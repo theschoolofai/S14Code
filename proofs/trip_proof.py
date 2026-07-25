@@ -19,8 +19,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from s13code.ui.catalog import COMPONENTS, catalog_manifest  # noqa: E402
-from s13code.ui.validator import validate_surface  # noqa: E402
+from s13code.ui.catalog import COMPONENTS, catalog_manifest
+from s13code.ui.validator import validate_surface
 
 OUT = Path(__file__).parent / "trip_proof.json"
 
