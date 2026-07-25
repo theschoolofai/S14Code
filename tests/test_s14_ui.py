@@ -19,6 +19,7 @@ from fastapi.testclient import TestClient
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from s13code.runtime import _matrix_from_table
 from s13code.ui.agui import (
     empty_state,
     replay_state,
@@ -390,8 +391,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +403,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "HeatMap", "Notice", "ApprovalCard",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -581,6 +582,153 @@ def test_route_reconnect_snapshot_rebuild_equals_full_replay(live_client):
     reconnect_frames = _sse_events(live_client.get("/v1/runs/tc/events?reconnect=1").text)
     rebuilt = reconnect_frames[0]["state"]
     assert rebuilt == full
+
+
+# --------------------------------------------------------------------------- #
+# HeatMap — the contributed component, in all three of its places
+# --------------------------------------------------------------------------- #
+
+def _heatmap(**overrides) -> dict:
+    comp = {
+        "id": "hm", "type": "HeatMap", "title": "Comparison",
+        "rows": {"$bind": "/matrix_rows"},
+        "columns": {"$bind": "/matrix_columns"},
+        "cells": {"$bind": "/matrix_cells"},
+        "tone": "good",
+    }
+    comp.update(overrides)
+    return comp
+
+
+def test_heatmap_is_in_the_catalog_as_a_custom_extension():
+    spec = COMPONENTS["HeatMap"]
+    assert spec.source == "custom"
+    # Every DATA slot is a binding: the component carries structure, never content.
+    assert {name for name, prop in spec.props.items() if prop.kind == "binding"} == {
+        "rows", "columns", "cells"}
+    assert spec.props["title"].kind == "text"
+    assert spec.props["tone"].kind == "enum"
+
+
+def test_heatmap_validates_clean_when_every_data_slot_is_bound():
+    result = validate_surface({"root": "hm", "components": [_heatmap()]})
+    assert result.ok
+    assert result.accepted[0]["type"] == "HeatMap"
+
+
+@pytest.mark.parametrize("field_name", ["rows", "columns", "cells"])
+def test_heatmap_rejects_an_inline_literal_where_a_binding_belongs(field_name):
+    """Inline content in a binding slot is how markup sneaks in; the wall refuses
+    it for the new component exactly as it does for every older one."""
+    result = validate_surface({"root": "hm", "components": [_heatmap(**{field_name: [["x"]]})]})
+    assert not result.ok
+    assert result.rejections[0].field == field_name
+    assert result.rejections[0].invariant == Invariant.DATA_NOT_CODE
+
+
+def test_heatmap_rejects_markup_in_its_literal_title():
+    result = validate_surface({"root": "hm", "components": [_heatmap(title="<img src=x onerror=1>")]})
+    assert not result.ok
+    assert result.rejections[0].invariant == Invariant.DATA_NOT_CODE
+    assert result.accepted == []
+
+
+def test_heatmap_rejects_a_handler_shaped_property_it_never_declared():
+    result = validate_surface({"root": "hm", "components": [_heatmap(onclick="steal()")]})
+    assert not result.ok
+    assert result.rejections[0].field == "onclick"
+    assert "event-handler" in result.rejections[0].reason
+
+
+def test_heatmap_rejects_a_tone_outside_the_enum():
+    result = validate_surface({"root": "hm", "components": [_heatmap(tone="rainbow")]})
+    assert not result.ok
+    assert result.rejections[0].field == "tone"
+
+
+# --- the data model half: the matrix the compose step derives ---------------
+
+def test_matrix_is_derived_from_a_grid_of_comparable_numbers():
+    matrix = _matrix_from_table(
+        [{"Item": "A", "Speed": 3, "Cost": 9}, {"Item": "B", "Speed": 7, "Cost": 2}],
+        ["Item", "Speed", "Cost"],
+    )
+    assert matrix == {"rows": ["A", "B"], "columns": ["Speed", "Cost"],
+                      "cells": [[3.0, 9.0], [7.0, 2.0]]}
+
+
+def test_matrix_reads_numbers_written_as_strings():
+    matrix = _matrix_from_table(
+        [{"k": "A", "x": "1,200", "y": " 4 "}, {"k": "B", "x": "900", "y": "6"}], ["k", "x", "y"])
+    assert matrix["cells"] == [[1200.0, 4.0], [900.0, 6.0]]
+
+
+def test_matrix_falls_back_to_the_first_rows_key_order_without_declared_columns():
+    matrix = _matrix_from_table([{"k": "A", "x": 1, "y": 2}, {"k": "B", "x": 3, "y": 4}])
+    assert matrix["columns"] == ["x", "y"]
+    assert matrix["rows"] == ["A", "B"]
+
+
+def test_matrix_is_absent_for_a_single_measure_which_is_a_chart_not_a_heatmap():
+    assert _matrix_from_table([{"Item": "A", "Sources": 3}, {"Item": "B", "Sources": 1}],
+                              ["Item", "Sources"]) is None
+
+
+def test_matrix_is_absent_for_one_row_and_for_no_rows():
+    assert _matrix_from_table([{"k": "A", "x": 1, "y": 2}], ["k", "x", "y"]) is None
+    assert _matrix_from_table([], ["k", "x", "y"]) is None
+
+
+def test_matrix_ignores_a_column_that_is_not_numeric_in_every_row():
+    """One non-numeric cell disqualifies the whole measure — a heatmap colours
+    magnitude, so a column it cannot compare must not become one."""
+    assert _matrix_from_table(
+        [{"k": "A", "x": 1, "note": "high"}, {"k": "B", "x": 3, "note": "low"}],
+        ["k", "x", "note"]) is None
+
+
+def test_matrix_treats_booleans_as_non_numeric():
+    assert _matrix_from_table([{"k": "A", "x": True, "y": 2}, {"k": "B", "x": False, "y": 4}],
+                              ["k", "x", "y"]) is None
+
+
+def test_matrix_survives_the_validator_when_bound_into_a_real_surface():
+    """The derived pointers and the component's binding slots line up: the exact
+    shape compose_surface publishes is the exact shape the catalog accepts."""
+    matrix = _matrix_from_table([{"k": "A", "x": 1, "y": 2}, {"k": "B", "x": 3, "y": 4}])
+    data_model = {"matrix_rows": matrix["rows"], "matrix_columns": matrix["columns"],
+                  "matrix_cells": matrix["cells"]}
+    surface = {"root": "hm", "components": [_heatmap()], "dataModel": data_model}
+    assert validate_surface(surface).ok
+    for prop in ("rows", "columns", "cells"):
+        pointer = surface["components"][0][prop]["$bind"]
+        assert pointer.lstrip("/") in data_model
+
+
+# --- the renderer half: both clients can draw every type the catalog offers --
+
+@pytest.mark.parametrize("client_file", ["index.html", "app.html"])
+def test_every_catalog_type_has_a_renderer_in_every_client(client_file):
+    """Adding a component type means editing the catalog AND both render clients.
+    A type the catalog offers but no client can draw would render as a skipped
+    placeholder, so the coverage is asserted rather than remembered."""
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / client_file).read_text()
+    missing = [name for name in COMPONENTS if not re.search(rf"\b{name}:\s*\(", html)]
+    assert missing == []
+
+
+@pytest.mark.parametrize("client_file", ["index.html", "app.html"])
+def test_heatmap_renderer_draws_text_nodes_and_executes_no_value(client_file):
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / client_file).read_text()
+    body = html[html.index("HEAT_RGB"):html.index("function tabs") if client_file == "app.html"
+                else html.index("function renderTabs")]
+    # Labels and cells reach the DOM only as text nodes.
+    assert re.search(r"append\(T\(|append\(text\(", body)
+    # Nothing in the heatmap path evaluates a value or sets markup.
+    for forbidden in ("innerHTML", "eval(", "Function(", "outerHTML", "insertAdjacentHTML"):
+        assert forbidden not in body, forbidden
+    # The only thing a bound value decides is an arithmetic colour.
+    assert "heatFill" in body and "Number.isFinite" in body
 
 
 # --------------------------------------------------------------------------- #
