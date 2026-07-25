@@ -151,9 +151,10 @@ def _surface_composition_prompt(
         "type, prop, event handler, URL, or markup. children/labels reference component ids. "
         "Prefer the RICHEST fitting component for each piece of data, NEVER one big Text blob: a "
         "Timeline or a List/Column of Cards for ordered groups, StatTiles in a Row for key numbers, "
-        "a Treemap for a positive part-to-whole breakdown, a BarChart or Sparkline for a general "
-        "numeric series, a DataTable for tabular rows, and Buttons for tappable choices. Fall back "
-        "to a single Text only when the data has no structure. Return JSON only: no prose, no fences."
+        "a composition-focused view for positive parts of one meaningful whole, a BarChart or "
+        "Sparkline for a general numeric series, a DataTable for tabular rows, and Buttons for "
+        "tappable choices. Fall back to a single Text only when the data has no structure. Return "
+        "JSON only: no prose, no fences."
     )
     instruction = {
         "goal": prompt,
@@ -171,9 +172,11 @@ def _surface_composition_prompt(
             "and a Text bound to /section_N_points; "
             "for /metrics render a Row of StatTiles, each StatTile value bound to /metric_N_value "
             "with a literal label; "
-            "for /breakdown (positive parts of one meaningful whole) render a Treemap with data "
-            'bound to /breakdown, labelKey "label", valueKey "value", and unit bound to '
-            "/breakdown_unit when that pointer is present; do not use Treemap for /series; "
+            "for /breakdown (two or more positive parts of one meaningful whole sharing a single "
+            "unit) choose whichever catalog component best communicates part-to-whole composition "
+            "rather than a plain ranking, bind the component's data to /breakdown, and bind its unit "
+            "to /breakdown_unit when that pointer is present; /breakdown is a composition while "
+            "/series is an ordinary numeric series; "
             'for /series render a BarChart (data bound to /series, xKey "label", yKey "value") '
             "or a Sparkline bound to /series_values; "
             "for /table_rows render a DataTable (rows bound to /table_rows, columns the literal "

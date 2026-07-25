@@ -147,7 +147,7 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
-| `treemap_run.json` | `treemap_run.py` | Gemini reaches for `Treemap` unprompted; the bound-value wall holds |
+| `treemap_run.json` | `treemap_run.py` | Gemini selects `Treemap` with its name present only in the catalog; the bound-value wall holds |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
@@ -159,9 +159,11 @@ uv run pytest -q                             # S13 core + regression tests + the
 `Treemap` is the catalog's 24th type and its 9th custom extension — a part-to-whole
 view for two or more positive parts of one whole sharing a single unit.
 
-**The request.** Captured live against `glc_v3`; the prompt never says "treemap",
-so the model reaches for it from the catalog manifest alone. Synthetic identity
-throughout.
+**The request.** Captured live against `glc_v3`; neither the user goal nor the
+system/compose selection guidance names `Treemap`. The schema-v2 proof records
+those exact selection strings with `catalog_offered: true`: the type reaches the
+model only through the catalog manifest, and generic part-to-whole guidance leads
+the composer to select it. Synthetic identity throughout.
 
 ```bash
 curl -s 127.0.0.1:8113/v1/agent/runs -H 'content-type: application/json' -d '{
@@ -184,29 +186,27 @@ curl -s 127.0.0.1:8113/v1/agent/runs -H 'content-type: application/json' -d '{
 
 **The result.** The `content` role emitted a `breakdown` of 7 positive parts summing
 to 120,000 INR; `_normalize_breakdown` accepted it and published `/breakdown`,
-`/breakdown_total` and `/breakdown_unit`. The composer then built an 8-component
-interface — `Column`, `Text` ×2, `Row`, `StatTile` ×2, **`Treemap`**, `DataTable` —
-with the validator accepting 8 of 8 and rejecting none. The Treemap binds rather
-than inlines:
+`/breakdown_total` and `/breakdown_unit`. The composer then built a 10-component
+interface — `Column`, `Text` ×2, `Row` ×2, `StatTile`, **`Treemap`**, `DataTable`,
+and `Button` ×2 — with the validator accepting 10 of 10 and rejecting none. The
+Treemap binds rather than inlines:
 
 ```json
-{ "id": "treemapSection", "type": "Treemap",
+{ "id": "treemap_comp", "type": "Treemap",
   "data": {"$bind": "/breakdown"}, "labelKey": "label", "valueKey": "value",
   "unit": {"$bind": "/breakdown_unit"} }
 ```
 
-**The rendered surface.** The same prompt, run again through `/app` — the viewer
-that renders `/composed` with `client/app.html`:
+**The rendered surface.** The exact `run-732398e974d3` surface recorded in
+`treemap_run.json` was fetched from `/composed` into `/app`'s existing
+`client/app.html` renderer; no second model run was made:
 
-![The composed household-budget interface: two StatTiles, a Treemap sized by value with a full text legend, and the DataTable beginning below](proofs/treemap_render.png)
+![The exact composed household-budget run: one StatTile, a Treemap sized by value with its full legend, the complete DataTable, and two action Buttons](proofs/treemap_render.png)
 
 `Rent` dominates the picture because it dominates the budget, which is the entire
 reason the type exists — a `BarChart` would have shown seven magnitudes and no
-whole. Note the chip: **10** accepted components, not the 8 of the capture above.
-Same prompt, same seven parts, a differently composed interface — the surface is
-written per run, not chosen from a fixed set. What does not vary is that the model
-reaches for `Treemap`. (The capture is one viewport; the `DataTable` continues below
-the crop.)
+whole. The chip's **10 components** matches the validator record, and the full-page
+capture shows every accepted component from that same run.
 
 **The three invariants, attacked.** `proofs/treemap_run.py` replays three hostile
 surfaces through the same validator that guards the live path:
@@ -230,9 +230,13 @@ git alone:
 ```bash
 TREEMAP=$(git log --format=%H --grep='Add a Treemap component' -1)
 git checkout "$TREEMAP^" -- s13code/ui/validator.py
-uv run pytest tests/test_treemap_component.py -q   # before: 4 failed, 30 passed
+uv run pytest tests/test_treemap_component.py -q \
+  -k 'resolved_nested_markup_rejects_only_the_bound_component or resolved_script_or_data_url_is_rejected'
+                                                    # before: 4 failed
 git checkout HEAD -- s13code/ui/validator.py
-uv run pytest tests/test_treemap_component.py -q   # after:  34 passed
+uv run pytest tests/test_treemap_component.py -q \
+  -k 'resolved_nested_markup_rejects_only_the_bound_component or resolved_script_or_data_url_is_rejected'
+                                                    # after: 4 passed
 ```
 
 The four that fail are exactly the bound-value cases:
@@ -244,15 +248,16 @@ tests need neither network nor gateway.
 
 ```bash
 uv sync --dev
-uv run pytest -q                          # 159 passed
+uv run pytest -q                          # 162 passed
 uv run s14code serve                      # 8113, in a second terminal
 uv run python proofs/treemap_run.py       # rewrites treemap_run.json, prints the invariant table
 ```
 
 `treemap_run.py` fails loudly rather than writing a flattering file: if the model
-does not produce a normalized breakdown, does not reach for `Treemap` on its own,
-does not ground a root-reachable `Treemap` in that breakdown, or any adversarial
-case misses its exact rejection, it exits non-zero and writes nothing.
+does not produce a normalized breakdown, the user/system/compose guidance names
+`Treemap`, the catalog does not offer it, the model does not select it, the accepted
+surface does not ground a root-reachable `Treemap` in that breakdown, or any
+adversarial case misses its exact rejection, it exits non-zero and writes nothing.
 
 ## Architecture
 

@@ -93,20 +93,24 @@ def test_normalize_breakdown_rejects_malformed_or_ambiguous_wholes(value):
     assert _normalize_breakdown(value) is None
 
 
-def test_composition_prompt_maps_breakdown_only_to_treemap():
+def test_composition_prompt_never_names_treemap_outside_the_catalog():
+    goal = "show allocation"
     data_model = {
         "title": "Budget",
         "breakdown": _SAFE_DATA,
         "breakdown_unit": "INR",
         "series": [{"label": "January", "value": 1}],
     }
-    system, instruction = _surface_composition_prompt("show allocation", catalog_manifest(), data_model)
-    assert "a Treemap for a positive part-to-whole breakdown" in system
+    system, instruction = _surface_composition_prompt(goal, catalog_manifest(), data_model)
+    assert "treemap" not in goal.casefold()
+    assert "treemap" not in system.casefold()
+    assert "treemap" not in instruction["compose"].casefold()
+    assert "Treemap" in instruction["catalog"]["components"]
     assert set(instruction["available_pointers"]) >= {"/breakdown", "/breakdown_unit", "/series"}
     compose = instruction["compose"]
     assert "for /breakdown" in compose
-    assert 'labelKey "label", valueKey "value"' in compose
-    assert "do not use Treemap for /series" in compose
+    assert "part-to-whole composition rather than a plain ranking" in compose
+    assert "/breakdown is a composition while /series is an ordinary numeric series" in compose
     assert "for /series render a BarChart" in compose
 
 
@@ -258,6 +262,21 @@ def test_live_proof_accepts_a_reachable_grounded_treemap():
     treemap_run.verify_grounded_treemap(surface, normalized)
 
 
+def test_live_proof_accepts_omitted_default_label_and_value_keys():
+    surface, normalized = _grounded_proof_surface()
+    surface["components"][1].pop("labelKey")
+    surface["components"][1].pop("valueKey")
+    treemap_run.verify_grounded_treemap(surface, normalized)
+
+
+@pytest.mark.parametrize(("field", "value"), [("labelKey", "name"), ("valueKey", "amount")])
+def test_live_proof_rejects_explicitly_wrong_treemap_keys(field, value):
+    surface, normalized = _grounded_proof_surface()
+    surface["components"][1][field] = value
+    with pytest.raises(SystemExit, match="no reachable Treemap grounded in /breakdown"):
+        treemap_run.verify_grounded_treemap(surface, normalized)
+
+
 def test_live_proof_rejects_an_orphaned_treemap():
     surface, normalized = _grounded_proof_surface()
     surface["components"][0]["children"] = []
@@ -356,9 +375,12 @@ def test_live_proof_fails_on_the_wrong_adversarial_invariant_or_component(monkey
 
 def test_sanitized_live_proof_records_an_ordinary_grounded_treemap_run():
     proof = json.loads((_ROOT / "proofs" / "treemap_run.json").read_text())
-    assert proof["schema_version"] == 1
+    assert proof["schema_version"] == 2
     assert proof["request"]["respond_as"] == "ui"
     assert "treemap" not in proof["request"]["prompt"].casefold()
+    assert "treemap" not in proof["composer_prompt"]["system"].casefold()
+    assert "treemap" not in proof["composer_prompt"]["compose"].casefold()
+    assert proof["composer_prompt"]["catalog_offered"] is True
     assert proof["normalized_breakdown"]["unit"] == "INR"
     assert proof["normalized_breakdown"]["total"] == 120000
     assert sum(item["value"] for item in proof["normalized_breakdown"]["items"]) == 120000

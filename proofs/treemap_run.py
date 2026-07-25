@@ -28,7 +28,8 @@ import httpx
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from s13code.runtime import _normalize_breakdown, _parse_json_object
+from s13code.runtime import _normalize_breakdown, _parse_json_object, _surface_composition_prompt
+from s13code.ui.catalog import catalog_manifest
 from s13code.ui.validator import validate_surface
 
 OUT = Path(__file__).parent / "treemap_run.json"
@@ -126,6 +127,22 @@ def _clean_treemap() -> dict:
             "labelKey": "label", "valueKey": "value", "unit": {"$bind": "/breakdown_unit"}}
 
 
+def composer_prompt_evidence(prompt: str, data_model: dict) -> dict:
+    """Record the deterministic selection strings and require catalog-only naming."""
+    system, instruction = _surface_composition_prompt(prompt, catalog_manifest(), data_model)
+    compose = instruction["compose"]
+    named_channels = [
+        name for name, text in (("goal", prompt), ("system", system), ("compose", compose))
+        if "treemap" in text.casefold()
+    ]
+    if named_channels:
+        raise SystemExit(f"Treemap is named outside the catalog in: {', '.join(named_channels)}")
+    catalog_offered = "Treemap" in instruction["catalog"]["components"]
+    if not catalog_offered:
+        raise SystemExit("Treemap is absent from the catalog offered to the composer")
+    return {"system": system, "compose": compose, "catalog_offered": catalog_offered}
+
+
 def verify_grounded_treemap(surface: dict, normalized: dict) -> None:
     """Require one rendered Treemap to bind the normalized content breakdown.
 
@@ -181,13 +198,6 @@ def verify_grounded_treemap(surface: dict, normalized: dict) -> None:
         if isinstance(children, list):
             pending.extend(child for child in children if isinstance(child, str))
 
-    expected_contract = {
-        "data": {"$bind": "/breakdown"},
-        "labelKey": "label",
-        "valueKey": "value",
-    }
-    if unit:
-        expected_contract["unit"] = {"$bind": "/breakdown_unit"}
     reachable_treemaps = [
         component for component_id, component in by_id.items()
         if component_id in reachable and component.get("type") == "Treemap"
@@ -196,7 +206,10 @@ def verify_grounded_treemap(surface: dict, normalized: dict) -> None:
     # pointer through as a nullable binding — so a Treemap still binding it
     # renders no unit at all and is not grounded.
     if not any(
-        all(component.get(field) == value for field, value in expected_contract.items())
+        component.get("data") == {"$bind": "/breakdown"}
+        and component.get("labelKey", "label") == "label"
+        and component.get("valueKey", "value") == "value"
+        and (not unit or component.get("unit") == {"$bind": "/breakdown_unit"})
         and (unit or "unit" not in component)
         for component in reachable_treemaps
     ):
@@ -291,15 +304,23 @@ def main() -> None:
     if not normalized:
         raise SystemExit("the content role produced no usable breakdown; nothing for Treemap to bind")
 
+    composer_data_model = node_result.get("data_model")
+    if not isinstance(composer_data_model, dict):
+        raise SystemExit("compose_surface recorded no data_model; its prompt cannot be reconstructed")
+    if composer_data_model != accepted.get("dataModel"):
+        raise SystemExit("served dataModel differs from the dataModel given to the composer")
+    prompt_evidence = composer_prompt_evidence(str(REQUEST["prompt"]), composer_data_model)
+
     types = sorted({component["type"] for component in accepted["components"]})
     if "Treemap" not in types:
         raise SystemExit(f"Gemini did not reach for Treemap unprompted; it composed {types}")
     verify_grounded_treemap(accepted, normalized)
 
     proof = {
-        "schema_version": 1,
+        "schema_version": 2,
         "captured_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "request": REQUEST,
+        "composer_prompt": prompt_evidence,
         "run_id": run_id,
         "provider": composed.get("provider") or report.get("provider"),
         "model": composed.get("model") or report.get("model"),

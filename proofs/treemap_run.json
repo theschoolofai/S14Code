@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "captured_at": "2026-07-25T12:38:01Z",
+  "schema_version": 2,
+  "captured_at": "2026-07-25T14:27:50Z",
   "request": {
     "prompt": "Create a visual monthly household budget for INR 120,000: rent 42,000, food 18,000, transport 10,000, savings 25,000, healthcare 8,000, utilities 9,000, and leisure 8,000. Make the dominant costs immediately obvious.",
     "respond_as": "ui",
@@ -9,7 +9,12 @@
     "user_id": "student-01",
     "agent_id": "assistant"
   },
-  "run_id": "run-58743e2fa8e5",
+  "composer_prompt": {
+    "system": "You compose declarative A2UI interfaces for a goal, binding every value to a provided dataModel. Output ONLY one JSON object {\"root\":\"root\",\"components\":[...]}. Each component is a FLAT object whose fields sit DIRECTLY on it: {\"id\":..., \"type\":..., <prop>:<value>, ...}. Do NOT wrap fields in a \"props\" object and do NOT nest a \"properties\" key. The catalog uses A2UI Basic names: use \"Text\" with \"variant\":\"heading\" for titles (there is NO \"Heading\" type), \"Row\"/\"Column\"/\"List\"/\"Card\" for layout (there is NO \"Grid\" type), \"Tabs\" whose \"children\" are the panels directly (there is NO separate \"Tab\" type), and \"Button\" for tappable choices. Shape examples (fields inline): {\"id\":\"h\",\"type\":\"Text\",\"variant\":\"heading\",\"text\":{\"$bind\":\"/title\"}}  {\"id\":\"r\",\"type\":\"Row\",\"align\":\"stretch\",\"justify\":\"spaceBetween\",\"children\":[\"a\",\"b\"]}  {\"id\":\"b1\",\"type\":\"Button\",\"label\":\"Choice A\",\"onPress\":{\"action\":\"request_data\"}}  {\"id\":\"body\",\"type\":\"Text\",\"variant\":\"body\",\"text\":{\"$bind\":\"/summary\"}}  {\"id\":\"tabs\",\"type\":\"Tabs\",\"labels\":\"One,Two\",\"children\":[\"p0\",\"p1\"]}. Use ONLY the component types and props named in the catalog. Every DATA value a component shows MUST be a binding {\"$bind\":\"/pointer\"} into the dataModel; a Button/Card/Tabs label/title and column names may be literal UI strings. An onPress action MUST be one of the registered actions (use \"request_data\" for choices); never invent an action, component type, prop, event handler, URL, or markup. children/labels reference component ids. Prefer the RICHEST fitting component for each piece of data, NEVER one big Text blob: a Timeline or a List/Column of Cards for ordered groups, StatTiles in a Row for key numbers, a composition-focused view for positive parts of one meaningful whole, a BarChart or Sparkline for a general numeric series, a DataTable for tabular rows, and Buttons for tappable choices. Fall back to a single Text only when the data has no structure. Return JSON only: no prose, no fences.",
+    "compose": "Compose the RICHEST interface that serves the goal above, using ONLY catalog types, and choose components from the data that is actually present in available_pointers. Start with a Text (variant \"heading\") bound to /title, then a Text (variant \"body\") bound to /intro or /summary if present. Then map the structured data to rich components (skip any pointer that is absent): for /sections (ordered groups) render EITHER a Timeline bound to /section_events OR a List/Column of Cards, one Card per section titled with the literal /section_N_heading and a Text bound to /section_N_points; for /metrics render a Row of StatTiles, each StatTile value bound to /metric_N_value with a literal label; for /breakdown (two or more positive parts of one meaningful whole sharing a single unit) choose whichever catalog component best communicates part-to-whole composition rather than a plain ranking, bind the component's data to /breakdown, and bind its unit to /breakdown_unit when that pointer is present; /breakdown is a composition while /series is an ordinary numeric series; for /series render a BarChart (data bound to /series, xKey \"label\", yKey \"value\") or a Sparkline bound to /series_values; for /table_rows render a DataTable (rows bound to /table_rows, columns the literal /table_columns joined by commas); for /choices (the goal asks the user to pick) render one tappable Button per entry, label the literal /choice_N_label, onPress action \"request_data\"; you may also add a ProgressBar bound to /progress_value (max /progress_max) and a Timeline bound to /timeline for the run's own steps. Do NOT dump everything into one Text. Bind every DATA value to a /pointer listed in available_pointers.",
+    "catalog_offered": true
+  },
+  "run_id": "run-732398e974d3",
   "provider": "gemini_1",
   "model": "gemini-3.5-flash-lite",
   "content_breakdown": {
@@ -80,21 +85,22 @@
     "total": 120000
   },
   "raw_surface": {
-    "root": "root",
+    "root": "main_col",
     "components": [
       {
-        "id": "root",
+        "id": "main_col",
         "type": "Column",
         "children": [
-          "titleText",
-          "summaryText",
-          "statsRow",
-          "treemapSection",
-          "tableSection"
+          "title_text",
+          "intro_text",
+          "metrics_row",
+          "treemap_comp",
+          "table_comp",
+          "actions_row"
         ]
       },
       {
-        "id": "titleText",
+        "id": "title_text",
         "type": "Text",
         "variant": "heading",
         "text": {
@@ -102,25 +108,24 @@
         }
       },
       {
-        "id": "summaryText",
+        "id": "intro_text",
         "type": "Text",
         "variant": "body",
         "text": {
-          "$bind": "/summary"
+          "$bind": "/intro"
         }
       },
       {
-        "id": "statsRow",
+        "id": "metrics_row",
         "type": "Row",
         "align": "stretch",
         "justify": "spaceBetween",
         "children": [
-          "statIncome",
-          "statSavings"
+          "stat_income"
         ]
       },
       {
-        "id": "statIncome",
+        "id": "stat_income",
         "type": "StatTile",
         "label": "Total Income",
         "value": {
@@ -130,19 +135,9 @@
         "tone": "neutral"
       },
       {
-        "id": "statSavings",
-        "type": "StatTile",
-        "label": "Total Savings",
-        "value": {
-          "$bind": "/metric_1_value"
-        },
-        "unit": "INR",
-        "tone": "good"
-      },
-      {
-        "id": "treemapSection",
+        "id": "treemap_comp",
         "type": "Treemap",
-        "title": "Expense Breakdown",
+        "title": "Budget Breakdown (Dominant Costs)",
         "data": {
           "$bind": "/breakdown"
         },
@@ -153,32 +148,59 @@
         }
       },
       {
-        "id": "tableSection",
+        "id": "table_comp",
         "type": "DataTable",
         "columns": "Category,Amount (INR),Percentage",
         "rows": {
           "$bind": "/table_rows"
         },
         "sortable": true
+      },
+      {
+        "id": "actions_row",
+        "type": "Row",
+        "align": "center",
+        "justify": "spaceAround",
+        "children": [
+          "btn_adjust",
+          "btn_confirm"
+        ]
+      },
+      {
+        "id": "btn_adjust",
+        "type": "Button",
+        "label": "Adjust Budget",
+        "onPress": {
+          "action": "request_data"
+        }
+      },
+      {
+        "id": "btn_confirm",
+        "type": "Button",
+        "label": "Confirm Budget",
+        "onPress": {
+          "action": "request_data"
+        }
       }
     ]
   },
   "accepted_surface": {
-    "root": "root",
+    "root": "main_col",
     "components": [
       {
-        "id": "root",
+        "id": "main_col",
         "type": "Column",
         "children": [
-          "titleText",
-          "summaryText",
-          "statsRow",
-          "treemapSection",
-          "tableSection"
+          "title_text",
+          "intro_text",
+          "metrics_row",
+          "treemap_comp",
+          "table_comp",
+          "actions_row"
         ]
       },
       {
-        "id": "titleText",
+        "id": "title_text",
         "type": "Text",
         "variant": "heading",
         "text": {
@@ -186,25 +208,24 @@
         }
       },
       {
-        "id": "summaryText",
+        "id": "intro_text",
         "type": "Text",
         "variant": "body",
         "text": {
-          "$bind": "/summary"
+          "$bind": "/intro"
         }
       },
       {
-        "id": "statsRow",
+        "id": "metrics_row",
         "type": "Row",
         "align": "stretch",
         "justify": "spaceBetween",
         "children": [
-          "statIncome",
-          "statSavings"
+          "stat_income"
         ]
       },
       {
-        "id": "statIncome",
+        "id": "stat_income",
         "type": "StatTile",
         "label": "Total Income",
         "value": {
@@ -214,19 +235,9 @@
         "tone": "neutral"
       },
       {
-        "id": "statSavings",
-        "type": "StatTile",
-        "label": "Total Savings",
-        "value": {
-          "$bind": "/metric_1_value"
-        },
-        "unit": "INR",
-        "tone": "good"
-      },
-      {
-        "id": "treemapSection",
+        "id": "treemap_comp",
         "type": "Treemap",
-        "title": "Expense Breakdown",
+        "title": "Budget Breakdown (Dominant Costs)",
         "data": {
           "$bind": "/breakdown"
         },
@@ -237,30 +248,51 @@
         }
       },
       {
-        "id": "tableSection",
+        "id": "table_comp",
         "type": "DataTable",
         "columns": "Category,Amount (INR),Percentage",
         "rows": {
           "$bind": "/table_rows"
         },
         "sortable": true
+      },
+      {
+        "id": "actions_row",
+        "type": "Row",
+        "align": "center",
+        "justify": "spaceAround",
+        "children": [
+          "btn_adjust",
+          "btn_confirm"
+        ]
+      },
+      {
+        "id": "btn_adjust",
+        "type": "Button",
+        "label": "Adjust Budget",
+        "onPress": {
+          "action": "request_data"
+        }
+      },
+      {
+        "id": "btn_confirm",
+        "type": "Button",
+        "label": "Confirm Budget",
+        "onPress": {
+          "action": "request_data"
+        }
       }
     ],
     "dataModel": {
       "title": "Monthly Household Budget (INR 120,000)",
       "goal": "Create a visual monthly household budget for INR 120,000: rent 42,000, food 18,000, transport 10,000, savings 25,000, healthcare 8,000, utilities 9,000, and leisure 8,000. Make the dominant costs immediately obvious.",
-      "summary": "An optimized monthly financial breakdown designed to highlight dominant household expenses and savings allocations.",
+      "summary": "Visual breakdown of monthly household expenses and savings allocation.",
       "results": [],
       "items": [],
       "metrics": [
         {
           "label": "Total Income",
           "value": 120000,
-          "unit": "INR"
-        },
-        {
-          "label": "Total Savings",
-          "value": 25000,
           "unit": "INR"
         }
       ],
@@ -307,53 +339,52 @@
       "subjects": [],
       "timeline": [
         {
-          "time": "220",
+          "time": "268",
           "label": "run_started"
         },
         {
-          "time": "221",
+          "time": "269",
           "label": "graph_patched"
         },
         {
-          "time": "222",
+          "time": "270",
           "label": "task_started content"
         },
         {
-          "time": "223",
+          "time": "271",
           "label": "task_succeeded content"
         },
         {
-          "time": "224",
+          "time": "272",
           "label": "graph_patched"
         },
         {
-          "time": "225",
+          "time": "273",
           "label": "task_started surface"
         }
       ],
       "progress_value": 1,
       "progress_max": 2,
-      "intro": "An optimized monthly financial breakdown designed to highlight dominant household expenses and savings allocations.",
+      "intro": "Visual breakdown of monthly household expenses and savings allocation.",
       "section_0_heading": "Dominant Costs",
-      "section_0_points": "\u2022 Rent is the largest single expense at 35% of total income.\n\u2022 Savings constitute over 20% of the monthly budget.\n\u2022 Food and transport form the core operational expenses.",
+      "section_0_points": "\u2022 Rent is the largest single expense at 35% of total income.\n\u2022 Savings constitute a strong secondary allocation at nearly 21%.\n\u2022 Food and transport form the core daily operational costs.",
       "sections": [
         {
           "heading": "Dominant Costs",
           "points": [
             "Rent is the largest single expense at 35% of total income.",
-            "Savings constitute over 20% of the monthly budget.",
-            "Food and transport form the core operational expenses."
+            "Savings constitute a strong secondary allocation at nearly 21%.",
+            "Food and transport form the core daily operational costs."
           ]
         }
       ],
       "section_events": [
         {
           "time": "Dominant Costs",
-          "label": "Rent is the largest single expense at 35% of total income.; Savings constitute over 20% of the monthly budget.; Food and transport form the core operational expenses."
+          "label": "Rent is the largest single expense at 35% of total income.; Savings constitute a strong secondary allocation at nearly 21%.; Food and transport form the core daily operational costs."
         }
       ],
       "metric_0_value": 120000,
-      "metric_1_value": 25000,
       "breakdown": [
         {
           "label": "Rent",
@@ -394,13 +425,14 @@
     }
   },
   "validator": {
-    "proposed": 8,
-    "accepted": 8,
+    "proposed": 10,
+    "accepted": 10,
     "rejected": 0,
     "ok": true,
     "rejections": [],
     "dangling_child_refs": [],
     "component_types": [
+      "Button",
       "Column",
       "DataTable",
       "Row",
@@ -408,9 +440,10 @@
       "Text",
       "Treemap"
     ],
-    "component_count": 8
+    "component_count": 10
   },
   "component_types": [
+    "Button",
     "Column",
     "DataTable",
     "Row",
