@@ -195,6 +195,19 @@ than inlines:
   "unit": {"$bind": "/breakdown_unit"} }
 ```
 
+**The rendered surface.** The same prompt, run again through `/app` — the viewer
+that renders `/composed` with `client/app.html`:
+
+![The composed household-budget interface: two StatTiles, a Treemap sized by value with a full text legend, and the DataTable beginning below](proofs/treemap_render.png)
+
+`Rent` dominates the picture because it dominates the budget, which is the entire
+reason the type exists — a `BarChart` would have shown seven magnitudes and no
+whole. Note the chip: **10** accepted components, not the 8 of the capture above.
+Same prompt, same seven parts, a differently composed interface — the surface is
+written per run, not chosen from a fixed set. What does not vary is that the model
+reaches for `Treemap`. (The capture is one viewport; the `DataTable` continues below
+the crop.)
+
 **The three invariants, attacked.** `proofs/treemap_run.py` replays three hostile
 surfaces through the same validator that guards the live path:
 
