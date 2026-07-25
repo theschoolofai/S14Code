@@ -1,0 +1,400 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-07-25T12:04:07Z",
+  "request": {
+    "prompt": "Create a visual monthly household budget for INR 120,000: rent 42,000, food 18,000, transport 10,000, savings 25,000, healthcare 8,000, utilities 9,000, and leisure 8,000. Make the dominant costs immediately obvious.",
+    "respond_as": "ui",
+    "tenant_id": "course",
+    "project_id": "s14-treemap",
+    "user_id": "student-01",
+    "agent_id": "assistant"
+  },
+  "run_id": "run-1c322dfda175",
+  "provider": "gemini_1",
+  "model": "gemini-3.5-flash-lite",
+  "content_breakdown": {
+    "unit": "INR",
+    "items": [
+      {
+        "label": "Rent",
+        "value": 42000
+      },
+      {
+        "label": "Savings",
+        "value": 25000
+      },
+      {
+        "label": "Food",
+        "value": 18000
+      },
+      {
+        "label": "Transport",
+        "value": 10000
+      },
+      {
+        "label": "Utilities",
+        "value": 9000
+      },
+      {
+        "label": "Healthcare",
+        "value": 8000
+      },
+      {
+        "label": "Leisure",
+        "value": 8000
+      }
+    ]
+  },
+  "normalized_breakdown": {
+    "items": [
+      {
+        "label": "Rent",
+        "value": 42000
+      },
+      {
+        "label": "Savings",
+        "value": 25000
+      },
+      {
+        "label": "Food",
+        "value": 18000
+      },
+      {
+        "label": "Transport",
+        "value": 10000
+      },
+      {
+        "label": "Utilities",
+        "value": 9000
+      },
+      {
+        "label": "Healthcare",
+        "value": 8000
+      },
+      {
+        "label": "Leisure",
+        "value": 8000
+      }
+    ],
+    "unit": "INR",
+    "total": 120000
+  },
+  "raw_surface": {
+    "root": "main_column",
+    "components": [
+      {
+        "id": "main_column",
+        "type": "Column",
+        "children": [
+          "title_text",
+          "summary_text",
+          "stats_row",
+          "breakdown_treemap",
+          "table_card",
+          "sections_card"
+        ]
+      },
+      {
+        "id": "title_text",
+        "type": "Text",
+        "variant": "heading",
+        "text": {
+          "$bind": "/title"
+        }
+      },
+      {
+        "id": "summary_text",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/summary"
+        }
+      },
+      {
+        "id": "stats_row",
+        "type": "Row",
+        "align": "stretch",
+        "justify": "spaceBetween",
+        "children": [
+          "stat_income",
+          "stat_savings"
+        ]
+      },
+      {
+        "id": "stat_income",
+        "type": "StatTile",
+        "label": "Total Income",
+        "value": {
+          "$bind": "/metric_0_value"
+        },
+        "unit": "INR",
+        "tone": "neutral"
+      },
+      {
+        "id": "stat_savings",
+        "type": "StatTile",
+        "label": "Total Savings",
+        "value": {
+          "$bind": "/metric_1_value"
+        },
+        "unit": "INR",
+        "tone": "good"
+      },
+      {
+        "id": "breakdown_treemap",
+        "type": "Treemap",
+        "title": "Budget Allocation Breakdown",
+        "data": {
+          "$bind": "/breakdown"
+        },
+        "labelKey": "label",
+        "valueKey": "value",
+        "unit": {
+          "$bind": "/breakdown_unit"
+        }
+      },
+      {
+        "id": "table_card",
+        "type": "Card",
+        "title": "Detailed Budget Table",
+        "children": [
+          "data_table"
+        ]
+      },
+      {
+        "id": "data_table",
+        "type": "DataTable",
+        "columns": "Category,Amount (INR),Percentage",
+        "rows": {
+          "$bind": "/table_rows"
+        },
+        "sortable": true
+      },
+      {
+        "id": "sections_card",
+        "type": "Card",
+        "title": "Budget Insights",
+        "children": [
+          "section_0_col",
+          "section_1_col"
+        ]
+      },
+      {
+        "id": "section_0_col",
+        "type": "Column",
+        "children": [
+          "sec0_title",
+          "sec0_points"
+        ]
+      },
+      {
+        "id": "sec0_title",
+        "type": "Text",
+        "variant": "subtitle",
+        "text": {
+          "$bind": "/section_0_heading"
+        }
+      },
+      {
+        "id": "sec0_points",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/section_0_points"
+        }
+      },
+      {
+        "id": "section_1_col",
+        "type": "Column",
+        "children": [
+          "sec1_title",
+          "sec1_points"
+        ]
+      },
+      {
+        "id": "sec1_title",
+        "type": "Text",
+        "variant": "subtitle",
+        "text": {
+          "$bind": "/section_1_heading"
+        }
+      },
+      {
+        "id": "sec1_points",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/section_1_points"
+        }
+      }
+    ]
+  },
+  "accepted_surface": {
+    "root": "main_column",
+    "components": [
+      {
+        "id": "main_column",
+        "type": "Column",
+        "children": [
+          "title_text",
+          "summary_text",
+          "stats_row",
+          "breakdown_treemap",
+          "table_card",
+          "sections_card"
+        ]
+      },
+      {
+        "id": "title_text",
+        "type": "Text",
+        "variant": "heading",
+        "text": {
+          "$bind": "/title"
+        }
+      },
+      {
+        "id": "summary_text",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/summary"
+        }
+      },
+      {
+        "id": "stats_row",
+        "type": "Row",
+        "align": "stretch",
+        "justify": "spaceBetween",
+        "children": [
+          "stat_income",
+          "stat_savings"
+        ]
+      },
+      {
+        "id": "stat_income",
+        "type": "StatTile",
+        "label": "Total Income",
+        "value": {
+          "$bind": "/metric_0_value"
+        },
+        "unit": "INR",
+        "tone": "neutral"
+      },
+      {
+        "id": "stat_savings",
+        "type": "StatTile",
+        "label": "Total Savings",
+        "value": {
+          "$bind": "/metric_1_value"
+        },
+        "unit": "INR",
+        "tone": "good"
+      },
+      {
+        "id": "breakdown_treemap",
+        "type": "Treemap",
+        "title": "Budget Allocation Breakdown",
+        "data": {
+          "$bind": "/breakdown"
+        },
+        "labelKey": "label",
+        "valueKey": "value",
+        "unit": {
+          "$bind": "/breakdown_unit"
+        }
+      },
+      {
+        "id": "table_card",
+        "type": "Card",
+        "title": "Detailed Budget Table",
+        "children": [
+          "data_table"
+        ]
+      },
+      {
+        "id": "data_table",
+        "type": "DataTable",
+        "columns": "Category,Amount (INR),Percentage",
+        "rows": {
+          "$bind": "/table_rows"
+        },
+        "sortable": true
+      },
+      {
+        "id": "sections_card",
+        "type": "Card",
+        "title": "Budget Insights",
+        "children": [
+          "section_0_col",
+          "section_1_col"
+        ]
+      },
+      {
+        "id": "section_0_col",
+        "type": "Column",
+        "children": [
+          "sec0_title",
+          "sec0_points"
+        ]
+      },
+      {
+        "id": "sec0_title",
+        "type": "Text",
+        "variant": "subtitle",
+        "text": {
+          "$bind": "/section_0_heading"
+        }
+      },
+      {
+        "id": "sec0_points",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/section_0_points"
+        }
+      },
+      {
+        "id": "section_1_col",
+        "type": "Column",
+        "children": [
+          "sec1_title",
+          "sec1_points"
+        ]
+      },
+      {
+        "id": "sec1_title",
+        "type": "Text",
+        "variant": "subtitle",
+        "text": {
+          "$bind": "/section_1_heading"
+        }
+      },
+      {
+        "id": "sec1_points",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/section_1_points"
+        }
+      }
+    ]
+  },
+  "validator": {
+    "proposed": 16,
+    "accepted": 16,
+    "rejected": 0,
+    "ok": true,
+    "rejections": [],
+    "dangling_child_refs": [],
+    "component_count": 16
+  },
+  "component_types": [
+    "Card",
+    "Column",
+    "DataTable",
+    "Row",
+    "StatTile",
+    "Text",
+    "Treemap"
+  ]
+}

@@ -12,6 +12,8 @@
     --green:#16A34A;--green-soft:rgba(22,163,74,.12);--green-ink:#15803D;
     --amber:#D97706;--amber-soft:rgba(217,119,6,.14);--amber-ink:#B45309;
     --red:#DC2626;--red-soft:rgba(220,38,38,.10);--red-ink:#B91C1C;
+    --tree-1:#2563EB;--tree-2:#0D9488;--tree-3:#7C3AED;--tree-4:#EA580C;
+    --tree-5:#0891B2;--tree-6:#4F46E5;--tree-7:#65A30D;--tree-8:#BE185D;
     --font-sans:'Inter',system-ui,sans-serif;--font-serif:'Palatino Linotype',Palatino,Georgia,serif;--font-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
   }
   *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink-body);font-family:var(--font-sans);font-size:15px}
@@ -45,6 +47,12 @@
   .StatTile .dl{font-size:11px;color:var(--ink-muted);margin-top:3px}
   .chart{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
   .chart .ct{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:8px;font-family:var(--font-mono)}
+  .Treemap svg{display:block;width:100%;height:auto}
+  .tm-fallback{padding:24px 12px;text-align:center;color:var(--ink-muted);font-family:var(--font-mono);font-size:12px}
+  .tm-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px 12px;margin-top:12px}
+  .tm-legend-row{display:flex;align-items:center;gap:7px;min-width:0;font-size:11px;font-family:var(--font-mono);color:var(--ink-muted)}
+  .tm-swatch{width:10px;height:10px;border-radius:3px;flex:0 0 10px}
+  .tm-legend-label{overflow-wrap:anywhere;color:var(--ink-body)}
   .prog{height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}.prog>i{display:block;height:100%;background:var(--green)}
   table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
   th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);font-size:14px}
@@ -126,6 +134,7 @@ const R={
   ProgressBar:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("progress"));const p=$("div","prog");const i=$("i");const val=+resolve(c.value,x.dm)||0;i.style.width=Math.min(100,val/(c.max||100)*100)+"%";p.append(i);e.append(t,p);return e;},
   Sparkline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("trend"));e.append(t,spark(resolve(c.data,x.dm)||[]));return e;},
   BarChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"chart"));e.append(t,bars(resolve(c.data,x.dm)||[],c.xKey,c.yKey));return e;},
+  Treemap:(c,x)=>renderTreemap(c,x),
   DataTable:(c,x)=>table(c,x),
   Tabs:(c,x)=>tabs(c,x),
   Button:(c,x)=>{const b=$("button","actbtn");let lab=resolve(c.label,x.dm);if(lab&&typeof lab==="object")lab=lab.label||lab.name||lab.text||lab.id||"Choose";lab=String(lab==null?"Choose":lab);b.append(T(lab));b.onclick=()=>choose(lab);return b;},
@@ -142,6 +151,113 @@ function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
 function spark(v){const ns="http://www.w3.org/2000/svg",w=200,h=44,mx=Math.max(...v,1),mn=Math.min(...v,0),rg=(mx-mn)||1;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");s.setAttribute("height",h);const p=document.createElementNS(ns,"polyline");p.setAttribute("points",v.map((y,i)=>`${i/(v.length-1||1)*w},${h-5-(y-mn)/rg*(h-10)}`).join(" "));p.setAttribute("fill","none");p.setAttribute("stroke","var(--green)");p.setAttribute("stroke-width","2.5");s.append(p);return s;}
 function bars(d,xk,yk){const ns="http://www.w3.org/2000/svg",w=300,h=150,pad=24,mx=Math.max(...d.map(r=>+r[yk]),1),bw=(w-pad*2)/(d.length||1)*.6;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");d.forEach((r,i)=>{const x=pad+i*((w-pad*2)/d.length)+((w-pad*2)/d.length-bw)/2,bh=(+r[yk])/mx*(h-pad*2);const rc=document.createElementNS(ns,"rect");rc.setAttribute("x",x);rc.setAttribute("y",h-pad-bh);rc.setAttribute("width",bw);rc.setAttribute("height",bh);rc.setAttribute("rx",3);rc.setAttribute("fill","var(--accent)");s.append(rc);const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","9");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=r[xk];s.append(tl);});return s;}
+
+const TREEMAP_COLORS=[
+  "var(--tree-1)","var(--tree-2)","var(--tree-3)","var(--tree-4)",
+  "var(--tree-5)","var(--tree-6)","var(--tree-7)","var(--tree-8)"
+];
+
+function treemapWorst(row,side){
+  if(!row.length||side<=0)return Infinity;
+  const sum=row.reduce((n,item)=>n+item.area,0);
+  const largest=Math.max(...row.map(item=>item.area));
+  const smallest=Math.min(...row.map(item=>item.area));
+  return Math.max((side*side*largest)/(sum*sum),(sum*sum)/(side*side*smallest));
+}
+
+function treemapPlaceRow(row,rect,out){
+  const area=row.reduce((n,item)=>n+item.area,0);
+  if(rect.w>=rect.h){
+    const strip=area/rect.h;let y=rect.y;
+    row.forEach(item=>{const h=item.area/strip;out.push({...item,x:rect.x,y,w:strip,h});y+=h;});
+    return{x:rect.x+strip,y:rect.y,w:Math.max(0,rect.w-strip),h:rect.h};
+  }
+  const strip=area/rect.w;let x=rect.x;
+  row.forEach(item=>{const w=item.area/strip;out.push({...item,x,y:rect.y,w,h:strip});x+=w;});
+  return{x:rect.x,y:rect.y+strip,w:rect.w,h:Math.max(0,rect.h-strip)};
+}
+
+function squarifyTreemap(items,width,height){
+  const total=items.reduce((n,item)=>n+item.value,0);
+  const queue=items.map(item=>({...item,area:item.value/total*width*height}));
+  const out=[];let row=[];let rect={x:0,y:0,w:width,h:height};
+  while(queue.length){
+    const next=queue[0],side=Math.min(rect.w,rect.h);
+    if(!row.length||treemapWorst([...row,next],side)<=treemapWorst(row,side)){
+      row.push(queue.shift());
+    }else{
+      rect=treemapPlaceRow(row,rect,out);row=[];
+    }
+  }
+  if(row.length)treemapPlaceRow(row,rect,out);
+  return out;
+}
+
+function treemapData(c,ctx){
+  const raw=resolve(c.data,ctx.dm),labelKey=c.labelKey||"label",valueKey=c.valueKey||"value";
+  const resolvedUnit=resolve(c.unit,ctx.dm);
+  if(!Array.isArray(raw)||raw.length<2||!(resolvedUnit==null||typeof resolvedUnit==="string"))return null;
+  const labels=new Set(),items=[];
+  for(let index=0;index<raw.length;index++){
+    const source=raw[index];
+    if(!source||typeof source!=="object")return null;
+    const label=typeof source[labelKey]==="string"?source[labelKey].trim():"";
+    const value=Number(source[valueKey]),folded=label.toLowerCase();
+    if(!label||labels.has(folded)||!Number.isFinite(value)||value<=0)return null;
+    labels.add(folded);items.push({label,value,index});
+  }
+  return{items:items.slice().sort((a,b)=>b.value-a.value||a.index-b.index),unit:resolvedUnit||""};
+}
+
+function treemapLabel(value,width){
+  const max=Math.max(4,Math.floor((width-12)/7));
+  return value.length>max?value.slice(0,Math.max(1,max-1))+"…":value;
+}
+
+function renderTreemap(c,ctx){
+  const shell=$("div","chart Treemap"),heading=$("div","ct");heading.append(T(c.title||"treemap"));shell.append(heading);
+  const parsed=treemapData(c,ctx);
+  if(!parsed){
+    const fallback=$("div","tm-fallback");fallback.append(T("Treemap unavailable: breakdown data is invalid"));
+    shell.append(fallback);return shell;
+  }
+  const ns="http://www.w3.org/2000/svg",width=640,height=360,gutter=2;
+  const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox",`0 0 ${width} ${height}`);
+  svg.setAttribute("role","img");svg.setAttribute("aria-label",String(c.title||"Part-to-whole treemap"));
+  const total=parsed.items.reduce((n,item)=>n+item.value,0);
+  const number=new Intl.NumberFormat(undefined,{maximumFractionDigits:2});
+  const percent=new Intl.NumberFormat(undefined,{maximumFractionDigits:1});
+  const displayValue=value=>number.format(value)+(parsed.unit?" "+parsed.unit:"");
+  const displayPercent=value=>percent.format(value/total*100)+"%";
+  squarifyTreemap(parsed.items,width,height).forEach((tile,index)=>{
+    const x=tile.x+gutter/2,y=tile.y+gutter/2,w=Math.max(0,tile.w-gutter),h=Math.max(0,tile.h-gutter);
+    const group=document.createElementNS(ns,"g"),rect=document.createElementNS(ns,"rect");
+    rect.setAttribute("x",x);rect.setAttribute("y",y);rect.setAttribute("width",w);rect.setAttribute("height",h);
+    rect.setAttribute("rx","6");rect.setAttribute("fill",TREEMAP_COLORS[index%TREEMAP_COLORS.length]);group.append(rect);
+    const title=document.createElementNS(ns,"title");
+    title.textContent=`${tile.label}: ${displayValue(tile.value)} (${displayPercent(tile.value)})`;group.append(title);
+    if(w>=90&&h>=48){
+      const label=document.createElementNS(ns,"text");label.setAttribute("x",x+8);label.setAttribute("y",y+19);
+      label.setAttribute("fill","#fff");label.setAttribute("font-size","12");label.setAttribute("font-weight","600");
+      label.setAttribute("font-family","var(--font-sans)");label.textContent=treemapLabel(tile.label,w);group.append(label);
+      const value=document.createElementNS(ns,"text");value.setAttribute("x",x+8);value.setAttribute("y",y+38);
+      value.setAttribute("fill","rgba(255,255,255,.9)");value.setAttribute("font-size","10");
+      value.setAttribute("font-family","var(--font-mono)");
+      value.textContent=treemapLabel(`${displayValue(tile.value)} · ${displayPercent(tile.value)}`,w);group.append(value);
+    }
+    svg.append(group);
+  });
+  shell.append(svg);
+  const legend=$("div","tm-legend");
+  parsed.items.forEach((item,index)=>{
+    const row=$("div","tm-legend-row"),swatch=$("span","tm-swatch"),label=$("span","tm-legend-label");
+    swatch.style.background=TREEMAP_COLORS[index%TREEMAP_COLORS.length];
+    label.append(T(`${item.label} · ${displayValue(item.value)} · ${displayPercent(item.value)}`));
+    row.append(swatch,label);legend.append(row);
+  });
+  shell.append(legend);return shell;
+}
+
 function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());const rows=resolve(c.rows,x.dm)||[];const t=$("table");const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(T(col));tr.append(th);});t.append(tr);rows.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(r[col]));rr.append(td);});t.append(rr);});wrap.append(t);return wrap;}
 function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);const tabIds=c.children||[];function show(i){body.textContent="";const cc=x.byId[tabIds[i]];if(cc)body.append(node(cc,x));[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}
   (String(c.labels||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});

@@ -390,8 +390,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -401,7 +401,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
         "CheckBox", "Slider", "InputChoice", "DateTime", "Button", "Tabs", "Modal",
     }
     assert by_source["custom"] == {
-        "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
+        "BarChart", "Treemap", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
         "Notice", "ApprovalCard",
     }
     # The removed types are truly gone.
