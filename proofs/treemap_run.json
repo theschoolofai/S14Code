@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "captured_at": "2026-07-25T12:04:07Z",
+  "captured_at": "2026-07-25T12:38:01Z",
   "request": {
     "prompt": "Create a visual monthly household budget for INR 120,000: rent 42,000, food 18,000, transport 10,000, savings 25,000, healthcare 8,000, utilities 9,000, and leisure 8,000. Make the dominant costs immediately obvious.",
     "respond_as": "ui",
@@ -9,7 +9,7 @@
     "user_id": "student-01",
     "agent_id": "assistant"
   },
-  "run_id": "run-1c322dfda175",
+  "run_id": "run-58743e2fa8e5",
   "provider": "gemini_1",
   "model": "gemini-3.5-flash-lite",
   "content_breakdown": {
@@ -80,22 +80,21 @@
     "total": 120000
   },
   "raw_surface": {
-    "root": "main_column",
+    "root": "root",
     "components": [
       {
-        "id": "main_column",
+        "id": "root",
         "type": "Column",
         "children": [
-          "title_text",
-          "summary_text",
-          "stats_row",
-          "breakdown_treemap",
-          "table_card",
-          "sections_card"
+          "titleText",
+          "summaryText",
+          "statsRow",
+          "treemapSection",
+          "tableSection"
         ]
       },
       {
-        "id": "title_text",
+        "id": "titleText",
         "type": "Text",
         "variant": "heading",
         "text": {
@@ -103,7 +102,7 @@
         }
       },
       {
-        "id": "summary_text",
+        "id": "summaryText",
         "type": "Text",
         "variant": "body",
         "text": {
@@ -111,17 +110,17 @@
         }
       },
       {
-        "id": "stats_row",
+        "id": "statsRow",
         "type": "Row",
         "align": "stretch",
         "justify": "spaceBetween",
         "children": [
-          "stat_income",
-          "stat_savings"
+          "statIncome",
+          "statSavings"
         ]
       },
       {
-        "id": "stat_income",
+        "id": "statIncome",
         "type": "StatTile",
         "label": "Total Income",
         "value": {
@@ -131,7 +130,7 @@
         "tone": "neutral"
       },
       {
-        "id": "stat_savings",
+        "id": "statSavings",
         "type": "StatTile",
         "label": "Total Savings",
         "value": {
@@ -141,9 +140,9 @@
         "tone": "good"
       },
       {
-        "id": "breakdown_treemap",
+        "id": "treemapSection",
         "type": "Treemap",
-        "title": "Budget Allocation Breakdown",
+        "title": "Expense Breakdown",
         "data": {
           "$bind": "/breakdown"
         },
@@ -154,98 +153,32 @@
         }
       },
       {
-        "id": "table_card",
-        "type": "Card",
-        "title": "Detailed Budget Table",
-        "children": [
-          "data_table"
-        ]
-      },
-      {
-        "id": "data_table",
+        "id": "tableSection",
         "type": "DataTable",
         "columns": "Category,Amount (INR),Percentage",
         "rows": {
           "$bind": "/table_rows"
         },
         "sortable": true
-      },
-      {
-        "id": "sections_card",
-        "type": "Card",
-        "title": "Budget Insights",
-        "children": [
-          "section_0_col",
-          "section_1_col"
-        ]
-      },
-      {
-        "id": "section_0_col",
-        "type": "Column",
-        "children": [
-          "sec0_title",
-          "sec0_points"
-        ]
-      },
-      {
-        "id": "sec0_title",
-        "type": "Text",
-        "variant": "subtitle",
-        "text": {
-          "$bind": "/section_0_heading"
-        }
-      },
-      {
-        "id": "sec0_points",
-        "type": "Text",
-        "variant": "body",
-        "text": {
-          "$bind": "/section_0_points"
-        }
-      },
-      {
-        "id": "section_1_col",
-        "type": "Column",
-        "children": [
-          "sec1_title",
-          "sec1_points"
-        ]
-      },
-      {
-        "id": "sec1_title",
-        "type": "Text",
-        "variant": "subtitle",
-        "text": {
-          "$bind": "/section_1_heading"
-        }
-      },
-      {
-        "id": "sec1_points",
-        "type": "Text",
-        "variant": "body",
-        "text": {
-          "$bind": "/section_1_points"
-        }
       }
     ]
   },
   "accepted_surface": {
-    "root": "main_column",
+    "root": "root",
     "components": [
       {
-        "id": "main_column",
+        "id": "root",
         "type": "Column",
         "children": [
-          "title_text",
-          "summary_text",
-          "stats_row",
-          "breakdown_treemap",
-          "table_card",
-          "sections_card"
+          "titleText",
+          "summaryText",
+          "statsRow",
+          "treemapSection",
+          "tableSection"
         ]
       },
       {
-        "id": "title_text",
+        "id": "titleText",
         "type": "Text",
         "variant": "heading",
         "text": {
@@ -253,7 +186,7 @@
         }
       },
       {
-        "id": "summary_text",
+        "id": "summaryText",
         "type": "Text",
         "variant": "body",
         "text": {
@@ -261,17 +194,17 @@
         }
       },
       {
-        "id": "stats_row",
+        "id": "statsRow",
         "type": "Row",
         "align": "stretch",
         "justify": "spaceBetween",
         "children": [
-          "stat_income",
-          "stat_savings"
+          "statIncome",
+          "statSavings"
         ]
       },
       {
-        "id": "stat_income",
+        "id": "statIncome",
         "type": "StatTile",
         "label": "Total Income",
         "value": {
@@ -281,7 +214,7 @@
         "tone": "neutral"
       },
       {
-        "id": "stat_savings",
+        "id": "statSavings",
         "type": "StatTile",
         "label": "Total Savings",
         "value": {
@@ -291,9 +224,9 @@
         "tone": "good"
       },
       {
-        "id": "breakdown_treemap",
+        "id": "treemapSection",
         "type": "Treemap",
-        "title": "Budget Allocation Breakdown",
+        "title": "Expense Breakdown",
         "data": {
           "$bind": "/breakdown"
         },
@@ -304,97 +237,299 @@
         }
       },
       {
-        "id": "table_card",
-        "type": "Card",
-        "title": "Detailed Budget Table",
-        "children": [
-          "data_table"
-        ]
-      },
-      {
-        "id": "data_table",
+        "id": "tableSection",
         "type": "DataTable",
         "columns": "Category,Amount (INR),Percentage",
         "rows": {
           "$bind": "/table_rows"
         },
         "sortable": true
-      },
-      {
-        "id": "sections_card",
-        "type": "Card",
-        "title": "Budget Insights",
-        "children": [
-          "section_0_col",
-          "section_1_col"
-        ]
-      },
-      {
-        "id": "section_0_col",
-        "type": "Column",
-        "children": [
-          "sec0_title",
-          "sec0_points"
-        ]
-      },
-      {
-        "id": "sec0_title",
-        "type": "Text",
-        "variant": "subtitle",
-        "text": {
-          "$bind": "/section_0_heading"
-        }
-      },
-      {
-        "id": "sec0_points",
-        "type": "Text",
-        "variant": "body",
-        "text": {
-          "$bind": "/section_0_points"
-        }
-      },
-      {
-        "id": "section_1_col",
-        "type": "Column",
-        "children": [
-          "sec1_title",
-          "sec1_points"
-        ]
-      },
-      {
-        "id": "sec1_title",
-        "type": "Text",
-        "variant": "subtitle",
-        "text": {
-          "$bind": "/section_1_heading"
-        }
-      },
-      {
-        "id": "sec1_points",
-        "type": "Text",
-        "variant": "body",
-        "text": {
-          "$bind": "/section_1_points"
-        }
       }
-    ]
+    ],
+    "dataModel": {
+      "title": "Monthly Household Budget (INR 120,000)",
+      "goal": "Create a visual monthly household budget for INR 120,000: rent 42,000, food 18,000, transport 10,000, savings 25,000, healthcare 8,000, utilities 9,000, and leisure 8,000. Make the dominant costs immediately obvious.",
+      "summary": "An optimized monthly financial breakdown designed to highlight dominant household expenses and savings allocations.",
+      "results": [],
+      "items": [],
+      "metrics": [
+        {
+          "label": "Total Income",
+          "value": 120000,
+          "unit": "INR"
+        },
+        {
+          "label": "Total Savings",
+          "value": 25000,
+          "unit": "INR"
+        }
+      ],
+      "spark": [],
+      "table_rows": [
+        {
+          "Category": "Rent",
+          "Amount (INR)": 42000,
+          "Percentage": "35.0%"
+        },
+        {
+          "Category": "Savings",
+          "Amount (INR)": 25000,
+          "Percentage": "20.8%"
+        },
+        {
+          "Category": "Food",
+          "Amount (INR)": 18000,
+          "Percentage": "15.0%"
+        },
+        {
+          "Category": "Transport",
+          "Amount (INR)": 10000,
+          "Percentage": "8.3%"
+        },
+        {
+          "Category": "Utilities",
+          "Amount (INR)": 9000,
+          "Percentage": "7.5%"
+        },
+        {
+          "Category": "Healthcare",
+          "Amount (INR)": 8000,
+          "Percentage": "6.7%"
+        },
+        {
+          "Category": "Leisure",
+          "Amount (INR)": 8000,
+          "Percentage": "6.7%"
+        }
+      ],
+      "item_count": 0,
+      "source_count": 0,
+      "subjects": [],
+      "timeline": [
+        {
+          "time": "220",
+          "label": "run_started"
+        },
+        {
+          "time": "221",
+          "label": "graph_patched"
+        },
+        {
+          "time": "222",
+          "label": "task_started content"
+        },
+        {
+          "time": "223",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "224",
+          "label": "graph_patched"
+        },
+        {
+          "time": "225",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "intro": "An optimized monthly financial breakdown designed to highlight dominant household expenses and savings allocations.",
+      "section_0_heading": "Dominant Costs",
+      "section_0_points": "\u2022 Rent is the largest single expense at 35% of total income.\n\u2022 Savings constitute over 20% of the monthly budget.\n\u2022 Food and transport form the core operational expenses.",
+      "sections": [
+        {
+          "heading": "Dominant Costs",
+          "points": [
+            "Rent is the largest single expense at 35% of total income.",
+            "Savings constitute over 20% of the monthly budget.",
+            "Food and transport form the core operational expenses."
+          ]
+        }
+      ],
+      "section_events": [
+        {
+          "time": "Dominant Costs",
+          "label": "Rent is the largest single expense at 35% of total income.; Savings constitute over 20% of the monthly budget.; Food and transport form the core operational expenses."
+        }
+      ],
+      "metric_0_value": 120000,
+      "metric_1_value": 25000,
+      "breakdown": [
+        {
+          "label": "Rent",
+          "value": 42000
+        },
+        {
+          "label": "Savings",
+          "value": 25000
+        },
+        {
+          "label": "Food",
+          "value": 18000
+        },
+        {
+          "label": "Transport",
+          "value": 10000
+        },
+        {
+          "label": "Utilities",
+          "value": 9000
+        },
+        {
+          "label": "Healthcare",
+          "value": 8000
+        },
+        {
+          "label": "Leisure",
+          "value": 8000
+        }
+      ],
+      "breakdown_total": 120000,
+      "breakdown_unit": "INR",
+      "table_columns": [
+        "Category",
+        "Amount (INR)",
+        "Percentage"
+      ]
+    }
   },
   "validator": {
-    "proposed": 16,
-    "accepted": 16,
+    "proposed": 8,
+    "accepted": 8,
     "rejected": 0,
     "ok": true,
     "rejections": [],
     "dangling_child_refs": [],
-    "component_count": 16
+    "component_types": [
+      "Column",
+      "DataTable",
+      "Row",
+      "StatTile",
+      "Text",
+      "Treemap"
+    ],
+    "component_count": 8
   },
   "component_types": [
-    "Card",
     "Column",
     "DataTable",
     "Row",
     "StatTile",
     "Text",
     "Treemap"
+  ],
+  "agents": [
+    {
+      "node": "content",
+      "agent": "content",
+      "skill": "content",
+      "state": "succeeded",
+      "provider": "gemini_1",
+      "model": "gemini-3.5-flash-lite"
+    },
+    {
+      "node": "surface",
+      "agent": "ui_composer",
+      "skill": "compose_surface",
+      "state": "succeeded",
+      "provider": "gemini_1",
+      "model": "gemini-3.5-flash-lite"
+    }
+  ],
+  "events": [
+    {
+      "seq": 0,
+      "kind": "run_started",
+      "node": null
+    },
+    {
+      "seq": 1,
+      "kind": "graph_patched",
+      "node": null
+    },
+    {
+      "seq": 2,
+      "kind": "task_started",
+      "node": "content"
+    },
+    {
+      "seq": 3,
+      "kind": "task_succeeded",
+      "node": "content"
+    },
+    {
+      "seq": 4,
+      "kind": "graph_patched",
+      "node": null
+    },
+    {
+      "seq": 5,
+      "kind": "task_started",
+      "node": "surface"
+    },
+    {
+      "seq": 6,
+      "kind": "task_succeeded",
+      "node": "surface"
+    },
+    {
+      "seq": 7,
+      "kind": "graph_patched",
+      "node": null
+    }
+  ],
+  "adversarial": [
+    {
+      "invariant": "catalog",
+      "attack": "Treemap swapped for an uncatalogued RawHtml node",
+      "refused": true,
+      "rejections": [
+        {
+          "component_id": "tree",
+          "field": "type",
+          "invariant": "catalog",
+          "reason": "unknown component type 'RawHtml'"
+        }
+      ],
+      "surviving_components": [
+        "root"
+      ],
+      "newly_closed_by_this_change": false
+    },
+    {
+      "invariant": "data-not-code",
+      "attack": "markup smuggled through the dataModel behind a $bind pointer",
+      "refused": true,
+      "rejections": [
+        {
+          "component_id": "tree",
+          "field": "data",
+          "invariant": "data-not-code",
+          "reason": "bound value carries markup"
+        }
+      ],
+      "surviving_components": [
+        "root"
+      ],
+      "newly_closed_by_this_change": true
+    },
+    {
+      "invariant": "event",
+      "attack": "an action the catalog never registered, riding beside a clean Treemap",
+      "refused": true,
+      "rejections": [
+        {
+          "component_id": "btn",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action 'exfiltrate_memory'"
+        }
+      ],
+      "surviving_components": [
+        "root",
+        "tree"
+      ],
+      "newly_closed_by_this_change": false
+    }
   ]
 }

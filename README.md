@@ -147,11 +147,98 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
+| `treemap_run.json` | `treemap_run.py` | Gemini reaches for `Treemap` unprompted; the bound-value wall holds |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
 uv run pytest -q                             # S13 core + regression tests + the S14 invariant tests
 ```
+
+### Evidence: the `Treemap` component
+
+`Treemap` is the catalog's 24th type and its 9th custom extension — a part-to-whole
+view for two or more positive parts of one whole sharing a single unit.
+
+**The request.** Captured live against `glc_v3`; the prompt never says "treemap",
+so the model reaches for it from the catalog manifest alone. Synthetic identity
+throughout.
+
+```bash
+curl -s 127.0.0.1:8113/v1/agent/runs -H 'content-type: application/json' -d '{
+  "prompt": "Create a visual monthly household budget for INR 120,000: rent 42,000, food 18,000, transport 10,000, savings 25,000, healthcare 8,000, utilities 9,000, and leisure 8,000. Make the dominant costs immediately obvious.",
+  "respond_as": "ui", "tenant_id": "course", "project_id": "s14-treemap",
+  "user_id": "student-01", "agent_id": "assistant" }'
+```
+
+**The graph and its ordered event trace.** Two model calls, both served by the
+`gemini_1` slot on `gemini-3.5-flash-lite` — every credential stayed in `glc_v3`.
+
+| # | Event | Node |
+|---|---|---|
+| 0 | `run_started` | — |
+| 1 | `graph_patched` | — |
+| 2–3 | `task_started` → `task_succeeded` | `content` (agent `content`, `gemini_1`) |
+| 4 | `graph_patched` | — |
+| 5–6 | `task_started` → `task_succeeded` | `surface` (agent `ui_composer`, `gemini_1`) |
+| 7 | `graph_patched` | — |
+
+**The result.** The `content` role emitted a `breakdown` of 7 positive parts summing
+to 120,000 INR; `_normalize_breakdown` accepted it and published `/breakdown`,
+`/breakdown_total` and `/breakdown_unit`. The composer then built an 8-component
+interface — `Column`, `Text` ×2, `Row`, `StatTile` ×2, **`Treemap`**, `DataTable` —
+with the validator accepting 8 of 8 and rejecting none. The Treemap binds rather
+than inlines:
+
+```json
+{ "id": "treemapSection", "type": "Treemap",
+  "data": {"$bind": "/breakdown"}, "labelKey": "label", "valueKey": "value",
+  "unit": {"$bind": "/breakdown_unit"} }
+```
+
+**The three invariants, attacked.** `proofs/treemap_run.py` replays three hostile
+surfaces through the same validator that guards the live path:
+
+| Invariant | Attack | Validator's answer | Still renders |
+|---|---|---|---|
+| catalog | `Treemap` swapped for an uncatalogued `RawHtml` node | `unknown component type 'RawHtml'` | `root` |
+| data-not-code | markup smuggled into the `dataModel` behind a `$bind` pointer | `bound value carries markup` | `root` |
+| event | an unregistered action riding beside a clean `Treemap` | `unregistered action 'exfiltrate_memory'` | `root`, `tree` |
+
+The third case is the one worth reading twice: the hostile `Button` is refused
+while the clean `Treemap` beside it still renders. Refusal is per component, not
+per surface.
+
+**The adversarial before/after.** The middle attack is the one this change newly
+defends against. The validator previously inspected only inline literals, so markup
+that arrived *through* a `$bind` pointer reached the client untouched;
+`_unsafe_bound_value` now resolves the pointer and refuses it. Reproducible with
+git alone:
+
+```bash
+TREEMAP=$(git log --format=%H --grep='Add a Treemap component' -1)
+git checkout "$TREEMAP^" -- s13code/ui/validator.py
+uv run pytest tests/test_treemap_component.py -q   # before: 4 failed, 30 passed
+git checkout HEAD -- s13code/ui/validator.py
+uv run pytest tests/test_treemap_component.py -q   # after:  34 passed
+```
+
+The four that fail are exactly the bound-value cases:
+`test_resolved_nested_markup_rejects_only_the_bound_component` and the three
+parametrized `test_resolved_script_or_data_url_is_rejected` payloads.
+
+**Reproduce from a fresh checkout.** The live capture needs `glc_v3` on 8111; the
+tests need neither network nor gateway.
+
+```bash
+uv sync --dev
+uv run pytest -q                          # 146 passed
+uv run s14code serve                      # 8113, in a second terminal
+uv run python proofs/treemap_run.py       # rewrites treemap_run.json, prints the invariant table
+```
+
+`treemap_run.py` fails loudly rather than writing a flattering file: if the model
+does not reach for `Treemap` on its own, or the breakdown does not normalize, it
+exits non-zero and writes nothing.
 
 ## Architecture
 
