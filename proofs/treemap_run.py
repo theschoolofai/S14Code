@@ -126,6 +126,86 @@ def _clean_treemap() -> dict:
             "labelKey": "label", "valueKey": "value", "unit": {"$bind": "/breakdown_unit"}}
 
 
+def verify_grounded_treemap(surface: dict, normalized: dict) -> None:
+    """Require one rendered Treemap to bind the normalized content breakdown.
+
+    The unit is optional end to end: runtime.py publishes /breakdown_unit only
+    when the content role gave one, and the composer is told to bind unit only
+    when that pointer is present. So a unitless breakdown must prove the pointer
+    is absent and the Treemap omits ``unit`` — not that both are there.
+    """
+    unit = normalized["unit"]
+    data_model = surface.get("dataModel")
+    if not isinstance(data_model, dict):
+        raise SystemExit(f"served surface has no dataModel object: {data_model!r}")
+
+    expected_data = {"breakdown": normalized["items"], "breakdown_total": normalized["total"]}
+    if unit:
+        expected_data["breakdown_unit"] = unit
+    # Project the breakdown keys only: the dataModel legitimately carries the
+    # rest of the content role's output. Absent keys stay absent, so a missing
+    # pointer and a stray one both read as a mismatch.
+    observed_data = {
+        key: data_model[key]
+        for key in ("breakdown", "breakdown_total", "breakdown_unit")
+        if key in data_model
+    }
+    if observed_data != expected_data:
+        raise SystemExit(
+            f"served dataModel does not match the normalized breakdown: "
+            f"expected={expected_data!r}, observed={observed_data!r}"
+        )
+
+    components = surface.get("components")
+    if not isinstance(components, list):
+        raise SystemExit("accepted surface has no component list")
+    by_id = {
+        component.get("id"): component
+        for component in components
+        if isinstance(component, dict) and isinstance(component.get("id"), str)
+    }
+    root_id = surface.get("root")
+    if root_id not in by_id:
+        raise SystemExit(f"accepted surface dropped its root component {root_id!r}; nothing renders")
+    reachable: set[str] = set()
+    pending = [root_id]
+    while pending:
+        component_id = pending.pop()
+        if not isinstance(component_id, str) or component_id in reachable:
+            continue
+        component = by_id.get(component_id)
+        if not component:
+            continue
+        reachable.add(component_id)
+        children = component.get("children")
+        if isinstance(children, list):
+            pending.extend(child for child in children if isinstance(child, str))
+
+    expected_contract = {
+        "data": {"$bind": "/breakdown"},
+        "labelKey": "label",
+        "valueKey": "value",
+    }
+    if unit:
+        expected_contract["unit"] = {"$bind": "/breakdown_unit"}
+    reachable_treemaps = [
+        component for component_id, component in by_id.items()
+        if component_id in reachable and component.get("type") == "Treemap"
+    ]
+    # Without a unit the pointer does not exist, and validator.py lets a missing
+    # pointer through as a nullable binding — so a Treemap still binding it
+    # renders no unit at all and is not grounded.
+    if not any(
+        all(component.get(field) == value for field, value in expected_contract.items())
+        and (unit or "unit" not in component)
+        for component in reachable_treemaps
+    ):
+        raise SystemExit(
+            "accepted surface has no reachable Treemap grounded in /breakdown: "
+            f"reachable_treemaps={reachable_treemaps!r}"
+        )
+
+
 def adversarial() -> list[dict]:
     """One hostile surface per invariant, judged by the live validator."""
     unknown_type = _hostile({"id": "tree", "type": "RawHtml", "html": "<script>steal()</script>"})
@@ -143,22 +223,44 @@ def adversarial() -> list[dict]:
     smuggled_action["components"][0]["children"] = ["tree", "btn"]
 
     cases = [
-        ("catalog", "Treemap swapped for an uncatalogued RawHtml node", unknown_type, False),
+        (
+            "catalog",
+            "Treemap swapped for an uncatalogued RawHtml node",
+            unknown_type,
+            False,
+            {"component_id": "tree", "field": "type", "invariant": "catalog",
+             "reason": "unknown component type 'RawHtml'"},
+            ["root"],
+        ),
         ("data-not-code", "markup smuggled through the dataModel behind a $bind pointer",
-         bound_markup, True),
+         bound_markup, True,
+         {"component_id": "tree", "field": "data", "invariant": "data-not-code",
+          "reason": "bound value carries markup"},
+         ["root"]),
         ("event", "an action the catalog never registered, riding beside a clean Treemap",
-         smuggled_action, False),
+         smuggled_action, False,
+         {"component_id": "btn", "field": "onPress", "invariant": "event",
+          "reason": "unregistered action 'exfiltrate_memory'"},
+         ["root", "tree"]),
     ]
 
     out = []
-    for invariant, description, surface, newly_closed in cases:
+    for invariant, description, surface, newly_closed, expected_rejection, expected_survivors in cases:
         result = validate_surface(surface)
+        rejections = [rejection.as_dict() for rejection in result.rejections]
+        survivors = sorted(component["id"] for component in result.accepted)
+        if rejections != [expected_rejection] or survivors != expected_survivors:
+            raise SystemExit(
+                f"{invariant} adversarial check failed: "
+                f"expected_rejections={[expected_rejection]!r}, observed_rejections={rejections!r}, "
+                f"expected_survivors={expected_survivors!r}, observed_survivors={survivors!r}"
+            )
         out.append({
             "invariant": invariant,
             "attack": description,
             "refused": not result.ok,
-            "rejections": [rejection.as_dict() for rejection in result.rejections],
-            "surviving_components": sorted(component["id"] for component in result.accepted),
+            "rejections": rejections,
+            "surviving_components": survivors,
             # True for the one attack this change newly defends against; the
             # pre-change validator only inspected inline literals, so a bound
             # value carrying markup reached the client. README documents the
@@ -192,6 +294,7 @@ def main() -> None:
     types = sorted({component["type"] for component in accepted["components"]})
     if "Treemap" not in types:
         raise SystemExit(f"Gemini did not reach for Treemap unprompted; it composed {types}")
+    verify_grounded_treemap(accepted, normalized)
 
     proof = {
         "schema_version": 1,

@@ -244,14 +244,15 @@ tests need neither network nor gateway.
 
 ```bash
 uv sync --dev
-uv run pytest -q                          # 146 passed
+uv run pytest -q                          # 159 passed
 uv run s14code serve                      # 8113, in a second terminal
 uv run python proofs/treemap_run.py       # rewrites treemap_run.json, prints the invariant table
 ```
 
 `treemap_run.py` fails loudly rather than writing a flattering file: if the model
-does not reach for `Treemap` on its own, or the breakdown does not normalize, it
-exits non-zero and writes nothing.
+does not produce a normalized breakdown, does not reach for `Treemap` on its own,
+does not ground a root-reachable `Treemap` in that breakdown, or any adversarial
+case misses its exact rejection, it exits non-zero and writes nothing.
 
 ## Architecture
 
