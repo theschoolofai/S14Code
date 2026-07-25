@@ -42,6 +42,10 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
+# Pin the rule set explicitly. Without `select`, the enabled rules are ruff's
+# default, which changed in 0.16 (E402 dropped, ~45 opinionated rules added) and
+# would silently red CI on any future ruff bump.
+select = ["E4", "E7", "E9", "F"]
 # A few teaching examples intentionally keep tiny state transitions on one
 # line. Generated protobuf modules are excluded above and remain reproducible.
 ignore = ["E701", "E702"]

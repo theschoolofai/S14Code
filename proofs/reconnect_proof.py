@@ -27,7 +27,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from s13code.ui.agui import (  # noqa: E402
-    empty_state,
     replay_state,
     run_data_model,
     state_snapshot,
