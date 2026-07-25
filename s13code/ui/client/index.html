@@ -135,6 +135,7 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  Calendar:(c,ctx)=>renderCalendar(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -185,6 +186,31 @@ function renderApproval(c,ctx){const e=$("div","Approval");const sm=$("div","sm"
   const pre=$("pre");pre.append(text(JSON.stringify(resolve(c.params,ctx.dm),null,2)));const btns=$("div","btns");
   const ok=$("button","ok");ok.append(text("Approve"));ok.onclick=()=>emitAction("approve",resolve(c.params,ctx.dm));
   const no=$("button");no.append(text("Reject"));no.onclick=()=>emitAction("reject",{});btns.append(ok,no);e.append(sm,pre,btns);return e;}
+
+// Month/weekday labels come only from these fixed static arrays, indexed by a
+// number computed from Date arithmetic — never from a bound string used as text.
+const _WEEKDAYS=["Su","Mo","Tu","We","Th","Fr","Sa"];
+function renderCalendar(c,ctx){const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"calendar"));e.append(t);
+  const raw=resolve(c.value,ctx.dm);
+  const m=/^(\d{4})-(\d{2})(?:-(\d{2}))?$/.exec(typeof raw==="string"?raw:"");
+  const base=m?new Date(+m[1],+m[2]-1,1):new Date();
+  const year=base.getFullYear(),month=base.getMonth(),selectedDay=m&&m[3]?+m[3]:null;
+  const head=$("div");head.style.cssText="font-family:var(--font-mono);font-size:12px;color:var(--ink-muted);margin-bottom:8px";
+  head.append(text(base.toLocaleString("en-US",{month:"long"})+" "+year));e.append(head);
+  const grid=$("div");grid.style.cssText="display:grid;grid-template-columns:repeat(7,1fr);gap:4px";
+  _WEEKDAYS.forEach(w=>{const h=$("div");h.style.cssText="font-size:10px;text-align:center;color:var(--ink-muted);font-family:var(--font-mono)";h.append(text(w));grid.append(h);});
+  const firstDow=new Date(year,month,1).getDay(),days=new Date(year,month+1,0).getDate();
+  for(let i=0;i<firstDow;i++)grid.append($("div"));
+  for(let d=1;d<=days;d++){
+    const cell=$("div");const isSel=d===selectedDay;
+    cell.style.cssText="text-align:center;padding:6px 0;border-radius:6px;font-size:12px;"+(c.onSelect?"cursor:pointer;":"")+
+      (isSel?"background:var(--accent);color:#fff;font-weight:700":"background:var(--surface-alt)");
+    cell.append(text(String(d)));
+    if(c.onSelect){const iso=year+"-"+String(month+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+      cell.onclick=()=>emitAction(c.onSelect.action,{date:iso});}
+    grid.append(cell);
+  }
+  e.append(grid);return e;}
 
 function emitAction(name,args){ // the only way the surface changes the world: a named, validated event
   document.getElementById("meta").textContent = "action emitted → "+name+" "+JSON.stringify(args);

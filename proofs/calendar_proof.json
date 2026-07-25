@@ -1,0 +1,878 @@
+{
+  "task": "Help me choose a date for mom's birthday reminder. Lay out the days of the month for me to pick from.",
+  "run_id": "run-a37b13613db2",
+  "status": "completed",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "gateway_provider_env": "gemini",
+  "new_component": "Calendar",
+  "calendar_in_catalog": true,
+  "calendar_named_in_prompt": false,
+  "graph": {
+    "finished": true,
+    "nodes": {
+      "content": {
+        "skill": "content",
+        "state": "succeeded",
+        "agent": "content",
+        "provider": "gemini_1",
+        "model": "gemini-3.1-flash-lite"
+      },
+      "surface": {
+        "skill": "compose_surface",
+        "state": "succeeded",
+        "agent": "ui_composer",
+        "provider": "gemini_1",
+        "model": "gemini-3.1-flash-lite"
+      }
+    },
+    "edges": [
+      [
+        "content",
+        "surface"
+      ]
+    ]
+  },
+  "event_journal": [
+    {
+      "sequence": 1,
+      "kind": "run_started",
+      "node_id": null
+    },
+    {
+      "sequence": 2,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 3,
+      "kind": "task_started",
+      "node_id": "content"
+    },
+    {
+      "sequence": 4,
+      "kind": "task_succeeded",
+      "node_id": "content"
+    },
+    {
+      "sequence": 5,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 6,
+      "kind": "task_started",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 7,
+      "kind": "task_succeeded",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 8,
+      "kind": "graph_patched",
+      "node_id": null
+    }
+  ],
+  "compose_surface_node": {
+    "id": "surface",
+    "state": "succeeded",
+    "provider": "gemini_1",
+    "model": "gemini-3.1-flash-lite",
+    "parse_ok": true,
+    "raw_surface": "{\n  \"root\": \"root\",\n  \"components\": [\n    {\n      \"id\": \"root\",\n      \"type\": \"Column\",\n      \"children\": [\n        \"title\",\n        \"intro\",\n        \"calendar\",\n        \"sections_list\",\n        \"choices_row\"\n      ]\n    },\n    {\n      \"id\": \"title\",\n      \"type\": \"Text\",\n      \"variant\": \"heading\",\n      \"text\": {\n        \"$bind\": \"/title\"\n      }\n    },\n    {\n      \"id\": \"intro\",\n      \"type\": \"Text\",\n      \"variant\": \"body\",\n      \"text\": {\n        \"$bind\": \"/intro\"\n      }\n    },\n    {\n      \"id\": \"calendar\",\n      \"type\": \"Calendar\",\n      \"title\": \"Select a date\",\n      \"value\": {\n        \"$bind\": \"/today\"\n      },\n      \"onSelect\": {\n        \"action\": \"request_data\"\n      }\n    },\n    {\n      \"id\": \"sections_list\",\n      \"type\": \"Timeline\",\n      \"title\": \"Planning Considerations\",\n      \"events\": {\n        \"$bind\": \"/section_events\"\n      }\n    },\n    {\n      \"id\": \"choices_row\",\n      \"type\": \"Row\",\n      \"justify\": \"spaceBetween\",\n      \"children\": [\n        \"btn_early\",\n        \"btn_mid\",\n        \"btn_late\"\n      ]\n    },\n    {\n      \"id\": \"btn_early\",\n      \"type\": \"Button\",\n      \"label\": \"Early Month (1-10)\",\n      \"onPress\": {\n        \"action\": \"request_data\"\n      }\n    },\n    {\n      \"id\": \"btn_mid\",\n      \"type\": \"Button\",\n      \"label\": \"Mid Month (11-20)\",\n      \"onPress\": {\n        \"action\": \"request_data\"\n      }\n    },\n    {\n      \"id\": \"btn_late\",\n      \"type\": \"Button\",\n      \"label\": \"Late Month (21-31)\",\n      \"onPress\": {\n        \"action\": \"request_data\"\n      }\n    }\n  ]\n}",
+    "validator": {
+      "proposed": 9,
+      "accepted": 9,
+      "rejected": 0,
+      "ok": true,
+      "rejections": [],
+      "dangling_child_refs": [],
+      "component_types": [
+        "Button",
+        "Calendar",
+        "Column",
+        "Row",
+        "Text",
+        "Timeline"
+      ],
+      "component_count": 9
+    },
+    "data_model": {
+      "title": "Mom's Birthday Reminder Selection",
+      "goal": "Help me choose a date for mom's birthday reminder. Lay out the days of the month for me to pick from.",
+      "summary": "Select a date to set your annual reminder. Consider the following breakdown of the month to help you choose the best time for planning and celebration.",
+      "results": [],
+      "items": [],
+      "metrics": [],
+      "spark": [],
+      "table_rows": [],
+      "item_count": 0,
+      "source_count": 0,
+      "today": "2026-07-25",
+      "subjects": [
+        "Early Month (1-10)",
+        "Mid Month (11-20)",
+        "Late Month (21-31)"
+      ],
+      "timeline": [
+        {
+          "time": "1",
+          "label": "run_started"
+        },
+        {
+          "time": "2",
+          "label": "graph_patched"
+        },
+        {
+          "time": "3",
+          "label": "task_started content"
+        },
+        {
+          "time": "4",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "5",
+          "label": "graph_patched"
+        },
+        {
+          "time": "6",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "intro": "Select a date to set your annual reminder. Consider the following breakdown of the month to help you choose the best time for planning and celebration.",
+      "section_0_heading": "Early Month (1st - 10th)",
+      "section_0_points": "\u2022 Ideal for early planning\n\u2022 Avoids end-of-month financial stress\n\u2022 Ensures gifts arrive before the actual day",
+      "section_1_heading": "Mid Month (11th - 20th)",
+      "section_1_points": "\u2022 Balanced timing\n\u2022 Good for weekend celebration planning\n\u2022 Avoids beginning-of-month busy periods",
+      "section_2_heading": "Late Month (21st - 31st)",
+      "section_2_points": "\u2022 Best if you prefer to celebrate closer to month-end\n\u2022 Allows for post-payday gift shopping\n\u2022 Good for planning long-weekend festivities",
+      "sections": [
+        {
+          "heading": "Early Month (1st - 10th)",
+          "points": [
+            "Ideal for early planning",
+            "Avoids end-of-month financial stress",
+            "Ensures gifts arrive before the actual day"
+          ]
+        },
+        {
+          "heading": "Mid Month (11th - 20th)",
+          "points": [
+            "Balanced timing",
+            "Good for weekend celebration planning",
+            "Avoids beginning-of-month busy periods"
+          ]
+        },
+        {
+          "heading": "Late Month (21st - 31st)",
+          "points": [
+            "Best if you prefer to celebrate closer to month-end",
+            "Allows for post-payday gift shopping",
+            "Good for planning long-weekend festivities"
+          ]
+        }
+      ],
+      "section_events": [
+        {
+          "time": "Early Month (1st - 10th)",
+          "label": "Ideal for early planning; Avoids end-of-month financial stress; Ensures gifts arrive before the actual day"
+        },
+        {
+          "time": "Mid Month (11th - 20th)",
+          "label": "Balanced timing; Good for weekend celebration planning; Avoids beginning-of-month busy periods"
+        },
+        {
+          "time": "Late Month (21st - 31st)",
+          "label": "Best if you prefer to celebrate closer to month-end; Allows for post-payday gift shopping; Good for planning long-weekend festivities"
+        }
+      ],
+      "choices": [
+        {
+          "id": "early",
+          "label": "Early Month (1-10)"
+        },
+        {
+          "id": "mid",
+          "label": "Mid Month (11-20)"
+        },
+        {
+          "id": "late",
+          "label": "Late Month (21-31)"
+        }
+      ],
+      "choice_0_label": "Early Month (1-10)",
+      "choice_1_label": "Mid Month (11-20)",
+      "choice_2_label": "Late Month (21-31)"
+    },
+    "surface_accepted": {
+      "root": "root",
+      "components": [
+        {
+          "id": "root",
+          "type": "Column",
+          "children": [
+            "title",
+            "intro",
+            "calendar",
+            "sections_list",
+            "choices_row"
+          ]
+        },
+        {
+          "id": "title",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "intro",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/intro"
+          }
+        },
+        {
+          "id": "calendar",
+          "type": "Calendar",
+          "title": "Select a date",
+          "value": {
+            "$bind": "/today"
+          },
+          "onSelect": {
+            "action": "request_data"
+          }
+        },
+        {
+          "id": "sections_list",
+          "type": "Timeline",
+          "title": "Planning Considerations",
+          "events": {
+            "$bind": "/section_events"
+          }
+        },
+        {
+          "id": "choices_row",
+          "type": "Row",
+          "justify": "spaceBetween",
+          "children": [
+            "btn_early",
+            "btn_mid",
+            "btn_late"
+          ]
+        },
+        {
+          "id": "btn_early",
+          "type": "Button",
+          "label": "Early Month (1-10)",
+          "onPress": {
+            "action": "request_data"
+          }
+        },
+        {
+          "id": "btn_mid",
+          "type": "Button",
+          "label": "Mid Month (11-20)",
+          "onPress": {
+            "action": "request_data"
+          }
+        },
+        {
+          "id": "btn_late",
+          "type": "Button",
+          "label": "Late Month (21-31)",
+          "onPress": {
+            "action": "request_data"
+          }
+        }
+      ],
+      "dataModel": {
+        "title": "Mom's Birthday Reminder Selection",
+        "goal": "Help me choose a date for mom's birthday reminder. Lay out the days of the month for me to pick from.",
+        "summary": "Select a date to set your annual reminder. Consider the following breakdown of the month to help you choose the best time for planning and celebration.",
+        "results": [],
+        "items": [],
+        "metrics": [],
+        "spark": [],
+        "table_rows": [],
+        "item_count": 0,
+        "source_count": 0,
+        "today": "2026-07-25",
+        "subjects": [
+          "Early Month (1-10)",
+          "Mid Month (11-20)",
+          "Late Month (21-31)"
+        ],
+        "timeline": [
+          {
+            "time": "1",
+            "label": "run_started"
+          },
+          {
+            "time": "2",
+            "label": "graph_patched"
+          },
+          {
+            "time": "3",
+            "label": "task_started content"
+          },
+          {
+            "time": "4",
+            "label": "task_succeeded content"
+          },
+          {
+            "time": "5",
+            "label": "graph_patched"
+          },
+          {
+            "time": "6",
+            "label": "task_started surface"
+          }
+        ],
+        "progress_value": 1,
+        "progress_max": 2,
+        "intro": "Select a date to set your annual reminder. Consider the following breakdown of the month to help you choose the best time for planning and celebration.",
+        "section_0_heading": "Early Month (1st - 10th)",
+        "section_0_points": "\u2022 Ideal for early planning\n\u2022 Avoids end-of-month financial stress\n\u2022 Ensures gifts arrive before the actual day",
+        "section_1_heading": "Mid Month (11th - 20th)",
+        "section_1_points": "\u2022 Balanced timing\n\u2022 Good for weekend celebration planning\n\u2022 Avoids beginning-of-month busy periods",
+        "section_2_heading": "Late Month (21st - 31st)",
+        "section_2_points": "\u2022 Best if you prefer to celebrate closer to month-end\n\u2022 Allows for post-payday gift shopping\n\u2022 Good for planning long-weekend festivities",
+        "sections": [
+          {
+            "heading": "Early Month (1st - 10th)",
+            "points": [
+              "Ideal for early planning",
+              "Avoids end-of-month financial stress",
+              "Ensures gifts arrive before the actual day"
+            ]
+          },
+          {
+            "heading": "Mid Month (11th - 20th)",
+            "points": [
+              "Balanced timing",
+              "Good for weekend celebration planning",
+              "Avoids beginning-of-month busy periods"
+            ]
+          },
+          {
+            "heading": "Late Month (21st - 31st)",
+            "points": [
+              "Best if you prefer to celebrate closer to month-end",
+              "Allows for post-payday gift shopping",
+              "Good for planning long-weekend festivities"
+            ]
+          }
+        ],
+        "section_events": [
+          {
+            "time": "Early Month (1st - 10th)",
+            "label": "Ideal for early planning; Avoids end-of-month financial stress; Ensures gifts arrive before the actual day"
+          },
+          {
+            "time": "Mid Month (11th - 20th)",
+            "label": "Balanced timing; Good for weekend celebration planning; Avoids beginning-of-month busy periods"
+          },
+          {
+            "time": "Late Month (21st - 31st)",
+            "label": "Best if you prefer to celebrate closer to month-end; Allows for post-payday gift shopping; Good for planning long-weekend festivities"
+          }
+        ],
+        "choices": [
+          {
+            "id": "early",
+            "label": "Early Month (1-10)"
+          },
+          {
+            "id": "mid",
+            "label": "Mid Month (11-20)"
+          },
+          {
+            "id": "late",
+            "label": "Late Month (21-31)"
+          }
+        ],
+        "choice_0_label": "Early Month (1-10)",
+        "choice_1_label": "Mid Month (11-20)",
+        "choice_2_label": "Late Month (21-31)"
+      }
+    }
+  },
+  "full_events": [
+    {
+      "sequence": 1,
+      "kind": "run_started",
+      "node_id": null,
+      "payload": {}
+    },
+    {
+      "sequence": 2,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 1,
+        "reason": "first frontier selected for compose_answer",
+        "add": [
+          "content"
+        ],
+        "connect": [],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": false
+      }
+    },
+    {
+      "sequence": 3,
+      "kind": "task_started",
+      "node_id": "content",
+      "payload": {
+        "skill": "content",
+        "agent": "content"
+      }
+    },
+    {
+      "sequence": 4,
+      "kind": "task_succeeded",
+      "node_id": "content",
+      "payload": {
+        "structured": {
+          "title": "Mom's Birthday Reminder Selection",
+          "intro": "Select a date to set your annual reminder. Consider the following breakdown of the month to help you choose the best time for planning and celebration.",
+          "sections": [
+            {
+              "heading": "Early Month (1st - 10th)",
+              "points": [
+                "Ideal for early planning",
+                "Avoids end-of-month financial stress",
+                "Ensures gifts arrive before the actual day"
+              ]
+            },
+            {
+              "heading": "Mid Month (11th - 20th)",
+              "points": [
+                "Balanced timing",
+                "Good for weekend celebration planning",
+                "Avoids beginning-of-month busy periods"
+              ]
+            },
+            {
+              "heading": "Late Month (21st - 31st)",
+              "points": [
+                "Best if you prefer to celebrate closer to month-end",
+                "Allows for post-payday gift shopping",
+                "Good for planning long-weekend festivities"
+              ]
+            }
+          ],
+          "choices": [
+            {
+              "id": "early",
+              "label": "Early Month (1-10)"
+            },
+            {
+              "id": "mid",
+              "label": "Mid Month (11-20)"
+            },
+            {
+              "id": "late",
+              "label": "Late Month (21-31)"
+            }
+          ]
+        },
+        "text": "Select a date to set your annual reminder. Consider the following breakdown of the month to help you choose the best time for planning and celebration.",
+        "raw": "{\n  \"title\": \"Mom's Birthday Reminder Selection\",\n  \"intro\": \"Select a date to set your annual reminder. Consider the following breakdown of the month to help you choose the best time for planning and celebration.\",\n  \"sections\": [\n    {\n      \"heading\": \"Early Month (1st - 10th)\",\n      \"points\": [\n        \"Ideal for early planning\",\n        \"Avoids end-of-month financial stress\",\n        \"Ensures gifts arrive before the actual day\"\n      ]\n    },\n    {\n      \"heading\": \"Mid Month (11th - 20th)\",\n      \"points\": [\n        \"Balanced timing\",\n        \"Good for weekend celebration planning\",\n        \"Avoids beginning-of-month busy periods\"\n      ]\n    },\n    {\n      \"heading\": \"Late Month (21st - 31st)\",\n      \"points\": [\n        \"Best if you prefer to celebrate closer to month-end\",\n        \"Allows for post-payday gift shopping\",\n        \"Good for planning long-weekend festivities\"\n      ]\n    }\n  ],\n  \"choices\": [\n    {\"id\": \"early\", \"label\": \"Early Month (1-10)\"},\n    {\"id\": \"mid\", \"label\": \"Mid Month (11-20)\"},\n    {\"id\": \"late\", \"label\": \"Late Month (21-31)\"}\n  ]\n}",
+        "provider": "gemini_1",
+        "model": "gemini-3.1-flash-lite",
+        "agent": "content"
+      }
+    },
+    {
+      "sequence": 5,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 4,
+        "reason": "content produced; compose a validated A2UI surface from the real outcome",
+        "add": [
+          "surface"
+        ],
+        "connect": [
+          [
+            "content",
+            "surface"
+          ]
+        ],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": false
+      }
+    },
+    {
+      "sequence": 6,
+      "kind": "task_started",
+      "node_id": "surface",
+      "payload": {
+        "skill": "compose_surface",
+        "agent": "ui_composer"
+      }
+    },
+    {
+      "sequence": 7,
+      "kind": "task_succeeded",
+      "node_id": "surface",
+      "payload": {
+        "agent": "ui_composer",
+        "provider": "gemini_1",
+        "model": "gemini-3.1-flash-lite",
+        "raw_surface": "{\n  \"root\": \"root\",\n  \"components\": [\n    {\n      \"id\": \"root\",\n      \"type\": \"Column\",\n      \"children\": [\n        \"title\",\n        \"intro\",\n        \"calendar\",\n        \"sections_list\",\n        \"choices_row\"\n      ]\n    },\n    {\n      \"id\": \"title\",\n      \"type\": \"Text\",\n      \"variant\": \"heading\",\n      \"text\": {\n        \"$bind\": \"/title\"\n      }\n    },\n    {\n      \"id\": \"intro\",\n      \"type\": \"Text\",\n      \"variant\": \"body\",\n      \"text\": {\n        \"$bind\": \"/intro\"\n      }\n    },\n    {\n      \"id\": \"calendar\",\n      \"type\": \"Calendar\",\n      \"title\": \"Select a date\",\n      \"value\": {\n        \"$bind\": \"/today\"\n      },\n      \"onSelect\": {\n        \"action\": \"request_data\"\n      }\n    },\n    {\n      \"id\": \"sections_list\",\n      \"type\": \"Timeline\",\n      \"title\": \"Planning Considerations\",\n      \"events\": {\n        \"$bind\": \"/section_events\"\n      }\n    },\n    {\n      \"id\": \"choices_row\",\n      \"type\": \"Row\",\n      \"justify\": \"spaceBetween\",\n      \"children\": [\n        \"btn_early\",\n        \"btn_mid\",\n        \"btn_late\"\n      ]\n    },\n    {\n      \"id\": \"btn_early\",\n      \"type\": \"Button\",\n      \"label\": \"Early Month (1-10)\",\n      \"onPress\": {\n        \"action\": \"request_data\"\n      }\n    },\n    {\n      \"id\": \"btn_mid\",\n      \"type\": \"Button\",\n      \"label\": \"Mid Month (11-20)\",\n      \"onPress\": {\n        \"action\": \"request_data\"\n      }\n    },\n    {\n      \"id\": \"btn_late\",\n      \"type\": \"Button\",\n      \"label\": \"Late Month (21-31)\",\n      \"onPress\": {\n        \"action\": \"request_data\"\n      }\n    }\n  ]\n}",
+        "surface": {
+          "root": "root",
+          "components": [
+            {
+              "id": "root",
+              "type": "Column",
+              "children": [
+                "title",
+                "intro",
+                "calendar",
+                "sections_list",
+                "choices_row"
+              ]
+            },
+            {
+              "id": "title",
+              "type": "Text",
+              "variant": "heading",
+              "text": {
+                "$bind": "/title"
+              }
+            },
+            {
+              "id": "intro",
+              "type": "Text",
+              "variant": "body",
+              "text": {
+                "$bind": "/intro"
+              }
+            },
+            {
+              "id": "calendar",
+              "type": "Calendar",
+              "title": "Select a date",
+              "value": {
+                "$bind": "/today"
+              },
+              "onSelect": {
+                "action": "request_data"
+              }
+            },
+            {
+              "id": "sections_list",
+              "type": "Timeline",
+              "title": "Planning Considerations",
+              "events": {
+                "$bind": "/section_events"
+              }
+            },
+            {
+              "id": "choices_row",
+              "type": "Row",
+              "justify": "spaceBetween",
+              "children": [
+                "btn_early",
+                "btn_mid",
+                "btn_late"
+              ]
+            },
+            {
+              "id": "btn_early",
+              "type": "Button",
+              "label": "Early Month (1-10)",
+              "onPress": {
+                "action": "request_data"
+              }
+            },
+            {
+              "id": "btn_mid",
+              "type": "Button",
+              "label": "Mid Month (11-20)",
+              "onPress": {
+                "action": "request_data"
+              }
+            },
+            {
+              "id": "btn_late",
+              "type": "Button",
+              "label": "Late Month (21-31)",
+              "onPress": {
+                "action": "request_data"
+              }
+            }
+          ],
+          "dataModel": {
+            "title": "Mom's Birthday Reminder Selection",
+            "goal": "Help me choose a date for mom's birthday reminder. Lay out the days of the month for me to pick from.",
+            "summary": "Select a date to set your annual reminder. Consider the following breakdown of the month to help you choose the best time for planning and celebration.",
+            "results": [],
+            "items": [],
+            "metrics": [],
+            "spark": [],
+            "table_rows": [],
+            "item_count": 0,
+            "source_count": 0,
+            "today": "2026-07-25",
+            "subjects": [
+              "Early Month (1-10)",
+              "Mid Month (11-20)",
+              "Late Month (21-31)"
+            ],
+            "timeline": [
+              {
+                "time": "1",
+                "label": "run_started"
+              },
+              {
+                "time": "2",
+                "label": "graph_patched"
+              },
+              {
+                "time": "3",
+                "label": "task_started content"
+              },
+              {
+                "time": "4",
+                "label": "task_succeeded content"
+              },
+              {
+                "time": "5",
+                "label": "graph_patched"
+              },
+              {
+                "time": "6",
+                "label": "task_started surface"
+              }
+            ],
+            "progress_value": 1,
+            "progress_max": 2,
+            "intro": "Select a date to set your annual reminder. Consider the following breakdown of the month to help you choose the best time for planning and celebration.",
+            "section_0_heading": "Early Month (1st - 10th)",
+            "section_0_points": "\u2022 Ideal for early planning\n\u2022 Avoids end-of-month financial stress\n\u2022 Ensures gifts arrive before the actual day",
+            "section_1_heading": "Mid Month (11th - 20th)",
+            "section_1_points": "\u2022 Balanced timing\n\u2022 Good for weekend celebration planning\n\u2022 Avoids beginning-of-month busy periods",
+            "section_2_heading": "Late Month (21st - 31st)",
+            "section_2_points": "\u2022 Best if you prefer to celebrate closer to month-end\n\u2022 Allows for post-payday gift shopping\n\u2022 Good for planning long-weekend festivities",
+            "sections": [
+              {
+                "heading": "Early Month (1st - 10th)",
+                "points": [
+                  "Ideal for early planning",
+                  "Avoids end-of-month financial stress",
+                  "Ensures gifts arrive before the actual day"
+                ]
+              },
+              {
+                "heading": "Mid Month (11th - 20th)",
+                "points": [
+                  "Balanced timing",
+                  "Good for weekend celebration planning",
+                  "Avoids beginning-of-month busy periods"
+                ]
+              },
+              {
+                "heading": "Late Month (21st - 31st)",
+                "points": [
+                  "Best if you prefer to celebrate closer to month-end",
+                  "Allows for post-payday gift shopping",
+                  "Good for planning long-weekend festivities"
+                ]
+              }
+            ],
+            "section_events": [
+              {
+                "time": "Early Month (1st - 10th)",
+                "label": "Ideal for early planning; Avoids end-of-month financial stress; Ensures gifts arrive before the actual day"
+              },
+              {
+                "time": "Mid Month (11th - 20th)",
+                "label": "Balanced timing; Good for weekend celebration planning; Avoids beginning-of-month busy periods"
+              },
+              {
+                "time": "Late Month (21st - 31st)",
+                "label": "Best if you prefer to celebrate closer to month-end; Allows for post-payday gift shopping; Good for planning long-weekend festivities"
+              }
+            ],
+            "choices": [
+              {
+                "id": "early",
+                "label": "Early Month (1-10)"
+              },
+              {
+                "id": "mid",
+                "label": "Mid Month (11-20)"
+              },
+              {
+                "id": "late",
+                "label": "Late Month (21-31)"
+              }
+            ],
+            "choice_0_label": "Early Month (1-10)",
+            "choice_1_label": "Mid Month (11-20)",
+            "choice_2_label": "Late Month (21-31)"
+          }
+        },
+        "data_model": {
+          "title": "Mom's Birthday Reminder Selection",
+          "goal": "Help me choose a date for mom's birthday reminder. Lay out the days of the month for me to pick from.",
+          "summary": "Select a date to set your annual reminder. Consider the following breakdown of the month to help you choose the best time for planning and celebration.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "today": "2026-07-25",
+          "subjects": [
+            "Early Month (1-10)",
+            "Mid Month (11-20)",
+            "Late Month (21-31)"
+          ],
+          "timeline": [
+            {
+              "time": "1",
+              "label": "run_started"
+            },
+            {
+              "time": "2",
+              "label": "graph_patched"
+            },
+            {
+              "time": "3",
+              "label": "task_started content"
+            },
+            {
+              "time": "4",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "5",
+              "label": "graph_patched"
+            },
+            {
+              "time": "6",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Select a date to set your annual reminder. Consider the following breakdown of the month to help you choose the best time for planning and celebration.",
+          "section_0_heading": "Early Month (1st - 10th)",
+          "section_0_points": "\u2022 Ideal for early planning\n\u2022 Avoids end-of-month financial stress\n\u2022 Ensures gifts arrive before the actual day",
+          "section_1_heading": "Mid Month (11th - 20th)",
+          "section_1_points": "\u2022 Balanced timing\n\u2022 Good for weekend celebration planning\n\u2022 Avoids beginning-of-month busy periods",
+          "section_2_heading": "Late Month (21st - 31st)",
+          "section_2_points": "\u2022 Best if you prefer to celebrate closer to month-end\n\u2022 Allows for post-payday gift shopping\n\u2022 Good for planning long-weekend festivities",
+          "sections": [
+            {
+              "heading": "Early Month (1st - 10th)",
+              "points": [
+                "Ideal for early planning",
+                "Avoids end-of-month financial stress",
+                "Ensures gifts arrive before the actual day"
+              ]
+            },
+            {
+              "heading": "Mid Month (11th - 20th)",
+              "points": [
+                "Balanced timing",
+                "Good for weekend celebration planning",
+                "Avoids beginning-of-month busy periods"
+              ]
+            },
+            {
+              "heading": "Late Month (21st - 31st)",
+              "points": [
+                "Best if you prefer to celebrate closer to month-end",
+                "Allows for post-payday gift shopping",
+                "Good for planning long-weekend festivities"
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Early Month (1st - 10th)",
+              "label": "Ideal for early planning; Avoids end-of-month financial stress; Ensures gifts arrive before the actual day"
+            },
+            {
+              "time": "Mid Month (11th - 20th)",
+              "label": "Balanced timing; Good for weekend celebration planning; Avoids beginning-of-month busy periods"
+            },
+            {
+              "time": "Late Month (21st - 31st)",
+              "label": "Best if you prefer to celebrate closer to month-end; Allows for post-payday gift shopping; Good for planning long-weekend festivities"
+            }
+          ],
+          "choices": [
+            {
+              "id": "early",
+              "label": "Early Month (1-10)"
+            },
+            {
+              "id": "mid",
+              "label": "Mid Month (11-20)"
+            },
+            {
+              "id": "late",
+              "label": "Late Month (21-31)"
+            }
+          ],
+          "choice_0_label": "Early Month (1-10)",
+          "choice_1_label": "Mid Month (11-20)",
+          "choice_2_label": "Late Month (21-31)"
+        },
+        "validator": {
+          "proposed": 9,
+          "accepted": 9,
+          "rejected": 0,
+          "ok": true,
+          "rejections": [],
+          "dangling_child_refs": [],
+          "component_types": [
+            "Button",
+            "Calendar",
+            "Column",
+            "Row",
+            "Text",
+            "Timeline"
+          ],
+          "component_count": 9
+        },
+        "upstream_used": [],
+        "parse_ok": true
+      }
+    },
+    {
+      "sequence": 8,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 7,
+        "reason": "Gemini composed a surface the S14 validator accepted",
+        "add": [],
+        "connect": [],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": true
+      }
+    }
+  ]
+}

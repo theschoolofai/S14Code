@@ -724,6 +724,9 @@ class S13Runtime:
                 "table_rows": [{"Item": item["label"], "Sources": item["sources_count"]} for item in outcomes],
                 "item_count": len(outcomes),
                 "source_count": sum(item["sources_count"] for item in outcomes),
+                # Server-computed, always present: a date-shaped pointer any
+                # Calendar can bind to even when the goal names no domain date.
+                "today": datetime.now().astimezone().date().isoformat(),
             }
             for index, item in enumerate(outcomes):
                 data_model[f"item_{index}_label"] = item["label"]
@@ -885,8 +888,15 @@ class S13Runtime:
                             "or a Sparkline bound to /series_values; "
                             "for /table_rows render a DataTable (rows bound to /table_rows, columns the literal "
                             "/table_columns joined by commas); "
-                            "for /choices (the goal asks the user to pick) render one tappable Button per entry, "
-                            "label the literal /choice_N_label, onPress action \"request_data\"; "
+                            "for /choices (the goal asks the user to pick) choose whichever catalog component best "
+                            "presents what is actually being picked, one entry per choice from /choice_N_label, "
+                            "bound to a registered action (\"request_data\" fits most cases) so the pick crosses "
+                            "back; do not default to Button reflexively when another catalog type fits the choices "
+                            "better; "
+                            "if a single date pointer like /today is present and the goal involves picking, "
+                            "scheduling, or choosing a day, render whichever catalog component best supports "
+                            "browsing and selecting a date, bound to that pointer, with the pick emitted via a "
+                            "registered action; "
                             "you may also add a ProgressBar bound to /progress_value (max /progress_max) and a "
                             "Timeline bound to /timeline for the run's own steps. Do NOT dump everything into one "
                             "Text. Bind every DATA value to a /pointer listed in available_pointers."),
