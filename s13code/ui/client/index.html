@@ -135,6 +135,7 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  Rating:(c,ctx)=>renderRating(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -185,6 +186,22 @@ function renderApproval(c,ctx){const e=$("div","Approval");const sm=$("div","sm"
   const pre=$("pre");pre.append(text(JSON.stringify(resolve(c.params,ctx.dm),null,2)));const btns=$("div","btns");
   const ok=$("button","ok");ok.append(text("Approve"));ok.onclick=()=>emitAction("approve",resolve(c.params,ctx.dm));
   const no=$("button");no.append(text("Reject"));no.onclick=()=>emitAction("reject",{});btns.append(ok,no);e.append(sm,pre,btns);return e;}
+
+// A star's filled/empty state comes only from a numeric threshold compare
+// (i <= value) against a fixed glyph/colour pair -- never from bound text.
+function renderRating(c,ctx){const e=$("div","chart");const t=$("div","ct");t.append(text(c.label||"rating"));e.append(t);
+  const val=+resolve(c.value,ctx.dm)||0;const max=c.max||5;
+  const row=$("div");row.style.cssText="display:flex;gap:4px;align-items:center";
+  for(let i=1;i<=max;i++){
+    const star=$("span");star.style.cssText="font-size:20px;line-height:1;"+(c.onSelect?"cursor:pointer;":"")+
+      "color:"+(i<=val?"var(--accent)":"var(--rule-strong)");
+    star.append(text("★"));
+    if(c.onSelect)star.onclick=()=>emitAction(c.onSelect.action,{value:i});
+    row.append(star);
+  }
+  const cap=$("div");cap.style.cssText="font-size:11px;color:var(--ink-muted);margin-top:4px;font-family:var(--font-mono)";
+  cap.append(text(val+" / "+max));
+  e.append(row,cap);return e;}
 
 function emitAction(name,args){ // the only way the surface changes the world: a named, validated event
   document.getElementById("meta").textContent = "action emitted → "+name+" "+JSON.stringify(args);

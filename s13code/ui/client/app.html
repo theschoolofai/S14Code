@@ -137,6 +137,17 @@ const R={
   DateTime:(c,x)=>{const i=$("input","field");i.type="date";return i;},
   Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
   ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
+  Rating:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.label||"rating"));e.append(t);
+    const val=+resolve(c.value,x.dm)||0;const max=c.max||5;
+    const row=$("div");row.style.cssText="display:flex;gap:4px;align-items:center";
+    for(let i=1;i<=max;i++){
+      const star=$("span");star.style.cssText="font-size:18px;line-height:1;"+(c.onSelect?"cursor:pointer;":"")+
+        "color:"+(i<=val?"var(--accent)":"var(--rule-strong)");
+      star.append(T("★"));
+      if(c.onSelect)star.onclick=()=>choose("rated "+i+"/"+max);
+      row.append(star);
+    }
+    e.append(row);return e;},
 };
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}

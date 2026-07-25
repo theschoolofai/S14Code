@@ -147,10 +147,113 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
+| `rating_proof.json` | `rating_proof.py` | a real live-graph run → Gemini composes the new `Rating` component unprompted |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
 uv run pytest -q                             # S13 core + regression tests + the S14 invariant tests
+```
+
+## Evidence: `Rating` catalog component
+
+Adds `Rating` (`label` / `value` / `max` / `onSelect`) as a 24th catalog
+type, for a bounded 0–5 quality/confidence score shown as filled/empty stars
+rather than a raw number. It lives in the three required places: a
+`ComponentSpec` in [`s13code/ui/catalog.py`](s13code/ui/catalog.py); real
+star-rating renderers in both render clients
+([`index.html`](s13code/ui/client/index.html),
+[`app.html`](s13code/ui/client/app.html)) — each star's fill state comes
+only from a numeric threshold compare against a fixed colour pair, never
+from bound text; and one captured live run where Gemini composes it into a
+real interface.
+
+**The prompt never names the component.** `compose_surface`'s instruction
+(`s13code/runtime.py`) offers `Rating` to the model only through the catalog
+manifest, plus a generic clause describing the `/ratings` data shape —
+*"for `/ratings` (a bounded 0-5 quality/confidence score per item, not an
+arbitrary number) render whichever catalog component best expresses a
+bounded score visually rather than as a raw figure"* — the literal string
+`"Rating"` never appears in the prompt (enforced by
+`test_rating_prompt_never_names_rating_in_the_compose_instruction`). The
+`/ratings` values are derived, not invented: `min(sources_count, 5)` per
+research outcome, reusing the same `sources_count` every other metric/table
+row already carries.
+
+### Prompt
+
+```
+Compare the safety records of Tesla, Ford, and Toyota.
+```
+
+### Graph and event trace (`proofs/rating_proof.json`, run `run-b5dcef89732b`)
+
+| Node | Skill | State | Agent | Provider / model |
+|---|---|---|---|---|
+| `search_1` | `researcher` | succeeded | `researcher` | `gemini_1` / `gemini-3.1-flash-lite` |
+| `search_2` | `researcher` | succeeded | `researcher` | `gemini_1` / `gemini-3.1-flash-lite` |
+| `search_3` | `researcher` | succeeded | `researcher` | `gemini_1` / `gemini-3.1-flash-lite` |
+| `distill` | `distiller` | succeeded | `distiller` | `gemini_1` / `gemini-3.1-flash-lite` |
+| `surface` | `compose_surface` | succeeded | `ui_composer` | `gemini_1` / `gemini-3.1-flash-lite` |
+
+Edges: `search_1/2/3 → distill`, `search_1/2/3 → surface`, `distill → surface`.
+
+```
+1  run_started
+2  graph_patched
+3  task_started    search_1
+4  task_started    search_2
+5  task_started    search_3
+6  task_succeeded   search_2
+7  graph_patched
+8  task_succeeded   search_3
+9  graph_patched
+10 task_succeeded   search_1
+11 graph_patched
+12 task_started    distill
+13 task_succeeded   distill
+14 graph_patched
+15 task_started    surface
+16 task_succeeded   surface
+17 graph_patched
+```
+
+### Result
+
+`compose_surface` proposed 16 components; the validator accepted all 16 and
+rejected 0, using types `Card, Column, DataTable, ProgressBar, Rating, Row,
+Tabs, Text` — Gemini chose `Rating` on its own, once per compared entity:
+
+```json
+{"id":"r0","type":"Rating","label":{"$bind":"/rating_0_label"},"value":{"$bind":"/rating_0_value"},"max":5}
+{"id":"r1","type":"Rating","label":{"$bind":"/rating_1_label"},"value":{"$bind":"/rating_1_value"},"max":5}
+{"id":"r2","type":"Rating","label":{"$bind":"/rating_2_label"},"value":{"$bind":"/rating_2_value"},"max":5}
+```
+
+### Adversarial: the injection wall holds for the new type too
+
+Before this change `Rating` did not exist, so there was nothing to attack.
+After adding it, the same wall guarding every other component was proven
+against it (`tests/test_s14_ui.py`):
+
+| Attack | Invariant broken | Result |
+|---|---|---|
+| `type: "RatingPro"` (unknown lookalike type) | catalog | rejected |
+| `label: "<img src=x onerror=alert(1)>"` | data-not-code | rejected |
+| `value: 4` (literal, not `{"$bind": ...}`) | data-not-code | rejected |
+| `onSelect: {"action": "delete_everything"}` (unregistered) | event | rejected |
+
+### Reproduce from a fresh checkout
+
+```bash
+uv sync
+# terminal 1: glc_v3 on 8111 (needs at least one provider key, e.g. GEMINI_API_KEY)
+# terminal 2:
+export GLC_BASE_URL=http://127.0.0.1:8111
+export S13_GATEWAY_PROVIDER=gemini
+uv run s14code serve
+
+uv run pytest -q                        # 118 passed, incl. 8 Rating-specific tests
+uv run python proofs/rating_proof.py    # re-captures rating_proof.json live
 ```
 
 ## Architecture
