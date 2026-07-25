@@ -9,6 +9,7 @@ TestClient. No live gateway, no Ollama, no network.
 from __future__ import annotations
 
 import copy
+import json
 import re
 import sys
 from pathlib import Path
@@ -352,6 +353,54 @@ def test_data_url_value_breaks_data_not_code():
     assert r.invariant == Invariant.DATA_NOT_CODE
 
 
+# --------------------------------------------------------------------------- #
+# Rating — the new component, held to the same three invariants
+# --------------------------------------------------------------------------- #
+
+def test_rating_valid_component_validates_clean():
+    surface = {
+        "root": "r",
+        "components": [{
+            "id": "r", "type": "Rating", "label": "Evidence strength",
+            "value": {"$bind": "/rating_0_value"}, "max": 5,
+            "onSelect": {"action": "request_data"},
+        }],
+        "dataModel": {"rating_0_value": 3},
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert result.accepted[0]["type"] == "Rating"
+
+
+def test_rating_unknown_type_variant_breaks_catalog_invariant():
+    # A name that doesn't exist cannot be named by a hostile agent, Rating
+    # included: a lookalike type is rejected exactly like any other unknown type.
+    assert _reject({"id": "r", "type": "RatingPro"}).invariant == Invariant.CATALOG
+
+
+def test_rating_markup_in_bound_label_breaks_data_not_code():
+    # `label` is a `text` prop; markup smuggled through it is refused, not rendered.
+    r = _reject({"id": "r", "type": "Rating", "label": "<img src=x onerror=alert(1)>",
+                 "value": {"$bind": "/rating_0_value"}})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "label"
+
+
+def test_rating_value_binding_must_be_a_bind_pointer():
+    # An inline literal where `value` (a binding prop) belongs is how an
+    # invented score sneaks in disguised as a bound value.
+    r = _reject({"id": "r", "type": "Rating", "value": 4})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_rating_unregistered_onselect_action_breaks_event_invariant():
+    # onSelect is Rating's own action prop; an unregistered name never
+    # crosses back, exactly as with any other action-bearing component.
+    r = _reject({"id": "r", "type": "Rating", "value": {"$bind": "/rating_0_value"},
+                 "onSelect": {"action": "delete_everything"}})
+    assert r.invariant == Invariant.EVENT
+
+
 def test_safe_siblings_survive_a_partially_poisoned_surface():
     surface = {
         "root": "root",
@@ -390,8 +439,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +451,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "Rating",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -586,6 +635,46 @@ def test_route_reconnect_snapshot_rebuild_equals_full_replay(live_client):
 # --------------------------------------------------------------------------- #
 # render client — source-level safety property (no innerHTML from bound data)
 # --------------------------------------------------------------------------- #
+
+def test_rating_prompt_never_names_rating_in_the_compose_instruction():
+    """The compose_surface prompt offers Rating only via the catalog manifest
+    and a generic, non-naming clause describing the /ratings data shape --
+    never by name. A regression here (someone adding 'use Rating for X')
+    would defeat the whole point of the captured proof below."""
+    src = (_BUILD_ROOT / "s13code" / "runtime.py").read_text()
+    start = src.index('"compose": (')
+    end = src.index(")", src.index("Do NOT dump everything", start))
+    assert '"Rating"' not in src[start:end] and "Rating " not in src[start:end]
+
+
+def test_render_client_draws_rating_from_text_nodes_only():
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "index.html").read_text()
+    assert "Rating:(c,ctx)=>renderRating(c,ctx)" in html
+    # Star fill state comes only from a numeric threshold compare, never bound text.
+    assert "i<=val?" in html
+    app_html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "app.html").read_text()
+    assert "Rating:(c,x)=>" in app_html
+
+
+def test_rating_proof_shows_gemini_composing_it_unprompted():
+    """proofs/rating_proof.py captured a REAL live run (gemini_1 /
+    gemini-3.1-flash-lite) where the model chose Rating on its own, given
+    only the catalog and the generic /ratings-shaped clause above. Re-validate
+    the recorded output here so the claim stays checked, not just narrated."""
+    path = _BUILD_ROOT / "proofs" / "rating_proof.json"
+    if not path.exists():
+        pytest.skip("proofs/rating_proof.py has not been run in this environment")
+    data = json.loads(path.read_text())
+    node = data["compose_surface_node"]
+    acc = node["surface_accepted"]
+    surface = {"root": acc["root"], "components": acc["components"], "dataModel": node["data_model"]}
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    types_used = {c["type"] for c in result.accepted}
+    assert "Rating" in types_used
+    rating = next(c for c in result.accepted if c["type"] == "Rating")
+    assert rating["value"]["$bind"].startswith("/rating_")
+
 
 def test_render_client_never_uses_innerhtml_and_documents_the_contract():
     html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "index.html").read_text()

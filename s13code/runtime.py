@@ -724,10 +724,17 @@ class S13Runtime:
                 "table_rows": [{"Item": item["label"], "Sources": item["sources_count"]} for item in outcomes],
                 "item_count": len(outcomes),
                 "source_count": sum(item["sources_count"] for item in outcomes),
+                # A bounded 0-5 evidence-strength score per item, derived (not
+                # invented) from the same sources_count every metric/table row
+                # already carries -- a generic confidence signal any run has.
+                "ratings": [{"label": item["label"], "value": min(item["sources_count"], 5), "max": 5}
+                            for item in outcomes],
             }
             for index, item in enumerate(outcomes):
                 data_model[f"item_{index}_label"] = item["label"]
                 data_model[f"item_{index}_detail"] = item["detail"] or item["label"]
+                data_model[f"rating_{index}_value"] = min(item["sources_count"], 5)
+                data_model[f"rating_{index}_label"] = item["label"]
             data_model["subjects"] = [item["label"] for item in outcomes]
             journal = runtime.graph.events(run_id)
             data_model["timeline"] = [{"time": str(event.sequence),
@@ -881,6 +888,10 @@ class S13Runtime:
                             "and a Text bound to /section_N_points; "
                             "for /metrics render a Row of StatTiles, each StatTile value bound to /metric_N_value "
                             "with a literal label; "
+                            "for /ratings (a bounded 0-5 quality/confidence score per item, not an arbitrary "
+                            "number) render whichever catalog component best expresses a bounded score visually "
+                            "rather than as a raw figure, one per item bound to /rating_N_value with the literal "
+                            "/rating_N_label; "
                             "for /series render a BarChart (data bound to /series, xKey \"label\", yKey \"value\") "
                             "or a Sparkline bound to /series_values; "
                             "for /table_rows render a DataTable (rows bound to /table_rows, columns the literal "
