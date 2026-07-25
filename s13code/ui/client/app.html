@@ -137,6 +137,27 @@ const R={
   DateTime:(c,x)=>{const i=$("input","field");i.type="date";return i;},
   Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
   ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
+  Calendar:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"calendar"));e.append(t);
+    const raw=resolve(c.value,x.dm);const wd=["Su","Mo","Tu","We","Th","Fr","Sa"];
+    const m=/^(\d{4})-(\d{2})(?:-(\d{2}))?$/.exec(typeof raw==="string"?raw:"");
+    const base=m?new Date(+m[1],+m[2]-1,1):new Date();
+    const year=base.getFullYear(),month=base.getMonth(),selectedDay=m&&m[3]?+m[3]:null;
+    const head=$("div");head.style.cssText="font-family:var(--font-mono);font-size:12px;color:var(--ink-muted);margin-bottom:8px";
+    head.append(T(base.toLocaleString("en-US",{month:"long"})+" "+year));e.append(head);
+    const grid=$("div");grid.style.cssText="display:grid;grid-template-columns:repeat(7,1fr);gap:4px";
+    wd.forEach(w=>{const h=$("div");h.style.cssText="font-size:10px;text-align:center;color:var(--ink-muted);font-family:var(--font-mono)";h.append(T(w));grid.append(h);});
+    const firstDow=new Date(year,month,1).getDay(),days=new Date(year,month+1,0).getDate();
+    for(let i=0;i<firstDow;i++)grid.append($("div"));
+    for(let d=1;d<=days;d++){
+      const cell=$("div");const isSel=d===selectedDay;
+      cell.style.cssText="text-align:center;padding:6px 0;border-radius:6px;font-size:12px;cursor:pointer;"+
+        (isSel?"background:var(--accent);color:#fff;font-weight:700":"background:var(--surface-alt)");
+      cell.append(T(String(d)));
+      const iso=year+"-"+String(month+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+      cell.onclick=()=>choose(iso);
+      grid.append(cell);
+    }
+    e.append(grid);return e;},
 };
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}

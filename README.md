@@ -147,10 +147,104 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
+| `calendar_proof.json` | `calendar_proof.py` | a real live-graph run → Gemini composes the new `Calendar` component unprompted |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
 uv run pytest -q                             # S13 core + regression tests + the S14 invariant tests
+```
+
+## Evidence: `Calendar` catalog component
+
+Adds `Calendar` (`title` / `value` / `onSelect`) as a 24th catalog type, for
+goals that ask the user to pick or schedule a day. It lives in the three
+required places: a `ComponentSpec` in
+[`s13code/ui/catalog.py`](s13code/ui/catalog.py); real month-grid renderers in
+both render clients
+([`index.html`](s13code/ui/client/index.html),
+[`app.html`](s13code/ui/client/app.html)) built purely from `createElement` /
+text nodes — no `innerHTML`, no `eval`, weekday/month labels from fixed
+arrays or `Date` formatting only, never from bound text; and one captured
+live run where Gemini composes it into a real interface.
+
+**The prompt never names the component.** `compose_surface`'s instruction
+(`s13code/runtime.py`) offers `Calendar` to the model only through the
+catalog manifest, plus a generic clause for any single date-shaped pointer —
+*"if a single date pointer like `/today` is present and the goal involves
+picking, scheduling, or choosing a day, render whichever catalog component
+best supports browsing and selecting a date"* — the literal string
+`"Calendar"` never appears in the prompt (enforced by
+`test_calendar_prompt_never_names_calendar_in_the_compose_instruction`). A
+server-computed, deterministic `/today` pointer
+(`datetime.now().date().isoformat()`, never model-invented) is always present
+in the data model so the binding has something real to point at regardless
+of the goal's domain.
+
+### Prompt
+
+```
+Help me choose a date for mom's birthday reminder. Lay out the days of the month for me to pick from.
+```
+
+### Graph and event trace (`proofs/calendar_proof.json`, run `run-a37b13613db2`)
+
+| Node | Skill | State | Agent | Provider / model |
+|---|---|---|---|---|
+| `content` | `content` | succeeded | `content` | `gemini_1` / `gemini-3.1-flash-lite` |
+| `surface` | `compose_surface` | succeeded | `ui_composer` | `gemini_1` / `gemini-3.1-flash-lite` |
+
+Edge: `content → surface`.
+
+```
+1  run_started
+2  graph_patched
+3  task_started    content
+4  task_succeeded  content
+5  graph_patched
+6  task_started    surface
+7  task_succeeded  surface
+8  graph_patched
+```
+
+### Result
+
+`compose_surface` proposed 9 components; the validator accepted all 9 and
+rejected 0, using types `Button, Calendar, Column, Row, Text, Timeline` —
+Gemini chose `Calendar` on its own:
+
+```json
+{"id":"calendar","type":"Calendar","title":"Select a date","value":{"$bind":"/today"},"onSelect":{"action":"request_data"}}
+```
+
+Rendered live in `/app`:
+
+![Calendar composed live in /app](https://raw.githubusercontent.com/sandeephegde16/S14Code/add-calendar-component/proofs/calendar_app_screenshot.png)
+
+### Adversarial: the injection wall holds for the new type too
+
+Before this change `Calendar` did not exist, so there was nothing to attack.
+After adding it, the same wall guarding every other component was proven
+against it (`tests/test_s14_ui.py`):
+
+| Attack | Invariant broken | Result |
+|---|---|---|
+| `type: "CalendarPro"` (unknown lookalike type) | catalog | rejected |
+| `title: "<img src=x onerror=alert(1)>"` | data-not-code | rejected |
+| `value: "2026-07-25"` (literal, not `{"$bind": ...}`) | data-not-code | rejected |
+| `onSelect: {"action": "delete_everything"}` (unregistered) | event | rejected |
+
+### Reproduce from a fresh checkout
+
+```bash
+uv sync
+# terminal 1: glc_v3 on 8111 (needs at least one provider key, e.g. GEMINI_API_KEY)
+# terminal 2:
+export GLC_BASE_URL=http://127.0.0.1:8111
+export S13_GATEWAY_PROVIDER=gemini
+uv run s14code serve
+
+uv run pytest -q                          # 118 passed, incl. 8 Calendar-specific tests
+uv run python proofs/calendar_proof.py    # re-captures calendar_proof.json live
 ```
 
 ## Architecture
