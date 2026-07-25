@@ -646,6 +646,42 @@ def test_heatmap_rejects_a_tone_outside_the_enum():
     assert result.rejections[0].field == "tone"
 
 
+def test_heatmap_catalog_invariant_accepts_the_real_type_and_rejects_a_near_miss():
+    """The catalog invariant is exact: a plausible near-miss type (wrong casing)
+    is rejected exactly like any other unknown type, while the real "HeatMap" is
+    accepted in the SAME surface -- proving the invariant discriminates for THIS
+    component, not just for an unrelated made-up type like "Wormhole"."""
+    surface = {"root": "hm", "components": [
+        _heatmap(id="hm"),
+        _heatmap(id="hm2", type="Heatmap"),   # wrong casing -- not a registered type
+    ]}
+    result = validate_surface(surface)
+    assert {c["id"] for c in result.accepted} == {"hm"}
+    rejection = next(r for r in result.rejections if r.component_id == "hm2")
+    assert rejection.invariant == Invariant.CATALOG
+    assert rejection.field == "type"
+
+
+def test_heatmap_has_no_action_surface_so_the_event_invariant_holds_vacuously():
+    """HeatMap declares no action-kind prop at all (catalog.py), so it can never
+    emit ANY action -- registered or not -- which is the strongest form the event
+    invariant can take. An injected action-shaped prop never even reaches the
+    EVENT check: it is refused one step earlier, as an undeclared property under
+    data-not-code, exactly like any other prop HeatMap never declared."""
+    spec = COMPONENTS["HeatMap"]
+    assert not any(prop.kind == "action" for prop in spec.props.values())
+
+    result = validate_surface({"root": "hm", "components": [
+        _heatmap(onPress={"action": "request_data"})]})
+    assert not result.ok
+    assert result.rejections[0].field == "onPress"
+    assert result.rejections[0].invariant == Invariant.DATA_NOT_CODE
+    assert "event-handler" in result.rejections[0].reason
+    # Even a REGISTERED action, smuggled onto an undeclared prop, is refused --
+    # the wall never treats "the action name is legal" as a pass on its own.
+    assert "request_data" in REGISTERED_ACTIONS
+
+
 # --- the data model half: the matrix the compose step derives ---------------
 
 def test_matrix_is_derived_from_a_grid_of_comparable_numbers():
