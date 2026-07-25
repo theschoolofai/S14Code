@@ -58,6 +58,13 @@
   .Approval button.ok{background:var(--green);color:#fff;border-color:var(--green)}
   .prog{height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}
   .prog>i{display:block;height:100%;background:var(--green)}
+  .heat{display:grid;gap:3px;overflow:auto;max-height:300px}
+  .heat .hh{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-muted);text-align:center;padding:4px 2px;font-weight:600}
+  .heat .hr{font-size:12px;color:var(--ink-body);padding:6px 8px 6px 2px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .heat .hc{border-radius:6px;padding:9px 4px;text-align:center;font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--ink-body);border:1px solid var(--rule)}
+  .heat .hc.na{color:var(--ink-muted);font-weight:400}
+  .heatkey{display:flex;align-items:center;gap:6px;margin-top:8px;font-family:var(--font-mono);font-size:10px;color:var(--ink-muted)}
+  .heatkey .sw{width:16px;height:10px;border-radius:3px;border:1px solid var(--rule)}
   @media (prefers-color-scheme:dark){:root{--bg:#0d0f14;--surface:#161922;--surface-alt:#11131a;--ink:#f3f5f9;--ink-body:#e4e8f0;--ink-muted:#9aa4b8;--rule:#252a36;--rule-strong:#333a49}body{background:var(--surface-alt)}}
 
   .Text .md-h{font-weight:700;color:var(--ink);margin:12px 0 4px}.Text .md-p{margin:6px 0;line-height:1.6}.Text .md-ul{margin:6px 0 6px 4px;padding-left:18px}.Text .md-ul li{margin:3px 0}
@@ -133,6 +140,7 @@ const RENDERERS = {
   BarChart:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"bar chart"));e.append(t);
     e.append(barSvg(resolve(c.data,ctx.dm)||[],c.xKey,c.yKey));return e;},
   DataTable:(c,ctx)=>renderTable(c,ctx),
+  HeatMap:(c,ctx)=>renderHeatMap(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
 };
@@ -165,6 +173,77 @@ function renderTable(c,ctx){const wrap=$("div");const cols=(c.columns||"").split
     if(sortCol)view=view.slice().sort((a,b)=>{const x=a[sortCol],y=b[sortCol];return(x>y?1:x<y?-1:0)*sortDir;});
     view.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(text(r[col]));rr.append(td);});t.append(rr);});}
   draw("");return wrap;}
+
+// HeatMap: a matrix of comparable numbers. Row labels, column labels and cells
+// all arrive as bound DATA. Every one of them reaches the DOM through text(),
+// so a label containing markup stays literal text. The ONLY thing a cell value
+// decides is a background alpha computed arithmetically from a number — no
+// string from the data model is ever evaluated, and no markup is ever set.
+const HEAT_RGB={good:[22,163,74],warn:[217,119,6],bad:[220,38,38],neutral:[37,99,235]};
+function heatFill(v,min,rng,tone){const rgb=HEAT_RGB[tone]||HEAT_RGB.neutral;
+  const t=Math.max(0,Math.min(1,(v-min)/rng));
+  return "rgba("+rgb[0]+","+rgb[1]+","+rgb[2]+","+(0.05+t*0.6).toFixed(3)+")";}
+// A DIVERGING column (one that genuinely contains both a negative and a
+// positive value — a real zero crossing, e.g. profit/loss) is scaled
+// SYMMETRICALLY around zero: `bound` is the larger of |min| and |max|, so a
+// value at either extreme reaches full intensity only if it is actually the
+// biggest deviation from zero in the data, not just the biggest on its own
+// side. Negative is always the same red as the "bad" tone; positive uses the
+// component's own selected tone. An all-negative or all-positive column is
+// NOT diverging — it stays on the ordinary single-hue scale above, so `tone`
+// keeps meaning "the chosen colour," not "the sign of the data."
+function heatFillDiverging(v,bound,tone){const rgb=v<0?HEAT_RGB.bad:(HEAT_RGB[tone]||HEAT_RGB.neutral);
+  const t=Math.max(0,Math.min(1,Math.abs(v)/bound));
+  return "rgba("+rgb[0]+","+rgb[1]+","+rgb[2]+","+(0.05+t*0.6).toFixed(3)+")";}
+// Colour is normalized PER COLUMN, not across the whole grid: two columns can
+// carry different units (a 1-10 rating next to a dollar figure), so scaling
+// against one shared range would wash out or exaggerate a column relative to
+// its own actual spread. Each column's [min,max] is also the number a viewer
+// can recover on hover, since a single shared legend can no longer state one.
+// A missing cell is null/undefined in JSON; Number(null) is 0 (a real finite
+// value), so null must be caught BEFORE coercion or a missing cell would
+// silently render as a colored zero instead of the "—" not-available state.
+function cellNum(v){ return v==null ? NaN : Number(v); }
+// Rounds to 2 decimal places and inserts thousands separators (e.g.
+// 50000 -> "50,000"). This is safe regardless of what the number MEANS —
+// unlike a unit suffix ($, %), grouping digits doesn't require knowing
+// whether a column's values are even the same kind of thing. Locale is
+// pinned to en-US rather than left undefined: every other string in this
+// catalog is hardcoded English, and an unpinned locale silently follows the
+// VIEWER's OS/browser setting (e.g. lakh/crore grouping), which would make
+// the same number render differently for different people for no reason
+// tied to the data itself.
+function fmtNum(n){ return n.toLocaleString("en-US",{maximumFractionDigits:2}); }
+function colStats(rows,cols,cells){
+  return cols.map((_,ci)=>{
+    const vals=rows.map((_,ri)=>cellNum((cells[ri]||[])[ci])).filter(Number.isFinite);
+    const min=vals.length?Math.min(...vals):0,max=vals.length?Math.max(...vals):1;
+    const diverging=min<0&&max>0;
+    return {min,max,rng:(max-min)||1,diverging,bound:Math.max(Math.abs(min),Math.abs(max))||1};});}
+function renderHeatMap(c,ctx){
+  const rows=resolve(c.rows,ctx.dm)||[],cols=resolve(c.columns,ctx.dm)||[],cells=resolve(c.cells,ctx.dm)||[];
+  const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"heatmap"));e.append(t);
+  const stats=colStats(rows,cols,cells);
+  const grid=$("div","heat");grid.style.gridTemplateColumns="minmax(90px,1.5fr) repeat("+cols.length+",minmax(46px,1fr))";
+  grid.append($("div","hh"));  // empty corner above the row labels
+  cols.forEach((col,ci)=>{const h=$("div","hh");h.append(text(col));h.title=fmtNum(stats[ci].min)+" – "+fmtNum(stats[ci].max);grid.append(h);});
+  rows.forEach((label,ri)=>{const rl=$("div","hr");rl.append(text(label));grid.append(rl);
+    cols.forEach((_,ci)=>{const n=cellNum((cells[ri]||[])[ci]);const cell=$("div","hc");
+      if(Number.isFinite(n)){const s=stats[ci];
+        cell.style.background=s.diverging?heatFillDiverging(n,s.bound,c.tone):heatFill(n,s.min,s.rng,c.tone);
+        cell.append(text(fmtNum(n)));}
+      else{cell.className="hc na";cell.append(text("—"));}
+      grid.append(cell);});});
+  e.append(grid);
+  if(rows.length&&cols.length){const key=$("div","heatkey");
+    if(stats.some(s=>s.diverging)){key.append(text("−"));
+      [-1,-.5,0,.5,1].forEach(f=>{const sw=$("div","sw");sw.style.background=heatFillDiverging(f,1,c.tone);key.append(sw);});
+      key.append(text("+ · diverging columns centered on zero, hover a header for its range"));}
+    else{key.append(text("low"));
+      [0,.25,.5,.75,1].forEach(f=>{const sw=$("div","sw");sw.style.background=heatFill(f,0,1,c.tone);key.append(sw);});
+      key.append(text("high · scaled per column, hover a header for its range"));}
+    e.append(key);}
+  return e;}
 
 function renderTabs(c,ctx){const wrap=$("div");const nav=$("div","tabs");wrap.append(nav);const body=$("div");wrap.append(body);
   // A2UI Basic Tabs: each child IS a panel; `labels` names the tabs (comma list).

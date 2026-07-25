@@ -54,6 +54,13 @@
   .tabs button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-mono);color:var(--ink-muted)}
   .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .Notice{border-left:4px solid var(--amber);background:var(--amber-soft);border-radius:10px;padding:12px 14px}
+  .heat{display:grid;gap:3px;overflow:auto;max-height:300px;margin-top:4px}
+  .heat .hh{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-muted);text-align:center;padding:4px 2px;font-weight:600}
+  .heat .hr{font-size:13px;color:var(--ink-body);padding:7px 8px 7px 2px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .heat .hc{border-radius:6px;padding:10px 4px;text-align:center;font-family:var(--font-mono);font-size:12px;font-weight:600;border:1px solid var(--rule)}
+  .heat .hc.na{color:var(--ink-muted);font-weight:400}
+  .heatkey{display:flex;align-items:center;gap:6px;margin-top:8px;font-family:var(--font-mono);font-size:10px;color:var(--ink-muted)}
+  .heatkey .sw{width:16px;height:10px;border-radius:3px;border:1px solid var(--rule)}
   .actbtn{width:100%;text-align:center;border:1px solid var(--rule-strong);background:var(--surface);border-radius:12px;padding:14px;font-weight:600;font-size:15px;cursor:pointer;color:var(--ink);transition:all 120ms}
   .actbtn:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
   .actbtn:active{transform:translateY(1px)}
@@ -127,6 +134,7 @@ const R={
   Sparkline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("trend"));e.append(t,spark(resolve(c.data,x.dm)||[]));return e;},
   BarChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"chart"));e.append(t,bars(resolve(c.data,x.dm)||[],c.xKey,c.yKey));return e;},
   DataTable:(c,x)=>table(c,x),
+  HeatMap:(c,x)=>heatmap(c,x),
   Tabs:(c,x)=>tabs(c,x),
   Button:(c,x)=>{const b=$("button","actbtn");let lab=resolve(c.label,x.dm);if(lab&&typeof lab==="object")lab=lab.label||lab.name||lab.text||lab.id||"Choose";lab=String(lab==null?"Choose":lab);b.append(T(lab));b.onclick=()=>choose(lab);return b;},
   Image:(c,x)=>{const e=$("div","chart");e.append(T("[image]"));return e;},
@@ -143,6 +151,74 @@ function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="co
 function spark(v){const ns="http://www.w3.org/2000/svg",w=200,h=44,mx=Math.max(...v,1),mn=Math.min(...v,0),rg=(mx-mn)||1;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");s.setAttribute("height",h);const p=document.createElementNS(ns,"polyline");p.setAttribute("points",v.map((y,i)=>`${i/(v.length-1||1)*w},${h-5-(y-mn)/rg*(h-10)}`).join(" "));p.setAttribute("fill","none");p.setAttribute("stroke","var(--green)");p.setAttribute("stroke-width","2.5");s.append(p);return s;}
 function bars(d,xk,yk){const ns="http://www.w3.org/2000/svg",w=300,h=150,pad=24,mx=Math.max(...d.map(r=>+r[yk]),1),bw=(w-pad*2)/(d.length||1)*.6;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");d.forEach((r,i)=>{const x=pad+i*((w-pad*2)/d.length)+((w-pad*2)/d.length-bw)/2,bh=(+r[yk])/mx*(h-pad*2);const rc=document.createElementNS(ns,"rect");rc.setAttribute("x",x);rc.setAttribute("y",h-pad-bh);rc.setAttribute("width",bw);rc.setAttribute("height",bh);rc.setAttribute("rx",3);rc.setAttribute("fill","var(--accent)");s.append(rc);const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","9");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=r[xk];s.append(tl);});return s;}
 function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());const rows=resolve(c.rows,x.dm)||[];const t=$("table");const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(T(col));tr.append(th);});t.append(tr);rows.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(r[col]));rr.append(td);});t.append(rr);});wrap.append(t);return wrap;}
+// HeatMap: a matrix of comparable numbers. Row labels, column labels and cells
+// are bound DATA and every one reaches the DOM through T() as a text node; the
+// only thing a value decides is a background alpha computed from a number. No
+// string from the data model is evaluated and no markup is ever set.
+const HEAT_RGB={good:[22,163,74],warn:[217,119,6],bad:[220,38,38],neutral:[37,99,235]};
+function heatFill(v,mn,rg,tone){const c=HEAT_RGB[tone]||HEAT_RGB.neutral;const t=Math.max(0,Math.min(1,(v-mn)/rg));
+  return "rgba("+c[0]+","+c[1]+","+c[2]+","+(0.05+t*0.6).toFixed(3)+")";}
+// A DIVERGING column (one that genuinely contains both a negative and a
+// positive value — a real zero crossing, e.g. profit/loss) is scaled
+// SYMMETRICALLY around zero: `bound` is the larger of |min| and |max|, so a
+// value at either extreme reaches full intensity only if it is actually the
+// biggest deviation from zero in the data, not just the biggest on its own
+// side. Negative is always the same red as the "bad" tone; positive uses the
+// component's own selected tone. An all-negative or all-positive column is
+// NOT diverging — it stays on the ordinary single-hue scale above, so `tone`
+// keeps meaning "the chosen colour," not "the sign of the data."
+function heatFillDiverging(v,bound,tone){const c=v<0?HEAT_RGB.bad:(HEAT_RGB[tone]||HEAT_RGB.neutral);
+  const t=Math.max(0,Math.min(1,Math.abs(v)/bound));
+  return "rgba("+c[0]+","+c[1]+","+c[2]+","+(0.05+t*0.6).toFixed(3)+")";}
+// Colour is normalized PER COLUMN, not across the whole grid: two columns can
+// carry different units (a 1-10 rating next to a dollar figure), so scaling
+// against one shared range would wash out or exaggerate a column relative to
+// its own actual spread. Each column's [min,max] is also the number a viewer
+// can recover on hover, since a single shared legend can no longer state one.
+// A missing cell is null/undefined in JSON; Number(null) is 0 (a real finite
+// value), so null must be caught BEFORE coercion or a missing cell would
+// silently render as a colored zero instead of the "—" not-available state.
+function cellNum(v){ return v==null ? NaN : Number(v); }
+// Rounds to 2 decimal places and inserts thousands separators (e.g.
+// 50000 -> "50,000"). This is safe regardless of what the number MEANS —
+// unlike a unit suffix ($, %), grouping digits doesn't require knowing
+// whether a column's values are even the same kind of thing. Locale is
+// pinned to en-US rather than left undefined: every other string in this
+// catalog is hardcoded English, and an unpinned locale silently follows the
+// VIEWER's OS/browser setting (e.g. lakh/crore grouping), which would make
+// the same number render differently for different people for no reason
+// tied to the data itself.
+function fmtNum(n){ return n.toLocaleString("en-US",{maximumFractionDigits:2}); }
+function colStats(rows,cols,cells){
+  return cols.map((_,ci)=>{
+    const vals=rows.map((_,ri)=>cellNum((cells[ri]||[])[ci])).filter(Number.isFinite);
+    const mn=vals.length?Math.min(...vals):0,mx=vals.length?Math.max(...vals):1;
+    const diverging=mn<0&&mx>0;
+    return {mn,mx,rg:(mx-mn)||1,diverging,bound:Math.max(Math.abs(mn),Math.abs(mx))||1};});}
+function heatmap(c,x){
+  const rows=resolve(c.rows,x.dm)||[],cols=resolve(c.columns,x.dm)||[],cells=resolve(c.cells,x.dm)||[];
+  const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"heatmap"));e.append(t);
+  const stats=colStats(rows,cols,cells);
+  const g=$("div","heat");g.style.gridTemplateColumns="minmax(90px,1.5fr) repeat("+cols.length+",minmax(46px,1fr))";
+  g.append($("div","hh"));
+  cols.forEach((col,ci)=>{const h=$("div","hh");h.append(T(col));h.title=fmtNum(stats[ci].mn)+" – "+fmtNum(stats[ci].mx);g.append(h);});
+  rows.forEach((lab,ri)=>{const rl=$("div","hr");rl.append(T(lab));g.append(rl);
+    cols.forEach((_,ci)=>{const n=cellNum((cells[ri]||[])[ci]);const cell=$("div","hc");
+      if(Number.isFinite(n)){const s=stats[ci];
+        cell.style.background=s.diverging?heatFillDiverging(n,s.bound,c.tone):heatFill(n,s.mn,s.rg,c.tone);
+        cell.append(T(fmtNum(n)));}
+      else{cell.className="hc na";cell.append(T("—"));}
+      g.append(cell);});});
+  e.append(g);
+  if(rows.length&&cols.length){const k=$("div","heatkey");
+    if(stats.some(s=>s.diverging)){k.append(T("−"));
+      [-1,-.5,0,.5,1].forEach(f=>{const sw=$("div","sw");sw.style.background=heatFillDiverging(f,1,c.tone);k.append(sw);});
+      k.append(T("+ · diverging columns centered on zero, hover a header for its range"));}
+    else{k.append(T("low"));
+      [0,.25,.5,.75,1].forEach(f=>{const sw=$("div","sw");sw.style.background=heatFill(f,0,1,c.tone);k.append(sw);});
+      k.append(T("high · scaled per column, hover a header for its range"));}
+    e.append(k);}
+  return e;}
 function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);const tabIds=c.children||[];function show(i){body.textContent="";const cc=x.byId[tabIds[i]];if(cc)body.append(node(cc,x));[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}
   (String(c.labels||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});
   if(tabIds.length)show(0);return wrap;}

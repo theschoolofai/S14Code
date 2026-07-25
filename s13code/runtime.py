@@ -121,6 +121,48 @@ def _weak_evidence(result: dict[str, Any] | None) -> bool:
     return not text and not hits
 
 
+def _numeric(value: Any) -> float | None:
+    """The one numeric coercion the compose step uses. Booleans are not numbers."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return float(str(value).replace(",", "").strip())
+    except Exception:
+        return None
+
+
+# --- S14 additive: matrix derivation for the HeatMap component ---------------
+def _matrix_from_table(rows: list[Any], columns: list[str] | None = None) -> dict[str, Any] | None:
+    """Derive a row/column/cell MATRIX from a table, or None when the table is
+    not one. Purely mechanical and domain-agnostic: the first column supplies the
+    row labels, and a later column is a measure only when EVERY row parses it as
+    a number. A matrix needs at least two measures and two rows — with one
+    measure a table is a bar chart, not a heatmap — so this stays absent unless
+    the run really produced a comparable grid.
+    """
+    clean_rows = [row for row in rows or [] if isinstance(row, dict) and row]
+    if len(clean_rows) < 2:
+        return None
+    names = [str(col).strip() for col in (columns or []) if str(col).strip()]
+    if not names:  # no declared columns: take the first row's key order
+        names = [str(key) for key in clean_rows[0]]
+    present = [name for name in names if any(name in row for row in clean_rows)]
+    if len(present) < 3:  # a label column plus at least two measures
+        return None
+    label_col, rest = present[0], present[1:]
+    measures = [name for name in rest
+                if all(_numeric(row.get(name)) is not None for row in clean_rows)]
+    if len(measures) < 2:
+        return None
+    return {
+        "rows": [str(row.get(label_col, "")) for row in clean_rows],
+        "columns": measures,
+        "cells": [[_numeric(row.get(name)) for name in measures] for row in clean_rows],
+    }
+
+
 def _work_intent(prompt: str, respond_as: str = "text") -> tuple[str, list[TaskSpec]]:
     """Choose the first useful frontier from the non-browser skill surface.
 
@@ -743,16 +785,6 @@ class S13Runtime:
             # Everything optional; only non-empty structure is exposed. For a
             # multi-entity research run content_structured is empty and the
             # outcome-derived arrays above stand. No domain words appear here.
-            def _num(value: Any) -> float | None:
-                if isinstance(value, bool):
-                    return None
-                if isinstance(value, (int, float)):
-                    return float(value)
-                try:
-                    return float(str(value).replace(",", "").strip())
-                except Exception:
-                    return None
-
             if content_structured:
                 title = content_structured.get("title")
                 if isinstance(title, str) and title.strip():
@@ -804,7 +836,7 @@ class S13Runtime:
                         if not isinstance(point, dict):
                             continue
                         label = str(point.get("label") or "").strip()
-                        value = _num(point.get("value"))
+                        value = _numeric(point.get("value"))
                         if not label or value is None:
                             continue
                         clean_series.append({"label": label, "value": value})
@@ -837,6 +869,22 @@ class S13Runtime:
                         data_model["subjects"] = [choice["label"] for choice in clean_choices]
                         for index, choice in enumerate(clean_choices):
                             data_model[f"choice_{index}_label"] = choice["label"]
+
+            # --- S14 additive: expose a MATRIX view when — and only when — the
+            # run's own table really is a grid of comparable numbers. Derived
+            # mechanically from the table already in the data model (no new model
+            # call, no new schema field, no domain nouns). The three pointers are
+            # published as top-level keys so they appear in available_pointers;
+            # nothing in the compose instruction names a component for them, so
+            # whether a HeatMap gets used is the model's own reading of the
+            # catalog. Absent for a one-measure table, which is a chart, not a
+            # heatmap. ---
+            matrix = _matrix_from_table(data_model.get("table_rows") or [],
+                                        data_model.get("table_columns"))
+            if matrix:
+                data_model["matrix_rows"] = matrix["rows"]
+                data_model["matrix_columns"] = matrix["columns"]
+                data_model["matrix_cells"] = matrix["cells"]
 
             manifest = catalog_manifest()
             pointers = sorted("/" + key for key in data_model)

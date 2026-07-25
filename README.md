@@ -134,7 +134,74 @@ S13_GATEWAY_PROVIDER=gemini GLC_BASE_URL=http://127.0.0.1:8111 \
 # the outcome-aware planner: weak evidence earns a corrective node before compose
 S14_SELFCORRECT_CITY=Berlin GLC_BASE_URL=http://127.0.0.1:8111 \
   uv run python proofs/harness_selfcorrect.py  # -> proofs/harness_selfcorrect.json
+
+# HeatMap: never named in the prompt or in compose_surface's own instructions —
+# only reachable through the catalog manifest, same as every other component
+S13_GATEWAY_PROVIDER=gemini GLC_BASE_URL=http://127.0.0.1:8111 \
+  uv run python proofs/heatmap_run.py          # -> proofs/heatmap_run.json
 ```
+
+## The HeatMap component (Session 14 catalog contribution)
+
+`HeatMap` is the catalog's 24th component (9th custom extension) —
+[`s13code/ui/catalog.py`](s13code/ui/catalog.py) — for rendering a matrix of
+comparable numbers: row labels, column labels and a numeric `cells` grid, all
+three as bindings into the harness-owned data model. Nothing in
+`compose_surface`'s prompt (`s13code/runtime.py`) names it; the model reaches
+for it, if at all, purely from the catalog manifest and the shape of
+`available_pointers` — the same claim the rest of the catalog makes for every
+other component. [`proofs/heatmap_run.py`](proofs/heatmap_run.py) proves this
+against a real Gemini call: `proofs/heatmap_run.json` captures Gemini composing
+a "Performance Matrix" / "Profit/Loss Matrix" `HeatMap` unprompted, `0`
+validator rejections, correctly bound to `/matrix_rows` `/matrix_columns`
+`/matrix_cells` — derived mechanically in `_matrix_from_table()` from whichever
+real table the run's `content` role happened to produce.
+
+Adding a component means it joins the vocabulary the *whole* catalog composes
+with, so the same three invariants the top of this README quotes have to hold
+for `HeatMap` specifically, not just in the abstract — each one demonstrated
+by a test in [`tests/test_s14_ui.py`](tests/test_s14_ui.py), not asserted by
+prose:
+
+- **catalog** — `test_heatmap_catalog_invariant_accepts_the_real_type_and_rejects_a_near_miss`
+  puts a real `HeatMap` and a wrong-cased `Heatmap` in the *same* surface: the
+  real one is accepted, the near-miss is rejected under `Invariant.CATALOG` —
+  proving the check discriminates for this component, not just for an
+  unrelated placeholder like `"Wormhole"`.
+- **data-not-code** — the most heavily tested of the three:
+  `test_heatmap_rejects_an_inline_literal_where_a_binding_belongs` (an inline
+  literal where `rows`/`columns`/`cells` must be a `{"$bind": ...}`),
+  `test_heatmap_rejects_markup_in_its_literal_title` (an `<img onerror>` in
+  `title`), and `test_heatmap_rejects_a_handler_shaped_property_it_never_declared`
+  (a bare `onclick`) all fail the same way `HeatMap` fails everywhere else in
+  the catalog.
+- **event** — `HeatMap` declares **no `action`-kind prop at all**
+  (`catalog.py`), a deliberate choice: it is read-only, no click, no drill-in.
+  `test_heatmap_has_no_action_surface_so_the_event_invariant_holds_vacuously`
+  proves this is real, not assumed — it injects `onPress` carrying a genuinely
+  *registered* action and confirms the wall never even reaches the
+  action-registration check: an undeclared prop is refused one step earlier,
+  under data-not-code, the same as any other prop `HeatMap` never declared.
+
+Hardening applied after the first working version, each caught by actually
+executing the render client's JS during development rather than trusting it by
+inspection:
+
+| Fix | Problem it closes |
+|---|---|
+| Per-column colour normalization | A single global min/max silently washed out a low-variance column (e.g. a 1–10 rating) sharing a grid with a high-variance one (e.g. a dollar figure) |
+| `null` → not-available, not `0` | `Number(null) === 0` is truthy-finite in JS; an unguarded missing cell rendered as a real, coloured zero instead of "—" |
+| Symmetric diverging scale | Signed data (profit/loss) had no way to show "this is bad" vs "this is good" — a single-hue scale only reads as "more intense = more"; verified against a real Gemini-composed profit/loss matrix carrying genuine negative values |
+| Vertical size cap | No ceiling on grid height, unlike the sibling `Timeline` component |
+| Locale-pinned numeric formatting | An unpinned `toLocaleString()` silently followed the *server's* locale — on this machine that produced Indian-style lakh/crore digit grouping instead of the thousands grouping every other string in the catalog assumes |
+
+Deliberately not done, and not glossed over: no outlier-robust scaling (one
+extreme value still compresses the rest of its column's colour range), no
+row/column sort (unlike the sibling `DataTable`), `tone` still applies to a
+whole non-diverging column rather than per cell, and the colour-math itself
+(`heatFill`, `heatFillDiverging`, `colStats`, `cellNum`, `fmtNum`) has no
+*automated* test — every check above was run by hand against Node during
+development, not wired into `pytest` or CI.
 
 ## Proofs and tests
 
@@ -145,6 +212,7 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `proof.json` | `run_surface_proof.py` | injection wall (4 rejections), HITL, catalog/validator |
 | `harness_run.json` | `harness_run.py` | a real live-graph run → the model composes a 19-component surface |
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
+| `heatmap_run.json` | `heatmap_run.py` | a real live-graph run → Gemini composes a `HeatMap` from the catalog manifest alone, never told its name |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
 
