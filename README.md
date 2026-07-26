@@ -147,9 +147,16 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
+| `trip_proof.json` | `trip_proof.py` | StepWizard catalog check, valid 9-component surface, 3 injection wall cases |
+| `stepwizard_run.json` | `stepwizard_run.py` | live Gemini run where StepWizard is picked from the catalog unprompted |
+| `adversarial_run.json` | `adversarial_run.py` | 3 direct wall attacks (safe node survives, hostile blocked) + 3 live Gemini prompt injections |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
+uv run python proofs/trip_proof.py           # writes trip_proof.json, StepWizard catalog + wall
+uv run python proofs/stepwizard_run.py       # writes stepwizard_run.json, live Gemini + StepWizard
+GLC_BASE_URL=http://127.0.0.1:8111 S14_GATEWAY_PROVIDER=gemini \
+  uv run python proofs/adversarial_run.py    # writes adversarial_run.json, live injection attacks
 uv run pytest -q                             # S13 core + regression tests + the S14 invariant tests
 ```
 
@@ -299,6 +306,10 @@ Files changed:
 - `tests/test_s14_ui.py` — catalog count 23 → 24, custom set + `"StepWizard"`
 - `proofs/trip_proof.py` — in-process proof (catalog + valid surface + 3 injections)
 - `proofs/trip_proof.json` — captured proof output
+- `proofs/stepwizard_run.py` — live Gemini proof (StepWizard picked from catalog unprompted)
+- `proofs/stepwizard_run.json` — captured live run output
+- `proofs/adversarial_run.py` — adversarial proof (direct + live prompt injection attacks)
+- `proofs/adversarial_run.json` — captured adversarial run output
 
 ## License
 
