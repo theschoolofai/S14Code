@@ -782,6 +782,13 @@ class S13Runtime:
                         data_model["section_events"] = [
                             {"time": section["heading"], "label": "; ".join(section["points"])}
                             for section in clean_sections]
+                        # StepWizard: sections become numbered process steps
+                        data_model["steps"] = [
+                            {"label": sec["heading"],
+                             "detail": "; ".join(sec["points"][:3]) if sec["points"] else ""}
+                            for sec in clean_sections
+                        ]
+                        data_model["current_step"] = 0
 
                 metrics = content_structured.get("metrics")
                 if isinstance(metrics, list) and metrics:
@@ -838,6 +845,22 @@ class S13Runtime:
                         for index, choice in enumerate(clean_choices):
                             data_model[f"choice_{index}_label"] = choice["label"]
 
+                # --- S14 additive: StepWizard — explicit steps from structured -------
+                steps = content_structured.get("steps")
+                if isinstance(steps, list) and steps:
+                    clean_steps: list[dict[str, Any]] = []
+                    for step in steps:
+                        if isinstance(step, dict) and str(step.get("label") or "").strip():
+                            clean_steps.append({
+                                "label": str(step["label"]).strip(),
+                                "detail": str(step.get("detail") or "").strip(),
+                            })
+                        elif isinstance(step, str) and step.strip():
+                            clean_steps.append({"label": step.strip(), "detail": ""})
+                    if clean_steps:
+                        data_model["steps"] = clean_steps  # explicit steps override section-derived
+                        data_model["current_step"] = 0
+
             manifest = catalog_manifest()
             pointers = sorted("/" + key for key in data_model)
             # Domain-agnostic system prompt: compose an A2UI interface for the goal
@@ -887,6 +910,8 @@ class S13Runtime:
                             "/table_columns joined by commas); "
                             "for /choices (the goal asks the user to pick) render one tappable Button per entry, "
                             "label the literal /choice_N_label, onPress action \"request_data\"; "
+                            "for /steps (an ordered process, checklist, or procedure) render a StepWizard "
+                            "(steps bound to /steps, current bound to /current_step); "
                             "you may also add a ProgressBar bound to /progress_value (max /progress_max) and a "
                             "Timeline bound to /timeline for the run's own steps. Do NOT dump everything into one "
                             "Text. Bind every DATA value to a /pointer listed in available_pointers."),

@@ -1,0 +1,191 @@
+{
+  "catalog": {
+    "total_components": 24,
+    "source": "custom",
+    "props": {
+      "title": "text",
+      "steps": "binding",
+      "current": "binding"
+    },
+    "in_manifest": true,
+    "manifest_source": "custom"
+  },
+  "valid_surface": {
+    "clean": true,
+    "accepted": 9,
+    "rejected": 0,
+    "step_wizard_present": true,
+    "step_count": 5,
+    "rejections": [],
+    "surface": {
+      "root": "root",
+      "components": [
+        {
+          "id": "root",
+          "type": "Column",
+          "children": [
+            "title",
+            "stats",
+            "wiz",
+            "table",
+            "tip"
+          ]
+        },
+        {
+          "id": "title",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "stats",
+          "type": "Row",
+          "children": [
+            "s_days",
+            "s_budget",
+            "s_cities"
+          ]
+        },
+        {
+          "id": "s_days",
+          "type": "StatTile",
+          "label": "Days",
+          "value": {
+            "$bind": "/days"
+          },
+          "unit": "days"
+        },
+        {
+          "id": "s_budget",
+          "type": "StatTile",
+          "label": "Budget",
+          "value": {
+            "$bind": "/budget"
+          },
+          "unit": "USD"
+        },
+        {
+          "id": "s_cities",
+          "type": "StatTile",
+          "label": "Cities",
+          "value": {
+            "$bind": "/cities"
+          }
+        },
+        {
+          "id": "wiz",
+          "type": "StepWizard",
+          "title": "Arrival checklist",
+          "steps": {
+            "$bind": "/steps"
+          },
+          "current": {
+            "$bind": "/current_step"
+          }
+        },
+        {
+          "id": "table",
+          "type": "DataTable",
+          "columns": "place,category,entry fee,time",
+          "rows": {
+            "$bind": "/places"
+          },
+          "sortable": true
+        },
+        {
+          "id": "tip",
+          "type": "Notice",
+          "text": {
+            "$bind": "/tip"
+          },
+          "tone": "warn"
+        }
+      ],
+      "dataModel": {
+        "title": "5-Day Japan First-Timer",
+        "days": 5,
+        "budget": 1200,
+        "cities": 3,
+        "steps": [
+          {
+            "label": "Visa",
+            "detail": "No visa required for stays under 90 days (most passports)"
+          },
+          {
+            "label": "Currency",
+            "detail": "Withdraw JPY at airport ATM \u2014 cards not widely accepted"
+          },
+          {
+            "label": "SIM card",
+            "detail": "Pick up a prepaid data SIM at Narita arrivals"
+          },
+          {
+            "label": "IC card",
+            "detail": "Load a Suica/Pasmo card for all train/bus travel"
+          },
+          {
+            "label": "Accommodation",
+            "detail": "Check in, drop bags, refresh before heading out"
+          }
+        ],
+        "current_step": 0,
+        "places": [
+          {
+            "place": "Senso-ji Temple",
+            "category": "Culture",
+            "entry fee": "Free",
+            "time": "1-2 h"
+          },
+          {
+            "place": "teamLab Planets",
+            "category": "Art/Tech",
+            "entry fee": "\u00a53200",
+            "time": "1.5 h"
+          },
+          {
+            "place": "Fushimi Inari",
+            "category": "Shrine",
+            "entry fee": "Free",
+            "time": "2-4 h"
+          }
+        ],
+        "tip": "Carry cash. Many temples, small restaurants, and vending machines are cash-only."
+      }
+    }
+  },
+  "injection_wall": {
+    "all_rejected": true,
+    "all_correct": true,
+    "cases": [
+      {
+        "name": "unknown_type",
+        "expected": "catalog",
+        "rejected": true,
+        "invariants_broken": [
+          "catalog"
+        ],
+        "correct": true
+      },
+      {
+        "name": "inline_literal_where_binding_required",
+        "expected": "data-not-code",
+        "rejected": true,
+        "invariants_broken": [
+          "data-not-code"
+        ],
+        "correct": true
+      },
+      {
+        "name": "undeclared_handler_property",
+        "expected": "data-not-code",
+        "rejected": true,
+        "invariants_broken": [
+          "data-not-code"
+        ],
+        "correct": true
+      }
+    ]
+  }
+}

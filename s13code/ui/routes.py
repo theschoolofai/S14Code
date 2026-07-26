@@ -234,3 +234,14 @@ async def app_viewer():
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
     return path.read_text()
+
+
+@router.get("/trip", response_class=HTMLResponse)
+@router.get("/trip/", response_class=HTMLResponse)
+async def trip_app():
+    """Trip Planner UI-only application. Destination input → agent composes
+    Timeline + StatTile + StepWizard + DataTable + Notice surfaces."""
+    path = Path(__file__).parent / "client" / "trip.html"
+    if not path.exists():
+        raise HTTPException(500, "trip app missing")
+    return path.read_text()

@@ -1,0 +1,504 @@
+{
+  "task": "Research and compose a step-by-step guide for applying for a Japan tourist visa: eligibility, required documents, application process, fees, and processing time.",
+  "stepwizard_used_unprompted": true,
+  "run_id": "run-9d7d97004966",
+  "status": "completed",
+  "provider": "gemini_1",
+  "model": "gemini-3.1-flash-lite",
+  "graph": {
+    "finished": true,
+    "nodes": {
+      "content": {
+        "skill": "content",
+        "state": "succeeded",
+        "agent": "content",
+        "provider": "gemini_1"
+      },
+      "surface": {
+        "skill": "compose_surface",
+        "state": "succeeded",
+        "agent": "ui_composer",
+        "provider": "gemini_1"
+      }
+    },
+    "edges": [
+      [
+        "content",
+        "surface"
+      ]
+    ]
+  },
+  "event_journal": [
+    {
+      "sequence": 1,
+      "kind": "run_started",
+      "node_id": null
+    },
+    {
+      "sequence": 2,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 3,
+      "kind": "task_started",
+      "node_id": "content"
+    },
+    {
+      "sequence": 4,
+      "kind": "task_succeeded",
+      "node_id": "content"
+    },
+    {
+      "sequence": 5,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 6,
+      "kind": "task_started",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 7,
+      "kind": "task_succeeded",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 8,
+      "kind": "graph_patched",
+      "node_id": null
+    }
+  ],
+  "compose_surface_node": {
+    "skill": "compose_surface",
+    "state": "succeeded",
+    "provider": "gemini_1",
+    "model": "gemini-3.1-flash-lite",
+    "validator": {
+      "proposed": 9,
+      "accepted": 9,
+      "rejected": 0,
+      "ok": true,
+      "rejections": [],
+      "dangling_child_refs": [],
+      "component_types": [
+        "Column",
+        "DataTable",
+        "Row",
+        "StatTile",
+        "StepWizard",
+        "Text",
+        "Timeline"
+      ],
+      "component_count": 9
+    },
+    "types_used": [
+      "Column",
+      "DataTable",
+      "Row",
+      "StatTile",
+      "StepWizard",
+      "Text",
+      "Timeline"
+    ],
+    "stepwizard_used": true,
+    "data_model_keys": [
+      "current_step",
+      "goal",
+      "intro",
+      "item_count",
+      "items",
+      "metric_0_value",
+      "metric_1_value",
+      "metrics",
+      "progress_max",
+      "progress_value",
+      "results",
+      "section_0_heading",
+      "section_0_points",
+      "section_1_heading",
+      "section_1_points",
+      "section_2_heading",
+      "section_2_points",
+      "section_events",
+      "sections",
+      "source_count",
+      "spark",
+      "steps",
+      "subjects",
+      "summary",
+      "table_columns",
+      "table_rows",
+      "timeline",
+      "title"
+    ],
+    "steps_in_data_model": true,
+    "surface_accepted": {
+      "root": "root",
+      "components": [
+        {
+          "id": "root",
+          "type": "Column",
+          "children": [
+            "title",
+            "summary",
+            "metricsRow",
+            "wizard",
+            "table",
+            "timeline"
+          ]
+        },
+        {
+          "id": "title",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "summary",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/summary"
+          }
+        },
+        {
+          "id": "metricsRow",
+          "type": "Row",
+          "align": "center",
+          "justify": "spaceBetween",
+          "children": [
+            "stat1",
+            "stat2"
+          ]
+        },
+        {
+          "id": "stat1",
+          "type": "StatTile",
+          "label": "Standard Processing Time",
+          "value": {
+            "$bind": "/metric_0_value"
+          },
+          "unit": "business days"
+        },
+        {
+          "id": "stat2",
+          "type": "StatTile",
+          "label": "Typical Visa Validity",
+          "value": {
+            "$bind": "/metric_1_value"
+          },
+          "unit": "days"
+        },
+        {
+          "id": "wizard",
+          "type": "StepWizard",
+          "title": "Application Steps",
+          "steps": {
+            "$bind": "/steps"
+          },
+          "current": {
+            "$bind": "/current_step"
+          }
+        },
+        {
+          "id": "table",
+          "type": "DataTable",
+          "columns": "Category,Details",
+          "rows": {
+            "$bind": "/table_rows"
+          }
+        },
+        {
+          "id": "timeline",
+          "type": "Timeline",
+          "title": "Process Overview",
+          "events": {
+            "$bind": "/section_events"
+          }
+        }
+      ],
+      "dataModel": {
+        "title": "Japan Tourist Visa Application Guide",
+        "goal": "Research and compose a step-by-step guide for applying for a Japan tourist visa: eligibility, required documents, application process, fees, and processing time.",
+        "summary": "A comprehensive guide for foreign nationals applying for a short-term stay tourist visa for Japan.",
+        "results": [],
+        "items": [],
+        "metrics": [
+          {
+            "label": "Standard Processing Time",
+            "value": 5,
+            "unit": "business days"
+          },
+          {
+            "label": "Typical Visa Validity",
+            "value": 90,
+            "unit": "days"
+          }
+        ],
+        "spark": [],
+        "table_rows": [
+          {
+            "Category": "Visa Fee",
+            "Details": "Varies by nationality and local currency"
+          },
+          {
+            "Category": "Submission",
+            "Details": "Embassy, Consulate, or Authorized Agency"
+          },
+          {
+            "Category": "Interview",
+            "Details": "Usually not required, but may be requested"
+          }
+        ],
+        "item_count": 0,
+        "source_count": 0,
+        "subjects": [],
+        "timeline": [
+          {
+            "time": "1",
+            "label": "run_started"
+          },
+          {
+            "time": "2",
+            "label": "graph_patched"
+          },
+          {
+            "time": "3",
+            "label": "task_started content"
+          },
+          {
+            "time": "4",
+            "label": "task_succeeded content"
+          },
+          {
+            "time": "5",
+            "label": "graph_patched"
+          },
+          {
+            "time": "6",
+            "label": "task_started surface"
+          }
+        ],
+        "progress_value": 1,
+        "progress_max": 2,
+        "intro": "A comprehensive guide for foreign nationals applying for a short-term stay tourist visa for Japan.",
+        "section_0_heading": "Eligibility",
+        "section_0_points": "\u2022 Must be a foreign national requiring a visa for entry.\n\u2022 Purpose of visit must be strictly tourism, sightseeing, or visiting friends/relatives.\n\u2022 Must possess a valid passport with at least two blank pages.\n\u2022 Must demonstrate sufficient financial means to cover travel expenses.",
+        "section_1_heading": "Required Documents",
+        "section_1_points": "\u2022 Valid passport (original and photocopy).\n\u2022 Completed visa application form with a recent passport-sized photo.\n\u2022 Proof of financial capacity (e.g., bank statements, income tax returns).\n\u2022 Detailed itinerary of stay in Japan.\n\u2022 Confirmed flight reservation or booking details.\n\u2022 Proof of accommodation (hotel bookings or invitation letter).",
+        "section_2_heading": "Application Process",
+        "section_2_points": "\u2022 Check the jurisdiction of the nearest Japanese Embassy or Consulate.\n\u2022 Prepare all required documents according to the specific embassy checklist.\n\u2022 Submit application in person or via an authorized travel agency.\n\u2022 Pay the visa fee upon submission or collection.\n\u2022 Collect passport once notified of the visa decision.",
+        "sections": [
+          {
+            "heading": "Eligibility",
+            "points": [
+              "Must be a foreign national requiring a visa for entry.",
+              "Purpose of visit must be strictly tourism, sightseeing, or visiting friends/relatives.",
+              "Must possess a valid passport with at least two blank pages.",
+              "Must demonstrate sufficient financial means to cover travel expenses."
+            ]
+          },
+          {
+            "heading": "Required Documents",
+            "points": [
+              "Valid passport (original and photocopy).",
+              "Completed visa application form with a recent passport-sized photo.",
+              "Proof of financial capacity (e.g., bank statements, income tax returns).",
+              "Detailed itinerary of stay in Japan.",
+              "Confirmed flight reservation or booking details.",
+              "Proof of accommodation (hotel bookings or invitation letter)."
+            ]
+          },
+          {
+            "heading": "Application Process",
+            "points": [
+              "Check the jurisdiction of the nearest Japanese Embassy or Consulate.",
+              "Prepare all required documents according to the specific embassy checklist.",
+              "Submit application in person or via an authorized travel agency.",
+              "Pay the visa fee upon submission or collection.",
+              "Collect passport once notified of the visa decision."
+            ]
+          }
+        ],
+        "section_events": [
+          {
+            "time": "Eligibility",
+            "label": "Must be a foreign national requiring a visa for entry.; Purpose of visit must be strictly tourism, sightseeing, or visiting friends/relatives.; Must possess a valid passport with at least two blank pages.; Must demonstrate sufficient financial means to cover travel expenses."
+          },
+          {
+            "time": "Required Documents",
+            "label": "Valid passport (original and photocopy).; Completed visa application form with a recent passport-sized photo.; Proof of financial capacity (e.g., bank statements, income tax returns).; Detailed itinerary of stay in Japan.; Confirmed flight reservation or booking details.; Proof of accommodation (hotel bookings or invitation letter)."
+          },
+          {
+            "time": "Application Process",
+            "label": "Check the jurisdiction of the nearest Japanese Embassy or Consulate.; Prepare all required documents according to the specific embassy checklist.; Submit application in person or via an authorized travel agency.; Pay the visa fee upon submission or collection.; Collect passport once notified of the visa decision."
+          }
+        ],
+        "steps": [
+          {
+            "label": "Eligibility",
+            "detail": "Must be a foreign national requiring a visa for entry.; Purpose of visit must be strictly tourism, sightseeing, or visiting friends/relatives.; Must possess a valid passport with at least two blank pages."
+          },
+          {
+            "label": "Required Documents",
+            "detail": "Valid passport (original and photocopy).; Completed visa application form with a recent passport-sized photo.; Proof of financial capacity (e.g., bank statements, income tax returns)."
+          },
+          {
+            "label": "Application Process",
+            "detail": "Check the jurisdiction of the nearest Japanese Embassy or Consulate.; Prepare all required documents according to the specific embassy checklist.; Submit application in person or via an authorized travel agency."
+          }
+        ],
+        "current_step": 0,
+        "metric_0_value": 5,
+        "metric_1_value": 90,
+        "table_columns": [
+          "Category",
+          "Details"
+        ]
+      }
+    },
+    "data_model": {
+      "title": "Japan Tourist Visa Application Guide",
+      "goal": "Research and compose a step-by-step guide for applying for a Japan tourist visa: eligibility, required documents, application process, fees, and processing time.",
+      "summary": "A comprehensive guide for foreign nationals applying for a short-term stay tourist visa for Japan.",
+      "results": [],
+      "items": [],
+      "metrics": [
+        {
+          "label": "Standard Processing Time",
+          "value": 5,
+          "unit": "business days"
+        },
+        {
+          "label": "Typical Visa Validity",
+          "value": 90,
+          "unit": "days"
+        }
+      ],
+      "spark": [],
+      "table_rows": [
+        {
+          "Category": "Visa Fee",
+          "Details": "Varies by nationality and local currency"
+        },
+        {
+          "Category": "Submission",
+          "Details": "Embassy, Consulate, or Authorized Agency"
+        },
+        {
+          "Category": "Interview",
+          "Details": "Usually not required, but may be requested"
+        }
+      ],
+      "item_count": 0,
+      "source_count": 0,
+      "subjects": [],
+      "timeline": [
+        {
+          "time": "1",
+          "label": "run_started"
+        },
+        {
+          "time": "2",
+          "label": "graph_patched"
+        },
+        {
+          "time": "3",
+          "label": "task_started content"
+        },
+        {
+          "time": "4",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "5",
+          "label": "graph_patched"
+        },
+        {
+          "time": "6",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "intro": "A comprehensive guide for foreign nationals applying for a short-term stay tourist visa for Japan.",
+      "section_0_heading": "Eligibility",
+      "section_0_points": "\u2022 Must be a foreign national requiring a visa for entry.\n\u2022 Purpose of visit must be strictly tourism, sightseeing, or visiting friends/relatives.\n\u2022 Must possess a valid passport with at least two blank pages.\n\u2022 Must demonstrate sufficient financial means to cover travel expenses.",
+      "section_1_heading": "Required Documents",
+      "section_1_points": "\u2022 Valid passport (original and photocopy).\n\u2022 Completed visa application form with a recent passport-sized photo.\n\u2022 Proof of financial capacity (e.g., bank statements, income tax returns).\n\u2022 Detailed itinerary of stay in Japan.\n\u2022 Confirmed flight reservation or booking details.\n\u2022 Proof of accommodation (hotel bookings or invitation letter).",
+      "section_2_heading": "Application Process",
+      "section_2_points": "\u2022 Check the jurisdiction of the nearest Japanese Embassy or Consulate.\n\u2022 Prepare all required documents according to the specific embassy checklist.\n\u2022 Submit application in person or via an authorized travel agency.\n\u2022 Pay the visa fee upon submission or collection.\n\u2022 Collect passport once notified of the visa decision.",
+      "sections": [
+        {
+          "heading": "Eligibility",
+          "points": [
+            "Must be a foreign national requiring a visa for entry.",
+            "Purpose of visit must be strictly tourism, sightseeing, or visiting friends/relatives.",
+            "Must possess a valid passport with at least two blank pages.",
+            "Must demonstrate sufficient financial means to cover travel expenses."
+          ]
+        },
+        {
+          "heading": "Required Documents",
+          "points": [
+            "Valid passport (original and photocopy).",
+            "Completed visa application form with a recent passport-sized photo.",
+            "Proof of financial capacity (e.g., bank statements, income tax returns).",
+            "Detailed itinerary of stay in Japan.",
+            "Confirmed flight reservation or booking details.",
+            "Proof of accommodation (hotel bookings or invitation letter)."
+          ]
+        },
+        {
+          "heading": "Application Process",
+          "points": [
+            "Check the jurisdiction of the nearest Japanese Embassy or Consulate.",
+            "Prepare all required documents according to the specific embassy checklist.",
+            "Submit application in person or via an authorized travel agency.",
+            "Pay the visa fee upon submission or collection.",
+            "Collect passport once notified of the visa decision."
+          ]
+        }
+      ],
+      "section_events": [
+        {
+          "time": "Eligibility",
+          "label": "Must be a foreign national requiring a visa for entry.; Purpose of visit must be strictly tourism, sightseeing, or visiting friends/relatives.; Must possess a valid passport with at least two blank pages.; Must demonstrate sufficient financial means to cover travel expenses."
+        },
+        {
+          "time": "Required Documents",
+          "label": "Valid passport (original and photocopy).; Completed visa application form with a recent passport-sized photo.; Proof of financial capacity (e.g., bank statements, income tax returns).; Detailed itinerary of stay in Japan.; Confirmed flight reservation or booking details.; Proof of accommodation (hotel bookings or invitation letter)."
+        },
+        {
+          "time": "Application Process",
+          "label": "Check the jurisdiction of the nearest Japanese Embassy or Consulate.; Prepare all required documents according to the specific embassy checklist.; Submit application in person or via an authorized travel agency.; Pay the visa fee upon submission or collection.; Collect passport once notified of the visa decision."
+        }
+      ],
+      "steps": [
+        {
+          "label": "Eligibility",
+          "detail": "Must be a foreign national requiring a visa for entry.; Purpose of visit must be strictly tourism, sightseeing, or visiting friends/relatives.; Must possess a valid passport with at least two blank pages."
+        },
+        {
+          "label": "Required Documents",
+          "detail": "Valid passport (original and photocopy).; Completed visa application form with a recent passport-sized photo.; Proof of financial capacity (e.g., bank statements, income tax returns)."
+        },
+        {
+          "label": "Application Process",
+          "detail": "Check the jurisdiction of the nearest Japanese Embassy or Consulate.; Prepare all required documents according to the specific embassy checklist.; Submit application in person or via an authorized travel agency."
+        }
+      ],
+      "current_step": 0,
+      "metric_0_value": 5,
+      "metric_1_value": 90,
+      "table_columns": [
+        "Category",
+        "Details"
+      ]
+    }
+  }
+}

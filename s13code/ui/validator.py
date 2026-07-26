@@ -69,10 +69,24 @@ def _looks_like_js_url(value) -> bool:
     return isinstance(value, str) and bool(_JS_URL.match(value))
 
 
+def _resolve_ptr(data_model: dict, pointer: str):
+    """Walk a JSON Pointer (e.g. /rows/0/label) into data_model."""
+    node = data_model
+    for key in pointer.split("/")[1:]:
+        if not isinstance(node, (dict, list)):
+            return None
+        try:
+            node = node[int(key)] if isinstance(node, list) else node[key]
+        except (KeyError, IndexError, ValueError):
+            return None
+    return node
+
+
 def validate_surface(surface: dict) -> ValidationResult:
     """Validate one surface (``{root, components:[...]}``) against the catalog."""
     accepted: list[dict] = []
     rejections: list[Rejection] = []
+    data_model: dict = surface.get("dataModel") or {}
     components = surface.get("components", [])
 
     for comp in components:
@@ -114,6 +128,20 @@ def validate_surface(surface: dict) -> ValidationResult:
                 )
                 bad = True
                 break
+            # A text-kind prop may carry a {"$bind": "/pointer"} dict instead of a
+            # literal string — the renderer resolves it at display time.  Check the
+            # bound dataModel value now; markup there is the same invariant violation.
+            if (prop.kind == "text"
+                    and isinstance(value, dict) and "$bind" in value
+                    and isinstance(value["$bind"], str)):
+                bound = _resolve_ptr(data_model, value["$bind"])
+                if _looks_like_markup(bound):
+                    rejections.append(
+                        Rejection(cid, field_name, Invariant.DATA_NOT_CODE,
+                                  f"dataModel[{value['$bind']!r}] carries markup")
+                    )
+                    bad = True
+                    break
             if _looks_like_js_url(value):
                 rejections.append(
                     Rejection(cid, field_name, Invariant.DATA_NOT_CODE, "value is a script/data URL")

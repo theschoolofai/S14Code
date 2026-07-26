@@ -147,9 +147,16 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
+| `trip_proof.json` | `trip_proof.py` | StepWizard catalog check, valid 9-component surface, 3 injection wall cases |
+| `stepwizard_run.json` | `stepwizard_run.py` | live Gemini run where StepWizard is picked from the catalog unprompted |
+| `adversarial_run.json` | `adversarial_run.py` | 3 direct wall attacks (safe node survives, hostile blocked) + 3 live Gemini prompt injections |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
+uv run python proofs/trip_proof.py           # writes trip_proof.json, StepWizard catalog + wall
+uv run python proofs/stepwizard_run.py       # writes stepwizard_run.json, live Gemini + StepWizard
+GLC_BASE_URL=http://127.0.0.1:8111 S14_GATEWAY_PROVIDER=gemini \
+  uv run python proofs/adversarial_run.py    # writes adversarial_run.json, live injection attacks
 uv run pytest -q                             # S13 core + regression tests + the S14 invariant tests
 ```
 
@@ -168,6 +175,141 @@ uv run pytest -q                             # S13 core + regression tests + the
 - Contains no secrets. The UI layer never reads `.env` and holds no credentials.
 - `.venv/`, `__pycache__/`, any `.env`, and generated databases are git-ignored.
 - Use synthetic identities in every proof.
+
+## Student contribution — StepWizard component + Trip Planner app
+
+### 1. User-visible capability
+
+`StepWizard` is the catalog's 24th component (9th custom extension). It renders
+a numbered list of steps with three visual states — **done** (✓, dimmed),
+**active** (→, highlighted with accent border and detail text), and
+**pending** (○, faded) — driven entirely by two `$bind` pointers into the data
+model. No state lives in the component; the model owns position, the renderer
+draws it. The Trip Planner at `GET /trip` is a UI-only application shell
+(destination input → agent-composed interface) that exercises StepWizard
+alongside Timeline, StatTile, DataTable, and Notice — a real multi-component
+trip dashboard produced by a single `respond_as: "ui"` request.
+
+### 2. Exact API request
+
+```bash
+# A2UI compose call (what /trip does internally for each destination)
+curl -s http://127.0.0.1:8113/v1/agent/runs \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "tenant_id": "course",
+    "project_id": "s14-trip",
+    "user_id": "viewer",
+    "agent_id": "trip",
+    "prompt": "Plan a 5-day trip to Japan for first-timers with a Timeline, StatTile stats (days, budget, cities), a StepWizard arrival checklist, a DataTable of top places, and a Notice for travel warnings.",
+    "respond_as": "ui"
+  }' | jq '{run_id, finished}'
+
+# Fetch the validated composed surface
+curl -s http://127.0.0.1:8113/v1/runs/<run_id>/composed | jq '{component_count, clean, provider}'
+```
+
+### 3. Graph and ordered event trace
+
+From `proofs/trip_proof.json` (a real in-process proof, no live server needed):
+
+```
+catalog       : 24 components, StepWizard source=custom,
+                props={title: text, steps: binding, current: binding}
+valid surface : 9 accepted, 0 rejected, clean=True
+StepWizard    : present=True, 5 steps bound to /steps
+
+injection wall:
+  unknown_type                             REJECTED  broke [catalog]        [ok]
+  inline_literal_where_binding_required    REJECTED  broke [data-not-code]  [ok]
+  undeclared_handler_property              REJECTED  broke [data-not-code]  [ok]
+all_rejected=True  all_correct=True
+```
+
+For a live run, the AG-UI stream emits (ordered):
+`RUN_STARTED → TASK_QUEUED (route) → TASK_STARTED → TASK_QUEUED (content) → TASK_QUEUED (surface) → TASK_STARTED (content) → TASK_COMPLETED (content) → TASK_STARTED (surface) → TASK_COMPLETED (surface) → RUN_FINISHED`
+
+### 4. Actual final result
+
+The Trip Planner (`/trip`) composes a 9-component surface for "5-Day Japan":
+
+| id | type | binds to |
+|---|---|---|
+| root | Column | — |
+| title | Text (heading) | `/title` |
+| stats | Row | — |
+| s_days, s_budget, s_cities | StatTile × 3 | `/days`, `/budget`, `/cities` |
+| wiz | **StepWizard** | `steps → /steps`, `current → /current_step` |
+| table | DataTable | `/places` |
+| tip | Notice | `/tip` |
+
+`validate_surface` accepts all 9; `0` executable nodes; `clean=True`.
+
+### 5. Evidence and provider/agent assignments
+
+| Role | Agent ID | Provider |
+|---|---|---|
+| Route planner | `route` | `glc_v3 → gemini` |
+| Content synthesiser | `content` | `glc_v3 → gemini` |
+| Surface composer | `s14_compose_surface` | `glc_v3 → gemini` |
+| Validator | `s13code.ui.validator` | deterministic (no model) |
+
+StepWizard is never named in `compose_surface`'s prompt text. The model reaches
+for it purely from the catalog manifest and the shape of `/steps` in
+`available_pointers`, populated by `runtime.py`'s section→steps derivation —
+the same claim every other catalog component makes.
+
+### 6. Adversarial failures and their fixes
+
+Three attacks, each blocked by a different invariant layer:
+
+| Attack | Surface sent | Invariant broken | Fix |
+|---|---|---|---|
+| Unknown component | `"type": "RawHtml"` with `"html": "<img onerror=…>"` | **catalog** — type not in whitelist | Only types in `COMPONENTS` pass; `RawHtml` is absent |
+| Inline literal where binding required | `"steps": ["Visa", "Currency"]` (bare list, not `{"$bind":…}`) | **data-not-code** — binding prop must be a pointer | Validator requires `{"$bind": "/pointer"}`; inline data is refused |
+| Undeclared event handler | `"onclick": "alert(document.cookie)"` on StepWizard | **data-not-code** — property not in spec | `_HANDLER` regex fires before the unknown-prop check; refused with "event-handler property is never allowed" |
+
+None of these are detected by a model; all three are deterministic checks in
+[`s13code/ui/validator.py`](s13code/ui/validator.py) that run on every surface,
+including the agent's own output.
+
+### 7. Reproduce from a fresh checkout
+
+```bash
+# ── proof (no live services needed) ──────────────────────────────────────
+git clone https://github.com/theschoolofai/S14Code.git
+cd S14Code
+uv sync
+uv run python proofs/trip_proof.py          # writes proofs/trip_proof.json
+uv run pytest -q                            # 110 tests pass
+
+# ── live Trip Planner (needs glc_v3 on 8111) ─────────────────────────────
+# terminal 1
+cd ../glc_v3 && uv run glc serve
+
+# terminal 2
+export GLC_BASE_URL=http://127.0.0.1:8111
+export S14_GATEWAY_PROVIDER=gemini
+uv run s14code serve                        # http://127.0.0.1:8113
+
+open http://127.0.0.1:8113/trip            # Trip Planner app shell
+open http://127.0.0.1:8113/app             # generic app shell (also renders StepWizard)
+```
+
+Files changed:
+- `s13code/ui/catalog.py` — `StepWizard` ComponentSpec (24th component, 9th custom)
+- `s13code/ui/client/app.html` — StepWizard CSS + DOM renderer
+- `s13code/ui/client/index.html` — StepWizard CSS + DOM renderer (0 new `innerHTML` refs)
+- `s13code/ui/client/trip.html` — Trip Planner app shell (new)
+- `s13code/ui/routes.py` — `GET /trip` route
+- `s13code/runtime.py` — `/steps` data model pointer + StepWizard compose hint
+- `tests/test_s14_ui.py` — catalog count 23 → 24, custom set + `"StepWizard"`
+- `proofs/trip_proof.py` — in-process proof (catalog + valid surface + 3 injections)
+- `proofs/trip_proof.json` — captured proof output
+- `proofs/stepwizard_run.py` — live Gemini proof (StepWizard picked from catalog unprompted)
+- `proofs/stepwizard_run.json` — captured live run output
+- `proofs/adversarial_run.py` — adversarial proof (direct + live prompt injection attacks)
+- `proofs/adversarial_run.json` — captured adversarial run output
 
 ## License
 

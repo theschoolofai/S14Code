@@ -58,6 +58,14 @@
   .Approval button.ok{background:var(--green);color:#fff;border-color:var(--green)}
   .prog{height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}
   .prog>i{display:block;height:100%;background:var(--green)}
+  .StepWizard{display:flex;flex-direction:column;gap:6px;padding:2px 0}
+  .sw-title{font-weight:600;font-size:11px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;font-family:var(--font-mono)}
+  .sw-row{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--rule)}
+  .sw-done{opacity:.6}.sw-active{border-color:var(--accent);background:var(--accent-soft)}
+  .sw-pending{opacity:.45}.sw-icon{font-size:13px;margin-top:1px;min-width:16px;color:var(--green);font-family:var(--font-mono)}
+  .sw-active .sw-icon{color:var(--accent)}.sw-pending .sw-icon{color:var(--ink-muted)}
+  .sw-body{flex:1}.sw-label{font-weight:500;font-size:14px;color:var(--ink)}
+  .sw-detail{font-size:13px;color:var(--ink-muted);margin-top:4px;line-height:1.5}
   @media (prefers-color-scheme:dark){:root{--bg:#0d0f14;--surface:#161922;--surface-alt:#11131a;--ink:#f3f5f9;--ink-body:#e4e8f0;--ink-muted:#9aa4b8;--rule:#252a36;--rule-strong:#333a49}body{background:var(--surface-alt)}}
 
   .Text .md-h{font-weight:700;color:var(--ink);margin:12px 0 4px}.Text .md-p{margin:6px 0;line-height:1.6}.Text .md-ul{margin:6px 0 6px 4px;padding-left:18px}.Text .md-ul li{margin:3px 0}
@@ -135,6 +143,7 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  StepWizard:(c,ctx)=>{const w=$("div","StepWizard");if(c.title){const t=$("div","sw-title");t.append(text(c.title));w.append(t);}const steps=resolve(c.steps,ctx.dm)||[];const cur=+(resolve(c.current,ctx.dm)??0);steps.forEach((step,i)=>{const st=i<cur?"sw-done":i===cur?"sw-active":"sw-pending";const row=$("div","sw-row "+st);const icon=$("span","sw-icon");icon.append(text(i<cur?"✓":i===cur?"→":"○"));const body=$("div","sw-body");const lab=$("div","sw-label");lab.append(text(typeof step==="string"?step:(step.label||"")));body.append(lab);if(i===cur&&typeof step==="object"&&step.detail){const d=$("div","sw-detail");d.append(text(step.detail));body.append(d);}row.append(icon,body);w.append(row);});return w;},
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
