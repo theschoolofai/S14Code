@@ -208,6 +208,18 @@ reason the type exists — a `BarChart` would have shown seven magnitudes and no
 whole. The chip's **10 components** matches the validator record, and the full-page
 capture shows every accepted component from that same run.
 
+**Regenerating the figure.** It is a build artifact of the render clients, so it
+goes stale whenever tile drawing changes:
+
+```bash
+uv run python proofs/treemap_render.py
+```
+
+`proofs/treemap_render.py` replays the recorded surface through the shipped
+`client/app.html` — no edit to the client, no service, no model call — and refuses
+to overwrite the image if a tile lost its label, the table or a button went
+missing, or the content outgrew its frame.
+
 **The three invariants, attacked.** `proofs/treemap_run.py` replays three hostile
 surfaces through the same validator that guards the live path:
 
