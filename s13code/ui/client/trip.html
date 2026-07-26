@@ -97,6 +97,7 @@ const API = "";
 let convo = [];
 const $ = (t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
 const T = t=>document.createTextNode(t==null?"":String(t));
+const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const resolve=(v,dm)=>(v&&typeof v==="object"&&"$bind"in v)?ptr(dm,v["$bind"]):v;
 function ptr(dm,p){let c=dm;for(const s of String(p).split("/").slice(1)){if(c==null)return null;c=c[s];}return c;}
 
@@ -167,7 +168,7 @@ function crumbs(){document.getElementById("crumbs").textContent=convo.length?"it
 async function runTurn(userText){
   convo.push(userText);
   crumbs();
-  setStatus('<span class="pill think">composing…</span> building your trip interface for: "'+userText+'"');
+  setStatus('<span class="pill think">composing…</span> building your trip interface for: &ldquo;'+esc(userText)+'&rdquo;');
   const dest = convo[0];
   const goal = convo.length===1
     ? "Trip to "+dest+": day-by-day itinerary overview, key stats (days, budget, cities), arrival checklist, top places to visit, and city buttons to drill into each destination."

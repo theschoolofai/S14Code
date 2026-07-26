@@ -93,6 +93,7 @@ const API = "";                     // same origin as the runtime (8113)
 let convo = [];                     // the running conversation (context for each turn)
 const $ = (t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
 const T = t=>document.createTextNode(t==null?"":String(t));
+const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const resolve=(v,dm)=>(v&&typeof v==="object"&&"$bind"in v)?ptr(dm,v["$bind"]):v;
 function ptr(dm,p){let c=dm;for(const s of String(p).split("/").slice(1)){if(c==null)return null;c=c[s];}return c;}
 
@@ -165,7 +166,7 @@ function crumbs(){document.getElementById("crumbs").textContent = convo.length? 
 async function runTurn(userText){
   convo.push(userText);
   crumbs();
-  setStatus('<span class="pill think">composing…</span> the agent is writing an interface for: "'+userText+'"');
+  setStatus('<span class="pill think">composing…</span> the agent is writing an interface for: &ldquo;'+esc(userText)+'&rdquo;');
   const goal = convo.length===1 ? convo[0]
      : convo[0] + "\nSo far the user then picked: " + convo.slice(1).join(", then ") + ".\nRespond with the next interface for that.";
   const res = await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},

