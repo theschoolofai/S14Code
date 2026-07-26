@@ -23,9 +23,9 @@ from .catalog import COMPONENTS, REGISTERED_ACTIONS
 
 # Markup / script / javascript-url smells. A ``text`` or ``binding`` value that
 # matches is treated as an attempt to reach execution and is refused.
-_MARKUP = re.compile(r"<[a-z!/][^>]*>|</[a-z]+>", re.I)
-_JS_URL = re.compile(r"^\s*(javascript|data|vbscript):", re.I)
-_HANDLER = re.compile(r"^on[a-z]+$", re.I)  # onclick, onerror, onload, ...
+_MARKUP = re.compile(r"<[a-z!/][^>]*>|</[a-z]+>", re.IGNORECASE)
+_JS_URL = re.compile(r"^\s*(javascript|data|vbscript):", re.IGNORECASE)
+_HANDLER = re.compile(r"^on[a-z]+$", re.IGNORECASE)  # onclick, onerror, onload, ...
 _POINTER = re.compile(r"^/[^\s]*$")  # a JSON Pointer: /rows, /pending/params
 
 
@@ -69,11 +69,56 @@ def _looks_like_js_url(value) -> bool:
     return isinstance(value, str) and bool(_JS_URL.match(value))
 
 
+def _resolve_pointer(data_model, pointer: str) -> tuple[bool, object]:
+    """Resolve the same simple JSON Pointer shape the render clients consume.
+
+    Missing pointers preserve the existing nullable-binding behaviour. The
+    boolean distinguishes a missing value from a present JSON ``null``.
+    """
+    current = data_model
+    for segment in pointer.split("/")[1:]:
+        if isinstance(current, dict) and segment in current:
+            current = current[segment]
+            continue
+        if isinstance(current, list) and segment.isdigit():
+            index = int(segment)
+            if index < len(current):
+                current = current[index]
+                continue
+        return False, None
+    return True, current
+
+
+def _unsafe_bound_value(value, seen: set[int] | None = None) -> str | None:
+    """Return the data-not-code reason for unsafe referenced data, if any."""
+    if isinstance(value, str):
+        if _looks_like_markup(value):
+            return "bound value carries markup"
+        if _looks_like_js_url(value):
+            return "bound value is a script/data URL"
+        return None
+    if not isinstance(value, (dict, list, tuple)):
+        return None
+
+    seen = seen or set()
+    identity = id(value)
+    if identity in seen:
+        return None
+    seen.add(identity)
+    values = value.values() if isinstance(value, dict) else value
+    for nested in values:
+        reason = _unsafe_bound_value(nested, seen)
+        if reason:
+            return reason
+    return None
+
+
 def validate_surface(surface: dict) -> ValidationResult:
     """Validate one surface (``{root, components:[...]}``) against the catalog."""
     accepted: list[dict] = []
     rejections: list[Rejection] = []
     components = surface.get("components", [])
+    data_model = surface.get("dataModel", {})
 
     for comp in components:
         cid = comp.get("id", "<no id>")
@@ -134,6 +179,15 @@ def validate_surface(surface: dict) -> ValidationResult:
                 )
                 bad = True
                 break
+            if prop.kind == "binding":
+                found, bound_value = _resolve_pointer(data_model, value["$bind"])
+                reason = _unsafe_bound_value(bound_value) if found else None
+                if reason:
+                    rejections.append(
+                        Rejection(cid, field_name, Invariant.DATA_NOT_CODE, reason)
+                    )
+                    bad = True
+                    break
             if prop.kind == "enum" and value not in prop.values:
                 rejections.append(
                     Rejection(cid, field_name, Invariant.DATA_NOT_CODE, f"{value!r} not in {prop.values}")

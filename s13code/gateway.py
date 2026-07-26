@@ -17,7 +17,10 @@ class GatewayClient:
         payload: dict[str, Any] = {
             "messages": [{"role": "user", "content": prompt}],
             "system": system,
-            "max_tokens": 700,
+            # Answers carrying inline citations outgrow 700 and truncate
+            # mid-sentence. Configurable like the compose_surface call site,
+            # which reads S14_SURFACE_MAX_TOKENS.
+            "max_tokens": int(os.getenv("S13_MAX_TOKENS", "700")),
             "temperature": 0,
             "reasoning": "off",
             "agent": "s13_answer",

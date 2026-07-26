@@ -34,6 +34,29 @@ async def test_s13code_calls_gateway_without_owning_provider_keys(monkeypatch):
     assert result["provider"] == "gemini_2"
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize("env,expected", [(None, 700), ("2000", 2000)])
+async def test_max_tokens_defaults_to_700_and_honours_the_env_override(monkeypatch, env, expected):
+    """Cited answers outgrow the shipped 700 and truncate mid-sentence."""
+    captured: dict[str, object] = {}
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        captured["payload"] = json.loads(request.content)
+        return httpx.Response(200, json={"text": "done", "provider": "gemini_1", "model": "gemini"})
+
+    monkeypatch.delenv("S13_MAX_TOKENS", raising=False)
+    if env is not None:
+        monkeypatch.setenv("S13_MAX_TOKENS", env)
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as http:
+        await GatewayClient("http://127.0.0.1:8111", client=http).complete("q", "s")
+
+    payload = captured["payload"]
+    assert isinstance(payload, dict)
+    assert payload["max_tokens"] == expected
+
+
 def test_s13code_does_not_reimplement_gateway_routes(app_client):
     assert app_client.post("/v1/chat", json={}).status_code == 404
     assert app_client.get("/v1/providers").status_code == 404

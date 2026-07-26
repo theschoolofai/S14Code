@@ -12,6 +12,8 @@
     --green:#16A34A;--green-soft:rgba(22,163,74,.12);--green-ink:#15803D;
     --amber:#D97706;--amber-soft:rgba(217,119,6,.14);--amber-ink:#B45309;
     --red:#DC2626;--red-soft:rgba(220,38,38,.10);--red-ink:#B91C1C;
+    --tree-1:#2563EB;--tree-2:#0D9488;--tree-3:#7C3AED;--tree-4:#EA580C;
+    --tree-5:#0891B2;--tree-6:#4F46E5;--tree-7:#65A30D;--tree-8:#BE185D;
     --font-sans:'Inter',system-ui,sans-serif;--font-serif:'Palatino Linotype',Palatino,Georgia,serif;--font-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
   }
   *{box-sizing:border-box}body{margin:0;background:var(--surface-alt);color:var(--ink-body);font-family:var(--font-sans);font-size:14px;padding:18px}
@@ -41,6 +43,12 @@
   .StatTile.good{border-top:3px solid var(--green)}.StatTile.warn{border-top:3px solid var(--amber)}.StatTile.neutral{border-top:3px solid var(--accent)}
   .chart{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
   .chart .ct{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:8px;font-family:var(--font-mono)}
+  .Treemap svg{display:block;width:100%;height:auto}
+  .tm-fallback{padding:24px 12px;text-align:center;color:var(--ink-muted);font-family:var(--font-mono);font-size:12px}
+  .tm-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px 12px;margin-top:12px}
+  .tm-legend-row{display:flex;align-items:center;gap:7px;min-width:0;font-size:11px;font-family:var(--font-mono);color:var(--ink-muted)}
+  .tm-swatch{width:10px;height:10px;border-radius:3px;flex:0 0 10px}
+  .tm-legend-label{overflow-wrap:anywhere;color:var(--ink-body)}
   table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
   th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);font-size:13px}
   th{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);cursor:pointer;user-select:none;background:var(--surface-alt)}
@@ -132,6 +140,7 @@ const RENDERERS = {
     const d=resolve(c.data,ctx.dm)||[];e.append(sparkSvg(d,c.tone));return e;},
   BarChart:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"bar chart"));e.append(t);
     e.append(barSvg(resolve(c.data,ctx.dm)||[],c.xKey,c.yKey));return e;},
+  Treemap:(c,ctx)=>renderTreemap(c,ctx),
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
@@ -156,6 +165,129 @@ function barSvg(data,xk,yk,unit){const ns="http://www.w3.org/2000/svg";const w=3
     const tv=document.createElementNS(ns,"text");tv.setAttribute("x",x+bw/2);tv.setAttribute("y",h-pad-bh-4);tv.setAttribute("text-anchor","middle");tv.setAttribute("font-size","10");tv.setAttribute("font-family","var(--font-mono)");tv.setAttribute("fill","var(--ink-muted)");tv.textContent=d[yk];svg.append(tv);
     const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","10");tl.setAttribute("font-family","var(--font-mono)");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=d[xk];svg.append(tl);});
   return svg;}
+
+const TREEMAP_COLORS=[
+  "var(--tree-1)","var(--tree-2)","var(--tree-3)","var(--tree-4)",
+  "var(--tree-5)","var(--tree-6)","var(--tree-7)","var(--tree-8)"
+];
+
+function treemapWorst(row,side){
+  if(!row.length||side<=0)return Infinity;
+  const sum=row.reduce((n,item)=>n+item.area,0);
+  const largest=Math.max(...row.map(item=>item.area));
+  const smallest=Math.min(...row.map(item=>item.area));
+  return Math.max((side*side*largest)/(sum*sum),(sum*sum)/(side*side*smallest));
+}
+
+function treemapPlaceRow(row,rect,out){
+  const area=row.reduce((n,item)=>n+item.area,0);
+  if(rect.w>=rect.h){
+    const strip=area/rect.h;let y=rect.y;
+    row.forEach(item=>{const h=item.area/strip;out.push({...item,x:rect.x,y,w:strip,h});y+=h;});
+    return{x:rect.x+strip,y:rect.y,w:Math.max(0,rect.w-strip),h:rect.h};
+  }
+  const strip=area/rect.w;let x=rect.x;
+  row.forEach(item=>{const w=item.area/strip;out.push({...item,x,y:rect.y,w,h:strip});x+=w;});
+  return{x:rect.x,y:rect.y+strip,w:rect.w,h:Math.max(0,rect.h-strip)};
+}
+
+function squarifyTreemap(items,width,height){
+  const total=items.reduce((n,item)=>n+item.value,0);
+  const queue=items.map(item=>({...item,area:item.value/total*width*height}));
+  const out=[];let row=[];let rect={x:0,y:0,w:width,h:height};
+  while(queue.length){
+    const next=queue[0],side=Math.min(rect.w,rect.h);
+    if(!row.length||treemapWorst([...row,next],side)<=treemapWorst(row,side)){
+      row.push(queue.shift());
+    }else{
+      rect=treemapPlaceRow(row,rect,out);row=[];
+    }
+  }
+  if(row.length)treemapPlaceRow(row,rect,out);
+  return out;
+}
+
+function treemapData(c,ctx){
+  const raw=resolve(c.data,ctx.dm),labelKey=c.labelKey||"label",valueKey=c.valueKey||"value";
+  const resolvedUnit=resolve(c.unit,ctx.dm);
+  if(!Array.isArray(raw)||raw.length<2||!(resolvedUnit==null||typeof resolvedUnit==="string"))return null;
+  const labels=new Set(),items=[];
+  for(let index=0;index<raw.length;index++){
+    const source=raw[index];
+    if(!source||typeof source!=="object")return null;
+    const label=typeof source[labelKey]==="string"?source[labelKey].trim():"";
+    const value=Number(source[valueKey]),folded=label.toLowerCase();
+    if(!label||labels.has(folded)||!Number.isFinite(value)||value<=0)return null;
+    labels.add(folded);items.push({label,value,index});
+  }
+  return{items:items.slice().sort((a,b)=>b.value-a.value||a.index-b.index),unit:resolvedUnit||""};
+}
+
+// one 7px-per-char estimate served both the 12px sans label and the 10px mono value line and
+// truncated the value too early; each line now gets an estimate matched to its own font.
+const TM_LABEL_CH=6.6,TM_VALUE_CH=6;
+const treemapChars=(run,perChar)=>Math.max(4,Math.floor((run-12)/perChar));
+function treemapLabel(value,run,perChar){
+  const max=treemapChars(run,perChar||TM_LABEL_CH);
+  return value.length>max?value.slice(0,Math.max(1,max-1))+"…":value;
+}
+// prefer dropping the percent over truncating mid-number ("10,000" beats "10,000 · 9…")
+function treemapValueText(full,short,run){
+  if(full.length<=treemapChars(run,TM_VALUE_CH))return full;
+  return short.length<=treemapChars(run,TM_VALUE_CH)?short:treemapLabel(short,run,TM_VALUE_CH);
+}
+
+function renderTreemap(c,ctx){
+  const shell=$("div","chart Treemap"),heading=$("div","ct");heading.append(text(c.title||"treemap"));shell.append(heading);
+  const parsed=treemapData(c,ctx);
+  if(!parsed){
+    const fallback=$("div","tm-fallback");fallback.append(text("Treemap unavailable: breakdown data is invalid"));
+    shell.append(fallback);return shell;
+  }
+  const ns="http://www.w3.org/2000/svg",width=640,height=360,gutter=2;
+  const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox",`0 0 ${width} ${height}`);
+  svg.setAttribute("role","img");svg.setAttribute("aria-label",String(c.title||"Part-to-whole treemap"));
+  const total=parsed.items.reduce((n,item)=>n+item.value,0);
+  const number=new Intl.NumberFormat(undefined,{maximumFractionDigits:2});
+  const percent=new Intl.NumberFormat(undefined,{maximumFractionDigits:1});
+  const displayValue=value=>number.format(value)+(parsed.unit?" "+parsed.unit:"");
+  const displayPercent=value=>percent.format(value/total*100)+"%";
+  const addTileText=(group,content,size,family,fill,weight,tx,ty,upright)=>{
+    const node=document.createElementNS(ns,"text");
+    node.setAttribute("x",tx);node.setAttribute("y",ty);node.setAttribute("fill",fill);
+    node.setAttribute("font-size",size);node.setAttribute("font-family",family);
+    if(weight)node.setAttribute("font-weight",weight);
+    if(upright)node.setAttribute("transform",`rotate(-90 ${tx} ${ty})`);
+    node.textContent=content;group.append(node);
+  };
+  squarifyTreemap(parsed.items,width,height).forEach((tile,index)=>{
+    const x=tile.x+gutter/2,y=tile.y+gutter/2,w=Math.max(0,tile.w-gutter),h=Math.max(0,tile.h-gutter);
+    const group=document.createElementNS(ns,"g"),rect=document.createElementNS(ns,"rect");
+    rect.setAttribute("x",x);rect.setAttribute("y",y);rect.setAttribute("width",w);rect.setAttribute("height",h);
+    rect.setAttribute("rx","6");rect.setAttribute("fill",TREEMAP_COLORS[index%TREEMAP_COLORS.length]);group.append(rect);
+    const title=document.createElementNS(ns,"title");
+    title.textContent=`${tile.label}: ${displayValue(tile.value)} (${displayPercent(tile.value)})`;group.append(title);
+    const fullValue=`${displayValue(tile.value)} · ${displayPercent(tile.value)}`,shortValue=displayValue(tile.value);
+    if(w>=90&&h>=48){
+      addTileText(group,treemapLabel(tile.label,w,TM_LABEL_CH),"12","var(--font-sans)","#fff","600",x+8,y+19,false);
+      addTileText(group,treemapValueText(fullValue,shortValue,w),"10","var(--font-mono)","rgba(255,255,255,.9)","",x+8,y+38,false);
+    }else if(h>=90&&w>=26){
+      // tall and narrow: run the label up the tile rather than leaving it unlabelled
+      addTileText(group,treemapLabel(tile.label,h,TM_LABEL_CH),"12","var(--font-sans)","#fff","600",x+17,y+h-8,true);
+      if(w>=44)addTileText(group,treemapValueText(fullValue,shortValue,h),"10","var(--font-mono)","rgba(255,255,255,.9)","",x+34,y+h-8,true);
+    }
+    svg.append(group);
+  });
+  shell.append(svg);
+  const legend=$("div","tm-legend");
+  parsed.items.forEach((item,index)=>{
+    const row=$("div","tm-legend-row"),swatch=$("span","tm-swatch"),label=$("span","tm-legend-label");
+    swatch.style.background=TREEMAP_COLORS[index%TREEMAP_COLORS.length];
+    label.append(text(`${item.label} · ${displayValue(item.value)} · ${displayPercent(item.value)}`));
+    row.append(swatch,label);legend.append(row);
+  });
+  shell.append(legend);return shell;
+}
 
 function renderTable(c,ctx){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());let rows=(resolve(c.rows,ctx.dm)||[]).slice();
   if(c.filterKey){const f=$("input","filter");f.placeholder="filter "+c.filterKey+"…";f.oninput=()=>draw(f.value);wrap.append(f);}
