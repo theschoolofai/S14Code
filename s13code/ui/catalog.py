@@ -9,9 +9,10 @@ named by a hostile agent.
 The catalog is aligned to A2UI's Basic component set: the 15 layout / text /
 input / container types A2UI Basic already defines are adopted under their real
 A2UI names (``source="a2ui-basic"``). Only the components A2UI Basic genuinely
-lacks — charts, tiles, tables, timelines, notices, and the approval card — are
-kept as clearly labelled custom extensions (``source="custom"``). Twenty-three
-types in all; a student can read every one and the validator can prove coverage.
+lacks — charts, tiles, tables, timelines, notices, the approval card, and the
+annotated-image overlay — are kept as clearly labelled custom extensions
+(``source="custom"``). Twenty-four types in all; a student can read every one
+and the validator can prove coverage.
 
 Property kinds:
   - ``text``   a string shown to the user as literal text, never as markup
@@ -47,8 +48,8 @@ class ComponentSpec:
 _TONE = PropSpec("enum", ("neutral", "good", "warn", "bad"))
 
 
-# The 23 component types the render client knows how to draw. The first 15 are
-# A2UI Basic's own names; the last 8 are custom extensions A2UI Basic lacks.
+# The 24 component types the render client knows how to draw. The first 15 are
+# A2UI Basic's own names; the last 9 are custom extensions A2UI Basic lacks.
 COMPONENTS: dict[str, ComponentSpec] = {
     # --- A2UI Basic: layout / text / media / inputs / containers (15) --------
     "Row": ComponentSpec("Row", {
@@ -116,6 +117,12 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "ApprovalCard": ComponentSpec("ApprovalCard", {
         "summary": PropSpec("binding"), "params": PropSpec("binding"),
         "confirm": PropSpec("action"), "reject": PropSpec("action"),
+    }, source="custom"),
+    "AnnotatedImage": ComponentSpec("AnnotatedImage", {
+        "src": PropSpec("text"),      # image URL, same convention as Image.src
+        "alt": PropSpec("text"),
+        "boxes": PropSpec("binding"),  # -> array in dataModel: [{x,y,w,h,label,confidence}, ...]
+        "caption": PropSpec("text"),
     }, source="custom"),
 }
 

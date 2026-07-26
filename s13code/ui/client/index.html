@@ -135,6 +135,7 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  AnnotatedImage:(c,ctx)=>renderAnnotatedImage(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -185,6 +186,35 @@ function renderApproval(c,ctx){const e=$("div","Approval");const sm=$("div","sm"
   const pre=$("pre");pre.append(text(JSON.stringify(resolve(c.params,ctx.dm),null,2)));const btns=$("div","btns");
   const ok=$("button","ok");ok.append(text("Approve"));ok.onclick=()=>emitAction("approve",resolve(c.params,ctx.dm));
   const no=$("button");no.append(text("Reject"));no.onclick=()=>emitAction("reject",{});btns.append(ok,no);e.append(sm,pre,btns);return e;}
+
+// boxes are pre-computed by an upstream detector, never by this component; each
+// box's label lands only in a text node here, so a hostile label renders as
+// inert text even though the validator doesn't recurse into binding-resolved
+// array items (see validator.py's top-level-only markup check).
+// src/alt/caption are declared "text" kind (literal, like Image.src) but a
+// model composing against a data model naturally reaches for {"$bind":...} on
+// them anyway (confirmed live against Gemini) -- resolve() handles either
+// shape safely, since it only ever does a JSON-pointer lookup, never eval.
+function renderAnnotatedImage(c,ctx){
+  const wrap=$("div");wrap.style.cssText="position:relative;display:inline-block;max-width:100%";
+  const img=$("img");const src=resolve(c.src,ctx.dm);if(isSafeUrl(src))img.setAttribute("src",src);
+  const alt=resolve(c.alt,ctx.dm);img.setAttribute("alt",alt==null?"":String(alt));
+  img.style.cssText="max-width:100%;border-radius:8px;display:block";
+  wrap.append(img);
+  (resolve(c.boxes,ctx.dm)||[]).forEach(b=>{
+    const box=$("div");
+    box.style.cssText=`position:absolute;left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%;`+
+      `border:2px solid var(--accent);border-radius:2px;pointer-events:none`;
+    const tag=$("div");
+    tag.style.cssText=`position:absolute;top:-20px;left:0;background:var(--accent);color:#fff;`+
+      `font-size:11px;padding:1px 6px;border-radius:4px;font-family:var(--font-mono);white-space:nowrap`;
+    tag.append(text(`${b.label==null?"":b.label} ${b.confidence!=null?Math.round(b.confidence*100)+"%":""}`));
+    box.append(tag);wrap.append(box);
+  });
+  const caption=resolve(c.caption,ctx.dm);
+  if(caption){const cap=$("div");cap.style.cssText="font-size:12px;color:var(--ink-muted);margin-top:6px;font-family:var(--font-mono)";cap.append(text(caption));wrap.append(cap);}
+  return wrap;
+}
 
 function emitAction(name,args){ // the only way the surface changes the world: a named, validated event
   document.getElementById("meta").textContent = "action emitted → "+name+" "+JSON.stringify(args);
