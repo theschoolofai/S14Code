@@ -168,9 +168,10 @@ async function runTurn(userText){
   convo.push(userText);
   crumbs();
   setStatus('<span class="pill think">composing…</span> building your trip interface for: "'+userText+'"');
+  const dest = convo[0];
   const goal = convo.length===1
-    ? "Plan a trip to: "+convo[0]+". I want a rich overview dashboard with: a Timeline showing a day-by-day itinerary, StatTile widgets for key stats (total days, estimated budget, main city count), a StepWizard for the arrival checklist (visa, currency, sim card, accommodation), and a DataTable of top must-see places with columns: place, category, entry fee, time needed. Use Notice for any important travel warnings."
-    : convo[0] + "\nThe user then selected: " + convo.slice(1).join(", then ") + ". Respond with the next detailed interface for that choice.";
+    ? "Trip to "+dest+": day-by-day itinerary overview, key stats (days, budget, cities), arrival checklist, top places to visit, and city buttons to drill into each destination."
+    : "Trip to "+dest+" — the user chose: "+convo[convo.length-1]+". Show a detailed guide for "+convo[convo.length-1]+" with step-by-step activities, specific places and costs, practical tips, and buttons to explore sub-choices.";
   const res = await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({prompt:goal, respond_as:"ui", tenant_id:"course", project_id:"s14-trip", user_id:"viewer", agent_id:"trip"})});
   const run = await res.json();
