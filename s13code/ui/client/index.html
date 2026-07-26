@@ -223,9 +223,18 @@ function treemapData(c,ctx){
   return{items:items.slice().sort((a,b)=>b.value-a.value||a.index-b.index),unit:resolvedUnit||""};
 }
 
-function treemapLabel(value,width){
-  const max=Math.max(4,Math.floor((width-12)/7));
+// one 7px-per-char estimate served both the 12px sans label and the 10px mono value line and
+// truncated the value too early; each line now gets an estimate matched to its own font.
+const TM_LABEL_CH=6.6,TM_VALUE_CH=6;
+const treemapChars=(run,perChar)=>Math.max(4,Math.floor((run-12)/perChar));
+function treemapLabel(value,run,perChar){
+  const max=treemapChars(run,perChar||TM_LABEL_CH);
   return value.length>max?value.slice(0,Math.max(1,max-1))+"…":value;
+}
+// prefer dropping the percent over truncating mid-number ("10,000" beats "10,000 · 9…")
+function treemapValueText(full,short,run){
+  if(full.length<=treemapChars(run,TM_VALUE_CH))return full;
+  return short.length<=treemapChars(run,TM_VALUE_CH)?short:treemapLabel(short,run,TM_VALUE_CH);
 }
 
 function renderTreemap(c,ctx){
@@ -243,6 +252,14 @@ function renderTreemap(c,ctx){
   const percent=new Intl.NumberFormat(undefined,{maximumFractionDigits:1});
   const displayValue=value=>number.format(value)+(parsed.unit?" "+parsed.unit:"");
   const displayPercent=value=>percent.format(value/total*100)+"%";
+  const addTileText=(group,content,size,family,fill,weight,tx,ty,upright)=>{
+    const node=document.createElementNS(ns,"text");
+    node.setAttribute("x",tx);node.setAttribute("y",ty);node.setAttribute("fill",fill);
+    node.setAttribute("font-size",size);node.setAttribute("font-family",family);
+    if(weight)node.setAttribute("font-weight",weight);
+    if(upright)node.setAttribute("transform",`rotate(-90 ${tx} ${ty})`);
+    node.textContent=content;group.append(node);
+  };
   squarifyTreemap(parsed.items,width,height).forEach((tile,index)=>{
     const x=tile.x+gutter/2,y=tile.y+gutter/2,w=Math.max(0,tile.w-gutter),h=Math.max(0,tile.h-gutter);
     const group=document.createElementNS(ns,"g"),rect=document.createElementNS(ns,"rect");
@@ -250,14 +267,14 @@ function renderTreemap(c,ctx){
     rect.setAttribute("rx","6");rect.setAttribute("fill",TREEMAP_COLORS[index%TREEMAP_COLORS.length]);group.append(rect);
     const title=document.createElementNS(ns,"title");
     title.textContent=`${tile.label}: ${displayValue(tile.value)} (${displayPercent(tile.value)})`;group.append(title);
+    const fullValue=`${displayValue(tile.value)} · ${displayPercent(tile.value)}`,shortValue=displayValue(tile.value);
     if(w>=90&&h>=48){
-      const label=document.createElementNS(ns,"text");label.setAttribute("x",x+8);label.setAttribute("y",y+19);
-      label.setAttribute("fill","#fff");label.setAttribute("font-size","12");label.setAttribute("font-weight","600");
-      label.setAttribute("font-family","var(--font-sans)");label.textContent=treemapLabel(tile.label,w);group.append(label);
-      const value=document.createElementNS(ns,"text");value.setAttribute("x",x+8);value.setAttribute("y",y+38);
-      value.setAttribute("fill","rgba(255,255,255,.9)");value.setAttribute("font-size","10");
-      value.setAttribute("font-family","var(--font-mono)");
-      value.textContent=treemapLabel(`${displayValue(tile.value)} · ${displayPercent(tile.value)}`,w);group.append(value);
+      addTileText(group,treemapLabel(tile.label,w,TM_LABEL_CH),"12","var(--font-sans)","#fff","600",x+8,y+19,false);
+      addTileText(group,treemapValueText(fullValue,shortValue,w),"10","var(--font-mono)","rgba(255,255,255,.9)","",x+8,y+38,false);
+    }else if(h>=90&&w>=26){
+      // tall and narrow: run the label up the tile rather than leaving it unlabelled
+      addTileText(group,treemapLabel(tile.label,h,TM_LABEL_CH),"12","var(--font-sans)","#fff","600",x+17,y+h-8,true);
+      if(w>=44)addTileText(group,treemapValueText(fullValue,shortValue,h),"10","var(--font-mono)","rgba(255,255,255,.9)","",x+34,y+h-8,true);
     }
     svg.append(group);
   });
