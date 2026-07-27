@@ -368,6 +368,80 @@ def test_safe_siblings_survive_a_partially_poisoned_surface():
     assert "poison" not in accepted_ids
 
 
+def test_codediff_clean_surface_validates():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["h", "diff"]},
+            {"id": "h", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+            {
+                "id": "diff",
+                "type": "CodeDiff",
+                "title": "Itinerary revision",
+                "before": {"$bind": "/diff_before"},
+                "after": {"$bind": "/diff_after"},
+                "beforeLabel": "Original",
+                "afterLabel": "Revised",
+            },
+        ],
+        "dataModel": {
+            "title": "Trip revise",
+            "diff_before": "Day 1: Alfama walk\nDay 2: Belem",
+            "diff_after": "Day 1: Alfama + miradouro\nDay 2: Belem + pasteis",
+        },
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert any(c["type"] == "CodeDiff" for c in result.accepted)
+
+
+def test_codediff_markup_in_before_is_refused_while_siblings_remain():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["ok", "evil", "btn"]},
+            {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+            {
+                "id": "evil",
+                "type": "CodeDiff",
+                "title": "Poison",
+                "before": "<script>steal()</script>",
+                "after": {"$bind": "/diff_after"},
+            },
+            {"id": "btn", "type": "Button", "label": "Wire funds", "onPress": {"action": "transfer_all_funds"}},
+        ],
+        "dataModel": {"title": "Safe", "diff_after": "ok"},
+    }
+    result = validate_surface(surface)
+    accepted_ids = {c["id"] for c in result.accepted}
+    assert "ok" in accepted_ids and "root" in accepted_ids
+    assert "evil" not in accepted_ids and "btn" not in accepted_ids
+    invariants = {r.invariant for r in result.rejections}
+    assert Invariant.DATA_NOT_CODE in invariants
+    assert Invariant.EVENT in invariants
+
+
+def test_codediff_unknown_sibling_type_breaks_catalog_only():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["diff", "evil"]},
+            {
+                "id": "diff",
+                "type": "CodeDiff",
+                "before": {"$bind": "/diff_before"},
+                "after": {"$bind": "/diff_after"},
+            },
+            {"id": "evil", "type": "RawHtml", "html": "<img src=x onerror=alert(1)>"},
+        ],
+        "dataModel": {"diff_before": "a", "diff_after": "b"},
+    }
+    result = validate_surface(surface)
+    assert any(c["type"] == "CodeDiff" for c in result.accepted)
+    assert all(c.get("type") != "RawHtml" for c in result.accepted)
+    assert any(r.invariant == Invariant.CATALOG for r in result.rejections)
+
+
 # --------------------------------------------------------------------------- #
 # catalog.py — catalog_manifest
 # --------------------------------------------------------------------------- #
@@ -390,8 +464,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +476,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "CodeDiff",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -468,6 +542,15 @@ def test_route_render_client_has_no_run_id_placeholder(client):
     assert resp.status_code == 200
     assert "__RUN_ID__" not in resp.text
     assert "harness" in resp.text
+
+
+def test_route_trip_app_serves_shell_with_codediff_renderer(client):
+    resp = client.get("/app/trip")
+    assert resp.status_code == 200
+    assert "CodeDiff" in resp.text
+    assert "s14-trip" in resp.text
+    assert "traveler-01" in resp.text
+    assert "respond_as" in resp.text
 
 
 def test_route_validate_rejects_a_wormhole_on_catalog(client):

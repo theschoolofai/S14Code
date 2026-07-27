@@ -63,6 +63,17 @@
   .Text .md-p{margin:6px 0;line-height:1.6}
   .Text .md-ul{margin:6px 0 6px 4px;padding-left:18px}
   .Text .md-ul li{margin:3px 0;line-height:1.55}
+  .CodeDiff{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden;font-family:var(--font-mono);font-size:12px}
+  .CodeDiff .ct{padding:10px 12px;font-size:12px;font-weight:600;color:var(--ink-muted);border-bottom:1px solid var(--rule);font-family:var(--font-mono)}
+  .CodeDiff .cols{display:grid;grid-template-columns:1fr 1fr}
+  .CodeDiff .pane{min-width:0}
+  .CodeDiff .pane+.pane{border-left:1px solid var(--rule)}
+  .CodeDiff .plab{padding:6px 12px;background:var(--surface-alt);color:var(--ink-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--rule)}
+  .CodeDiff .lines{padding:8px 0;max-height:280px;overflow:auto}
+  .CodeDiff .ln{display:flex;gap:8px;padding:1px 12px;white-space:pre-wrap;word-break:break-word;line-height:1.45}
+  .CodeDiff .ln.del{background:var(--red-soft);color:var(--red-ink)}
+  .CodeDiff .ln.add{background:var(--green-soft);color:var(--green-ink)}
+  .CodeDiff .mk{width:1ch;flex:0 0 auto;opacity:.7}
 </style>
 </head>
 <body>
@@ -137,6 +148,7 @@ const R={
   DateTime:(c,x)=>{const i=$("input","field");i.type="date";return i;},
   Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
   ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
+  CodeDiff:(c,x)=>codeDiff(c,x),
 };
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
@@ -146,6 +158,25 @@ function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").ma
 function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);const tabIds=c.children||[];function show(i){body.textContent="";const cc=x.byId[tabIds[i]];if(cc)body.append(node(cc,x));[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}
   (String(c.labels||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});
   if(tabIds.length)show(0);return wrap;}
+function codeDiff(c,x){
+  const e=$("div","CodeDiff");
+  if(c.title){const t=$("div","ct");t.append(T(c.title));e.append(t);}
+  const before=String(resolve(c.before,x.dm)??"");
+  const after=String(resolve(c.after,x.dm)??"");
+  const cols=$("div","cols");
+  function pane(label,body,cls){
+    const p=$("div","pane");
+    const lab=$("div","plab");lab.append(T(label));p.append(lab);
+    const lines=$("div","lines");
+    String(body).split(/\r?\n/).forEach(line=>{
+      const row=$("div","ln "+cls);const mk=$("span","mk");mk.append(T(cls==="del"?"-":(cls==="add"?"+":" ")));
+      row.append(mk,T(line));lines.append(row);
+    });
+    p.append(lines);return p;
+  }
+  cols.append(pane(c.beforeLabel||"Before",before,"del"), pane(c.afterLabel||"After",after,"add"));
+  e.append(cols);return e;
+}
 
 function render(surface){const byId={};surface.components.forEach(c=>byId[c.id]=c);const x={byId,dm:surface.dataModel||{}};const m=document.getElementById("mount");m.textContent="";m.append(node(byId[surface.root],x));}
 

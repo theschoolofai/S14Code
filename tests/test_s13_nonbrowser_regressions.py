@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.parse import urlparse
+from urllib.request import url2pathname
 
 import s13code.routes as agent_route
 import s13code.runtime as runtime_module
 from s13code.core.memory.embeddings import DeterministicEmbedder
+
+
+def _path_from_file_uri(uri: str) -> Path:
+    return Path(url2pathname(urlparse(uri).path))
 
 
 def _fake_answer(monkeypatch):
@@ -91,7 +97,9 @@ def test_birthday_creates_two_real_calendar_artifacts(app_client, monkeypatch):
         "prompt": "My mom's birthday is 15 May 2026. Remember that and give me a calendar reminder for two weeks before and on the day."}).json()
     artifacts = body["graph"]["nodes"]["reminder"]["result"]["artifacts"]
     assert len(artifacts) == 2
-    assert all(Path(uri.removeprefix("file://")).read_text().startswith("BEGIN:VCALENDAR") for uri in artifacts)
+    assert all(
+        _path_from_file_uri(uri).read_text().startswith("BEGIN:VCALENDAR") for uri in artifacts
+    )
 
 
 def test_missing_file_is_safely_attempted_and_failure_reaches_answer(app_client, monkeypatch, tmp_path):

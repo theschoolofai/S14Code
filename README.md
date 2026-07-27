@@ -73,7 +73,18 @@ Health, the trusted catalog, and the real harness-composed surface:
 curl http://127.0.0.1:8113/healthz
 curl http://127.0.0.1:8113/v1/catalog
 open  http://127.0.0.1:8113/s/harness      # the render client, which executes nothing
+open  http://127.0.0.1:8113/app            # generic UI-only app loop
+open  http://127.0.0.1:8113/app/trip       # Trip Planner (every turn is a composed interface)
 ```
+
+## Trip Planner (UI-only application)
+
+`GET /app/trip` forks the bare `/app` shell for a multi-turn trip planner. Synthetic
+identities only (`tenant_id=course`, `project_id=s14-trip`, `user_id=traveler-01`).
+Each turn posts `respond_as:"ui"`, reads `/v1/runs/{id}/composed`, and renders the
+validated surface. A button tap becomes the next turn. The catalog includes a custom
+`CodeDiff` component so itinerary revisions can render as before/after plain-text
+plans — drawn with text nodes only, never `innerHTML` from bound values.
 
 ## Run a prompt
 
@@ -111,11 +122,14 @@ All served by the runtime on 8113, defined in
 | `GET /v1/catalog` | the trusted component catalog |
 | `GET /v1/runs/{id}/surface` | a validated declarative surface built from the in-process graph |
 | `GET /v1/runs/{id}/dashboard` | the rich showcase dashboard, validated |
+| `GET /v1/runs/{id}/composed` | the `compose_surface` result for a UI-mode run |
 | `GET /v1/runs/{id}/events` | the S13 journal mapped to AG-UI events over SSE |
 | `GET /v1/harness/surface` | the real surface a recorded S13 harness run composed (re-validated on serve) |
 | `POST /v1/validate` | run any surface through the injection wall |
 | `POST /v1/action` | a validated user action (approve/reject), bound to final params |
 | `GET /s/{id}` | the render client, pointed at a run |
+| `GET /app` | bare-minimal UI-only conversation shell |
+| `GET /app/trip` | Trip Planner shell (destination → days → revision with CodeDiff) |
 
 ## The generative loop (UI composed by the harness)
 
@@ -145,11 +159,17 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `proof.json` | `run_surface_proof.py` | injection wall (4 rejections), HITL, catalog/validator |
 | `harness_run.json` | `harness_run.py` | a real live-graph run → the model composes a 19-component surface |
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
+| `harness_codediff.json` | `harness_codediff.py` | live compose includes `CodeDiff` without naming it in the user prompt |
+| `adversarial_trip.json` | `adversarial_trip.py` | RawHtml / markup / unregistered action refused; safe heading survives |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
+uv run python proofs/adversarial_trip.py     # three invariants against a hostile surface
+# gateway on 8111 required:
+S13_GATEWAY_PROVIDER=gemini GLC_BASE_URL=http://127.0.0.1:8111 \
+  uv run python proofs/harness_codediff.py   # -> proofs/harness_codediff.json
 uv run pytest -q                             # S13 core + regression tests + the S14 invariant tests
 ```
 

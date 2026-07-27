@@ -61,6 +61,17 @@
   @media (prefers-color-scheme:dark){:root{--bg:#0d0f14;--surface:#161922;--surface-alt:#11131a;--ink:#f3f5f9;--ink-body:#e4e8f0;--ink-muted:#9aa4b8;--rule:#252a36;--rule-strong:#333a49}body{background:var(--surface-alt)}}
 
   .Text .md-h{font-weight:700;color:var(--ink);margin:12px 0 4px}.Text .md-p{margin:6px 0;line-height:1.6}.Text .md-ul{margin:6px 0 6px 4px;padding-left:18px}.Text .md-ul li{margin:3px 0}
+  .CodeDiff{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden;font-family:var(--font-mono);font-size:12px}
+  .CodeDiff .ct{padding:10px 12px;font-size:12px;font-weight:600;color:var(--ink-muted);border-bottom:1px solid var(--rule)}
+  .CodeDiff .cols{display:grid;grid-template-columns:1fr 1fr}
+  .CodeDiff .pane{min-width:0}
+  .CodeDiff .pane+.pane{border-left:1px solid var(--rule)}
+  .CodeDiff .plab{padding:6px 12px;background:var(--surface-alt);color:var(--ink-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--rule)}
+  .CodeDiff .lines{padding:8px 0;max-height:280px;overflow:auto}
+  .CodeDiff .ln{display:flex;gap:8px;padding:1px 12px;white-space:pre-wrap;word-break:break-word;line-height:1.45}
+  .CodeDiff .ln.del{background:var(--red-soft);color:var(--red-ink)}
+  .CodeDiff .ln.add{background:var(--green-soft);color:var(--green-ink)}
+  .CodeDiff .mk{width:1ch;flex:0 0 auto;opacity:.7}
 </style>
 </head>
 <body>
@@ -135,6 +146,7 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  CodeDiff:(c,ctx)=>renderCodeDiff(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -185,6 +197,26 @@ function renderApproval(c,ctx){const e=$("div","Approval");const sm=$("div","sm"
   const pre=$("pre");pre.append(text(JSON.stringify(resolve(c.params,ctx.dm),null,2)));const btns=$("div","btns");
   const ok=$("button","ok");ok.append(text("Approve"));ok.onclick=()=>emitAction("approve",resolve(c.params,ctx.dm));
   const no=$("button");no.append(text("Reject"));no.onclick=()=>emitAction("reject",{});btns.append(ok,no);e.append(sm,pre,btns);return e;}
+
+function renderCodeDiff(c,ctx){
+  const e=$("div","CodeDiff");
+  if(c.title){const t=$("div","ct");t.append(text(c.title));e.append(t);}
+  const before=String(resolve(c.before,ctx.dm)??"");
+  const after=String(resolve(c.after,ctx.dm)??"");
+  const cols=$("div","cols");
+  function pane(label,body,cls){
+    const p=$("div","pane");
+    const lab=$("div","plab");lab.append(text(label));p.append(lab);
+    const lines=$("div","lines");
+    String(body).split(/\r?\n/).forEach(line=>{
+      const row=$("div","ln "+cls);const mk=$("span","mk");mk.append(text(cls==="del"?"-":(cls==="add"?"+":" ")));
+      row.append(mk,text(line));lines.append(row);
+    });
+    p.append(lines);return p;
+  }
+  cols.append(pane(c.beforeLabel||"Before",before,"del"), pane(c.afterLabel||"After",after,"add"));
+  e.append(cols);return e;
+}
 
 function emitAction(name,args){ // the only way the surface changes the world: a named, validated event
   document.getElementById("meta").textContent = "action emitted → "+name+" "+JSON.stringify(args);

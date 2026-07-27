@@ -1,0 +1,269 @@
+{
+  "task": "Revise this day plan for a walking focus and show a clear before-and-after comparison of the two plain-text versions line by line, then offer two next-step choices: keep the walking plan, or switch to transit. Original plan text:\n09:00 Tower ticket queue\n11:00 Monastery rush visit\n13:00 Pastry stop then taxi across town\n16:00 Viewpoint then dinner downtown\nPrefer a walking revision that replaces the taxi with a riverside walk and spreads the same stops with timed entry.",
+  "run_id": "run-b544d5cc8b66",
+  "status": "completed",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "gateway_provider_env": "gemini",
+  "graph_nodes": {
+    "content": {
+      "skill": "content",
+      "state": "succeeded",
+      "error": null,
+      "result_keys": [
+        "agent",
+        "model",
+        "provider",
+        "raw",
+        "structured",
+        "text"
+      ]
+    },
+    "surface": {
+      "skill": "compose_surface",
+      "state": "succeeded",
+      "error": null,
+      "result_keys": [
+        "agent",
+        "data_model",
+        "model",
+        "parse_ok",
+        "provider",
+        "raw_surface",
+        "surface",
+        "upstream_used",
+        "validator"
+      ]
+    }
+  },
+  "content_structured_keys": [
+    "choices",
+    "diff",
+    "intro",
+    "sections",
+    "title"
+  ],
+  "compose_surface_node": {
+    "state": "succeeded",
+    "error": null,
+    "provider": "gemini_1",
+    "model": "gemini-3.1-flash-lite-preview",
+    "validator": {
+      "proposed": 8,
+      "accepted": 8,
+      "rejected": 0,
+      "ok": true,
+      "rejections": [],
+      "dangling_child_refs": [],
+      "component_types": [
+        "Button",
+        "Card",
+        "CodeDiff",
+        "Row",
+        "Text"
+      ],
+      "component_count": 8
+    },
+    "component_types": [
+      "Button",
+      "Card",
+      "CodeDiff",
+      "Row",
+      "Text"
+    ],
+    "has_codediff": true,
+    "data_model_keys": [
+      "choice_0_label",
+      "choice_1_label",
+      "choices",
+      "diff_after",
+      "diff_after_label",
+      "diff_before",
+      "diff_before_label",
+      "goal",
+      "intro",
+      "item_count",
+      "items",
+      "metrics",
+      "progress_max",
+      "progress_value",
+      "results",
+      "section_0_heading",
+      "section_0_points",
+      "section_events",
+      "sections",
+      "source_count",
+      "spark",
+      "subjects",
+      "summary",
+      "table_rows",
+      "timeline",
+      "title"
+    ],
+    "surface_accepted": [
+      {
+        "id": "title",
+        "type": "Text",
+        "variant": "heading",
+        "text": {
+          "$bind": "/title"
+        }
+      },
+      {
+        "id": "summary",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/summary"
+        }
+      },
+      {
+        "id": "diff",
+        "type": "CodeDiff",
+        "title": "Plan Comparison",
+        "before": {
+          "$bind": "/diff_before"
+        },
+        "after": {
+          "$bind": "/diff_after"
+        },
+        "beforeLabel": {
+          "$bind": "/diff_before_label"
+        },
+        "afterLabel": {
+          "$bind": "/diff_after_label"
+        }
+      },
+      {
+        "id": "schedule_card",
+        "type": "Card",
+        "title": "Walking Schedule",
+        "children": [
+          "schedule_text"
+        ]
+      },
+      {
+        "id": "schedule_text",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/section_0_points"
+        }
+      },
+      {
+        "id": "choices_row",
+        "type": "Row",
+        "align": "center",
+        "justify": "spaceBetween",
+        "children": [
+          "btn_0",
+          "btn_1"
+        ]
+      },
+      {
+        "id": "btn_0",
+        "type": "Button",
+        "label": {
+          "$bind": "/choice_0_label"
+        },
+        "onPress": {
+          "action": "request_data"
+        }
+      },
+      {
+        "id": "btn_1",
+        "type": "Button",
+        "label": {
+          "$bind": "/choice_1_label"
+        },
+        "onPress": {
+          "action": "request_data"
+        }
+      }
+    ],
+    "data_model": {
+      "title": "Revised Walking Itinerary",
+      "goal": "Revise this day plan for a walking focus and show a clear before-and-after comparison of the two plain-text versions line by line, then offer two next-step choices: keep the walking plan, or switch to transit. Original plan text:\n09:00 Tower ticket queue\n11:00 Monastery rush visit\n13:00 Pastry stop then taxi across town\n16:00 Viewpoint then dinner downtown\nPrefer a walking revision that replaces the taxi with a riverside walk and spreads the same stops with timed entry.",
+      "summary": "A pedestrian-focused schedule replacing transit with a scenic riverside route.",
+      "results": [],
+      "items": [],
+      "metrics": [],
+      "spark": [],
+      "table_rows": [],
+      "item_count": 0,
+      "source_count": 0,
+      "subjects": [
+        "Keep the walking plan",
+        "Switch to transit"
+      ],
+      "timeline": [
+        {
+          "time": "1",
+          "label": "run_started"
+        },
+        {
+          "time": "2",
+          "label": "graph_patched"
+        },
+        {
+          "time": "3",
+          "label": "task_started content"
+        },
+        {
+          "time": "4",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "5",
+          "label": "graph_patched"
+        },
+        {
+          "time": "6",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "intro": "A pedestrian-focused schedule replacing transit with a scenic riverside route.",
+      "section_0_heading": "Walking Schedule",
+      "section_0_points": "\u2022 09:00 Tower ticket queue\n\u2022 11:00 Monastery visit\n\u2022 13:00 Pastry stop\n\u2022 14:00 Riverside walk across town\n\u2022 16:00 Viewpoint then dinner downtown",
+      "sections": [
+        {
+          "heading": "Walking Schedule",
+          "points": [
+            "09:00 Tower ticket queue",
+            "11:00 Monastery visit",
+            "13:00 Pastry stop",
+            "14:00 Riverside walk across town",
+            "16:00 Viewpoint then dinner downtown"
+          ]
+        }
+      ],
+      "section_events": [
+        {
+          "time": "Walking Schedule",
+          "label": "09:00 Tower ticket queue; 11:00 Monastery visit; 13:00 Pastry stop; 14:00 Riverside walk across town; 16:00 Viewpoint then dinner downtown"
+        }
+      ],
+      "choices": [
+        {
+          "id": "walk",
+          "label": "Keep the walking plan"
+        },
+        {
+          "id": "transit",
+          "label": "Switch to transit"
+        }
+      ],
+      "choice_0_label": "Keep the walking plan",
+      "choice_1_label": "Switch to transit",
+      "diff_before": "09:00 Tower ticket queue\n11:00 Monastery rush visit\n13:00 Pastry stop then taxi across town\n16:00 Viewpoint then dinner downtown",
+      "diff_after": "09:00 Tower ticket queue\n11:00 Monastery visit\n13:00 Pastry stop\n14:00 Riverside walk across town\n16:00 Viewpoint then dinner downtown",
+      "diff_before_label": "Original Plan",
+      "diff_after_label": "Walking Revision"
+    },
+    "revalidate_ok": true,
+    "revalidate_rejections": []
+  },
+  "assert_codediff_composed_unprompted": true,
+  "assert_surface_clean": true
+}
