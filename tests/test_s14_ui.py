@@ -481,7 +481,12 @@ def test_map_markup_caption_is_refused():
 
 
 def test_clean_map_markers_accepts_aliases_and_schematic_fallback():
-    from s13code.runtime import _clean_map_markers, _schematic_markers_from_sections
+    from s13code.runtime import (
+        _clean_map_markers,
+        _labels_from_surface_cards,
+        _schematic_markers_from_sections,
+        _unwrap_content_fields,
+    )
     cleaned = _clean_map_markers([
         {"latitude": "38.71", "longitude": "-9.14", "name": "Alfama"},
         {"location": {"lat": 38.7, "lon": -9.2}, "title": "Belem"},
@@ -498,6 +503,20 @@ def test_clean_map_markers_accepts_aliases_and_schematic_fallback():
     assert len(schematic) == 2
     assert schematic[0]["label"] == "Alfama & Castelo"
     assert schematic[1]["label"] == "Belém District"
+    unwrapped = _unwrap_content_fields({
+        "title": "outer",
+        "summary": {
+            "title": "inner-ignored",
+            "map": {"markers": [{"lat": 1, "lng": 2, "label": "A"}]},
+            "sections": [{"heading": "Day 1", "points": ["x"]}],
+        },
+    })
+    assert unwrapped["title"] == "outer"
+    assert unwrapped["map"]["markers"][0]["label"] == "A"
+    assert _labels_from_surface_cards([
+        {"id": "c1", "type": "Card", "title": "Day 1: Alfama & Castelo"},
+        {"id": "m", "type": "Map", "title": "Lisbon Highlights"},
+    ]) == ["Day 1: Alfama & Castelo"]
 
 
 # --------------------------------------------------------------------------- #

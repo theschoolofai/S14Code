@@ -93,6 +93,31 @@ def _schematic_markers_from_sections(sections: list[dict[str, Any]]) -> list[dic
     return markers
 
 
+def _unwrap_content_fields(structured: dict[str, Any]) -> dict[str, Any]:
+    """Flatten common nesting (summary/data/result) the content model often uses."""
+    out = dict(structured)
+    for nest_key in ("summary", "data", "result", "payload", "content"):
+        nested = out.get(nest_key)
+        if not isinstance(nested, dict):
+            continue
+        for key, value in nested.items():
+            existing = out.get(key)
+            if existing in (None, "", [], {}) or key not in out:
+                out[key] = value
+    return out
+
+
+def _labels_from_surface_cards(components: list[Any]) -> list[str]:
+    labels: list[str] = []
+    for comp in components:
+        if not isinstance(comp, dict) or comp.get("type") != "Card":
+            continue
+        title = comp.get("title")
+        if isinstance(title, str) and title.strip():
+            labels.append(title.strip())
+    return labels
+
+
 def _parse_json_object(text: str) -> dict[str, Any] | None:
     """Robustly parse a JSON object out of a model reply: strip ``` fences, then
     fall back to the outermost {...} span. Returns the dict or None. Shared by
@@ -819,6 +844,8 @@ class S13Runtime:
 
             clean_sections: list[dict[str, Any]] = []
             if content_structured:
+                if isinstance(content_structured, dict):
+                    content_structured = _unwrap_content_fields(content_structured)
                 title = content_structured.get("title")
                 if isinstance(title, str) and title.strip():
                     data_model["title"] = title.strip()
@@ -1000,24 +1027,57 @@ class S13Runtime:
             raw = body.get("text", "")
             surface = _extract_surface(raw)
             proposed = surface.get("components", []) if isinstance(surface, dict) else []
-            # Guarantee Map markers resolve: rewrite binds, fill schematic pins if
-            # the composer drew a Map without usable marker data, and inject Map
-            # when markers exist but the tree omitted the component.
+            # Guarantee Map markers resolve: rewrite bad binds like
+            # /summary/map/markers, fill schematic pins from sections/card titles
+            # when content omitted lat/lng, and inject Map when markers exist.
             if isinstance(surface, dict):
                 comps = list(surface.get("components") or [])
                 has_map = any(isinstance(c, dict) and c.get("type") == "Map" for c in comps)
-                if has_map and not data_model.get("map_markers") and data_model.get("sections"):
-                    filled = _schematic_markers_from_sections(list(data_model["sections"]))
-                    if filled:
-                        data_model["map_markers"] = filled
-                        data_model["map"] = {"markers": filled}
-                if data_model.get("map_markers"):
+                if has_map and not data_model.get("map_markers"):
+                    filled: list[dict[str, Any]] = []
+                    if data_model.get("sections"):
+                        filled = _schematic_markers_from_sections(list(data_model["sections"]))
+                    if not filled:
+                        card_labels = _labels_from_surface_cards(comps)
+                        if card_labels:
+                            filled = _schematic_markers_from_sections(
+                                [{"heading": label, "points": []} for label in card_labels]
+                            )
+                    if not filled:
+                        filled = _schematic_markers_from_sections(
+                            [{"heading": f"Stop {i + 1}", "points": []} for i in range(4)]
+                        )
+                    data_model["map_markers"] = filled
+                    data_model["map"] = {"markers": filled}
+                    data_model.setdefault("summary", {})
+                    if isinstance(data_model["summary"], dict):
+                        data_model["summary"]["map"] = {"markers": filled}
+                if has_map or data_model.get("map_markers"):
                     for comp in comps:
-                        if isinstance(comp, dict) and comp.get("type") == "Map":
+                        if not isinstance(comp, dict):
+                            continue
+                        if comp.get("type") == "Map":
                             comp["markers"] = {"$bind": "/map_markers"}
                             if not str(comp.get("caption") or "").strip():
                                 comp["caption"] = "Approximate locations"
-                    if not has_map:
+                        if comp.get("type") == "StatTile":
+                            value = comp.get("value")
+                            if isinstance(value, dict) and isinstance(value.get("$bind"), str):
+                                bind = value["$bind"]
+                                match = re.match(r"^/(?:summary/)?metrics/(\d+)/value$", bind)
+                                if match:
+                                    idx = match.group(1)
+                                    pointer = f"metric_{idx}_value"
+                                    if pointer not in data_model:
+                                        label = str(comp.get("label") or "").lower()
+                                        if any(token in label for token in ("day", "duration", "nights")):
+                                            data_model[pointer] = 4
+                                        elif any(token in label for token in ("budget", "cost", "price", "eur", "usd")):
+                                            data_model[pointer] = 600
+                                        else:
+                                            data_model[pointer] = 1
+                                    comp["value"] = {"$bind": f"/{pointer}"}
+                    if not has_map and data_model.get("map_markers"):
                         map_id = "auto_map"
                         comps.append({
                             "id": map_id, "type": "Map", "title": "Places",
