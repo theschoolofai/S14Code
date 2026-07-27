@@ -95,11 +95,11 @@
 <body>
 <div class="wrap">
   <div class="head"><span>S14 trip planner · UI-only turns</span><span style="margin-left:auto">Map · CodeDiff · Timeline</span></div>
-  <p class="hint">Every reply is a composed interface. Best demo path: destinations → day timeline + map → before/after revision. Avoid fake actions like PDF / email.</p>
+  <p class="hint">Stop after three turns. Path: destinations → day timeline + map → before/after revision. Do not keep tapping Accept / View map — that recycles old buttons.</p>
   <div class="path">
     <button type="button" data-fill="Plan a 4-day trip. Offer exactly four single-word destination choices as buttons. Do not invent a full itinerary yet.">1 · Destinations</button>
-    <button type="button" data-hint="Lisbon">2 · Tap Lisbon</button>
-    <button type="button" data-hint="Optimize Day 2 for walking">3 · Optimize Day 2</button>
+    <button type="button" data-hint="Lisbon">2 · Tap Lisbon (expect Map)</button>
+    <button type="button" data-hint="Optimize Day 2 for walking">3 · Optimize Day 2 (expect CodeDiff)</button>
   </div>
   <div class="startbar">
     <input id="prompt" value="Plan a 4-day trip. Offer exactly four single-word destination choices as buttons. Do not invent a full itinerary yet." />
@@ -272,13 +272,16 @@ function setStatus(html){document.getElementById("status").innerHTML=html;}
 function crumbs(){document.getElementById("crumbs").textContent = convo.length? "conversation: "+convo.join("  ›  ") : "";}
 
 function buildGoal(){
-  const ban = " Do not offer download, email, PDF, share, or booking actions.";
+  const ban = " Do not offer download, email, PDF, share, booking, accept, revert, confirm, save, exit, return-home, or view-map actions. Never reuse prior button labels.";
   if(convo.length===1) return convo[0]+ban;
-  const picks = convo.slice(1).join(", then ");
+  const city = convo[1] || "the chosen city";
   if(convo.length===2){
-    return convo[0]+"\nThe user picked: "+picks+".\nCompose the NEXT interface only: day-by-day itinerary as ordered sections, key metrics (days, budget), a small numeric series for daily spend if useful, a map of notable places with approximate lat/lng markers, and 2-3 short next-step choices such as optimizing one day for walking."+ban+" Prefer structured fields over long prose.";
+    return convo[0]+"\nThe user picked destination: "+city+".\nCompose the NEXT interface only: day-by-day itinerary as ordered sections, key metrics (days, budget), optional daily-spend series, and REQUIRED map.markers (4-6 notable places in "+city+" with approximate numeric lat/lng). Offer exactly 2 short next-step choices such as \"Optimize Day 2 for walking\" — no Accept/Revert."+ban+" Prefer structured fields over long prose.";
   }
-  return convo[0]+"\nSo far the user then picked: "+picks+".\nCompose the NEXT interface only: revise with a before/after plain-text day plan (diff), a small comparison table, and at most two short next-step choices."+ban+" Prefer structured fields over long prose.";
+  if(convo.length===3){
+    return convo[0]+"\nDestination: "+city+". Latest pick: "+convo[2]+".\nCompose the NEXT interface only: before/after plain-text day plan via diff, a small comparison table, and ZERO or at most one new next-step choice. Do not invent Accept/Revert buttons."+ban+" Prefer structured fields over long prose.";
+  }
+  return "The three-turn trip demo is complete for destination "+city+". Compose a short Notice that the demo path is done, with exactly one Button labeled \"Restart destinations\". No map, no CodeDiff, no Accept/Revert.";
 }
 
 async function runTurn(userText){

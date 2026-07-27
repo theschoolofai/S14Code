@@ -460,6 +460,14 @@ def test_map_clean_surface_validates():
     assert any(c["type"] == "Map" for c in result.accepted)
 
 
+def test_trip_shell_steers_map_and_stops_accept_loop():
+    from pathlib import Path
+    html = (Path(__file__).resolve().parents[1] / "s13code" / "ui" / "client" / "trip.html").read_text(encoding="utf-8")
+    assert "REQUIRED map.markers" in html
+    assert "Restart destinations" in html
+    assert "Accept/Revert" in html
+
+
 def test_map_markup_caption_is_refused():
     r = _reject({
         "id": "m",
