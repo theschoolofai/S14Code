@@ -228,7 +228,10 @@ function renderCodeDiff(c,ctx){
 function renderMap(c,ctx){
   const e=$("div","Map");
   if(c.title){const t=$("div","ct");t.append(text(c.title));e.append(t);}
-  const markers=(resolve(c.markers,ctx.dm)||[]).filter(m=>m&&isFinite(+m.lat)&&isFinite(+m.lng));
+  let markers=resolve(c.markers,ctx.dm);
+  if(markers&&!Array.isArray(markers)&&Array.isArray(markers.markers))markers=markers.markers;
+  if(!Array.isArray(markers)||!markers.length)markers=ctx.dm&&ctx.dm.map_markers;
+  markers=(markers||[]).filter(m=>m&&isFinite(+m.lat)&&isFinite(+m.lng));
   const w=560,h=280,pad=28,ns="http://www.w3.org/2000/svg";
   const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox","0 0 "+w+" "+h);svg.setAttribute("width","100%");svg.setAttribute("height","280");
   const bg=document.createElementNS(ns,"rect");bg.setAttribute("x","0");bg.setAttribute("y","0");bg.setAttribute("width",w);bg.setAttribute("height",h);bg.setAttribute("fill","#EEF2FF");svg.append(bg);
