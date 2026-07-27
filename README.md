@@ -227,6 +227,15 @@ The loop is the protocol, not application code: `POST /v1/agent/runs` with
 `respond_as: "ui"` → the graph runs `content` → `compose_surface` → the shell
 reads `GET /v1/runs/{id}/composed` and renders it.
 
+Before any turn, the shell holds nothing of its own — no greeting the agent did
+not compose, no prose placeholder standing in for an answer:
+
+![StudyCoach before the first turn: the goal input, a Start button, and a single italic hint explaining that the coach answers by building an interface and each tap becomes the next turn](docs/studycoach-empty-state.jpg)
+
+That italic line is the app's only piece of static copy, and it is instruction
+rather than content. Everything below it in every later screenshot came from the
+model through the validator.
+
 Turn one on the deployed app, composed live by `gemini_1`:
 
 ![StudyCoach turn one: the coach answers the opening goal with a heading, an intro, five tappable subject Buttons, a ProgressBar and a Timeline of the run's own graph events](docs/studycoach-turn-1.jpg)
