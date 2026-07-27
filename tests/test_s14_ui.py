@@ -9,7 +9,10 @@ TestClient. No live gateway, no Ollama, no network.
 from __future__ import annotations
 
 import copy
+import json
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -720,6 +723,44 @@ def test_render_client_never_uses_innerhtml_and_documents_the_contract():
     # The one place the word appears is the documented safety contract itself.
     assert html.count("innerHTML") == 1
     assert "NEVER sets" in html and "innerHTML from a bound value" in html
+
+
+@pytest.mark.parametrize("page", ["jobs.html", "app.html"])
+def test_render_client_executes_nothing_when_every_bound_value_is_hostile(page):
+    """Behavioural, not source-level: actually run the renderer under a DOM that
+    records what it is asked to do, with markup, a script tag, a javascript: URL
+    and a handler string in every bound slot. Skipped where node is absent."""
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node is not installed; the source-level contract tests still run")
+    probe = Path(__file__).parent / "render_client_probe.mjs"
+    completed = subprocess.run([node, str(probe), str(_BUILD_ROOT), page],
+                               capture_output=True, text=True, timeout=60)
+    assert completed.returncode == 0, completed.stderr
+    report = json.loads(completed.stdout)
+
+    assert report["renderedSomething"]
+    # Nothing the client did could execute.
+    assert report["innerHTMLWrites"] == 0
+    assert report["executableElements"] == []
+    assert report["handlerAttributes"] == []
+    assert report["unsafeUrlAttributes"] == []
+    # And the hostile values are still shown — as characters, not as elements.
+    assert report["markupIsLiteralText"]
+    assert report["scriptIsLiteralText"]
+    assert report["jsUrlIsLiteralText"]
+
+
+def test_render_client_draws_kanban_cards_as_tappable_buttons():
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node is not installed")
+    probe = Path(__file__).parent / "render_client_probe.mjs"
+    completed = subprocess.run([node, str(probe), str(_BUILD_ROOT), "jobs.html"],
+                               capture_output=True, text=True, timeout=60)
+    assert completed.returncode == 0, completed.stderr
+    # Two cards in the poisoned board; both drawn, both tappable, neither executed.
+    assert json.loads(completed.stdout)["tappableCards"] == 2
 
 
 def test_render_client_reconnects_and_rebuilds_from_a_state_snapshot():
