@@ -466,6 +466,8 @@ def test_trip_shell_steers_map_and_stops_accept_loop():
     assert "REQUIRED map.markers" in html
     assert "Restart destinations" in html
     assert "Accept/Revert" in html
+    assert "restart(\\s+destinations)?$" in html or "restart" in html.lower()
+    assert "convo = []" in html or "convo=[]" in html
 
 
 def test_map_markup_caption_is_refused():

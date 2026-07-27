@@ -311,7 +311,18 @@ async function runTurn(userText){
     setStatus('<span class="pill" style="background:var(--red-soft);color:var(--red-ink)">error</span> '+String(err&&err.message||err));
   }
 }
-function choose(label){ if(label) runTurn(label); }
+function choose(label){
+  if(!label) return;
+  const restart = /^restart(\s+destinations)?$/i.test(String(label).trim());
+  if(restart){
+    const start = document.getElementById("prompt").value.trim()
+      || "Plan a 4-day trip. Offer exactly four single-word destination choices as buttons. Do not invent a full itinerary yet.";
+    convo = [];
+    runTurn(start);
+    return;
+  }
+  runTurn(label);
+}
 
 document.getElementById("ask").onclick=()=>{ convo=[]; runTurn(document.getElementById("prompt").value.trim()); };
 document.getElementById("prompt").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("ask").click(); });
