@@ -936,11 +936,20 @@ class S13Runtime:
             dangling = sorted({child for comp in validation.accepted
                                for child in comp.get("children", []) if child not in accepted_ids})
             types_used = sorted({comp.get("type") for comp in validation.accepted})
+            root_id = (surface or {}).get("root", "root") if isinstance(surface, dict) else "root"
+            # If the declared root was rejected, remount on an accepted layout node
+            # so /composed still renders instead of a blank/crash client.
+            if root_id not in accepted_ids and validation.accepted:
+                layout = next(
+                    (comp for comp in validation.accepted
+                     if comp.get("type") in {"Column", "Row", "List", "Card", "Tabs"}),
+                    validation.accepted[0],
+                )
+                root_id = layout.get("id", root_id)
             return {
                 "agent": "ui_composer", "provider": body.get("provider"), "model": body.get("model"),
                 "raw_surface": raw,
-                "surface": {"root": (surface or {}).get("root", "root") if isinstance(surface, dict) else "root",
-                            "components": validation.accepted, "dataModel": data_model},
+                "surface": {"root": root_id, "components": validation.accepted, "dataModel": data_model},
                 "data_model": data_model,
                 "validator": {"proposed": len(proposed), "accepted": len(validation.accepted),
                               "rejected": len(validation.rejections), "ok": validation.ok,

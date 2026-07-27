@@ -206,10 +206,19 @@ async def composed(run_id: str, request: Request):
     if not surf.get("components"):
         raise HTTPException(404, "run has no composed interface (no compose_surface node)")
     result = validate_surface(surf)
+    accepted_ids = {comp.get("id") for comp in result.accepted}
+    root_id = surf.get("root")
+    if root_id not in accepted_ids and result.accepted:
+        layout = next(
+            (comp for comp in result.accepted
+             if comp.get("type") in {"Column", "Row", "List", "Card", "Tabs"}),
+            result.accepted[0],
+        )
+        root_id = layout.get("id")
     return {
         "run_id": run_id,
         "finished": run["finished"],
-        "surface": {"root": surf.get("root"), "components": result.accepted,
+        "surface": {"root": root_id, "components": result.accepted,
                     "dataModel": res.get("data_model") or surf.get("dataModel") or {}},
         "component_count": len(result.accepted),
         "clean": result.ok,
