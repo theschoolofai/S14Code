@@ -9,9 +9,14 @@ from s13code.core.memory import MemoryKind, MemoryScope, Principal
 router = APIRouter(prefix="/v1/agent", tags=["S13 live agent"])
 
 
-async def gateway_text_llm(app, prompt: str, system: str):
-    """Patchable test seam; production crosses HTTP through GatewayClient."""
-    return await app.state.gateway.complete(prompt, system)
+async def gateway_text_llm(app, prompt: str, system: str, **options):
+    """Patchable test seam; production crosses HTTP through GatewayClient.
+
+    ``options`` forwards per-call knobs (today ``max_tokens``) so a role that
+    needs a structured reply can buy the room for one without changing the
+    default every other role gets.
+    """
+    return await app.state.gateway.complete(prompt, system, **options)
 
 
 class ScopeBody(BaseModel):
@@ -59,7 +64,7 @@ async def run(body: RunBody, request: Request):
     runtime = request.app.state.s13_runtime
     try:
         return await runtime.run(prompt=body.prompt, scope=body.scope(),
-                                 llm=lambda prompt, system: gateway_text_llm(request.app, prompt, system),
+                                 llm=lambda prompt, system, **options: gateway_text_llm(request.app, prompt, system, **options),
                                  source_uri="api://agent/runs", source_author=body.user_id or "api-user",
                                  respond_as=body.respond_as)
     except RuntimeError as error:
@@ -71,7 +76,7 @@ async def resume(run_id: str, request: Request):
     runtime = request.app.state.s13_runtime
     try:
         return await runtime.run(prompt=None, scope=None,
-                                 llm=lambda prompt, system: gateway_text_llm(request.app, prompt, system),
+                                 llm=lambda prompt, system, **options: gateway_text_llm(request.app, prompt, system, **options),
                                  source_uri=None, source_author=None, run_id=run_id, resume=True)
     except KeyError:
         raise HTTPException(404, "run not found") from None

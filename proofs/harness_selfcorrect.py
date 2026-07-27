@@ -56,7 +56,7 @@ async def main() -> int:
     result = await runtime.run(
         prompt=TASK,
         scope=MemoryScope("s14-selfcorrect", "harness", "composer", "s13code"),
-        llm=lambda prompt, system: gateway.complete(prompt, system),
+        llm=lambda prompt, system, **options: gateway.complete(prompt, system, **options),
         source_uri="proof://harness/self_correct",
         source_author="s14-selfcorrect",
     )

@@ -57,7 +57,7 @@ async def main() -> int:
     result = await runtime.run(
         prompt=TASK,
         scope=MemoryScope("s14-proof", "harness", "composer", "s13code"),
-        llm=lambda prompt, system: gateway.complete(prompt, system),
+        llm=lambda prompt, system, **options: gateway.complete(prompt, system, **options),
         source_uri="proof://harness/compose_surface",
         source_author="s14-proof",
     )
