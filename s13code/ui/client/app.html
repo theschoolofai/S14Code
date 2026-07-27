@@ -53,6 +53,14 @@
   .tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
   .tabs button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-mono);color:var(--ink-muted)}
   .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .kanban .ct{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:8px;font-family:var(--font-mono)}
+  .kb-board{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;align-items:flex-start}
+  .kb-col{flex:1 0 150px;min-width:150px;background:var(--surface-alt);border:1px solid var(--rule);border-radius:12px;padding:10px}
+  .kb-head{display:flex;gap:6px;align-items:center;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);font-weight:600;margin-bottom:8px}
+  .kb-n{margin-left:auto;background:var(--surface);border:1px solid var(--rule);border-radius:999px;padding:0 7px;font-size:10px}
+  .kb-card{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:13px;line-height:1.45;color:var(--ink-body);font-family:inherit}
+  button.kb-card{cursor:pointer}button.kb-card:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .kb-empty{color:var(--ink-muted);font-size:12px;text-align:center;padding:6px 0}
   .Notice{border-left:4px solid var(--amber);background:var(--amber-soft);border-radius:10px;padding:12px 14px}
   .actbtn{width:100%;text-align:center;border:1px solid var(--rule-strong);background:var(--surface);border-radius:12px;padding:14px;font-weight:600;font-size:15px;cursor:pointer;color:var(--ink);transition:all 120ms}
   .actbtn:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
@@ -127,6 +135,7 @@ const R={
   Sparkline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("trend"));e.append(t,spark(resolve(c.data,x.dm)||[]));return e;},
   BarChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"chart"));e.append(t,bars(resolve(c.data,x.dm)||[],c.xKey,c.yKey));return e;},
   DataTable:(c,x)=>table(c,x),
+  Kanban:(c,x)=>kanban(c,x),
   Tabs:(c,x)=>tabs(c,x),
   Button:(c,x)=>{const b=$("button","actbtn");let lab=resolve(c.label,x.dm);if(lab&&typeof lab==="object")lab=lab.label||lab.name||lab.text||lab.id||"Choose";lab=String(lab==null?"Choose":lab);b.append(T(lab));b.onclick=()=>choose(lab);return b;},
   Image:(c,x)=>{const e=$("div","chart");e.append(T("[image]"));return e;},
@@ -142,6 +151,23 @@ function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
 function spark(v){const ns="http://www.w3.org/2000/svg",w=200,h=44,mx=Math.max(...v,1),mn=Math.min(...v,0),rg=(mx-mn)||1;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");s.setAttribute("height",h);const p=document.createElementNS(ns,"polyline");p.setAttribute("points",v.map((y,i)=>`${i/(v.length-1||1)*w},${h-5-(y-mn)/rg*(h-10)}`).join(" "));p.setAttribute("fill","none");p.setAttribute("stroke","var(--green)");p.setAttribute("stroke-width","2.5");s.append(p);return s;}
 function bars(d,xk,yk){const ns="http://www.w3.org/2000/svg",w=300,h=150,pad=24,mx=Math.max(...d.map(r=>+r[yk]),1),bw=(w-pad*2)/(d.length||1)*.6;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");d.forEach((r,i)=>{const x=pad+i*((w-pad*2)/d.length)+((w-pad*2)/d.length-bw)/2,bh=(+r[yk])/mx*(h-pad*2);const rc=document.createElementNS(ns,"rect");rc.setAttribute("x",x);rc.setAttribute("y",h-pad-bh);rc.setAttribute("width",bw);rc.setAttribute("height",bh);rc.setAttribute("rx",3);rc.setAttribute("fill","var(--accent)");s.append(rc);const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","9");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=r[xk];s.append(tl);});return s;}
+// Kanban: a column per group, a card per entry, every string via a text node.
+// A tap emits the registered action and feeds the next turn.
+function kanban(c,x){const wrap=$("div","kanban");if(c.title){const t=$("div","ct");t.append(T(c.title));wrap.append(t);}
+  const board=$("div","kb-board");
+  const pick=(o,k,alts)=>{if(k&&o&&k in o)return o[k];for(const a of alts)if(o&&a in o)return o[a];return null;};
+  (resolve(c.groups,x.dm)||[]).forEach(g=>{const col=$("div","kb-col");const head=$("div","kb-head");
+    const name=(g&&typeof g==="object")?pick(g,c.titleKey,["heading","name","title","label"]):g;head.append(T(name));
+    const raw=(g&&typeof g==="object")?pick(g,c.cardsKey,["points","cards","items","children"]):null;
+    const cards=Array.isArray(raw)?raw:[];
+    const n=$("span","kb-n");n.append(T(String(cards.length)));head.append(n);col.append(head);
+    cards.forEach(card=>{const lab=(card&&typeof card==="object")?(card.label??card.title??card.text??JSON.stringify(card)):card;
+      const el=$(c.onCardPress?"button":"div","kb-card");el.append(T(lab));
+      if(c.onCardPress)el.onclick=()=>choose(String(lab));col.append(el);});
+    if(!cards.length){const e=$("div","kb-empty");e.append(T("—"));col.append(e);}
+    board.append(col);});
+  wrap.append(board);return wrap;}
+
 function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());const rows=resolve(c.rows,x.dm)||[];const t=$("table");const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(T(col));tr.append(th);});t.append(tr);rows.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(r[col]));rr.append(td);});t.append(rr);});wrap.append(t);return wrap;}
 function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);const tabIds=c.children||[];function show(i){body.textContent="";const cc=x.byId[tabIds[i]];if(cc)body.append(node(cc,x));[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}
   (String(c.labels||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});

@@ -844,6 +844,48 @@
           }
         ],
         "correct": true
+      },
+      {
+        "name": "kanban-inline-cards",
+        "expected_invariant": "data-not-code",
+        "rejected": true,
+        "invariants_broken": [
+          "data-not-code"
+        ],
+        "accepted_ids": [
+          "root",
+          "ok"
+        ],
+        "rejections": [
+          {
+            "component_id": "evil",
+            "field": "groups",
+            "invariant": "data-not-code",
+            "reason": "binding must be {'$bind': '/pointer'}"
+          }
+        ],
+        "correct": true
+      },
+      {
+        "name": "kanban-unregistered-card-tap",
+        "expected_invariant": "event",
+        "rejected": true,
+        "invariants_broken": [
+          "event"
+        ],
+        "accepted_ids": [
+          "root",
+          "ok"
+        ],
+        "rejections": [
+          {
+            "component_id": "evil",
+            "field": "onCardPress",
+            "invariant": "event",
+            "reason": "unregistered action 'exfiltrate_memory'"
+          }
+        ],
+        "correct": true
       }
     ]
   },

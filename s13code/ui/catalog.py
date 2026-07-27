@@ -10,7 +10,7 @@ The catalog is aligned to A2UI's Basic component set: the 15 layout / text /
 input / container types A2UI Basic already defines are adopted under their real
 A2UI names (``source="a2ui-basic"``). Only the components A2UI Basic genuinely
 lacks — charts, tiles, tables, timelines, notices, and the approval card — are
-kept as clearly labelled custom extensions (``source="custom"``). Twenty-three
+kept as clearly labelled custom extensions (``source="custom"``). Twenty-four
 types in all; a student can read every one and the validator can prove coverage.
 
 Property kinds:
@@ -47,8 +47,8 @@ class ComponentSpec:
 _TONE = PropSpec("enum", ("neutral", "good", "warn", "bad"))
 
 
-# The 23 component types the render client knows how to draw. The first 15 are
-# A2UI Basic's own names; the last 8 are custom extensions A2UI Basic lacks.
+# The 24 component types the render client knows how to draw. The first 15 are
+# A2UI Basic's own names; the last 9 are custom extensions A2UI Basic lacks.
 COMPONENTS: dict[str, ComponentSpec] = {
     # --- A2UI Basic: layout / text / media / inputs / containers (15) --------
     "Row": ComponentSpec("Row", {
@@ -113,6 +113,21 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "Notice": ComponentSpec("Notice", {
         "text": PropSpec("binding"), "tone": _TONE,
     }, source="custom"),
+    # A board of columns, each holding a list of cards: the shape a pipeline,
+    # a backlog, or any set of items grouped by stage actually has. A DataTable
+    # can list those items and a Timeline can order them, but neither shows the
+    # grouping itself, which is the whole point of a board. ``groups`` binds one
+    # array of objects; ``titleKey`` / ``cardsKey`` name the fields to read off
+    # each entry, the same way BarChart's xKey / yKey do. Tapping a card emits a
+    # registered action and nothing else — the card text is never a link, never
+    # a handler, and never markup.
+    "Kanban": ComponentSpec("Kanban", {
+        "title": PropSpec("text"),
+        "groups": PropSpec("binding"),
+        "titleKey": PropSpec("text"),
+        "cardsKey": PropSpec("text"),
+        "onCardPress": PropSpec("action"),
+    }, source="custom"),
     "ApprovalCard": ComponentSpec("ApprovalCard", {
         "summary": PropSpec("binding"), "params": PropSpec("binding"),
         "confirm": PropSpec("action"), "reject": PropSpec("action"),
@@ -124,16 +139,31 @@ COMPONENTS: dict[str, ComponentSpec] = {
 REGISTERED_ACTIONS: frozenset[str] = frozenset({"approve", "reject", "rerun", "request_data"})
 
 
+def _prop_manifest(spec: PropSpec) -> dict:
+    """One prop as JSON, including the *shape* a structured kind must take.
+
+    A kind alone is not enough to write a valid value. ``binding`` and ``action``
+    are objects with a required key, and a composer that guesses a bare string
+    gets refused by the validator for a reason the catalog never told it about.
+    Publishing the shape costs nothing and closes that gap for every component.
+    """
+    entry: dict = {"kind": spec.kind}
+    if spec.values:
+        entry["values"] = list(spec.values)
+    if spec.kind == "binding":
+        entry["shape"] = {"$bind": "/json/pointer"}
+    elif spec.kind == "action":
+        entry["shape"] = {"action": "<one of actions>", "args": "optional object"}
+    return entry
+
+
 def catalog_manifest() -> dict:
     """A JSON view of the catalog, served at /v1/catalog for the client."""
     return {
         "components": {
             name: {
                 "source": comp.source,
-                "props": {
-                    prop: {"kind": spec.kind, **({"values": list(spec.values)} if spec.values else {})}
-                    for prop, spec in comp.props.items()
-                },
+                "props": {prop: _prop_manifest(spec) for prop, spec in comp.props.items()},
             }
             for name, comp in COMPONENTS.items()
         },

