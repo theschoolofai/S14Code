@@ -227,10 +227,22 @@ The loop is the protocol, not application code: `POST /v1/agent/runs` with
 `respond_as: "ui"` → the graph runs `content` → `compose_surface` → the shell
 reads `GET /v1/runs/{id}/composed` and renders it.
 
-### Two defects in the reference build that this branch fixes
+Turn one on the deployed app, composed live by `gemini_1`:
 
-Both were load-bearing for the invariant the session claims, and both were found
-by running the thing rather than reading it.
+![StudyCoach turn one: the coach answers the opening goal with a heading, an intro, five tappable subject Buttons, a ProgressBar and a Timeline of the run's own graph events](docs/studycoach-turn-1.jpg)
+
+The status line is the receipt: `gemini_1 · 11 components · 0 executable`, and
+`5 component types composed live, every one in-catalog`. Nothing in that page is
+a paragraph the model wrote — the prose is bound `Text`, the subjects are
+`Button`s whose taps become turn two's prompt, and the `Timeline` is the run's own
+`run_started` / `graph_patched` journal. `0 executable` is counted, not asserted:
+it is the number of accepted components carrying markup, a URL, a handler prop or
+an unregistered action.
+
+### Four defects in the reference build that this branch fixes
+
+All four were found by running the thing rather than reading it, and the first two
+were load-bearing for the invariant the session claims.
 
 1. **The app shell rendered model-adjacent markup.** `app.html` set
    `status.innerHTML` with the learner's own goal interpolated into it, so a goal
@@ -243,6 +255,17 @@ by running the thing rather than reading it.
    (`TypeError: unhashable type: 'dict'`) the first time a live model returned
    that shape. `children` are now enforced as a list of component-id strings;
    a nested object is a `data-not-code` rejection.
+3. **A truncated reply lost the whole interface.** A model that stops
+   mid-component returns HTTP 200 with no stop reason, so a cut-off reply is
+   indistinguishable from a finished one. `json.loads` failed and the turn rendered
+   nothing — which a UI-only application cannot survive. The finished components
+   are now recovered, dangling child refs dropped, and the composer retries once.
+4. **A tapped label was mistaken for a research fan-out.** A chip reading
+   `Algebra (Complex Numbers, Quadratic Equations, …)` was parsed as a
+   comma-separated entity list, so **one** conversational turn fanned into six
+   model calls and built a graph with no `compose_surface` node in it at all. An
+   explicit `respond_as: "ui"` turn now always takes the single-goal path; the
+   fan-out is kept for phrased requests, where the commas are the author's own list.
 
 ### Reproduce from a fresh checkout
 
@@ -253,7 +276,7 @@ cd glc_v3 && uv sync && uv run glc serve
 # terminal two — the Session 14 runtime
 cd S14Code && uv sync
 uv run ruff check .
-uv run pytest -q                      # 128 tests
+uv run pytest -q                      # 137 tests
 export GLC_BASE_URL=http://127.0.0.1:8111
 export S13_GATEWAY_PROVIDER=gemini
 uv run s14code serve
