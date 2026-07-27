@@ -161,12 +161,19 @@ def _work_intent(prompt: str, respond_as: str = "text") -> tuple[str, list[TaskS
 
     # --- S14 generative UI: a request to compose an interface. Triggered by an
     # explicit respond_as="ui", or by a general "build/compose a UI" phrasing —
-    # NOT by any one domain. If the prompt also names a list of entities to look
-    # up (e.g. "compose a dashboard of A, B and C"), fan out real research nodes
-    # and compose from their outcomes; otherwise produce the content for the
-    # single goal, then compose. Either way the surface node is terminal.
-    wants_ui = respond_as == "ui" or bool(_COMPOSE_UI.search(prompt))
-    if wants_ui:
+    # NOT by any one domain.
+    #
+    # respond_as="ui" (the /app and /app/trip shells) ALWAYS takes the single-goal
+    # content → compose_surface path. Multi-turn taps accumulate city names like
+    # "Rome, Italy" which would otherwise look like an entity list and fan out
+    # into researcher nodes that never produce a surface (404 on /composed).
+    #
+    # Research fan-out is reserved for phrasing-triggered compose prompts that
+    # name two or more entities (e.g. "compose a dashboard of London, Berlin and
+    # Paris"). Either way the surface node is terminal.
+    if respond_as == "ui":
+        return "compose_answer", [TaskSpec("content", "content", {"query": prompt}, {"agent": "content"})]
+    if _COMPOSE_UI.search(prompt):
         entities = _entity_list(prompt)
         if len(entities) >= 2:
             topic = _research_topic(prompt, entities)

@@ -190,14 +190,20 @@ async function runTurn(userText){
   setStatus('<span class="pill think">composing…</span> the agent is writing an interface for: "'+userText+'"');
   const goal = convo.length===1 ? convo[0]
      : convo[0] + "\nSo far the user then picked: " + convo.slice(1).join(", then ") + ".\nRespond with the next interface for that.";
-  const res = await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({prompt:goal, respond_as:"ui", tenant_id:"course", project_id:"s14", user_id:"viewer", agent_id:"app"})});
-  const run = await res.json();
-  const rid = run.run_id;
-  const c = await (await fetch(API+"/v1/runs/"+rid+"/composed")).json();
-  if(c.surface){ render(c.surface);
-    setStatus('<span class="pill good">'+(c.provider||"gemini")+' · '+c.component_count+' components · 0 executable</span> composed live, validated in-catalog'); }
-  else { setStatus("no interface composed"); }
+  try {
+    const res = await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({prompt:goal, respond_as:"ui", tenant_id:"course", project_id:"s14", user_id:"viewer", agent_id:"app"})});
+    const run = await res.json();
+    if(!res.ok){ setStatus('<span class="pill" style="background:var(--red-soft);color:var(--red-ink)">run failed</span> '+(run.detail||res.status)); return; }
+    const rid = run.run_id;
+    const creq = await fetch(API+"/v1/runs/"+rid+"/composed");
+    const c = await creq.json();
+    if(creq.ok && c.surface){ render(c.surface);
+      setStatus('<span class="pill good">'+(c.provider||"gemini")+' · '+c.component_count+' components · 0 executable</span> composed live, validated in-catalog'); }
+    else { setStatus('<span class="pill" style="background:var(--amber-soft);color:var(--amber-ink)">no surface</span> run finished without compose — wait for Gemini cooldown and try Ask again'); }
+  } catch (err) {
+    setStatus('<span class="pill" style="background:var(--red-soft);color:var(--red-ink)">error</span> '+String(err&&err.message||err));
+  }
 }
 function choose(label){ if(label) runTurn(label); }
 
