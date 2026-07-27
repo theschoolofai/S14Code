@@ -874,3 +874,30 @@ def test_the_two_embedders_have_different_fingerprints(monkeypatch):
     local = _select_embedder().fingerprint
     monkeypatch.setenv("S13_EMBEDDER", "deterministic")
     assert _select_embedder().fingerprint != local
+
+
+# --------------------------------------------------------------------------- #
+# the application answers ONLY in composed interfaces
+# --------------------------------------------------------------------------- #
+
+def test_studycoach_never_renders_the_models_prose_answer():
+    """The whole claim is that every turn is a composed interface. The run's
+    ``answer`` string is right there in the journal, so the one thing that would
+    quietly break the claim is the shell falling back to printing it."""
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "coach.html").read_text()
+    # The shell reads the composed surface, never the run's prose answer.
+    assert "/composed" in html
+    assert not re.search(r"\.answer\b", html)
+    assert "respond_as" in html and '"ui"' in html
+    # Every turn is mounted by render(surface); there is no other mount path.
+    assert html.count("function render(surface)") == 1
+
+
+def test_studycoach_turns_are_driven_by_taps_not_by_typing():
+    """A tap has to be able to become the next turn, or 'across turns' is just
+    three independent questions."""
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "coach.html").read_text()
+    assert "function choose(label)" in html
+    assert "runTurn(" in html
+    # The accumulated conversation is what gets sent, so turn 3 carries turns 1-2.
+    assert "The learner then chose:" in html

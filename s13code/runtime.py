@@ -728,16 +728,28 @@ class S13Runtime:
         async def _gateway_surface_call(surface_prompt: str, system: str) -> dict[str, Any]:
             import httpx as _httpx
             base = os.getenv("GLC_BASE_URL", "http://127.0.0.1:8111").rstrip("/")
-            payload = {"messages": [{"role": "user", "content": surface_prompt}], "system": system,
-                       "max_tokens": int(os.getenv("S14_SURFACE_MAX_TOKENS", "8000")),
-                       "temperature": 0, "reasoning": "off", "agent": "s14_compose_surface",
-                       "provider": os.getenv("S13_GATEWAY_PROVIDER", "gemini")}
-            async with _httpx.AsyncClient(timeout=120) as client:
-                response = await client.post(f"{base}/v1/chat", json=payload)
-            if response.status_code >= 400:
-                raise RuntimeError(f"GLC /v1/chat {response.status_code}: {response.text[:300]}")
-            body = response.json()
-            return {"text": body.get("text", ""), "provider": body.get("provider"), "model": body.get("model")}
+            provider = os.getenv("S13_GATEWAY_PROVIDER", "gemini")
+            # A rate-limited provider is not the same failure as a model that
+            # cannot compose, but both arrive here as one exception. Where a
+            # fallback provider is configured, spend it on the compose step: an
+            # application that answers only in interfaces has nothing to show at
+            # all if this call is the one that fails.
+            fallbacks = [name.strip() for name in
+                         os.getenv("S14_SURFACE_FALLBACK_PROVIDERS", "").split(",") if name.strip()]
+            last_error = ""
+            for candidate in [provider, *fallbacks]:
+                payload = {"messages": [{"role": "user", "content": surface_prompt}], "system": system,
+                           "max_tokens": int(os.getenv("S14_SURFACE_MAX_TOKENS", "8000")),
+                           "temperature": 0, "reasoning": "off", "agent": "s14_compose_surface",
+                           "provider": candidate}
+                async with _httpx.AsyncClient(timeout=180) as client:
+                    response = await client.post(f"{base}/v1/chat", json=payload)
+                if response.status_code < 400:
+                    body = response.json()
+                    return {"text": body.get("text", ""), "provider": body.get("provider"),
+                            "model": body.get("model")}
+                last_error = f"GLC /v1/chat {response.status_code}: {response.text[:300]}"
+            raise RuntimeError(last_error)
 
         def _extract_surface(text: str) -> dict[str, Any] | None:
             return _parse_json_object(text)

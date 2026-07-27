@@ -145,7 +145,7 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `proof.json` | `run_surface_proof.py` | injection wall (4 rejections), HITL, catalog/validator |
 | `harness_run.json` | `harness_run.py` | a real live-graph run → the model composes a 19-component surface |
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
-| `coach_turns.json` | `coach_turns.py` | StudyCoach's three tapped turns + the adversarial turn refused |
+| `coach_turns.json` | `coach_turns.py` | StudyCoach's tapped turns + the forced injection refused (produced on demand; not committed, since it records one dated run) |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
 
