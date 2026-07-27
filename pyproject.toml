@@ -44,7 +44,18 @@ extend-exclude = [
 [tool.ruff.lint]
 # A few teaching examples intentionally keep tiny state transitions on one
 # line. Generated protobuf modules are excluded above and remain reproducible.
-ignore = ["E701", "E702"]
+#
+# BLE001/S110: worker/task/push/parse boundaries deliberately catch Exception
+# broadly so one failing node, delivery attempt, or malformed model reply
+# degrades to a visible failure (a Notice, a retry, a fallback parse) instead
+# of crashing the graph or the request — the same "honest failure" contract
+# the S14 surface builder documents for a failed node.
+# TRY004: ConstrainedGraphPatchPlanner._parse validates untrusted LLM JSON
+# shape AND type together; ValueError is the correct signal for "not a valid
+# GraphPatch", not a plain TypeError.
+# DTZ007: the birthday reminder only ever needs a calendar date, never a
+# timezone-aware instant.
+ignore = ["E701", "E702", "BLE001", "S110", "TRY004", "DTZ007"]
 
 [tool.ruff.lint.per-file-ignores]
 "s13code/core/a2a_adapter/tests/test_hardening.py" = ["F401"]

