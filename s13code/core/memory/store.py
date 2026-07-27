@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sqlite3
-import hashlib
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from .embeddings import DeterministicEmbedder, Embedder, cosine
 from .models import MemoryKind, MemoryRecord, MemoryScope, Principal, SourceRef, utcnow
@@ -134,7 +135,7 @@ class MemoryStore:
         ))
         return "doc_" + hashlib.sha256(owner.encode()).hexdigest()[:24]
 
-    def ingest_document(self, *, source_text: str, prepared_text: str, chunks: list["DocumentChunk"],
+    def ingest_document(self, *, source_text: str, prepared_text: str, chunks: list[DocumentChunk],
                         source_uri: str, scope: MemoryScope, source_author: str,
                         preprocessing: str) -> dict[str, object]:
         """Atomically replace a source's active chunks with a new content version."""
@@ -150,36 +151,33 @@ class MemoryStore:
                     "prepared_sha256": prepared_hash}
         version = (int(active["version"]) + 1) if active else 1
         record_ids: list[str] = []
-        try:
-            with self.db:
-                if active:
-                    self.db.execute("UPDATE documents SET state='superseded' WHERE document_id=? AND state='active'", (document_id,))
-                    self.db.execute("UPDATE records SET status='superseded' WHERE status='current' AND json_extract(metadata_json, '$.document_id')=?", (document_id,))
-                self.db.execute("INSERT INTO documents VALUES (?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (
-                    document_id, version, scope.tenant_id, scope.project_id, scope.user_id, scope.agent_id, scope.run_id,
-                    source_uri, source_hash, prepared_hash, preprocessing, utcnow(),
-                ))
-                for chunk in chunks:
-                    metadata = {
-                        "document_id": document_id, "document_version": version, "heading": chunk.heading,
-                        "ordinal": chunk.ordinal, "previous": chunk.previous_ordinal, "next": chunk.next_ordinal,
-                        "segmentation": chunk.segmentation, "preprocessing": preprocessing,
-                        "source_sha256": source_hash, "prepared_sha256": prepared_hash,
-                        "source_start_char": chunk.source_start_char, "source_end_char": chunk.source_end_char,
-                        "source_start_word": chunk.source_start_word, "source_end_word": chunk.source_end_word,
-                    }
-                    record = MemoryRecord(MemoryKind.DOCUMENT_CHUNK, scope, chunk.text,
-                        [SourceRef(source_uri, source_author, excerpt=chunk.text)], Principal("gateway", "gateway"), metadata=metadata)
-                    self._write(record, audit=False)
-                    record_ids.append(record.id)
-                audit = MemoryRecord(MemoryKind.AUDIT, scope, f"index document {document_id} v{version}", [],
-                    Principal("memory-gateway", "gateway"), metadata={"document_id": document_id, "version": version,
-                    "chunks": len(record_ids), "source_sha256": source_hash})
-                self._write(audit, audit=False)
-        except Exception:
-            # `with self.db` rolled back documents, chunks and the one audit
-            # record together. The existing vector sidecar remains valid.
-            raise
+        # `with self.db` rolls back documents, chunks and the one audit record
+        # together on any failure. The existing vector sidecar remains valid.
+        with self.db:
+            if active:
+                self.db.execute("UPDATE documents SET state='superseded' WHERE document_id=? AND state='active'", (document_id,))
+                self.db.execute("UPDATE records SET status='superseded' WHERE status='current' AND json_extract(metadata_json, '$.document_id')=?", (document_id,))
+            self.db.execute("INSERT INTO documents VALUES (?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (
+                document_id, version, scope.tenant_id, scope.project_id, scope.user_id, scope.agent_id, scope.run_id,
+                source_uri, source_hash, prepared_hash, preprocessing, utcnow(),
+            ))
+            for chunk in chunks:
+                metadata = {
+                    "document_id": document_id, "document_version": version, "heading": chunk.heading,
+                    "ordinal": chunk.ordinal, "previous": chunk.previous_ordinal, "next": chunk.next_ordinal,
+                    "segmentation": chunk.segmentation, "preprocessing": preprocessing,
+                    "source_sha256": source_hash, "prepared_sha256": prepared_hash,
+                    "source_start_char": chunk.source_start_char, "source_end_char": chunk.source_end_char,
+                    "source_start_word": chunk.source_start_word, "source_end_word": chunk.source_end_word,
+                }
+                record = MemoryRecord(MemoryKind.DOCUMENT_CHUNK, scope, chunk.text,
+                    [SourceRef(source_uri, source_author, excerpt=chunk.text)], Principal("gateway", "gateway"), metadata=metadata)
+                self._write(record, audit=False)
+                record_ids.append(record.id)
+            audit = MemoryRecord(MemoryKind.AUDIT, scope, f"index document {document_id} v{version}", [],
+                Principal("memory-gateway", "gateway"), metadata={"document_id": document_id, "version": version,
+                "chunks": len(record_ids), "source_sha256": source_hash})
+            self._write(audit, audit=False)
         self._ensure_vector_index()
         return {"document_id": document_id, "version": version, "idempotent": False, "record_ids": record_ids,
                 "source_sha256": source_hash, "prepared_sha256": prepared_hash}

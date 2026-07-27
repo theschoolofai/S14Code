@@ -8,11 +8,12 @@ import hmac
 import json
 import sqlite3
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Awaitable, Callable
+from typing import Any
 
 import httpx
 from fastapi import FastAPI, Request

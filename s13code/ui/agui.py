@@ -36,7 +36,8 @@ complete data model as the single event a reconnecting client needs.
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Iterator
+from collections.abc import Iterable, Iterator
+from typing import Any
 
 _KIND_TO_AGUI = {
     "run_started": "RUN_STARTED",

@@ -1,7 +1,7 @@
+import asyncio
 import hashlib
 import hmac
 import json
-import asyncio
 
 import grpc
 import httpx

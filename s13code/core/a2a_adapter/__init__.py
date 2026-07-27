@@ -12,9 +12,9 @@ from .trust import AgentCardTrustPolicy, CardTrustError, sign_card
 
 __all__ = [
     "A2AClient",
+    "A2ADemoServer",
     "A2AGrpcClient",
     "A2AGrpcServer",
-    "A2ADemoServer",
     "AgentCardTrustPolicy",
     "CardTrustError",
     "DiscoveredAgent",
