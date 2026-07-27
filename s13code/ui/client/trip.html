@@ -257,14 +257,42 @@ function renderMap(c,x){
 function pickRoot(surface){
   const comps=surface.components||[];
   const byId={};comps.forEach(c=>{if(c&&c.id!=null)byId[c.id]=c;});
-  if(surface.root!=null&&byId[surface.root])return surface.root;
+  function reachable(id){
+    const seen=new Set(); const stack=[id];
+    while(stack.length){
+      const i=stack.pop(); if(seen.has(i)||!byId[i]) continue;
+      seen.add(i); (byId[i].children||[]).forEach(ch=>stack.push(ch));
+    }
+    return seen;
+  }
+  let rootId=surface.root;
+  if(rootId!=null&&byId[rootId]){
+    if(reachable(rootId).size>=comps.filter(c=>c&&c.id!=null).length) return rootId;
+  }
   const layout=comps.find(c=>c&&["Column","Row","List","Card","Tabs"].includes(c.type));
   return (layout||comps[0]||{}).id;
 }
 function render(surface){
-  const comps=surface.components||[];
+  const comps=(surface.components||[]).slice();
   const byId={};comps.forEach(c=>{if(c&&c.id!=null)byId[c.id]=c;});
-  const rootId=pickRoot(surface);
+  let rootId=pickRoot(surface);
+  function reachable(id){
+    const seen=new Set(); const stack=[id];
+    while(stack.length){
+      const i=stack.pop(); if(seen.has(i)||!byId[i]) continue;
+      seen.add(i); (byId[i].children||[]).forEach(ch=>stack.push(ch));
+    }
+    return seen;
+  }
+  if(rootId&&byId[rootId]){
+    const seen=reachable(rootId);
+    const orphans=comps.filter(c=>c&&c.id!=null&&!seen.has(c.id));
+    if(orphans.length){
+      const wrap={id:"__wrap",type:"Column",children:[rootId,...orphans.map(c=>c.id)]};
+      byId["__wrap"]=wrap;
+      rootId="__wrap";
+    }
+  }
   const x={byId,dm:surface.dataModel||{}};
   const m=document.getElementById("mount");m.textContent="";
   if(!rootId||!byId[rootId]){const empty=$("div","empty");empty.append(T("Surface has no renderable root."));m.append(empty);return;}

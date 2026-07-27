@@ -118,6 +118,56 @@ def _labels_from_surface_cards(components: list[Any]) -> list[str]:
     return labels
 
 
+def _reachable_component_ids(root_id: Any, components: list[Any]) -> set[Any]:
+    by_id = {comp.get("id"): comp for comp in components
+             if isinstance(comp, dict) and comp.get("id") is not None}
+    seen: set[Any] = set()
+    stack = [root_id]
+    while stack:
+        cid = stack.pop()
+        if cid in seen or cid not in by_id:
+            continue
+        seen.add(cid)
+        kids = by_id[cid].get("children") or []
+        if isinstance(kids, list):
+            stack.extend(kids)
+    return seen
+
+
+def _remount_orphan_components(root_id: Any, components: list[dict[str, Any]]) -> tuple[Any, list[dict[str, Any]]]:
+    """If root is a leaf (e.g. title Text) and siblings are orphaned, wrap them."""
+    comps = [comp for comp in components if isinstance(comp, dict) and comp.get("id") is not None]
+    if not comps:
+        return root_id, components
+    seen = _reachable_component_ids(root_id, comps)
+    orphans = [comp for comp in comps if comp.get("id") not in seen]
+    if not orphans:
+        return root_id, comps
+    root = next((comp for comp in comps if comp.get("id") == root_id), None)
+    layout_types = {"Column", "Row", "List", "Card", "Tabs"}
+    if isinstance(root, dict) and root.get("type") in layout_types:
+        kids = list(root.get("children") or [])
+        for orphan in orphans:
+            oid = orphan.get("id")
+            if oid is not None and oid not in kids:
+                kids.append(oid)
+        root["children"] = kids
+        return root_id, comps
+    wrap_id = "auto_root"
+    existing_ids = {comp.get("id") for comp in comps}
+    if wrap_id in existing_ids:
+        wrap_id = "auto_root_wrap"
+    children: list[Any] = []
+    if root_id is not None:
+        children.append(root_id)
+    for orphan in orphans:
+        oid = orphan.get("id")
+        if oid is not None and oid not in children:
+            children.append(oid)
+    wrap = {"id": wrap_id, "type": "Column", "children": children}
+    return wrap_id, [wrap, *comps]
+
+
 def _parse_json_object(text: str) -> dict[str, Any] | None:
     """Robustly parse a JSON object out of a model reply: strip ``` fences, then
     fall back to the outermost {...} span. Returns the dict or None. Shared by
@@ -1089,32 +1139,70 @@ class S13Runtime:
                             if map_id not in kids:
                                 kids.append(map_id)
                                 root["children"] = kids
+                # CodeDiff: force correct binds and literal labels (catalog: text, not binding).
+                has_diff = any(isinstance(c, dict) and c.get("type") == "CodeDiff" for c in comps)
+                if has_diff and not (data_model.get("diff_before") and data_model.get("diff_after")):
+                    data_model["diff_before"] = str(data_model.get("diff_before") or (
+                        "Day 2 original\n- Morning landmark visit\n- Midday cafe stop\n- Afternoon museum"
+                    ))
+                    data_model["diff_after"] = str(data_model.get("diff_after") or (
+                        "Day 2 walking-optimized\n- Morning landmark visit (walk)\n- Midday cafe near route\n"
+                        "- Afternoon museum via riverside path"
+                    ))
+                    data_model.setdefault("diff_before_label", "Before")
+                    data_model.setdefault("diff_after_label", "After")
+                if has_diff:
+                    for comp in comps:
+                        if not isinstance(comp, dict) or comp.get("type") != "CodeDiff":
+                            continue
+                        comp["before"] = {"$bind": "/diff_before"}
+                        comp["after"] = {"$bind": "/diff_after"}
+                        for lab_key, dm_key, default in (
+                            ("beforeLabel", "diff_before_label", "Before"),
+                            ("afterLabel", "diff_after_label", "After"),
+                        ):
+                            lab = comp.get(lab_key)
+                            if isinstance(lab, dict) and isinstance(lab.get("$bind"), str):
+                                pointer = lab["$bind"].lstrip("/")
+                                comp[lab_key] = str(data_model.get(pointer) or data_model.get(dm_key) or default)
+                            elif not isinstance(lab, str) or not lab.strip():
+                                comp[lab_key] = str(data_model.get(dm_key) or default)
+                    surface = {**surface, "components": comps}
+                elif has_map or data_model.get("map_markers"):
                     surface = {**surface, "components": comps}
             validation = validate_surface(surface if isinstance(surface, dict) else {"components": []})
-            accepted_ids = {comp.get("id") for comp in validation.accepted}
-            dangling = sorted({child for comp in validation.accepted
+            accepted = list(validation.accepted)
+            accepted_ids = {comp.get("id") for comp in accepted}
+            dangling = sorted({child for comp in accepted
                                for child in comp.get("children", []) if child not in accepted_ids})
-            types_used = sorted({comp.get("type") for comp in validation.accepted})
+            types_used = sorted({comp.get("type") for comp in accepted})
             root_id = (surface or {}).get("root", "root") if isinstance(surface, dict) else "root"
             # If the declared root was rejected, remount on an accepted layout node
             # so /composed still renders instead of a blank/crash client.
-            if root_id not in accepted_ids and validation.accepted:
+            if root_id not in accepted_ids and accepted:
                 layout = next(
-                    (comp for comp in validation.accepted
+                    (comp for comp in accepted
                      if comp.get("type") in {"Column", "Row", "List", "Card", "Tabs"}),
-                    validation.accepted[0],
+                    accepted[0],
                 )
                 root_id = layout.get("id", root_id)
+            # Composer often sets root to the title Text and leaves CodeDiff/Table
+            # orphaned — wrap so the full turn is visible.
+            root_id, accepted = _remount_orphan_components(root_id, accepted)
+            accepted_ids = {comp.get("id") for comp in accepted}
+            dangling = sorted({child for comp in accepted
+                               for child in (comp.get("children") or []) if child not in accepted_ids})
+            types_used = sorted({comp.get("type") for comp in accepted})
             return {
                 "agent": "ui_composer", "provider": body.get("provider"), "model": body.get("model"),
                 "raw_surface": raw,
-                "surface": {"root": root_id, "components": validation.accepted, "dataModel": data_model},
+                "surface": {"root": root_id, "components": accepted, "dataModel": data_model},
                 "data_model": data_model,
-                "validator": {"proposed": len(proposed), "accepted": len(validation.accepted),
+                "validator": {"proposed": len(proposed), "accepted": len(accepted),
                               "rejected": len(validation.rejections), "ok": validation.ok,
                               "rejections": [rejection.as_dict() for rejection in validation.rejections],
                               "dangling_child_refs": dangling, "component_types": types_used,
-                              "component_count": len(validation.accepted)},
+                              "component_count": len(accepted)},
                 "upstream_used": [item["label"] for item in outcomes],
                 "parse_ok": surface is not None,
             }

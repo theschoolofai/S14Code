@@ -466,8 +466,9 @@ def test_trip_shell_steers_map_and_stops_accept_loop():
     assert "REQUIRED map.markers" in html
     assert "Restart destinations" in html
     assert "Accept/Revert" in html
-    assert "restart(\\s+destinations)?$" in html or "restart" in html.lower()
+    assert "restart" in html.lower()
     assert "convo = []" in html or "convo=[]" in html
+    assert "__wrap" in html
 
 
 def test_map_markup_caption_is_refused():
@@ -519,6 +520,21 @@ def test_clean_map_markers_accepts_aliases_and_schematic_fallback():
         {"id": "c1", "type": "Card", "title": "Day 1: Alfama & Castelo"},
         {"id": "m", "type": "Map", "title": "Lisbon Highlights"},
     ]) == ["Day 1: Alfama & Castelo"]
+
+
+def test_remount_orphan_components_wraps_title_root():
+    from s13code.runtime import _remount_orphan_components
+    comps = [
+        {"id": "title", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+        {"id": "diff", "type": "CodeDiff", "before": {"$bind": "/diff_before"}, "after": {"$bind": "/diff_after"}},
+        {"id": "table", "type": "DataTable", "columns": "A,B", "rows": {"$bind": "/table_rows"}},
+        {"id": "btn", "type": "Button", "label": "Restart destinations", "onPress": {"action": "request_data"}},
+    ]
+    root_id, remounted = _remount_orphan_components("title", comps)
+    assert root_id == "auto_root"
+    wrap = next(c for c in remounted if c["id"] == "auto_root")
+    assert wrap["type"] == "Column"
+    assert wrap["children"] == ["title", "diff", "table", "btn"]
 
 
 # --------------------------------------------------------------------------- #
