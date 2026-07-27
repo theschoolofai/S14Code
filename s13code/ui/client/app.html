@@ -137,11 +137,38 @@ const R={
   DateTime:(c,x)=>{const i=$("input","field");i.type="date";return i;},
   Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
   ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
+  Map:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"map"));e.append(t,pins(resolve(c.points,x.dm)||[]));return e;},
 };
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
 function spark(v){const ns="http://www.w3.org/2000/svg",w=200,h=44,mx=Math.max(...v,1),mn=Math.min(...v,0),rg=(mx-mn)||1;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");s.setAttribute("height",h);const p=document.createElementNS(ns,"polyline");p.setAttribute("points",v.map((y,i)=>`${i/(v.length-1||1)*w},${h-5-(y-mn)/rg*(h-10)}`).join(" "));p.setAttribute("fill","none");p.setAttribute("stroke","var(--green)");p.setAttribute("stroke-width","2.5");s.append(p);return s;}
 function bars(d,xk,yk){const ns="http://www.w3.org/2000/svg",w=300,h=150,pad=24,mx=Math.max(...d.map(r=>+r[yk]),1),bw=(w-pad*2)/(d.length||1)*.6;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");d.forEach((r,i)=>{const x=pad+i*((w-pad*2)/d.length)+((w-pad*2)/d.length-bw)/2,bh=(+r[yk])/mx*(h-pad*2);const rc=document.createElementNS(ns,"rect");rc.setAttribute("x",x);rc.setAttribute("y",h-pad-bh);rc.setAttribute("width",bw);rc.setAttribute("height",bh);rc.setAttribute("rx",3);rc.setAttribute("fill","var(--accent)");s.append(rc);const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","9");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=r[xk];s.append(tl);});return s;}
+// Same hand-simplified continent outline as index.html's render client:
+// TRUSTED render-client geometry (never derived from model output), so pins
+// land on recognizable land instead of an empty box. No basemap fetch, no
+// tile server, no network request — the whole map IS the SVG. Labels use
+// .textContent on an SVG <text> node, which is always literal, never markup.
+const WORLD_OUTLINE = [
+  [[71,-156],[70,-128],[58,-94],[49,-79],[45,-67],[35,-76],[25,-81],[21,-97],[14,-92],[16,-95],[9,-83],[19,-105],[32,-117],[48,-125],[60,-140],[71,-156]],
+  [[12,-72],[8,-77],[1,-79],[-5,-81],[-18,-70],[-24,-70],[-33,-72],[-40,-73],[-52,-69],[-55,-68],[-52,-58],[-38,-58],[-23,-43],[-13,-39],[-5,-35],[2,-50],[8,-60],[10,-62],[12,-72]],
+  [[37,10],[33,-8],[27,-13],[15,-17],[5,-9],[4,8],[0,9],[-9,13],[-17,12],[-22,14],[-29,17],[-34,19],[-34,25],[-26,33],[-20,35],[-11,40],[-4,40],[2,45],[11,51],[15,43],[22,38],[28,34],[31,32],[33,25],[32,20],[33,11],[37,10]],
+  [[71,25],[68,15],[60,5],[55,8],[50,0],[43,-9],[37,-9],[36,-5],[43,3],[44,8],[38,15],[40,18],[45,13],[46,15],[52,21],[54,20],[59,10],[63,10],[68,20],[71,25]],
+  [[77,105],[73,60],[60,60],[55,45],[45,35],[35,35],[26,34],[15,42],[12,43],[8,48],[5,80],[8,98],[1,104],[10,105],[16,108],[22,113],[31,121],[35,129],[43,132],[52,140],[60,160],[68,180],[77,150],[77,105]],
+  [[-11,132],[-12,142],[-17,146],[-24,153],[-33,151],[-38,147],[-38,141],[-35,136],[-32,133],[-25,113],[-20,114],[-14,126],[-11,132]],
+];
+function pins(points){const ns="http://www.w3.org/2000/svg",w=300,h=160;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");
+  const proj=(lat,lng)=>[(lng+180)/360*w,(90-lat)/180*h];
+  const fr=document.createElementNS(ns,"rect");fr.setAttribute("x",0);fr.setAttribute("y",0);fr.setAttribute("width",w);fr.setAttribute("height",h);fr.setAttribute("rx",6);fr.setAttribute("fill","var(--surface-alt)");fr.setAttribute("stroke","var(--rule)");s.append(fr);
+  WORLD_OUTLINE.forEach(poly=>{const land=document.createElementNS(ns,"polygon");
+    land.setAttribute("points",poly.map(([lat,lng])=>proj(lat,lng).join(",")).join(" "));
+    land.setAttribute("fill","var(--surface)");land.setAttribute("stroke","var(--rule-strong)");land.setAttribute("stroke-width","0.75");s.append(land);});
+  const eq=document.createElementNS(ns,"line");const [ex1,ey]=proj(0,-180),[ex2]=proj(0,180);
+  eq.setAttribute("x1",ex1);eq.setAttribute("y1",ey);eq.setAttribute("x2",ex2);eq.setAttribute("y2",ey);
+  eq.setAttribute("stroke","var(--rule)");eq.setAttribute("stroke-dasharray","2,2");s.append(eq);
+  (points||[]).forEach(p=>{const lat=+((p||{}).lat),lng=+((p||{}).lng);if(!isFinite(lat)||!isFinite(lng))return;const [x,y]=proj(lat,lng);
+    const dot=document.createElementNS(ns,"circle");dot.setAttribute("cx",x);dot.setAttribute("cy",y);dot.setAttribute("r",3.5);dot.setAttribute("fill","var(--accent)");dot.setAttribute("stroke","var(--surface)");dot.setAttribute("stroke-width","1");s.append(dot);
+    const lb=document.createElementNS(ns,"text");lb.setAttribute("x",x+5);lb.setAttribute("y",y-5);lb.setAttribute("font-size","9");lb.setAttribute("fill","var(--ink-muted)");lb.textContent=p.label==null?"":String(p.label);s.append(lb);});
+  return s;}
 function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());const rows=resolve(c.rows,x.dm)||[];const t=$("table");const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(T(col));tr.append(th);});t.append(tr);rows.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(r[col]));rr.append(td);});t.append(rr);});wrap.append(t);return wrap;}
 function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);const tabIds=c.children||[];function show(i){body.textContent="";const cc=x.byId[tabIds[i]];if(cc)body.append(node(cc,x));[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}
   (String(c.labels||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});

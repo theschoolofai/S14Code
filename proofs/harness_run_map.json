@@ -1,0 +1,771 @@
+{
+  "task": "Build a travel-planning interface for European landmarks worth visiting, with their real-world locations.",
+  "run_id": "run-809b91b631ef",
+  "status": "completed",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "gateway_provider_env": "gemini",
+  "graph": {
+    "finished": true,
+    "nodes": {
+      "content": {
+        "skill": "content",
+        "state": "succeeded",
+        "agent": "content",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash"
+      },
+      "surface": {
+        "skill": "compose_surface",
+        "state": "succeeded",
+        "agent": "ui_composer",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash"
+      }
+    },
+    "edges": [
+      [
+        "content",
+        "surface"
+      ]
+    ]
+  },
+  "event_journal": [
+    {
+      "sequence": 1,
+      "kind": "run_started",
+      "node_id": null
+    },
+    {
+      "sequence": 2,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 3,
+      "kind": "task_started",
+      "node_id": "content"
+    },
+    {
+      "sequence": 4,
+      "kind": "task_succeeded",
+      "node_id": "content"
+    },
+    {
+      "sequence": 5,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 6,
+      "kind": "task_started",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 7,
+      "kind": "task_succeeded",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 8,
+      "kind": "graph_patched",
+      "node_id": null
+    }
+  ],
+  "compose_surface_node": {
+    "id": "surface",
+    "skill": "compose_surface",
+    "state": "succeeded",
+    "provider": "gemini_1",
+    "model": "gemini-2.5-flash",
+    "upstream_used": [],
+    "parse_ok": true,
+    "raw_surface": "{\"root\": \"root_column\", \"components\": [{\"id\": \"root_column\", \"type\": \"Column\", \"children\": [\"title_text\", \"intro_text\", \"landmark_map\", \"progress_bar\", \"run_timeline\"]}, {\"id\": \"title_text\", \"type\": \"Text\", \"variant\": \"heading\", \"text\": {\"$bind\": \"/title\"}}, {\"id\": \"intro_text\", \"type\": \"Text\", \"variant\": \"body\", \"text\": {\"$bind\": \"/intro\"}}, {\"id\": \"landmark_map\", \"type\": \"Map\", \"title\": \"European Landmarks\", \"points\": {\"$bind\": \"/locations\"}}, {\"id\": \"progress_bar\", \"type\": \"ProgressBar\", \"value\": {\"$bind\": \"/progress_value\"}, \"max\": {\"$bind\": \"/progress_max\"}, \"tone\": \"neutral\"}, {\"id\": \"run_timeline\", \"type\": \"Timeline\", \"title\": \"Run Steps\", \"events\": {\"$bind\": \"/timeline\"}}]}",
+    "validator": {
+      "proposed": 6,
+      "accepted": 6,
+      "rejected": 0,
+      "ok": true,
+      "rejections": [],
+      "dangling_child_refs": [],
+      "component_types": [
+        "Column",
+        "Map",
+        "ProgressBar",
+        "Text",
+        "Timeline"
+      ],
+      "component_count": 6
+    },
+    "data_model": {
+      "title": "European Landmark Travel Planner",
+      "goal": "Build a travel-planning interface for European landmarks worth visiting, with their real-world locations.",
+      "summary": "Explore iconic European landmarks and plan your next adventure!",
+      "results": [],
+      "items": [],
+      "metrics": [],
+      "spark": [],
+      "table_rows": [],
+      "item_count": 0,
+      "source_count": 0,
+      "subjects": [],
+      "timeline": [
+        {
+          "time": "1",
+          "label": "run_started"
+        },
+        {
+          "time": "2",
+          "label": "graph_patched"
+        },
+        {
+          "time": "3",
+          "label": "task_started content"
+        },
+        {
+          "time": "4",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "5",
+          "label": "graph_patched"
+        },
+        {
+          "time": "6",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "intro": "Explore iconic European landmarks and plan your next adventure!",
+      "locations": [
+        {
+          "label": "Eiffel Tower",
+          "lat": 48.8584,
+          "lng": 2.2945
+        },
+        {
+          "label": "Colosseum",
+          "lat": 41.8902,
+          "lng": 12.4922
+        },
+        {
+          "label": "Sagrada Familia",
+          "lat": 41.4037,
+          "lng": 2.1745
+        },
+        {
+          "label": "Brandenburg Gate",
+          "lat": 52.5163,
+          "lng": 13.3777
+        },
+        {
+          "label": "Buckingham Palace",
+          "lat": 51.5014,
+          "lng": -0.1419
+        },
+        {
+          "label": "Acropolis of Athens",
+          "lat": 37.9715,
+          "lng": 23.7257
+        },
+        {
+          "label": "St. Peter's Basilica",
+          "lat": 41.9022,
+          "lng": 12.457
+        },
+        {
+          "label": "Prague Castle",
+          "lat": 50.0902,
+          "lng": 14.4009
+        },
+        {
+          "label": "Neuschwanstein Castle",
+          "lat": 47.5576,
+          "lng": 10.7498
+        },
+        {
+          "label": "Duomo di Milano",
+          "lat": 45.4642,
+          "lng": 9.1916
+        }
+      ]
+    },
+    "surface_accepted": {
+      "root": "root_column",
+      "components": [
+        {
+          "id": "root_column",
+          "type": "Column",
+          "children": [
+            "title_text",
+            "intro_text",
+            "landmark_map",
+            "progress_bar",
+            "run_timeline"
+          ]
+        },
+        {
+          "id": "title_text",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "intro_text",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/intro"
+          }
+        },
+        {
+          "id": "landmark_map",
+          "type": "Map",
+          "title": "European Landmarks",
+          "points": {
+            "$bind": "/locations"
+          }
+        },
+        {
+          "id": "progress_bar",
+          "type": "ProgressBar",
+          "value": {
+            "$bind": "/progress_value"
+          },
+          "max": {
+            "$bind": "/progress_max"
+          },
+          "tone": "neutral"
+        },
+        {
+          "id": "run_timeline",
+          "type": "Timeline",
+          "title": "Run Steps",
+          "events": {
+            "$bind": "/timeline"
+          }
+        }
+      ],
+      "dataModel": {
+        "title": "European Landmark Travel Planner",
+        "goal": "Build a travel-planning interface for European landmarks worth visiting, with their real-world locations.",
+        "summary": "Explore iconic European landmarks and plan your next adventure!",
+        "results": [],
+        "items": [],
+        "metrics": [],
+        "spark": [],
+        "table_rows": [],
+        "item_count": 0,
+        "source_count": 0,
+        "subjects": [],
+        "timeline": [
+          {
+            "time": "1",
+            "label": "run_started"
+          },
+          {
+            "time": "2",
+            "label": "graph_patched"
+          },
+          {
+            "time": "3",
+            "label": "task_started content"
+          },
+          {
+            "time": "4",
+            "label": "task_succeeded content"
+          },
+          {
+            "time": "5",
+            "label": "graph_patched"
+          },
+          {
+            "time": "6",
+            "label": "task_started surface"
+          }
+        ],
+        "progress_value": 1,
+        "progress_max": 2,
+        "intro": "Explore iconic European landmarks and plan your next adventure!",
+        "locations": [
+          {
+            "label": "Eiffel Tower",
+            "lat": 48.8584,
+            "lng": 2.2945
+          },
+          {
+            "label": "Colosseum",
+            "lat": 41.8902,
+            "lng": 12.4922
+          },
+          {
+            "label": "Sagrada Familia",
+            "lat": 41.4037,
+            "lng": 2.1745
+          },
+          {
+            "label": "Brandenburg Gate",
+            "lat": 52.5163,
+            "lng": 13.3777
+          },
+          {
+            "label": "Buckingham Palace",
+            "lat": 51.5014,
+            "lng": -0.1419
+          },
+          {
+            "label": "Acropolis of Athens",
+            "lat": 37.9715,
+            "lng": 23.7257
+          },
+          {
+            "label": "St. Peter's Basilica",
+            "lat": 41.9022,
+            "lng": 12.457
+          },
+          {
+            "label": "Prague Castle",
+            "lat": 50.0902,
+            "lng": 14.4009
+          },
+          {
+            "label": "Neuschwanstein Castle",
+            "lat": 47.5576,
+            "lng": 10.7498
+          },
+          {
+            "label": "Duomo di Milano",
+            "lat": 45.4642,
+            "lng": 9.1916
+          }
+        ]
+      }
+    }
+  },
+  "full_events": [
+    {
+      "sequence": 1,
+      "kind": "run_started",
+      "node_id": null,
+      "payload": {}
+    },
+    {
+      "sequence": 2,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 1,
+        "reason": "first frontier selected for compose_answer",
+        "add": [
+          "content"
+        ],
+        "connect": [],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": false
+      }
+    },
+    {
+      "sequence": 3,
+      "kind": "task_started",
+      "node_id": "content",
+      "payload": {
+        "skill": "content",
+        "agent": "content"
+      }
+    },
+    {
+      "sequence": 4,
+      "kind": "task_succeeded",
+      "node_id": "content",
+      "payload": {
+        "structured": {
+          "title": "European Landmark Travel Planner",
+          "intro": "Explore iconic European landmarks and plan your next adventure!",
+          "locations": [
+            {
+              "label": "Eiffel Tower",
+              "lat": 48.8584,
+              "lng": 2.2945
+            },
+            {
+              "label": "Colosseum",
+              "lat": 41.8902,
+              "lng": 12.4922
+            },
+            {
+              "label": "Sagrada Familia",
+              "lat": 41.4037,
+              "lng": 2.1745
+            },
+            {
+              "label": "Brandenburg Gate",
+              "lat": 52.5163,
+              "lng": 13.3777
+            },
+            {
+              "label": "Buckingham Palace",
+              "lat": 51.5014,
+              "lng": -0.1419
+            },
+            {
+              "label": "Acropolis of Athens",
+              "lat": 37.9715,
+              "lng": 23.7257
+            },
+            {
+              "label": "St. Peter's Basilica",
+              "lat": 41.9022,
+              "lng": 12.457
+            },
+            {
+              "label": "Prague Castle",
+              "lat": 50.0902,
+              "lng": 14.4009
+            },
+            {
+              "label": "Neuschwanstein Castle",
+              "lat": 47.5576,
+              "lng": 10.7498
+            },
+            {
+              "label": "Duomo di Milano",
+              "lat": 45.4642,
+              "lng": 9.1916
+            }
+          ]
+        },
+        "text": "Explore iconic European landmarks and plan your next adventure!",
+        "raw": "{\"title\": \"European Landmark Travel Planner\", \"intro\": \"Explore iconic European landmarks and plan your next adventure!\", \"locations\": [{\"label\": \"Eiffel Tower\", \"lat\": 48.8584, \"lng\": 2.2945}, {\"label\": \"Colosseum\", \"lat\": 41.8902, \"lng\": 12.4922}, {\"label\": \"Sagrada Familia\", \"lat\": 41.4037, \"lng\": 2.1745}, {\"label\": \"Brandenburg Gate\", \"lat\": 52.5163, \"lng\": 13.3777}, {\"label\": \"Buckingham Palace\", \"lat\": 51.5014, \"lng\": -0.1419}, {\"label\": \"Acropolis of Athens\", \"lat\": 37.9715, \"lng\": 23.7257}, {\"label\": \"St. Peter's Basilica\", \"lat\": 41.9022, \"lng\": 12.4570}, {\"label\": \"Prague Castle\", \"lat\": 50.0902, \"lng\": 14.4009}, {\"label\": \"Neuschwanstein Castle\", \"lat\": 47.5576, \"lng\": 10.7498}, {\"label\": \"Duomo di Milano\", \"lat\": 45.4642, \"lng\": 9.1916}]}",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash",
+        "agent": "content"
+      }
+    },
+    {
+      "sequence": 5,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 4,
+        "reason": "content produced; compose a validated A2UI surface from the real outcome",
+        "add": [
+          "surface"
+        ],
+        "connect": [
+          [
+            "content",
+            "surface"
+          ]
+        ],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": false
+      }
+    },
+    {
+      "sequence": 6,
+      "kind": "task_started",
+      "node_id": "surface",
+      "payload": {
+        "skill": "compose_surface",
+        "agent": "ui_composer"
+      }
+    },
+    {
+      "sequence": 7,
+      "kind": "task_succeeded",
+      "node_id": "surface",
+      "payload": {
+        "agent": "ui_composer",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash",
+        "raw_surface": "{\"root\": \"root_column\", \"components\": [{\"id\": \"root_column\", \"type\": \"Column\", \"children\": [\"title_text\", \"intro_text\", \"landmark_map\", \"progress_bar\", \"run_timeline\"]}, {\"id\": \"title_text\", \"type\": \"Text\", \"variant\": \"heading\", \"text\": {\"$bind\": \"/title\"}}, {\"id\": \"intro_text\", \"type\": \"Text\", \"variant\": \"body\", \"text\": {\"$bind\": \"/intro\"}}, {\"id\": \"landmark_map\", \"type\": \"Map\", \"title\": \"European Landmarks\", \"points\": {\"$bind\": \"/locations\"}}, {\"id\": \"progress_bar\", \"type\": \"ProgressBar\", \"value\": {\"$bind\": \"/progress_value\"}, \"max\": {\"$bind\": \"/progress_max\"}, \"tone\": \"neutral\"}, {\"id\": \"run_timeline\", \"type\": \"Timeline\", \"title\": \"Run Steps\", \"events\": {\"$bind\": \"/timeline\"}}]}",
+        "surface": {
+          "root": "root_column",
+          "components": [
+            {
+              "id": "root_column",
+              "type": "Column",
+              "children": [
+                "title_text",
+                "intro_text",
+                "landmark_map",
+                "progress_bar",
+                "run_timeline"
+              ]
+            },
+            {
+              "id": "title_text",
+              "type": "Text",
+              "variant": "heading",
+              "text": {
+                "$bind": "/title"
+              }
+            },
+            {
+              "id": "intro_text",
+              "type": "Text",
+              "variant": "body",
+              "text": {
+                "$bind": "/intro"
+              }
+            },
+            {
+              "id": "landmark_map",
+              "type": "Map",
+              "title": "European Landmarks",
+              "points": {
+                "$bind": "/locations"
+              }
+            },
+            {
+              "id": "progress_bar",
+              "type": "ProgressBar",
+              "value": {
+                "$bind": "/progress_value"
+              },
+              "max": {
+                "$bind": "/progress_max"
+              },
+              "tone": "neutral"
+            },
+            {
+              "id": "run_timeline",
+              "type": "Timeline",
+              "title": "Run Steps",
+              "events": {
+                "$bind": "/timeline"
+              }
+            }
+          ],
+          "dataModel": {
+            "title": "European Landmark Travel Planner",
+            "goal": "Build a travel-planning interface for European landmarks worth visiting, with their real-world locations.",
+            "summary": "Explore iconic European landmarks and plan your next adventure!",
+            "results": [],
+            "items": [],
+            "metrics": [],
+            "spark": [],
+            "table_rows": [],
+            "item_count": 0,
+            "source_count": 0,
+            "subjects": [],
+            "timeline": [
+              {
+                "time": "1",
+                "label": "run_started"
+              },
+              {
+                "time": "2",
+                "label": "graph_patched"
+              },
+              {
+                "time": "3",
+                "label": "task_started content"
+              },
+              {
+                "time": "4",
+                "label": "task_succeeded content"
+              },
+              {
+                "time": "5",
+                "label": "graph_patched"
+              },
+              {
+                "time": "6",
+                "label": "task_started surface"
+              }
+            ],
+            "progress_value": 1,
+            "progress_max": 2,
+            "intro": "Explore iconic European landmarks and plan your next adventure!",
+            "locations": [
+              {
+                "label": "Eiffel Tower",
+                "lat": 48.8584,
+                "lng": 2.2945
+              },
+              {
+                "label": "Colosseum",
+                "lat": 41.8902,
+                "lng": 12.4922
+              },
+              {
+                "label": "Sagrada Familia",
+                "lat": 41.4037,
+                "lng": 2.1745
+              },
+              {
+                "label": "Brandenburg Gate",
+                "lat": 52.5163,
+                "lng": 13.3777
+              },
+              {
+                "label": "Buckingham Palace",
+                "lat": 51.5014,
+                "lng": -0.1419
+              },
+              {
+                "label": "Acropolis of Athens",
+                "lat": 37.9715,
+                "lng": 23.7257
+              },
+              {
+                "label": "St. Peter's Basilica",
+                "lat": 41.9022,
+                "lng": 12.457
+              },
+              {
+                "label": "Prague Castle",
+                "lat": 50.0902,
+                "lng": 14.4009
+              },
+              {
+                "label": "Neuschwanstein Castle",
+                "lat": 47.5576,
+                "lng": 10.7498
+              },
+              {
+                "label": "Duomo di Milano",
+                "lat": 45.4642,
+                "lng": 9.1916
+              }
+            ]
+          }
+        },
+        "data_model": {
+          "title": "European Landmark Travel Planner",
+          "goal": "Build a travel-planning interface for European landmarks worth visiting, with their real-world locations.",
+          "summary": "Explore iconic European landmarks and plan your next adventure!",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [],
+          "timeline": [
+            {
+              "time": "1",
+              "label": "run_started"
+            },
+            {
+              "time": "2",
+              "label": "graph_patched"
+            },
+            {
+              "time": "3",
+              "label": "task_started content"
+            },
+            {
+              "time": "4",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "5",
+              "label": "graph_patched"
+            },
+            {
+              "time": "6",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Explore iconic European landmarks and plan your next adventure!",
+          "locations": [
+            {
+              "label": "Eiffel Tower",
+              "lat": 48.8584,
+              "lng": 2.2945
+            },
+            {
+              "label": "Colosseum",
+              "lat": 41.8902,
+              "lng": 12.4922
+            },
+            {
+              "label": "Sagrada Familia",
+              "lat": 41.4037,
+              "lng": 2.1745
+            },
+            {
+              "label": "Brandenburg Gate",
+              "lat": 52.5163,
+              "lng": 13.3777
+            },
+            {
+              "label": "Buckingham Palace",
+              "lat": 51.5014,
+              "lng": -0.1419
+            },
+            {
+              "label": "Acropolis of Athens",
+              "lat": 37.9715,
+              "lng": 23.7257
+            },
+            {
+              "label": "St. Peter's Basilica",
+              "lat": 41.9022,
+              "lng": 12.457
+            },
+            {
+              "label": "Prague Castle",
+              "lat": 50.0902,
+              "lng": 14.4009
+            },
+            {
+              "label": "Neuschwanstein Castle",
+              "lat": 47.5576,
+              "lng": 10.7498
+            },
+            {
+              "label": "Duomo di Milano",
+              "lat": 45.4642,
+              "lng": 9.1916
+            }
+          ]
+        },
+        "validator": {
+          "proposed": 6,
+          "accepted": 6,
+          "rejected": 0,
+          "ok": true,
+          "rejections": [],
+          "dangling_child_refs": [],
+          "component_types": [
+            "Column",
+            "Map",
+            "ProgressBar",
+            "Text",
+            "Timeline"
+          ],
+          "component_count": 6
+        },
+        "upstream_used": [],
+        "parse_ok": true
+      }
+    },
+    {
+      "sequence": 8,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 7,
+        "reason": "Gemini composed a surface the S14 validator accepted",
+        "add": [],
+        "connect": [],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": true
+      }
+    }
+  ]
+}

@@ -369,6 +369,55 @@ def test_safe_siblings_survive_a_partially_poisoned_surface():
 
 
 # --------------------------------------------------------------------------- #
+# Map — a new catalog vocabulary entry, same three invariants
+# --------------------------------------------------------------------------- #
+
+def test_map_binds_points_and_title_and_validates_clean():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["m"]},
+            {"id": "m", "type": "Map", "title": "Cities", "points": {"$bind": "/locations"}},
+        ],
+        "dataModel": {"locations": [{"label": "Paris", "lat": 48.85, "lng": 2.35}]},
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert {c["id"] for c in result.accepted} == {"root", "m"}
+
+
+def test_map_did_not_widen_the_catalog_invariant():
+    # Adding Map must not make the catalog check fuzzy/prefix-based: a
+    # typosquat of the new type name is still an unknown type.
+    assert _reject({"id": "x", "type": "MapEvil"}).invariant == Invariant.CATALOG
+    assert _reject({"id": "x", "type": "map"}).invariant == Invariant.CATALOG  # case-sensitive
+
+
+def test_map_points_must_be_bind_shape_not_a_literal_carrying_markup():
+    # The exact smuggling path validator.py warns about: an inline literal
+    # where a binding belongs. A hostile literal here could carry markup;
+    # the fix is the same as for every other binding prop — refuse the shape.
+    r = _reject({"id": "m", "type": "Map", "points": [{"label": "<img onerror=steal()>"}]})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "points"
+
+
+def test_map_title_literal_markup_is_refused():
+    r = _reject({"id": "m", "type": "Map", "title": "<script>steal()</script>"})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "title"
+
+
+def test_map_has_no_action_prop_so_nothing_can_cross_back():
+    # Map is display-only: it registers no "action" kind prop, so no event
+    # name it carries could ever reach REGISTERED_ACTIONS in the first place.
+    assert all(prop.kind != "action" for prop in COMPONENTS["Map"].props.values())
+    r = _reject({"id": "m", "type": "Map", "title": "x", "onSelect": {"action": "approve"}})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "onSelect"
+
+
+# --------------------------------------------------------------------------- #
 # catalog.py — catalog_manifest
 # --------------------------------------------------------------------------- #
 
@@ -390,8 +439,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +451,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "Map",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
