@@ -74,6 +74,12 @@
   .CodeDiff .ln.del{background:var(--red-soft);color:var(--red-ink)}
   .CodeDiff .ln.add{background:var(--green-soft);color:var(--green-ink)}
   .CodeDiff .mk{width:1ch;flex:0 0 auto;opacity:.7}
+  .Map{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  .Map .ct{padding:10px 12px;font-size:12px;font-weight:600;color:var(--ink-muted);border-bottom:1px solid var(--rule);font-family:var(--font-mono)}
+  .Map .cap{padding:8px 12px;font-size:12px;color:var(--ink-muted);border-top:1px solid var(--rule)}
+  .Map .legend{display:flex;flex-wrap:wrap;gap:8px 14px;padding:8px 12px;font-size:12px}
+  .Map .legend span{display:inline-flex;align-items:center;gap:6px}
+  .Map .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
 </style>
 </head>
 <body>
@@ -149,6 +155,7 @@ const R={
   Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
   ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
   CodeDiff:(c,x)=>codeDiff(c,x),
+  Map:(c,x)=>renderMap(c,x),
 };
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){
@@ -179,6 +186,29 @@ function codeDiff(c,x){
   }
   cols.append(pane(c.beforeLabel||"Before",before,"del"), pane(c.afterLabel||"After",after,"add"));
   e.append(cols);return e;
+}
+function renderMap(c,x){
+  const e=$("div","Map");
+  if(c.title){const t=$("div","ct");t.append(T(c.title));e.append(t);}
+  const markers=(resolve(c.markers,x.dm)||[]).filter(m=>m&&isFinite(+m.lat)&&isFinite(+m.lng));
+  const w=560,h=280,pad=28,ns="http://www.w3.org/2000/svg";
+  const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox","0 0 "+w+" "+h);svg.setAttribute("width","100%");svg.setAttribute("height","280");
+  const bg=document.createElementNS(ns,"rect");bg.setAttribute("x","0");bg.setAttribute("y","0");bg.setAttribute("width",w);bg.setAttribute("height",h);bg.setAttribute("fill","#EEF2FF");svg.append(bg);
+  if(markers.length){
+    const lats=markers.map(m=>+m.lat), lngs=markers.map(m=>+m.lng);
+    let minLat=Math.min(...lats), maxLat=Math.max(...lats), minLng=Math.min(...lngs), maxLng=Math.max(...lngs);
+    if(minLat===maxLat){minLat-=0.05;maxLat+=0.05;} if(minLng===maxLng){minLng-=0.05;maxLng+=0.05;}
+    const dx=maxLng-minLng||1, dy=maxLat-minLat||1;
+    markers.forEach((m,i)=>{
+      const px=pad+((+m.lng-minLng)/dx)*(w-2*pad), py=pad+((maxLat-+m.lat)/dy)*(h-2*pad);
+      const circ=document.createElementNS(ns,"circle");circ.setAttribute("cx",String(px));circ.setAttribute("cy",String(py));circ.setAttribute("r","7");circ.setAttribute("fill","var(--accent)");circ.setAttribute("stroke","#fff");circ.setAttribute("stroke-width","2");svg.append(circ);
+      const num=document.createElementNS(ns,"text");num.setAttribute("x",String(px));num.setAttribute("y",String(py+3.5));num.setAttribute("text-anchor","middle");num.setAttribute("font-size","9");num.setAttribute("fill","#fff");num.textContent=String(i+1);svg.append(num);
+    });
+  }
+  e.append(svg);
+  if(markers.length){const leg=$("div","legend");markers.forEach((m,i)=>{const s=$("span");const d=$("span","dot");s.append(d,T((i+1)+". "+String(m.label||"")));leg.append(s);});e.append(leg);}
+  if(c.caption){const cap=$("div","cap");cap.append(T(c.caption));e.append(cap);}
+  return e;
 }
 
 function pickRoot(surface){

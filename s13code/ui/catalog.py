@@ -9,9 +9,9 @@ named by a hostile agent.
 The catalog is aligned to A2UI's Basic component set: the 15 layout / text /
 input / container types A2UI Basic already defines are adopted under their real
 A2UI names (``source="a2ui-basic"``). Only the components A2UI Basic genuinely
-lacks — charts, tiles, tables, timelines, notices, the approval card, and a
-code diff — are kept as clearly labelled custom extensions (``source="custom"``).
-Twenty-four types in all; a student can read every one and the validator can
+lacks — charts, tiles, tables, timelines, notices, the approval card, a
+code diff, and a map — are kept as clearly labelled custom extensions (``source="custom"``).
+Twenty-five types in all; a student can read every one and the validator can
 prove coverage.
 
 Property kinds:
@@ -48,8 +48,8 @@ class ComponentSpec:
 _TONE = PropSpec("enum", ("neutral", "good", "warn", "bad"))
 
 
-# The 24 component types the render client knows how to draw. The first 15 are
-# A2UI Basic's own names; the last 9 are custom extensions A2UI Basic lacks.
+# The 25 component types the render client knows how to draw. The first 15 are
+# A2UI Basic's own names; the last 10 are custom extensions A2UI Basic lacks.
 COMPONENTS: dict[str, ComponentSpec] = {
     # --- A2UI Basic: layout / text / media / inputs / containers (15) --------
     "Row": ComponentSpec("Row", {
@@ -89,7 +89,7 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "Modal": ComponentSpec("Modal", {
         "title": PropSpec("text"), "children": PropSpec("ref"), "open": PropSpec("binding"),
     }, source="a2ui-basic"),
-    # --- Custom extensions: what A2UI Basic does not define (9) ---------------
+    # --- Custom extensions: what A2UI Basic does not define (10) ---------------
     "BarChart": ComponentSpec("BarChart", {
         "title": PropSpec("text"), "data": PropSpec("binding"),
         "xKey": PropSpec("text"), "yKey": PropSpec("text"),
@@ -124,6 +124,11 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "after": PropSpec("binding"),
         "beforeLabel": PropSpec("text"),
         "afterLabel": PropSpec("text"),
+    }, source="custom"),
+    "Map": ComponentSpec("Map", {
+        "title": PropSpec("text"),
+        "markers": PropSpec("binding"),
+        "caption": PropSpec("text"),
     }, source="custom"),
 }
 

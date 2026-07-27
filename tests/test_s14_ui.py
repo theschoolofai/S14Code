@@ -442,6 +442,36 @@ def test_codediff_unknown_sibling_type_breaks_catalog_only():
     assert any(r.invariant == Invariant.CATALOG for r in result.rejections)
 
 
+def test_map_clean_surface_validates():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["h", "m"]},
+            {"id": "h", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+            {"id": "m", "type": "Map", "title": "Stops", "markers": {"$bind": "/map_markers"}, "caption": "Approximate"},
+        ],
+        "dataModel": {
+            "title": "Lisbon stops",
+            "map_markers": [{"lat": 38.7, "lng": -9.1, "label": "Belem"}, {"lat": 38.71, "lng": -9.13, "label": "Alfama"}],
+        },
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert any(c["type"] == "Map" for c in result.accepted)
+
+
+def test_map_markup_caption_is_refused():
+    r = _reject({
+        "id": "m",
+        "type": "Map",
+        "title": "Stops",
+        "markers": {"$bind": "/map_markers"},
+        "caption": "<script>steal()</script>",
+    })
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "caption"
+
+
 # --------------------------------------------------------------------------- #
 # catalog.py — catalog_manifest
 # --------------------------------------------------------------------------- #
@@ -464,8 +494,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 24
+    """25 types: 15 A2UI-Basic + 10 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 25
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -476,7 +506,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard", "CodeDiff",
+        "Notice", "ApprovalCard", "CodeDiff", "Map",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -548,6 +578,7 @@ def test_route_trip_app_serves_shell_with_codediff_renderer(client):
     resp = client.get("/app/trip")
     assert resp.status_code == 200
     assert "CodeDiff" in resp.text
+    assert "Map" in resp.text
     assert "s14-trip" in resp.text
     assert "traveler-01" in resp.text
     assert "respond_as" in resp.text

@@ -83,8 +83,9 @@ open  http://127.0.0.1:8113/app/trip       # Trip Planner (every turn is a compo
 identities only (`tenant_id=course`, `project_id=s14-trip`, `user_id=traveler-01`).
 Each turn posts `respond_as:"ui"`, reads `/v1/runs/{id}/composed`, and renders the
 validated surface. A button tap becomes the next turn. The catalog includes a custom
-`CodeDiff` component so itinerary revisions can render as before/after plain-text
-plans — drawn with text nodes only, never `innerHTML` from bound values.
+`CodeDiff` and `Map` components so itinerary revisions and place markers can
+render as before/after plain-text plans and an SVG marker map — drawn with text
+nodes only, never `innerHTML` from bound values.
 
 ## Run a prompt
 
@@ -129,7 +130,7 @@ All served by the runtime on 8113, defined in
 | `POST /v1/action` | a validated user action (approve/reject), bound to final params |
 | `GET /s/{id}` | the render client, pointed at a run |
 | `GET /app` | bare-minimal UI-only conversation shell |
-| `GET /app/trip` | Trip Planner shell (destination → days → revision with CodeDiff) |
+| `GET /app/trip` | Trip Planner shell (destination → days+map → revision with CodeDiff) |
 
 ## The generative loop (UI composed by the harness)
 
