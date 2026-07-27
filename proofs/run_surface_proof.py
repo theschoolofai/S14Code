@@ -21,12 +21,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from s13code.ui.agui import stream_agui  # noqa: E402
-from s13code.ui.hitl import PendingAction, decide_resume  # noqa: E402
-from s13code.ui.fixtures import RecordedS13, load_injections  # noqa: E402
-from s13code.ui.showcase import build_corpus_dashboard  # noqa: E402
-from s13code.ui.surface import build_run_surface  # noqa: E402
-from s13code.ui.validator import validate_surface  # noqa: E402
+from s13code.ui.agui import stream_agui
+from s13code.ui.fixtures import RecordedS13, load_injections
+from s13code.ui.hitl import PendingAction, decide_resume
+from s13code.ui.showcase import build_corpus_dashboard
+from s13code.ui.surface import build_run_surface
+from s13code.ui.validator import validate_surface
 
 OUT = Path(__file__).parent / "proof.json"
 

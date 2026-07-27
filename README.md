@@ -145,6 +145,7 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `proof.json` | `run_surface_proof.py` | injection wall (4 rejections), HITL, catalog/validator |
 | `harness_run.json` | `harness_run.py` | a real live-graph run → the model composes a 19-component surface |
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
+| `coach_turns.json` | `coach_turns.py` | StudyCoach's tapped turns + the forced injection refused (produced on demand; not committed, since it records one dated run) |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
 
@@ -168,6 +169,165 @@ uv run pytest -q                             # S13 core + regression tests + the
 - Contains no secrets. The UI layer never reads `.env` and holds no credentials.
 - `.venv/`, `__pycache__/`, any `.env`, and generated databases are git-ignored.
 - Use synthetic identities in every proof.
+
+## Assignment: the StepWizard component and the StudyCoach application
+
+Two parts in one pull request. Part 1 adds `StepWizard` to the shared catalog.
+Part 2 builds **StudyCoach**, an application that answers only by composing an
+interface. Synthetic identities throughout: `tenant_id=course`,
+`project_id=s14-studycoach`, `user_id=learner-07`, `agent_id=study_coach`.
+
+### Part 1 — `StepWizard`, in the three places a component lives
+
+A2UI Basic can render an ordered list, but nothing in the catalog could say
+**where you are inside an ordered process**. `StepWizard` carries that one extra
+fact, which is what a lesson plan, a revision sequence, or a multi-stage
+derivation actually needs.
+
+| Place | What was added |
+|---|---|
+| `s13code/ui/catalog.py` | `ComponentSpec("StepWizard", …, source="custom")` — `title` (`text`), `steps` (`binding`), `active` (`binding`), `advance` (`action`) |
+| `s13code/ui/client/index.html` | `renderWizard` — numbered rail with done/current state plus a detail panel, built from `createElement` + text nodes |
+| `s13code/ui/client/app.html`, `coach.html` | `wizard` — the same renderer in both application shells |
+
+The catalog is now **24 types**: the 15 A2UI-Basic names plus 9 custom
+extensions.
+
+**Composed unprompted.** `compose_surface` publishes `/steps`
+(`[{label, detail}]`) and `/active_step` as *data* derived from the content
+role's ordered sections, and the component-mapping instruction was generalised
+to "pick whichever catalog component conveys ordered progress best — read the
+catalog and choose". The engine never says the word `StepWizard`:
+`test_compose_prompt_never_names_stepwizard_so_the_model_must_choose_it`
+asserts `"StepWizard" not in s13code/runtime.py` while
+`catalog_manifest()` still offers it. The model can only find it by reading the
+catalog it is handed.
+
+**The three invariants hold for it** (`tests/test_s14_ui.py`):
+
+| Invariant | Attack on the new component | Result |
+|---|---|---|
+| catalog | `type: "StepWizardRaw"` / `type: "Wizard"` | rejected — `unknown component type` |
+| data-not-code | `title: "<img src=x onerror=…>"` | rejected — `value carries markup` |
+| data-not-code | `steps: "<script>…</script>"` (inline where a binding belongs) | rejected — `binding must be {'$bind': '/pointer'}` |
+| data-not-code | extra `onclick` property | rejected — `event-handler property is never allowed` |
+| event | `advance: {"action": "exfiltrate_memory"}` | rejected — `unregistered action` |
+| — | a poisoned `StepWizard` beside a clean `Text` | wizard dropped, heading still renders |
+
+### Part 2 — StudyCoach, a UI-only application
+
+`GET /coach` (`s13code/ui/client/coach.html`). Domain: exam preparation
+coaching. The learner states a goal; **every turn is a composed,
+catalog-validated interface and never a paragraph**. A tap is the next turn's
+prompt, so turn three is shaped by what was tapped in turns one and two. A turn
+rail keeps each composed interface so an earlier turn can be revisited without
+asking the model to compose it again.
+
+The loop is the protocol, not application code: `POST /v1/agent/runs` with
+`respond_as: "ui"` → the graph runs `content` → `compose_surface` → the shell
+reads `GET /v1/runs/{id}/composed` and renders it.
+
+Before any turn, the shell holds nothing of its own — no greeting the agent did
+not compose, no prose placeholder standing in for an answer:
+
+![StudyCoach before the first turn: the goal input, a Start button, and a single italic hint explaining that the coach answers by building an interface and each tap becomes the next turn](docs/studycoach-empty-state.jpg)
+
+That italic line is the app's only piece of static copy, and it is instruction
+rather than content. Everything below it in every later screenshot came from the
+model through the validator.
+
+Turn one on the deployed app, composed live by `gemini_1`:
+
+![StudyCoach turn one: the coach answers the opening goal with a heading, an intro, five tappable subject Buttons, a ProgressBar and a Timeline of the run's own graph events](docs/studycoach-turn-1.jpg)
+
+The status line is the receipt: `gemini_1 · 11 components · 0 executable`, and
+`5 component types composed live, every one in-catalog`. Nothing in that page is
+a paragraph the model wrote — the prose is bound `Text`, the subjects are
+`Button`s whose taps become turn two's prompt, and the `Timeline` is the run's own
+`run_started` / `graph_patched` journal. `0 executable` is counted, not asserted:
+it is the number of accepted components carrying markup, a URL, a handler prop or
+an unregistered action.
+
+### Four defects in the reference build that this branch fixes
+
+All four were found by running the thing rather than reading it, and the first two
+were load-bearing for the invariant the session claims.
+
+1. **The app shell rendered model-adjacent markup.** `app.html` set
+   `status.innerHTML` with the learner's own goal interpolated into it, so a goal
+   typed as `<img src=x onerror=…>` executed in the shell *around* a perfectly
+   clean interface. The status line is now DOM built from text nodes;
+   `test_app_viewer_status_line_is_dom_not_markup` locks it.
+2. **The validator never checked `children`.** It skipped the field, so a
+   nested component *object* inside `children` was never checked against the
+   catalog, and `compose_surface` crashed outright
+   (`TypeError: unhashable type: 'dict'`) the first time a live model returned
+   that shape. `children` are now enforced as a list of component-id strings;
+   a nested object is a `data-not-code` rejection.
+3. **A truncated reply lost the whole interface.** A model that stops
+   mid-component returns HTTP 200 with no stop reason, so a cut-off reply is
+   indistinguishable from a finished one. `json.loads` failed and the turn rendered
+   nothing — which a UI-only application cannot survive. The finished components
+   are now recovered, dangling child refs dropped, and the composer retries once.
+4. **A tapped label was mistaken for a research fan-out.** A chip reading
+   `Algebra (Complex Numbers, Quadratic Equations, …)` was parsed as a
+   comma-separated entity list, so **one** conversational turn fanned into six
+   model calls and built a graph with no `compose_surface` node in it at all. An
+   explicit `respond_as: "ui"` turn now always takes the single-goal path; the
+   fan-out is kept for phrased requests, where the commas are the author's own list.
+
+### Reproduce from a fresh checkout
+
+```bash
+# terminal one — the gateway owns the one provider credential
+cd glc_v3 && uv sync && uv run glc serve
+
+# terminal two — the Session 14 runtime
+cd S14Code && uv sync
+uv run ruff check .
+uv run pytest -q                      # 137 tests
+export GLC_BASE_URL=http://127.0.0.1:8111
+export S13_GATEWAY_PROVIDER=gemini
+uv run s14code serve
+
+# the application
+open http://127.0.0.1:8113/coach
+
+# the component's invariants on their own
+uv run pytest -q tests/test_s14_ui.py -k stepwizard
+```
+
+## Hosted deployment
+
+Two Modal apps, keeping the same boundary the local setup has: the gateway owns
+the provider credential, the runtime never sees one.
+
+| App | Serves | Secret it reads |
+|---|---|---|
+| `glc-v1-gateway` | `glc.main:app` — models, keys, routing, cost | `glc-llm-keys` (`GEMINI_API_KEY_1`) |
+| `s14code-studycoach` | `s13code.main:app` — `/coach` and the UI routes | `s14code-gateway` (`GLC_BASE_URL` only, no credential) |
+
+[`modal_app.py`](modal_app.py) makes two choices a serverless container forces,
+both by environment rather than by changing application code:
+
+- `S13_EMBEDDER=deterministic` — there is no Ollama sidecar in the container, and
+  an embedder that cannot be reached fails every memory write. Locally the real
+  `nomic-embed-text` embedder is still the default.
+- `S13_A2A_GRPC_ENABLED=0` — a second listener on its own port is unreachable
+  through Modal's single ASGI ingress. The JSON-RPC A2A surface stays on HTTP.
+
+```bash
+# the gateway (its image must include ./static — glc/main.py mounts it at import
+# time, so a missing directory kills the container before the app exists)
+cd glc_v3
+modal secret create glc-llm-keys GEMINI_API_KEY_1=... LLM_ORDER=gemini
+uv run modal deploy modal_app.py
+
+# the runtime, pointed at the deployed gateway
+cd ../S14Code
+modal secret create s14code-gateway GLC_BASE_URL=https://<gateway-host>
+uv run modal deploy modal_app.py
+```
 
 ## License
 

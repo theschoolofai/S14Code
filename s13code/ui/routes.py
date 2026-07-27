@@ -8,6 +8,7 @@
   POST /v1/validate                 validate an arbitrary surface (injection wall)
   POST /v1/action                   a validated user action (approve/reject/rerun)
   GET  /s/{id}                      the render client, pointed at a run
+  GET  /coach                       StudyCoach: the UI-only application
 
 The data source is the runtime's own graph, read in-process off
 ``request.app.state.s13_runtime`` — the same attribute S13's ``GET
@@ -233,4 +234,16 @@ async def app_viewer():
     path = Path(__file__).parent / "client" / "app.html"
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
+    return path.read_text()
+
+
+@router.get("/coach", response_class=HTMLResponse)
+@router.get("/coach/", response_class=HTMLResponse)
+async def coach_app():
+    """StudyCoach — the Session 14 assignment application. A study coach that
+    answers only in composed, catalog-validated interfaces: a tap in one turn
+    shapes the interface the agent composes for the next."""
+    path = Path(__file__).parent / "client" / "coach.html"
+    if not path.exists():
+        raise HTTPException(500, "coach app missing")
     return path.read_text()

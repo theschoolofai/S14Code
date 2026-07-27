@@ -14,4 +14,5 @@ htmlcov/
 benchmark.json
 benchmark.md
 a2a-proof.json
+proofs/*.partial.json
 .DS_Store

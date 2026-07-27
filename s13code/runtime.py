@@ -5,9 +5,9 @@ S13Core components into the code path used by HTTP and channel messages.
 """
 from __future__ import annotations
 
+import json
 import os
 import re
-import json
 import uuid
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
@@ -16,7 +16,7 @@ from typing import Any
 
 from s13code.core.live_graph import GraphPatch, GraphStore, LiveGraphExecutor, TaskSpec
 from s13code.core.memory import MemoryKind, MemoryRecord, MemoryScope, MemoryStore, Principal, SourceRef
-from s13code.core.memory.embeddings import OllamaNomicEmbedder
+from s13code.core.memory.embeddings import DeterministicEmbedder, OllamaNomicEmbedder
 from s13code.planner import ConstrainedGraphPatchPlanner
 from s13code.tools import fetch_url, sandbox_files, sandbox_path, web_search
 
@@ -49,10 +49,60 @@ def _slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_") or "item"
 
 
+def _open_stack(text: str) -> list[str] | None:
+    """The still-open brackets of a JSON fragment, or None if it ends inside a
+    string (an unterminated string can never be closed safely)."""
+    stack: list[str] = []
+    in_string = escape = False
+    for ch in text:
+        if in_string:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_string = False
+        elif ch == '"':
+            in_string = True
+        elif ch in "[{":
+            stack.append(ch)
+        elif ch in "]}":
+            if not stack:
+                return None
+            stack.pop()
+    return None if in_string else stack
+
+
+def _repair_truncated_json(text: str) -> dict[str, Any] | None:
+    """Recover the finished part of a JSON object the model stopped writing.
+
+    A truncated reply is indistinguishable from a finished one at the transport
+    level — the provider returns 200 with no stop reason and the JSON simply ends
+    mid-component. Losing the entire interface to that is worse than rendering
+    the components the model *did* finish, so cut back to the last complete
+    value, close the open brackets, and parse that.
+    """
+    cuts = [i + 1 for i, ch in enumerate(text) if ch in "]}"]
+    for cut in reversed(cuts):
+        fragment = text[:cut].rstrip().rstrip(",")
+        stack = _open_stack(fragment)
+        if not stack:
+            continue
+        closed = fragment + "".join("]" if bracket == "[" else "}" for bracket in reversed(stack))
+        try:
+            parsed = json.loads(closed)
+        except Exception:  # noqa: S112 — each cut point is a guess; the next one is the retry
+            continue
+        if isinstance(parsed, dict):
+            return parsed
+    return None
+
+
 def _parse_json_object(text: str) -> dict[str, Any] | None:
     """Robustly parse a JSON object out of a model reply: strip ``` fences, then
-    fall back to the outermost {...} span. Returns the dict or None. Shared by
-    the content role (structured answer) and compose_surface (surface tree)."""
+    fall back to the outermost {...} span, then to repairing a truncated reply.
+    Returns the dict or None. Shared by the content role (structured answer) and
+    compose_surface (surface tree)."""
     if not isinstance(text, str):
         return None
     candidate = text.strip()
@@ -67,10 +117,11 @@ def _parse_json_object(text: str) -> dict[str, Any] | None:
         if start >= 0 and end > start:
             try:
                 parsed = json.loads(candidate[start:end + 1])
-                return parsed if isinstance(parsed, dict) else None
+                if isinstance(parsed, dict):
+                    return parsed
             except Exception:
-                return None
-        return None
+                pass
+        return _repair_truncated_json(candidate[start:] if start >= 0 else candidate)
 
 
 def _entity_list(prompt: str) -> list[str]:
@@ -91,7 +142,7 @@ def _research_topic(prompt: str, entities: list[str]) -> str:
     topic = prompt
     for entity in entities:
         topic = topic.replace(entity, " ")
-    topic = re.split(r"\b(?:compose|build|create|make|generate|design)\b", topic, maxsplit=1, flags=re.I)[0]
+    topic = re.split(r"\b(?:compose|build|create|make|generate|design)\b", topic, maxsplit=1, flags=re.IGNORECASE)[0]
     topic = re.sub(r"[^A-Za-z0-9 ]+", " ", topic)
     return " ".join(topic.split())
 
@@ -160,13 +211,20 @@ def _work_intent(prompt: str, respond_as: str = "text") -> tuple[str, list[TaskS
 
     # --- S14 generative UI: a request to compose an interface. Triggered by an
     # explicit respond_as="ui", or by a general "build/compose a UI" phrasing —
-    # NOT by any one domain. If the prompt also names a list of entities to look
-    # up (e.g. "compose a dashboard of A, B and C"), fan out real research nodes
-    # and compose from their outcomes; otherwise produce the content for the
-    # single goal, then compose. Either way the surface node is terminal.
+    # NOT by any one domain. A PHRASED request may also name a list of entities
+    # to look up ("compose a dashboard of A, B and C"); then fan out real
+    # research nodes and compose from their outcomes.
+    #
+    # An explicit respond_as="ui" turn is different in kind: its text is whatever
+    # a user typed or tapped, so commas in it mean nothing. Treating a tapped
+    # label like "Algebra (Complex Numbers, Quadratic Equations, ...)" as a list
+    # of research subjects fanned one conversational turn into six model calls,
+    # which burned the provider's per-minute quota and left the turn with no
+    # interface at all. An app turn therefore always takes the single-goal path.
+    # Either way the surface node is terminal.
     wants_ui = respond_as == "ui" or bool(_COMPOSE_UI.search(prompt))
     if wants_ui:
-        entities = _entity_list(prompt)
+        entities = [] if respond_as == "ui" else _entity_list(prompt)
         if len(entities) >= 2:
             topic = _research_topic(prompt, entities)
             return "compose_research", [TaskSpec(f"search_{i + 1}", "researcher",
@@ -197,6 +255,25 @@ def _work_intent(prompt: str, respond_as: str = "text") -> tuple[str, list[TaskS
     return "memory", [TaskSpec("recall", "memory_recall", {"query": prompt})]
 
 
+def _select_embedder() -> Any:
+    """Choose the embedder from the environment.
+
+    Locally, Ollama's ``nomic-embed-text`` is the real one and stays the default.
+    A cloud container has no Ollama sidecar, and an embedder that cannot be
+    reached fails every memory write — so ``S13_EMBEDDER=deterministic`` selects
+    the offline hashed embedder instead. Fingerprints differ between the two, and
+    the store already treats a changed fingerprint as stale rather than
+    unsearchable, so switching does not silently corrupt recall.
+    """
+    choice = os.getenv("S13_EMBEDDER", "ollama").strip().lower()
+    if choice in {"deterministic", "offline", "hash"}:
+        return DeterministicEmbedder()
+    return OllamaNomicEmbedder(
+        model=os.getenv("EMBED_OLLAMA_MODEL", "nomic-embed-text"),
+        base_url=os.getenv("OLLAMA_URL", "http://localhost:11434"),
+    )
+
+
 class S13Runtime:
     """Owns the persistent stores and runs one user request through the graph."""
 
@@ -207,7 +284,7 @@ class S13Runtime:
         # between those profiles.
         self.root = root or Path(os.getenv("S13_DATA_DIR", str(Path.home() / ".s13code")))
         self.root.mkdir(parents=True, exist_ok=True)
-        self.memory = MemoryStore(self.root / "memory.sqlite", embedder=OllamaNomicEmbedder())
+        self.memory = MemoryStore(self.root / "memory.sqlite", embedder=_select_embedder())
         self.graph = GraphStore(self.root / "graph.sqlite")
 
     def close(self) -> None:
@@ -277,6 +354,15 @@ class S13Runtime:
                             connect=(("content", "surface"),),
                             reason="content produced; compose a validated A2UI surface from the real outcome")
                     if event.node_id == "content" and event.kind == "task_failed":
+                        # A UI-only application has no prose to fall back on: if
+                        # this turn composes nothing, the conversation simply
+                        # stops. Compose from whatever the run does hold (the
+                        # goal itself, at minimum) instead of finishing empty.
+                        if "surface" not in graph.nodes:
+                            return GraphPatch(
+                                add=(TaskSpec("surface", "compose_surface", {"query": prompt},
+                                              {"agent": "ui_composer"}),),
+                                reason="content worker failed; compose an interface from the goal anyway")
                         return GraphPatch(finish=True, reason="content worker failed; failure retained in journal")
                 # --- S14 generative UI: multi-entity path. Real research nodes
                 # feed a distill, then a compose_surface. The surface is terminal.
@@ -391,7 +477,7 @@ class S13Runtime:
                 return GraphPatch()
 
         async def recall(task: TaskSpec) -> dict[str, Any]:
-            corpus_query = bool(re.search(r"\b(papers?|documents?|indexed|corpus)\b", task.input["query"], re.I))
+            corpus_query = bool(re.search(r"\b(papers?|documents?|indexed|corpus)\b", task.input["query"], re.IGNORECASE))
             kinds = ([MemoryKind.DOCUMENT_CHUNK] if corpus_query else
                      [MemoryKind.FACT, MemoryKind.DOCUMENT_CHUNK, MemoryKind.PLAYBOOK, MemoryKind.EPISODE])
             # Ask the store for a wider candidate pool, then diversify corpus
@@ -499,7 +585,7 @@ class S13Runtime:
         async def remember_explicit(task: TaskSpec) -> dict[str, Any]:
             fact_text = task.input["text"]
             birthday = re.search(r"(?:my\s+)?mom(?:'s)?\s+birthday\s+is\s+(\d{1,2}\s+[A-Za-z]+\s+\d{4})",
-                                 fact_text, re.I)
+                                 fact_text, re.IGNORECASE)
             if birthday:
                 fact_text = f"Mom's birthday is {birthday.group(1)}."
             record = runtime.memory.write(MemoryRecord(
@@ -525,7 +611,7 @@ class S13Runtime:
             return {"path": str(path), "text": path.read_text(encoding="utf-8")[:60_000]}
 
         async def create_reminder(task: TaskSpec) -> dict[str, Any]:
-            match = re.search(r"birthday is\s+(\d{1,2}\s+[A-Za-z]+\s+\d{4})", task.input["prompt"], re.I)
+            match = re.search(r"birthday is\s+(\d{1,2}\s+[A-Za-z]+\s+\d{4})", task.input["prompt"], re.IGNORECASE)
             if not match:
                 raise ValueError("could not safely parse a birthday date for the reminder")
             day = datetime.strptime(match.group(1), "%d %B %Y").date()
@@ -642,16 +728,28 @@ class S13Runtime:
         async def _gateway_surface_call(surface_prompt: str, system: str) -> dict[str, Any]:
             import httpx as _httpx
             base = os.getenv("GLC_BASE_URL", "http://127.0.0.1:8111").rstrip("/")
-            payload = {"messages": [{"role": "user", "content": surface_prompt}], "system": system,
-                       "max_tokens": int(os.getenv("S14_SURFACE_MAX_TOKENS", "4000")),
-                       "temperature": 0, "reasoning": "off", "agent": "s14_compose_surface",
-                       "provider": os.getenv("S13_GATEWAY_PROVIDER", "gemini")}
-            async with _httpx.AsyncClient(timeout=120) as client:
-                response = await client.post(f"{base}/v1/chat", json=payload)
-            if response.status_code >= 400:
-                raise RuntimeError(f"GLC /v1/chat {response.status_code}: {response.text[:300]}")
-            body = response.json()
-            return {"text": body.get("text", ""), "provider": body.get("provider"), "model": body.get("model")}
+            provider = os.getenv("S13_GATEWAY_PROVIDER", "gemini")
+            # A rate-limited provider is not the same failure as a model that
+            # cannot compose, but both arrive here as one exception. Where a
+            # fallback provider is configured, spend it on the compose step: an
+            # application that answers only in interfaces has nothing to show at
+            # all if this call is the one that fails.
+            fallbacks = [name.strip() for name in
+                         os.getenv("S14_SURFACE_FALLBACK_PROVIDERS", "").split(",") if name.strip()]
+            last_error = ""
+            for candidate in [provider, *fallbacks]:
+                payload = {"messages": [{"role": "user", "content": surface_prompt}], "system": system,
+                           "max_tokens": int(os.getenv("S14_SURFACE_MAX_TOKENS", "8000")),
+                           "temperature": 0, "reasoning": "off", "agent": "s14_compose_surface",
+                           "provider": candidate}
+                async with _httpx.AsyncClient(timeout=180) as client:
+                    response = await client.post(f"{base}/v1/chat", json=payload)
+                if response.status_code < 400:
+                    body = response.json()
+                    return {"text": body.get("text", ""), "provider": body.get("provider"),
+                            "model": body.get("model")}
+                last_error = f"GLC /v1/chat {response.status_code}: {response.text[:300]}"
+            raise RuntimeError(last_error)
 
         def _extract_surface(text: str) -> dict[str, Any] | None:
             return _parse_json_object(text)
@@ -782,6 +880,15 @@ class S13Runtime:
                         data_model["section_events"] = [
                             {"time": section["heading"], "label": "; ".join(section["points"])}
                             for section in clean_sections]
+                        # A stage-shaped view of the same ordered sections:
+                        # {label, detail} per stage plus which stage is current.
+                        # This is DATA, not a component choice — whichever catalog
+                        # component best conveys an ordered process can bind it.
+                        data_model["steps"] = [
+                            {"label": section["heading"],
+                             "detail": "\n".join(section["points"]) or section["heading"]}
+                            for section in clean_sections]
+                        data_model["active_step"] = 0
 
                 metrics = content_structured.get("metrics")
                 if isinstance(metrics, list) and metrics:
@@ -861,10 +968,12 @@ class S13Runtime:
                       "label/title and column names may be literal UI strings. An onPress action MUST be one of the "
                       "registered actions (use \"request_data\" for choices); never invent an action, component "
                       "type, prop, event handler, URL, or markup. children/labels reference component ids. "
-                      "Prefer the RICHEST fitting component for each piece of data, NEVER one big Text blob: a "
-                      "Timeline or a List/Column of Cards for ordered groups, StatTiles in a Row for key numbers, "
-                      "a BarChart or Sparkline for a numeric series, a DataTable for tabular rows, and Buttons for "
-                      "tappable choices. Fall back to a single Text only when the data has no structure. Return "
+                      "Prefer the RICHEST fitting component for each piece of data, NEVER one big Text blob: "
+                      "read the catalog and pick the component whose props actually match the shape of each "
+                      "value — a component that plots a numeric series for a series, one that renders rows for "
+                      "tabular data, one that shows ordered progress for a sequence of stages, tiles for key "
+                      "numbers, and Buttons for tappable choices. "
+                      "Fall back to a single Text only when the data has no structure. Return "
                       "JSON only: no prose, no fences.")
             instruction = {
                 "goal": prompt,
@@ -876,9 +985,12 @@ class S13Runtime:
                             'Start with a Text (variant "heading") bound to /title, then a Text (variant "body") '
                             "bound to /intro or /summary if present. Then map the structured data to rich "
                             "components (skip any pointer that is absent): "
-                            "for /sections (ordered groups) render EITHER a Timeline bound to /section_events OR a "
-                            "List/Column of Cards, one Card per section titled with the literal /section_N_heading "
-                            "and a Text bound to /section_N_points; "
+                            "for an ordered sequence of stages (/sections, /steps, /section_events, "
+                            "/active_step) pick whichever catalog component conveys ordered progress best — "
+                            "read the catalog and choose; if a component can show BOTH the sequence and which "
+                            "stage is current, prefer it over a flat list, and otherwise render one Card per "
+                            "section titled with the literal /section_N_heading and a Text bound to "
+                            "/section_N_points; "
                             "for /metrics render a Row of StatTiles, each StatTile value bound to /metric_N_value "
                             "with a literal label; "
                             "for /series render a BarChart (data bound to /series, xKey \"label\", yKey \"value\") "
@@ -894,11 +1006,36 @@ class S13Runtime:
             body = await _gateway_surface_call(json.dumps(instruction), system)
             raw = body.get("text", "")
             surface = _extract_surface(raw)
+            # A truncated reply can leave too little to render. Ask once more
+            # before giving up: composing nothing is the one outcome a UI-only
+            # application cannot survive.
+            attempts = 1
+            if not isinstance(surface, dict) or len(surface.get("components") or []) < 2:
+                retry = await _gateway_surface_call(json.dumps(instruction), system)
+                retry_surface = _extract_surface(retry.get("text", ""))
+                attempts = 2
+                if isinstance(retry_surface, dict) and (
+                    len(retry_surface.get("components") or [])
+                    > len((surface or {}).get("components") or [])
+                ):
+                    body, raw, surface = retry, retry.get("text", ""), retry_surface
             proposed = surface.get("components", []) if isinstance(surface, dict) else []
             validation = validate_surface(surface if isinstance(surface, dict) else {"components": []})
             accepted_ids = {comp.get("id") for comp in validation.accepted}
+            # Children are guaranteed to be id strings here (the validator
+            # refuses any other shape), so this can no longer raise on a nested
+            # object the model invented.
             dangling = sorted({child for comp in validation.accepted
-                               for child in comp.get("children", []) if child not in accepted_ids})
+                               for child in comp.get("children", [])
+                               if isinstance(child, str) and child not in accepted_ids})
+            # A salvaged (or partly rejected) tree can reference children that
+            # never arrived. Drop those refs so the client renders the components
+            # that survived instead of a hole where a child should be.
+            if dangling:
+                for comp in validation.accepted:
+                    children = comp.get("children")
+                    if isinstance(children, list):
+                        comp["children"] = [c for c in children if c in accepted_ids]
             types_used = sorted({comp.get("type") for comp in validation.accepted})
             return {
                 "agent": "ui_composer", "provider": body.get("provider"), "model": body.get("model"),
@@ -912,6 +1049,7 @@ class S13Runtime:
                               "dangling_child_refs": dangling, "component_types": types_used,
                               "component_count": len(validation.accepted)},
                 "upstream_used": [item["label"] for item in outcomes],
+                "compose_attempts": attempts,
                 "parse_ok": surface is not None,
             }
         # --- end S14 additive -----------------------------------------------

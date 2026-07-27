@@ -5,7 +5,8 @@ before it reaches the client. The wall does not ask a model to be careful.
 It checks structure:
 
   1. Catalog invariant      every component ``type`` is in the catalog
-  2. Data-not-code invariant no property smuggles markup, a handler, or a URL
+  2. Data-not-code invariant no property smuggles markup, a handler, or a URL;
+     ``children`` are id *references*, never inline component objects
   3. Event invariant         every action name is registered
 
 A rejection is specific: it names the component, the offending field, and the
@@ -23,10 +24,11 @@ from .catalog import COMPONENTS, REGISTERED_ACTIONS
 
 # Markup / script / javascript-url smells. A ``text`` or ``binding`` value that
 # matches is treated as an attempt to reach execution and is refused.
-_MARKUP = re.compile(r"<[a-z!/][^>]*>|</[a-z]+>", re.I)
-_JS_URL = re.compile(r"^\s*(javascript|data|vbscript):", re.I)
-_HANDLER = re.compile(r"^on[a-z]+$", re.I)  # onclick, onerror, onload, ...
+_MARKUP = re.compile(r"<[a-z!/][^>]*>|</[a-z]+>", re.IGNORECASE)
+_JS_URL = re.compile(r"^\s*(javascript|data|vbscript):", re.IGNORECASE)
+_HANDLER = re.compile(r"^on[a-z]+$", re.IGNORECASE)  # onclick, onerror, onload, ...
 _POINTER = re.compile(r"^/[^\s]*$")  # a JSON Pointer: /rows, /pending/params
+_COMPONENT_ID = re.compile(r"^[A-Za-z0-9_.:-]{1,64}$")
 
 
 class Invariant:
@@ -89,9 +91,28 @@ def validate_surface(surface: dict) -> ValidationResult:
         spec = COMPONENTS[ctype]
         bad = False
         for field_name, value in comp.items():
-            if field_name in ("id", "type", "children"):
-                if field_name == "children":  # children are refs; validated by tree walk elsewhere
-                    continue
+            if field_name in ("id", "type"):
+                continue
+
+            # 2a. Children are *references*, never inline components. A child
+            # must be an id string the tree can resolve. Anything else — a
+            # nested component object, a number, a dict — is refused: a nested
+            # object would otherwise ride into the client without ever having
+            # been checked against the catalog, which is the whole wall.
+            if field_name == "children":
+                child_prop = spec.props.get("children")
+                if child_prop is None or child_prop.kind != "ref":
+                    rejections.append(Rejection(cid, "children", Invariant.DATA_NOT_CODE,
+                                                f"{ctype} takes no children"))
+                    bad = True
+                    break
+                if not isinstance(value, list) or not all(
+                    isinstance(child, str) and _COMPONENT_ID.match(child) for child in value
+                ):
+                    rejections.append(Rejection(cid, "children", Invariant.DATA_NOT_CODE,
+                                                "children must be a list of component id strings"))
+                    bad = True
+                    break
                 continue
 
             # 2. Data-not-code: the property must be one the schema declares.

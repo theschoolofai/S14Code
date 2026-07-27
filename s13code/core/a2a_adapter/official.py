@@ -8,14 +8,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import grpc
+from a2a.types import a2a_pb2 as p
+from a2a.types import a2a_pb2_grpc as pb_grpc
 from google.protobuf.empty_pb2 import Empty
 from google.protobuf.timestamp_pb2 import Timestamp
 
-from a2a.types import a2a_pb2 as p
-from a2a.types import a2a_pb2_grpc as pb_grpc
+from s13code.core.live_graph import GraphPatch, NodeState
 
 from .server import A2ADemoServer, TaskState
-from s13code.core.live_graph import GraphPatch, NodeState
 
 
 def _task(task) -> p.Task:

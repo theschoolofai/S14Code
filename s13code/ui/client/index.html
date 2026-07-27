@@ -58,6 +58,22 @@
   .Approval button.ok{background:var(--green);color:#fff;border-color:var(--green)}
   .prog{height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}
   .prog>i{display:block;height:100%;background:var(--green)}
+  .Wiz{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
+  .Wiz .wt{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:10px;font-family:var(--font-mono)}
+  .Wiz .rail{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding-bottom:4px}
+  .Wiz .st{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:78px;flex:1;position:relative}
+  .Wiz .st .dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-mono);border:2px solid var(--rule-strong);background:var(--surface);color:var(--ink-muted);z-index:1}
+  .Wiz .st .cap{font-size:11px;text-align:center;color:var(--ink-muted);line-height:1.35;padding:0 4px}
+  .Wiz .st .bar{position:absolute;top:12px;left:50%;width:100%;height:2px;background:var(--rule);z-index:0}
+  .Wiz .st:last-child .bar{display:none}
+  .Wiz .st.done .dot{border-color:var(--green);background:var(--green);color:#fff}
+  .Wiz .st.done .bar{background:var(--green)}
+  .Wiz .st.now .dot{border-color:var(--accent);background:var(--accent);color:#fff;box-shadow:0 0 0 4px var(--accent-soft)}
+  .Wiz .st.now .cap{color:var(--accent);font-weight:700}
+  .Wiz .panel{margin-top:12px;padding:12px 14px;background:var(--surface-alt);border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:10px}
+  .Wiz .panel .ph{font-weight:700;color:var(--ink);margin-bottom:4px}
+  .Wiz .panel .pd{font-size:13px;color:var(--ink-body);line-height:1.55;white-space:pre-wrap}
+  .Wiz .adv{margin-top:10px;border:1px solid var(--rule-strong);background:var(--surface);border-radius:8px;padding:6px 14px;font-weight:600;font-size:13px;cursor:pointer;color:var(--ink)}
   @media (prefers-color-scheme:dark){:root{--bg:#0d0f14;--surface:#161922;--surface-alt:#11131a;--ink:#f3f5f9;--ink-body:#e4e8f0;--ink-muted:#9aa4b8;--rule:#252a36;--rule-strong:#333a49}body{background:var(--surface-alt)}}
 
   .Text .md-h{font-weight:700;color:var(--ink);margin:12px 0 4px}.Text .md-p{margin:6px 0;line-height:1.6}.Text .md-ul{margin:6px 0 6px 4px;padding-left:18px}.Text .md-ul li{margin:3px 0}
@@ -135,6 +151,7 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  StepWizard:(c,ctx)=>renderWizard(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -185,6 +202,53 @@ function renderApproval(c,ctx){const e=$("div","Approval");const sm=$("div","sm"
   const pre=$("pre");pre.append(text(JSON.stringify(resolve(c.params,ctx.dm),null,2)));const btns=$("div","btns");
   const ok=$("button","ok");ok.append(text("Approve"));ok.onclick=()=>emitAction("approve",resolve(c.params,ctx.dm));
   const no=$("button");no.append(text("Reject"));no.onclick=()=>emitAction("reject",{});btns.append(ok,no);e.append(sm,pre,btns);return e;}
+
+// StepWizard: an ordered process plus WHERE YOU ARE in it. Every step label and
+// detail arrives as a bound data value and is written with text nodes only, so a
+// step whose label is "<script>…" renders those characters literally. Clicking a
+// step only moves a local index; the one way it can reach the agent is the
+// optional `advance` action, which the validator has already checked against the
+// registered action set.
+function renderWizard(c,ctx){
+  const e=$("div","Wiz");
+  const t=$("div","wt");t.append(text(c.title||"steps"));e.append(t);
+  const raw=resolve(c.steps,ctx.dm);
+  const steps=(Array.isArray(raw)?raw:[]).map((s,i)=>(s&&typeof s==="object")
+    ? {label:s.label!=null?s.label:(s.heading!=null?s.heading:"step "+(i+1)), detail:s.detail!=null?s.detail:(s.points!=null?s.points:"")}
+    : {label:String(s), detail:""});
+  let active=+resolve(c.active,ctx.dm);
+  if(!isFinite(active)||active<0)active=0;
+  if(active>steps.length-1)active=Math.max(0,steps.length-1);
+  const rail=$("div","rail");
+  const panel=$("div","panel");
+  const ph=$("div","ph"),pd=$("div","pd");
+  panel.append(ph,pd);
+  function paint(){
+    rail.textContent="";
+    steps.forEach((s,i)=>{
+      const st=$("div","st "+(i<active?"done":(i===active?"now":"")));
+      const bar=$("div","bar");
+      const dot=$("div","dot");dot.append(text(i<active?"✓":String(i+1)));
+      const cap=$("div","cap");cap.append(text(s.label));
+      st.append(bar,dot,cap);
+      st.onclick=()=>{active=i;paint();};
+      rail.append(st);
+    });
+    const cur=steps[active]||{label:"",detail:""};
+    ph.textContent="";ph.append(text(cur.label));
+    pd.textContent="";
+    const d=cur.detail;
+    pd.append(text(Array.isArray(d)?d.map(x=>"• "+String(x)).join("\n"):String(d==null?"":d)));
+  }
+  paint();
+  e.append(rail,panel);
+  if(c.advance&&c.advance.action){
+    const b=$("button","adv");b.append(text("Next step"));
+    b.onclick=()=>{if(active<steps.length-1){active+=1;paint();}emitAction(c.advance.action,{step:active});};
+    e.append(b);
+  }
+  return e;
+}
 
 function emitAction(name,args){ // the only way the surface changes the world: a named, validated event
   document.getElementById("meta").textContent = "action emitted → "+name+" "+JSON.stringify(args);

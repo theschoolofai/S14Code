@@ -3,7 +3,6 @@ from __future__ import annotations
 from s13code.core.memory.chunking import semantic_chunks
 from s13code.core.memory.embeddings import DeterministicEmbedder
 
-
 TEXT = """Artificial intelligence systems learn patterns from data. Neural networks train on examples.
 
 Cricket is played between two teams. Batters score runs and bowlers take wickets.
