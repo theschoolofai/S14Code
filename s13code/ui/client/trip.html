@@ -206,7 +206,10 @@ function codeDiff(c,x){
 function renderMap(c,x){
   const e=$("div","Map");
   if(c.title){const t=$("div","ct");t.append(T(c.title));e.append(t);}
-  const markers=(resolve(c.markers,x.dm)||[]).filter(m=>m&&isFinite(+m.lat)&&isFinite(+m.lng));
+  let markers=resolve(c.markers,x.dm);
+  if(markers&&!Array.isArray(markers)&&Array.isArray(markers.markers))markers=markers.markers;
+  if(!Array.isArray(markers)||!markers.length)markers=x.dm&&x.dm.map_markers;
+  markers=(markers||[]).filter(m=>m&&isFinite(+m.lat)&&isFinite(+m.lng));
   const w=560,h=280,pad=28;
   const ns="http://www.w3.org/2000/svg";
   const svg=document.createElementNS(ns,"svg");

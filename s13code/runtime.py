@@ -50,6 +50,49 @@ def _slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_") or "item"
 
 
+def _coerce_num(value: Any) -> float | None:
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return float(str(value).replace(",", "").strip())
+    except Exception:
+        return None
+
+
+def _clean_map_markers(raw_markers: Any) -> list[dict[str, Any]]:
+    """Normalize marker dicts from content JSON into lat/lng/label rows."""
+    if not isinstance(raw_markers, list):
+        return []
+    clean: list[dict[str, Any]] = []
+    for marker in raw_markers:
+        if not isinstance(marker, dict):
+            continue
+        loc = marker.get("location") if isinstance(marker.get("location"), dict) else marker
+        lat = _coerce_num(loc.get("lat", loc.get("latitude")))
+        lng = _coerce_num(loc.get("lng", loc.get("lon", loc.get("longitude"))))
+        label = str(marker.get("label") or marker.get("name") or marker.get("title") or "").strip()
+        if lat is None or lng is None or not label:
+            continue
+        clean.append({"lat": lat, "lng": lng, "label": label[:80]})
+    return clean
+
+
+def _schematic_markers_from_sections(sections: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Declarative placeholder pins so a Map always has something to draw."""
+    markers: list[dict[str, Any]] = []
+    for index, section in enumerate(sections[:6]):
+        heading = str(section.get("heading") or f"Stop {index + 1}").strip()
+        label = re.sub(r"(?i)^day\s*\d+\s*[:.\-–—]\s*", "", heading).strip() or heading
+        markers.append({
+            "lat": 38.72 + (index % 3) * 0.035 - 0.035,
+            "lng": -9.14 + (index // 3) * 0.04 - 0.02,
+            "label": label[:80],
+        })
+    return markers
+
+
 def _parse_json_object(text: str) -> dict[str, Any] | None:
     """Robustly parse a JSON object out of a model reply: strip ``` fences, then
     fall back to the outermost {...} span. Returns the dict or None. Shared by
@@ -772,15 +815,9 @@ class S13Runtime:
             # multi-entity research run content_structured is empty and the
             # outcome-derived arrays above stand. No domain words appear here.
             def _num(value: Any) -> float | None:
-                if isinstance(value, bool):
-                    return None
-                if isinstance(value, (int, float)):
-                    return float(value)
-                try:
-                    return float(str(value).replace(",", "").strip())
-                except Exception:
-                    return None
+                return _coerce_num(value)
 
+            clean_sections: list[dict[str, Any]] = []
             if content_structured:
                 title = content_structured.get("title")
                 if isinstance(title, str) and title.strip():
@@ -793,7 +830,6 @@ class S13Runtime:
 
                 sections = content_structured.get("sections")
                 if isinstance(sections, list) and sections:
-                    clean_sections: list[dict[str, Any]] = []
                     for index, section in enumerate(sections):
                         if not isinstance(section, dict):
                             continue
@@ -817,8 +853,13 @@ class S13Runtime:
                     for metric in metrics:
                         if not isinstance(metric, dict) or not str(metric.get("label") or "").strip():
                             continue
+                        raw_value = metric.get("value")
+                        if raw_value is None or (isinstance(raw_value, str)
+                                                 and raw_value.strip().lower() in {"", "null", "none", "n/a"}):
+                            continue
+                        coerced = _num(raw_value)
                         clean_metrics.append({"label": str(metric["label"]).strip(),
-                                              "value": metric.get("value"),
+                                              "value": coerced if coerced is not None else raw_value,
                                               "unit": str(metric.get("unit") or "").strip()})
                     if clean_metrics:
                         data_model["metrics"] = clean_metrics
@@ -884,20 +925,16 @@ class S13Runtime:
                 if isinstance(map_blob, dict):
                     raw_markers = map_blob.get("markers")
                 else:
-                    raw_markers = content_structured.get("markers")
-                if isinstance(raw_markers, list) and raw_markers:
-                    clean_markers: list[dict[str, Any]] = []
-                    for marker in raw_markers:
-                        if not isinstance(marker, dict):
-                            continue
-                        lat = _num(marker.get("lat"))
-                        lng = _num(marker.get("lng"))
-                        label = str(marker.get("label") or "").strip()
-                        if lat is None or lng is None or not label:
-                            continue
-                        clean_markers.append({"lat": lat, "lng": lng, "label": label})
-                    if clean_markers:
-                        data_model["map_markers"] = clean_markers
+                    raw_markers = content_structured.get("markers") or content_structured.get("map_markers")
+                clean_markers = _clean_map_markers(raw_markers)
+                goal_l = str(prompt).lower()
+                wants_map = any(token in goal_l for token in ("map", "marker", "lat/lng", "lat/long"))
+                if not clean_markers and clean_sections and wants_map:
+                    clean_markers = _schematic_markers_from_sections(clean_sections)
+                if clean_markers:
+                    data_model["map_markers"] = clean_markers
+                    # Alias so a composer that binds /map/markers still resolves.
+                    data_model["map"] = {"markers": clean_markers}
 
             manifest = catalog_manifest()
             pointers = sorted("/" + key for key in data_model)
@@ -963,22 +1000,35 @@ class S13Runtime:
             raw = body.get("text", "")
             surface = _extract_surface(raw)
             proposed = surface.get("components", []) if isinstance(surface, dict) else []
-            # If content supplied map markers but the composer omitted Map, attach one
-            # so the client can render the declarative SVG map.
-            if isinstance(surface, dict) and data_model.get("map_markers"):
+            # Guarantee Map markers resolve: rewrite binds, fill schematic pins if
+            # the composer drew a Map without usable marker data, and inject Map
+            # when markers exist but the tree omitted the component.
+            if isinstance(surface, dict):
                 comps = list(surface.get("components") or [])
-                if not any(isinstance(c, dict) and c.get("type") == "Map" for c in comps):
-                    map_id = "auto_map"
-                    comps.append({
-                        "id": map_id, "type": "Map", "title": "Places",
-                        "markers": {"$bind": "/map_markers"}, "caption": "Approximate locations",
-                    })
-                    root = next((c for c in comps if isinstance(c, dict) and c.get("id") == surface.get("root")), None)
-                    if isinstance(root, dict) and root.get("type") in {"Column", "Row", "List", "Card"}:
-                        kids = list(root.get("children") or [])
-                        if map_id not in kids:
-                            kids.append(map_id)
-                            root["children"] = kids
+                has_map = any(isinstance(c, dict) and c.get("type") == "Map" for c in comps)
+                if has_map and not data_model.get("map_markers") and data_model.get("sections"):
+                    filled = _schematic_markers_from_sections(list(data_model["sections"]))
+                    if filled:
+                        data_model["map_markers"] = filled
+                        data_model["map"] = {"markers": filled}
+                if data_model.get("map_markers"):
+                    for comp in comps:
+                        if isinstance(comp, dict) and comp.get("type") == "Map":
+                            comp["markers"] = {"$bind": "/map_markers"}
+                            if not str(comp.get("caption") or "").strip():
+                                comp["caption"] = "Approximate locations"
+                    if not has_map:
+                        map_id = "auto_map"
+                        comps.append({
+                            "id": map_id, "type": "Map", "title": "Places",
+                            "markers": {"$bind": "/map_markers"}, "caption": "Approximate locations",
+                        })
+                        root = next((c for c in comps if isinstance(c, dict) and c.get("id") == surface.get("root")), None)
+                        if isinstance(root, dict) and root.get("type") in {"Column", "Row", "List", "Card"}:
+                            kids = list(root.get("children") or [])
+                            if map_id not in kids:
+                                kids.append(map_id)
+                                root["children"] = kids
                     surface = {**surface, "components": comps}
             validation = validate_surface(surface if isinstance(surface, dict) else {"components": []})
             accepted_ids = {comp.get("id") for comp in validation.accepted}

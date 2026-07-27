@@ -480,6 +480,26 @@ def test_map_markup_caption_is_refused():
     assert r.field == "caption"
 
 
+def test_clean_map_markers_accepts_aliases_and_schematic_fallback():
+    from s13code.runtime import _clean_map_markers, _schematic_markers_from_sections
+    cleaned = _clean_map_markers([
+        {"latitude": "38.71", "longitude": "-9.14", "name": "Alfama"},
+        {"location": {"lat": 38.7, "lon": -9.2}, "title": "Belem"},
+        {"lat": None, "lng": -9.1, "label": "bad"},
+    ])
+    assert cleaned == [
+        {"lat": 38.71, "lng": -9.14, "label": "Alfama"},
+        {"lat": 38.7, "lng": -9.2, "label": "Belem"},
+    ]
+    schematic = _schematic_markers_from_sections([
+        {"heading": "Day 1: Alfama & Castelo", "points": ["walk"]},
+        {"heading": "Day 2: Belém District", "points": ["tower"]},
+    ])
+    assert len(schematic) == 2
+    assert schematic[0]["label"] == "Alfama & Castelo"
+    assert schematic[1]["label"] == "Belém District"
+
+
 # --------------------------------------------------------------------------- #
 # catalog.py — catalog_manifest
 # --------------------------------------------------------------------------- #
