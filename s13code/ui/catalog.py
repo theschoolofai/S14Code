@@ -9,9 +9,10 @@ named by a hostile agent.
 The catalog is aligned to A2UI's Basic component set: the 15 layout / text /
 input / container types A2UI Basic already defines are adopted under their real
 A2UI names (``source="a2ui-basic"``). Only the components A2UI Basic genuinely
-lacks — charts, tiles, tables, timelines, notices, and the approval card — are
-kept as clearly labelled custom extensions (``source="custom"``). Twenty-three
-types in all; a student can read every one and the validator can prove coverage.
+lacks — charts, tiles, tables, timelines, notices, the approval card, and the
+heatmap — are kept as clearly labelled custom extensions (``source="custom"``).
+Twenty-four types in all; a student can read every one and the validator can
+prove coverage.
 
 Property kinds:
   - ``text``   a string shown to the user as literal text, never as markup
@@ -47,8 +48,8 @@ class ComponentSpec:
 _TONE = PropSpec("enum", ("neutral", "good", "warn", "bad"))
 
 
-# The 23 component types the render client knows how to draw. The first 15 are
-# A2UI Basic's own names; the last 8 are custom extensions A2UI Basic lacks.
+# The 24 component types the render client knows how to draw. The first 15 are
+# A2UI Basic's own names; the last 9 are custom extensions A2UI Basic lacks.
 COMPONENTS: dict[str, ComponentSpec] = {
     # --- A2UI Basic: layout / text / media / inputs / containers (15) --------
     "Row": ComponentSpec("Row", {
@@ -109,6 +110,20 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "DataTable": ComponentSpec("DataTable", {
         "columns": PropSpec("text"), "rows": PropSpec("binding"),
         "sortable": PropSpec("bool"), "filterKey": PropSpec("text"),
+    }, source="custom"),
+    # Heatmap: the one shape none of the others can carry. BarChart and Sparkline
+    # are one-dimensional; DataTable shows cells but not magnitude. A heatmap is a
+    # rows x columns grid where the NUMBER in each cell is the message — mastery
+    # per topic per week, latency per venue per hour, coverage per module per
+    # suite. Labels and cells are text; the only thing a value may influence is an
+    # intensity the client computes itself (see renderHeatmap in client/index.html).
+    "Heatmap": ComponentSpec("Heatmap", {
+        "title": PropSpec("text"),
+        "rows": PropSpec("binding"),      # ["Week 1", "Week 2", ...]  (y labels)
+        "columns": PropSpec("binding"),   # ["Matching", "FIX", ...]   (x labels)
+        "values": PropSpec("binding"),    # [[3, 1, 4], [2, 5, 0]]     (row-major)
+        "unit": PropSpec("text"),
+        "tone": _TONE,
     }, source="custom"),
     "Notice": ComponentSpec("Notice", {
         "text": PropSpec("binding"), "tone": _TONE,

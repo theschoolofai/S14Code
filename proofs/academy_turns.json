@@ -1,0 +1,1690 @@
+{
+  "base_url": "http://127.0.0.1:8113",
+  "variety": [
+    {
+      "goal": "Teach me how a stock exchange matching engine works. I have 4 weeks. Show me how much study effort each core topic deserves in each week, plus the key numbers and a study path.",
+      "run_id": "run-6d6332d88527",
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "component_count": 12,
+      "clean": true,
+      "component_types": {
+        "Column": 1,
+        "Text": 2,
+        "Row": 1,
+        "StatTile": 4,
+        "Heatmap": 1,
+        "Timeline": 2,
+        "ProgressBar": 1
+      },
+      "buttons": [],
+      "matrix_pointers": [
+        "matrix_columns",
+        "matrix_rows",
+        "matrix_title",
+        "matrix_unit",
+        "matrix_values"
+      ],
+      "used_heatmap": true,
+      "validator": {
+        "proposed": 12,
+        "accepted": 12,
+        "rejected": 0,
+        "rejections": []
+      },
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title_text",
+              "intro_text",
+              "metrics_row",
+              "effort_heatmap",
+              "study_path_timeline",
+              "progress_bar",
+              "run_timeline"
+            ]
+          },
+          {
+            "id": "title_text",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "intro_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/intro"
+            }
+          },
+          {
+            "id": "metrics_row",
+            "type": "Row",
+            "justify": "spaceBetween",
+            "children": [
+              "metric_0",
+              "metric_1",
+              "metric_2",
+              "metric_3"
+            ]
+          },
+          {
+            "id": "metric_0",
+            "type": "StatTile",
+            "label": "Typical Latency",
+            "value": {
+              "$bind": "/metric_0_value"
+            },
+            "unit": "microseconds"
+          },
+          {
+            "id": "metric_1",
+            "type": "StatTile",
+            "label": "Typical Throughput",
+            "value": {
+              "$bind": "/metric_1_value"
+            },
+            "unit": "orders/second"
+          },
+          {
+            "id": "metric_2",
+            "type": "StatTile",
+            "label": "Common Order Types",
+            "value": {
+              "$bind": "/metric_2_value"
+            },
+            "unit": "types"
+          },
+          {
+            "id": "metric_3",
+            "type": "StatTile",
+            "label": "Order Book Depth",
+            "value": {
+              "$bind": "/metric_3_value"
+            },
+            "unit": "price levels"
+          },
+          {
+            "id": "effort_heatmap",
+            "type": "Heatmap",
+            "title": {
+              "$bind": "/matrix_title"
+            },
+            "rows": {
+              "$bind": "/matrix_rows"
+            },
+            "columns": {
+              "$bind": "/matrix_columns"
+            },
+            "values": {
+              "$bind": "/matrix_values"
+            },
+            "unit": {
+              "$bind": "/matrix_unit"
+            },
+            "tone": "neutral"
+          },
+          {
+            "id": "study_path_timeline",
+            "type": "Timeline",
+            "title": "4-Week Study Path",
+            "events": {
+              "$bind": "/section_events"
+            }
+          },
+          {
+            "id": "progress_bar",
+            "type": "ProgressBar",
+            "value": {
+              "$bind": "/progress_value"
+            },
+            "max": {
+              "$bind": "/progress_max"
+            },
+            "tone": "neutral"
+          },
+          {
+            "id": "run_timeline",
+            "type": "Timeline",
+            "title": "Run Steps",
+            "events": {
+              "$bind": "/timeline"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Understanding a Stock Exchange Matching Engine: A 4-Week Study Plan",
+          "goal": "Teach me how a stock exchange matching engine works. I have 4 weeks. Show me how much study effort each core topic deserves in each week, plus the key numbers and a study path.",
+          "summary": "This plan outlines a structured approach to learning about stock exchange matching engines over four weeks, covering core concepts, architecture, performance, and advanced topics. Each week builds upon the previous, ensuring a solid understanding of this critical financial technology.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Typical Latency",
+              "value": 10,
+              "unit": "microseconds"
+            },
+            {
+              "label": "Typical Throughput",
+              "value": 1000000,
+              "unit": "orders/second"
+            },
+            {
+              "label": "Common Order Types",
+              "value": 15,
+              "unit": "types"
+            },
+            {
+              "label": "Order Book Depth",
+              "value": "Hundreds to Thousands",
+              "unit": "price levels"
+            }
+          ],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [],
+          "timeline": [
+            {
+              "time": "258",
+              "label": "run_started"
+            },
+            {
+              "time": "259",
+              "label": "graph_patched"
+            },
+            {
+              "time": "260",
+              "label": "task_started content"
+            },
+            {
+              "time": "261",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "262",
+              "label": "graph_patched"
+            },
+            {
+              "time": "263",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "This plan outlines a structured approach to learning about stock exchange matching engines over four weeks, covering core concepts, architecture, performance, and advanced topics. Each week builds upon the previous, ensuring a solid understanding of this critical financial technology.",
+          "section_0_heading": "Week 1: Foundations of Matching Engines",
+          "section_0_points": "\u2022 Introduction to Matching Engines: Role in financial markets, basic purpose.\n\u2022 Core Components: Understanding the order book, order types, and matching rules.\n\u2022 Basic Order Types: Deep dive into Limit Orders (buy/sell at a specific price or better) and Market Orders (buy/sell immediately at the best available price).\n\u2022 Price-Time Priority: The fundamental rule for order matching (highest bid/lowest offer, then oldest order at that price).\n\u2022 Hands-on: Sketching a simple order book, tracing basic order matching scenarios.",
+          "section_1_heading": "Week 2: Advanced Order Types & Matching Logic",
+          "section_1_points": "\u2022 Advanced Order Types: Explore Stop Orders, Iceberg Orders, Fill-or-Kill (FOK), Immediate-or-Cancel (IOC), All-or-None (AON), and other common order modifiers.\n\u2022 Matching Algorithms: Understanding the continuous double auction mechanism, how orders interact, and the process of generating trades.\n\u2022 Handling Order Life Cycle: Managing partial fills, order cancellations, modifications, and their impact on the order book.\n\u2022 Hands-on: Implementing a basic matching logic for a few advanced order types, simulating order book updates.",
+          "section_2_heading": "Week 3: Architecture & Data Structures",
+          "section_2_points": "\u2022 System Design Principles: Discussing in-memory vs. persistent storage strategies, high-level architectural components (e.g., order entry, matching engine, market data distribution).\n\u2022 Efficient Data Structures: Learning about data structures optimized for order book operations (e.g., sorted maps/trees for price levels, doubly linked lists for orders at a price, hash maps for quick order lookup).\n\u2022 Concurrency & Thread Safety: Addressing how multiple orders are processed simultaneously, ensuring data integrity with locking mechanisms, lock-free algorithms, or other concurrency control patterns.\n\u2022 Hands-on: Designing data structures for an order book, considering concurrent access patterns.",
+          "section_3_heading": "Week 4: Performance, Scalability & Advanced Concepts",
+          "section_3_points": "\u2022 Performance Optimization: Techniques for minimizing latency (e.g., CPU cache awareness, network stack optimization, low-level programming) and maximizing throughput (orders per second).\n\u2022 Scalability & Fault Tolerance: Exploring distributed matching engine architectures, sharding strategies, disaster recovery, and high availability.\n\u2022 Market Microstructure: Understanding how matching engine design influences market behavior, concepts like dark pools, and the implications for High-Frequency Trading (HFT).\n\u2022 Regulatory Compliance: Overview of regulatory requirements such as best execution, market integrity, audit trails, and surveillance.\n\u2022 Hands-on: Analyzing performance bottlenecks, discussing trade-offs in distributed system design.",
+          "sections": [
+            {
+              "heading": "Week 1: Foundations of Matching Engines",
+              "points": [
+                "Introduction to Matching Engines: Role in financial markets, basic purpose.",
+                "Core Components: Understanding the order book, order types, and matching rules.",
+                "Basic Order Types: Deep dive into Limit Orders (buy/sell at a specific price or better) and Market Orders (buy/sell immediately at the best available price).",
+                "Price-Time Priority: The fundamental rule for order matching (highest bid/lowest offer, then oldest order at that price).",
+                "Hands-on: Sketching a simple order book, tracing basic order matching scenarios."
+              ]
+            },
+            {
+              "heading": "Week 2: Advanced Order Types & Matching Logic",
+              "points": [
+                "Advanced Order Types: Explore Stop Orders, Iceberg Orders, Fill-or-Kill (FOK), Immediate-or-Cancel (IOC), All-or-None (AON), and other common order modifiers.",
+                "Matching Algorithms: Understanding the continuous double auction mechanism, how orders interact, and the process of generating trades.",
+                "Handling Order Life Cycle: Managing partial fills, order cancellations, modifications, and their impact on the order book.",
+                "Hands-on: Implementing a basic matching logic for a few advanced order types, simulating order book updates."
+              ]
+            },
+            {
+              "heading": "Week 3: Architecture & Data Structures",
+              "points": [
+                "System Design Principles: Discussing in-memory vs. persistent storage strategies, high-level architectural components (e.g., order entry, matching engine, market data distribution).",
+                "Efficient Data Structures: Learning about data structures optimized for order book operations (e.g., sorted maps/trees for price levels, doubly linked lists for orders at a price, hash maps for quick order lookup).",
+                "Concurrency & Thread Safety: Addressing how multiple orders are processed simultaneously, ensuring data integrity with locking mechanisms, lock-free algorithms, or other concurrency control patterns.",
+                "Hands-on: Designing data structures for an order book, considering concurrent access patterns."
+              ]
+            },
+            {
+              "heading": "Week 4: Performance, Scalability & Advanced Concepts",
+              "points": [
+                "Performance Optimization: Techniques for minimizing latency (e.g., CPU cache awareness, network stack optimization, low-level programming) and maximizing throughput (orders per second).",
+                "Scalability & Fault Tolerance: Exploring distributed matching engine architectures, sharding strategies, disaster recovery, and high availability.",
+                "Market Microstructure: Understanding how matching engine design influences market behavior, concepts like dark pools, and the implications for High-Frequency Trading (HFT).",
+                "Regulatory Compliance: Overview of regulatory requirements such as best execution, market integrity, audit trails, and surveillance.",
+                "Hands-on: Analyzing performance bottlenecks, discussing trade-offs in distributed system design."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Week 1: Foundations of Matching Engines",
+              "label": "Introduction to Matching Engines: Role in financial markets, basic purpose.; Core Components: Understanding the order book, order types, and matching rules.; Basic Order Types: Deep dive into Limit Orders (buy/sell at a specific price or better) and Market Orders (buy/sell immediately at the best available price).; Price-Time Priority: The fundamental rule for order matching (highest bid/lowest offer, then oldest order at that price).; Hands-on: Sketching a simple order book, tracing basic order matching scenarios."
+            },
+            {
+              "time": "Week 2: Advanced Order Types & Matching Logic",
+              "label": "Advanced Order Types: Explore Stop Orders, Iceberg Orders, Fill-or-Kill (FOK), Immediate-or-Cancel (IOC), All-or-None (AON), and other common order modifiers.; Matching Algorithms: Understanding the continuous double auction mechanism, how orders interact, and the process of generating trades.; Handling Order Life Cycle: Managing partial fills, order cancellations, modifications, and their impact on the order book.; Hands-on: Implementing a basic matching logic for a few advanced order types, simulating order book updates."
+            },
+            {
+              "time": "Week 3: Architecture & Data Structures",
+              "label": "System Design Principles: Discussing in-memory vs. persistent storage strategies, high-level architectural components (e.g., order entry, matching engine, market data distribution).; Efficient Data Structures: Learning about data structures optimized for order book operations (e.g., sorted maps/trees for price levels, doubly linked lists for orders at a price, hash maps for quick order lookup).; Concurrency & Thread Safety: Addressing how multiple orders are processed simultaneously, ensuring data integrity with locking mechanisms, lock-free algorithms, or other concurrency control patterns.; Hands-on: Designing data structures for an order book, considering concurrent access patterns."
+            },
+            {
+              "time": "Week 4: Performance, Scalability & Advanced Concepts",
+              "label": "Performance Optimization: Techniques for minimizing latency (e.g., CPU cache awareness, network stack optimization, low-level programming) and maximizing throughput (orders per second).; Scalability & Fault Tolerance: Exploring distributed matching engine architectures, sharding strategies, disaster recovery, and high availability.; Market Microstructure: Understanding how matching engine design influences market behavior, concepts like dark pools, and the implications for High-Frequency Trading (HFT).; Regulatory Compliance: Overview of regulatory requirements such as best execution, market integrity, audit trails, and surveillance.; Hands-on: Analyzing performance bottlenecks, discussing trade-offs in distributed system design."
+            }
+          ],
+          "metric_0_value": 10,
+          "metric_1_value": 1000000,
+          "metric_2_value": 15,
+          "metric_3_value": "Hundreds to Thousands",
+          "matrix_rows": [
+            "Core Concepts & Order Book",
+            "Order Types & Matching Logic",
+            "System Architecture & Data Structures",
+            "Performance & Scalability",
+            "Market Microstructure & Regulation"
+          ],
+          "matrix_columns": [
+            "Week 1",
+            "Week 2",
+            "Week 3",
+            "Week 4"
+          ],
+          "matrix_values": [
+            [
+              60.0,
+              10.0,
+              0.0,
+              0.0
+            ],
+            [
+              40.0,
+              70.0,
+              10.0,
+              0.0
+            ],
+            [
+              0.0,
+              20.0,
+              70.0,
+              10.0
+            ],
+            [
+              0.0,
+              0.0,
+              20.0,
+              50.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              40.0
+            ]
+          ],
+          "matrix_title": "Weekly Study Effort Distribution by Topic (Percentage of Weekly Study Time)",
+          "matrix_unit": "%"
+        }
+      }
+    },
+    {
+      "goal": "Compare market, limit, stop and iceberg orders side by side: how each behaves in the order book, its visibility, its typical use and its slippage risk. Give me the key counts too.",
+      "run_id": "run-ac0409cf8f50",
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "component_count": 8,
+      "clean": true,
+      "component_types": {
+        "Column": 1,
+        "Text": 2,
+        "Row": 1,
+        "StatTile": 1,
+        "DataTable": 1,
+        "ProgressBar": 1,
+        "Timeline": 1
+      },
+      "buttons": [],
+      "matrix_pointers": [],
+      "used_heatmap": false,
+      "validator": {
+        "proposed": 8,
+        "accepted": 8,
+        "rejected": 0,
+        "rejections": []
+      },
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title",
+              "summary",
+              "metric_row",
+              "order_table",
+              "progress_bar",
+              "run_timeline"
+            ]
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "metric_row",
+            "type": "Row",
+            "children": [
+              "metric_0"
+            ]
+          },
+          {
+            "id": "metric_0",
+            "type": "StatTile",
+            "label": "Order Types Compared",
+            "value": {
+              "$bind": "/metric_0_value"
+            },
+            "unit": "types"
+          },
+          {
+            "id": "order_table",
+            "type": "DataTable",
+            "columns": "Order Type,Order Book Behavior,Visibility,Typical Use,Slippage Risk",
+            "rows": {
+              "$bind": "/table_rows"
+            },
+            "sortable": true
+          },
+          {
+            "id": "progress_bar",
+            "type": "ProgressBar",
+            "value": {
+              "$bind": "/progress_value"
+            },
+            "max": {
+              "$bind": "/progress_max"
+            }
+          },
+          {
+            "id": "run_timeline",
+            "type": "Timeline",
+            "title": "Run Steps",
+            "events": {
+              "$bind": "/timeline"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Compare market, limit, stop and iceberg orders side by side: how each behaves in the order book, its visibility, its typical use and its slippage risk. Give me the key counts too.",
+          "goal": "Compare market, limit, stop and iceberg orders side by side: how each behaves in the order book, its visibility, its typical use and its slippage risk. Give me the key counts too.",
+          "summary": "Compare market, limit, stop and iceberg orders side by side: how each behaves in the order book, its visibility, its typical use and its slippage risk. Give me the key counts too.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Order Types Compared",
+              "value": 4,
+              "unit": "types"
+            }
+          ],
+          "spark": [],
+          "table_rows": [
+            {
+              "Order Type": "Market Order",
+              "Order Book Behavior": "Immediately executes against the best available opposing orders, consuming liquidity. Does not sit in the order book.",
+              "Visibility": "Not visible; executes instantly.",
+              "Typical Use": "Prioritizing immediate execution; quick entry/exit.",
+              "Slippage Risk": "High, especially for large orders or illiquid markets, as it fills at progressively worse prices."
+            },
+            {
+              "Order Type": "Limit Order",
+              "Order Book Behavior": "Placed in the order book at a specified price (or better). Adds liquidity. Only executes if the market price reaches the limit price.",
+              "Visibility": "Fully visible in the order book at the specified price.",
+              "Typical Use": "Buying below or selling above current market price; ensuring a specific price; providing liquidity.",
+              "Slippage Risk": "Low (price certainty), but execution risk (may not fill)."
+            },
+            {
+              "Order Type": "Stop Order",
+              "Order Book Behavior": "A trigger order. Does not sit in the order book until its stop price is hit, then becomes a market or limit order.",
+              "Visibility": "Not visible in the public order book until triggered (held internally by broker).",
+              "Typical Use": "Limiting potential losses (stop-loss); protecting profits; initiating a position once a price level is breached.",
+              "Slippage Risk": "High for Stop-Market (behaves like market order once triggered). Moderate for Stop-Limit (price certainty, but execution risk)."
+            },
+            {
+              "Order Type": "Iceberg Order",
+              "Order Book Behavior": "A large order split into smaller, visible 'display' portions. Only the visible portion is shown; the rest is hidden until the visible portion is filled.",
+              "Visibility": "Partially visible (only the 'tip' is shown); full size is hidden.",
+              "Typical Use": "Executing large orders without revealing full size to the market, minimizing market impact.",
+              "Slippage Risk": "Moderate to Low. Aims to reduce slippage by not revealing full size, but still subject to market conditions between fills."
+            }
+          ],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [],
+          "timeline": [
+            {
+              "time": "325",
+              "label": "run_started"
+            },
+            {
+              "time": "326",
+              "label": "graph_patched"
+            },
+            {
+              "time": "327",
+              "label": "task_started content"
+            },
+            {
+              "time": "328",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "329",
+              "label": "graph_patched"
+            },
+            {
+              "time": "330",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "metric_0_value": 4,
+          "table_columns": [
+            "Order Type",
+            "Order Book Behavior",
+            "Visibility",
+            "Typical Use",
+            "Slippage Risk"
+          ]
+        }
+      }
+    },
+    {
+      "goal": "Walk me through the path of a market data tick from the exchange to a trading application. For each stage give me the typical latency in microseconds so I can see where the time goes.",
+      "run_id": "run-73f37d10ef10",
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "component_count": 6,
+      "clean": true,
+      "component_types": {
+        "Column": 1,
+        "Text": 2,
+        "Timeline": 2,
+        "ProgressBar": 1
+      },
+      "buttons": [],
+      "matrix_pointers": [],
+      "used_heatmap": false,
+      "validator": {
+        "proposed": 6,
+        "accepted": 6,
+        "rejected": 0,
+        "rejections": []
+      },
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title",
+              "intro",
+              "pathTimeline",
+              "progress",
+              "runTimeline"
+            ]
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "intro",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/intro"
+            }
+          },
+          {
+            "id": "pathTimeline",
+            "type": "Timeline",
+            "title": "Market Data Tick Path",
+            "events": {
+              "$bind": "/section_events"
+            }
+          },
+          {
+            "id": "progress",
+            "type": "ProgressBar",
+            "value": {
+              "$bind": "/progress_value"
+            },
+            "max": {
+              "$bind": "/progress_max"
+            }
+          },
+          {
+            "id": "runTimeline",
+            "type": "Timeline",
+            "title": "Run Steps",
+            "events": {
+              "$bind": "/timeline"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Market Data Tick Path and Latency",
+          "goal": "Walk me through the path of a market data tick from the exchange to a trading application. For each stage give me the typical latency in microseconds so I can see where the time goes.",
+          "summary": "A market data 'tick' represents the smallest change in a financial instrument's price or volume. Here's how a tick typically travels from an exchange to a trading application, along with estimated latencies at each stage.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [],
+          "timeline": [
+            {
+              "time": "333",
+              "label": "run_started"
+            },
+            {
+              "time": "334",
+              "label": "graph_patched"
+            },
+            {
+              "time": "335",
+              "label": "task_started content"
+            },
+            {
+              "time": "336",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "337",
+              "label": "graph_patched"
+            },
+            {
+              "time": "338",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "A market data 'tick' represents the smallest change in a financial instrument's price or volume. Here's how a tick typically travels from an exchange to a trading application, along with estimated latencies at each stage.",
+          "section_0_heading": "1. Exchange Matching Engine",
+          "section_0_points": "\u2022 An order is matched, or a quote is updated, generating the raw market event.\n\u2022 Typical Latency: <1 microsecond (internal processing)",
+          "section_1_heading": "2. Exchange Market Data Gateway",
+          "section_1_points": "\u2022 The raw event is formatted into a standardized market data message (e.g., FIX, ITCH, OUCH).\n\u2022 This involves serialization and preparing the data for distribution.\n\u2022 Typical Latency: 1-5 microseconds",
+          "section_2_heading": "3. Exchange Network Interface",
+          "section_2_points": "\u2022 The formatted message is handed off to the exchange's network card (NIC) to be placed onto the physical network.\n\u2022 Typical Latency: <1 microsecond",
+          "section_3_heading": "4. Co-location Network Path",
+          "section_3_points": "\u2022 The data travels over fiber optic cables and through network switches within the exchange's co-location facility.\n\u2022 This path connects the exchange's network equipment to the client's network equipment.\n\u2022 Typical Latency: 1-10 microseconds (depends on physical distance and switch hops)",
+          "section_4_heading": "5. Client Network Interface",
+          "section_4_points": "\u2022 The client's server network card (NIC) receives the incoming market data packet from the wire.\n\u2022 Typical Latency: <1 microsecond",
+          "section_5_heading": "6. Client OS/Kernel Network Stack",
+          "section_5_points": "\u2022 The operating system's kernel processes the incoming network packet, performs checks (e.g., checksums), and places it into a receive buffer.\n\u2022 This stage can be highly variable depending on OS tuning, driver efficiency, and server load.\n\u2022 Typical Latency: 5-20 microseconds",
+          "section_6_heading": "7. Client Application (User Space)",
+          "section_6_points": "\u2022 The trading application reads the market data from the kernel's buffer, parses the message, and processes the tick (e.g., updates an order book, triggers an algorithm).\n\u2022 This latency depends on the application's design, parsing complexity, and internal queueing.\n\u2022 Typical Latency: 1-10 microseconds",
+          "sections": [
+            {
+              "heading": "1. Exchange Matching Engine",
+              "points": [
+                "An order is matched, or a quote is updated, generating the raw market event.",
+                "Typical Latency: <1 microsecond (internal processing)"
+              ]
+            },
+            {
+              "heading": "2. Exchange Market Data Gateway",
+              "points": [
+                "The raw event is formatted into a standardized market data message (e.g., FIX, ITCH, OUCH).",
+                "This involves serialization and preparing the data for distribution.",
+                "Typical Latency: 1-5 microseconds"
+              ]
+            },
+            {
+              "heading": "3. Exchange Network Interface",
+              "points": [
+                "The formatted message is handed off to the exchange's network card (NIC) to be placed onto the physical network.",
+                "Typical Latency: <1 microsecond"
+              ]
+            },
+            {
+              "heading": "4. Co-location Network Path",
+              "points": [
+                "The data travels over fiber optic cables and through network switches within the exchange's co-location facility.",
+                "This path connects the exchange's network equipment to the client's network equipment.",
+                "Typical Latency: 1-10 microseconds (depends on physical distance and switch hops)"
+              ]
+            },
+            {
+              "heading": "5. Client Network Interface",
+              "points": [
+                "The client's server network card (NIC) receives the incoming market data packet from the wire.",
+                "Typical Latency: <1 microsecond"
+              ]
+            },
+            {
+              "heading": "6. Client OS/Kernel Network Stack",
+              "points": [
+                "The operating system's kernel processes the incoming network packet, performs checks (e.g., checksums), and places it into a receive buffer.",
+                "This stage can be highly variable depending on OS tuning, driver efficiency, and server load.",
+                "Typical Latency: 5-20 microseconds"
+              ]
+            },
+            {
+              "heading": "7. Client Application (User Space)",
+              "points": [
+                "The trading application reads the market data from the kernel's buffer, parses the message, and processes the tick (e.g., updates an order book, triggers an algorithm).",
+                "This latency depends on the application's design, parsing complexity, and internal queueing.",
+                "Typical Latency: 1-10 microseconds"
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "1. Exchange Matching Engine",
+              "label": "An order is matched, or a quote is updated, generating the raw market event.; Typical Latency: <1 microsecond (internal processing)"
+            },
+            {
+              "time": "2. Exchange Market Data Gateway",
+              "label": "The raw event is formatted into a standardized market data message (e.g., FIX, ITCH, OUCH).; This involves serialization and preparing the data for distribution.; Typical Latency: 1-5 microseconds"
+            },
+            {
+              "time": "3. Exchange Network Interface",
+              "label": "The formatted message is handed off to the exchange's network card (NIC) to be placed onto the physical network.; Typical Latency: <1 microsecond"
+            },
+            {
+              "time": "4. Co-location Network Path",
+              "label": "The data travels over fiber optic cables and through network switches within the exchange's co-location facility.; This path connects the exchange's network equipment to the client's network equipment.; Typical Latency: 1-10 microseconds (depends on physical distance and switch hops)"
+            },
+            {
+              "time": "5. Client Network Interface",
+              "label": "The client's server network card (NIC) receives the incoming market data packet from the wire.; Typical Latency: <1 microsecond"
+            },
+            {
+              "time": "6. Client OS/Kernel Network Stack",
+              "label": "The operating system's kernel processes the incoming network packet, performs checks (e.g., checksums), and places it into a receive buffer.; This stage can be highly variable depending on OS tuning, driver efficiency, and server load.; Typical Latency: 5-20 microseconds"
+            },
+            {
+              "time": "7. Client Application (User Space)",
+              "label": "The trading application reads the market data from the kernel's buffer, parses the message, and processes the tick (e.g., updates an order book, triggers an algorithm).; This latency depends on the application's design, parsing complexity, and internal queueing.; Typical Latency: 1-10 microseconds"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "thread": [
+    {
+      "goal": "Teach me for a trading-systems engineering interview. Ask me which area to study first.\nAlways finish by offering 3 to 5 concrete next topics the learner can pick from. Label each one as a short topic name, not as a question.",
+      "run_id": "run-1d344e9b04af",
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "component_count": 12,
+      "clean": true,
+      "component_types": {
+        "Column": 2,
+        "Text": 2,
+        "ProgressBar": 1,
+        "Timeline": 2,
+        "Button": 5
+      },
+      "buttons": [
+        "Low-Latency System Design",
+        "Market Data Processing",
+        "Order Management Systems (OMS)",
+        "Real-time Risk Management",
+        "Integration with Quantitative Strategies"
+      ],
+      "matrix_pointers": [],
+      "used_heatmap": false,
+      "validator": {
+        "proposed": 13,
+        "accepted": 12,
+        "rejected": 1,
+        "rejections": [
+          {
+            "component_id": "choice_question_text",
+            "field": "text",
+            "invariant": "data-not-code",
+            "reason": "binding must be {'$bind': '/pointer'}"
+          }
+        ]
+      },
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title_comp",
+              "intro_comp",
+              "progress_bar",
+              "sections_timeline",
+              "choice_question_text",
+              "choices_column",
+              "run_timeline"
+            ]
+          },
+          {
+            "id": "title_comp",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "intro_comp",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/intro"
+            }
+          },
+          {
+            "id": "progress_bar",
+            "type": "ProgressBar",
+            "value": {
+              "$bind": "/progress_value"
+            },
+            "max": 2
+          },
+          {
+            "id": "sections_timeline",
+            "type": "Timeline",
+            "title": "Key Areas",
+            "events": {
+              "$bind": "/section_events"
+            }
+          },
+          {
+            "id": "choices_column",
+            "type": "Column",
+            "children": [
+              "choice_button_0",
+              "choice_button_1",
+              "choice_button_2",
+              "choice_button_3",
+              "choice_button_4"
+            ]
+          },
+          {
+            "id": "choice_button_0",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_0_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice_button_1",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_1_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice_button_2",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_2_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice_button_3",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_3_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice_button_4",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_4_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "run_timeline",
+            "type": "Timeline",
+            "title": "Run Progress",
+            "events": {
+              "$bind": "/timeline"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Trading Systems Engineering Interview Prep",
+          "goal": "Teach me for a trading-systems engineering interview. Ask me which area to study first.\nAlways finish by offering 3 to 5 concrete next topics the learner can pick from. Label each one as a short topic name, not as a question.",
+          "summary": "Preparing for an interview in trading systems engineering requires understanding a blend of financial markets, computer science, and high-performance computing. This field focuses on building, maintaining, and optimizing the technological infrastructure that facilitates financial trading.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Low-Latency System Design",
+            "Market Data Processing",
+            "Order Management Systems (OMS)",
+            "Real-time Risk Management",
+            "Integration with Quantitative Strategies",
+            "FIX Protocol Deep Dive",
+            "Trading System Design Patterns",
+            "Advanced Performance Optimization",
+            "Regulatory Compliance in Trading Systems",
+            "Cloud vs. On-Premise Trading Infrastructure"
+          ],
+          "timeline": [
+            {
+              "time": "341",
+              "label": "run_started"
+            },
+            {
+              "time": "342",
+              "label": "graph_patched"
+            },
+            {
+              "time": "343",
+              "label": "task_started content"
+            },
+            {
+              "time": "344",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "345",
+              "label": "graph_patched"
+            },
+            {
+              "time": "346",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Preparing for an interview in trading systems engineering requires understanding a blend of financial markets, computer science, and high-performance computing. This field focuses on building, maintaining, and optimizing the technological infrastructure that facilitates financial trading.",
+          "section_0_heading": "Core Components of a Trading System",
+          "section_0_points": "\u2022 **Market Data Feed Handlers**: Ingest and process real-time market data (quotes, trades) from exchanges.\n\u2022 **Strategy Engine**: Executes trading logic based on market data and predefined rules.\n\u2022 **Order Management System (OMS)**: Manages the lifecycle of orders (creation, routing, modification, cancellation).\n\u2022 **Execution Management System (EMS)**: Routes orders to exchanges/brokers and handles execution reports.\n\u2022 **Risk Management System**: Monitors and enforces pre-trade and post-trade risk limits.\n\u2022 **Position Keeping System**: Tracks current holdings, P&L, and exposure.\n\u2022 **Connectivity Layer**: Interfaces with external venues (exchanges, dark pools, brokers) using protocols like FIX.",
+          "section_1_heading": "Key Engineering Challenges",
+          "section_1_points": "\u2022 **Low Latency**: Minimizing the time between receiving market data and sending an order. Achieved through hardware optimization (FPGAs, specialized network cards), software techniques (lock-free data structures, kernel bypass), and proximity (co-location).\n\u2022 **High Throughput**: Processing millions of market data updates and thousands of orders per second.\n\u2022 **Reliability & Resilience**: Ensuring continuous operation, fault tolerance, and rapid recovery from failures. Redundancy, failover mechanisms, and robust error handling are crucial.\n\u2022 **Scalability**: Ability to handle increasing volumes of data, strategies, and users without significant performance degradation.\n\u2022 **Determinism**: Predictable behavior and consistent execution times, especially critical for high-frequency trading.\n\u2022 **Accuracy**: Correct processing of financial data and precise execution of orders.\n\u2022 **Security**: Protecting sensitive financial data and preventing unauthorized access or manipulation.",
+          "section_2_heading": "Interview Focus Areas",
+          "section_2_points": "\u2022 **System Design**: Expect questions on designing components like an OMS, market data handler, or a low-latency trading path. Focus on data structures, concurrency, network protocols, and error handling.\n\u2022 **Concurrency & Multithreading**: Understanding race conditions, deadlocks, mutexes, semaphores, lock-free algorithms, and thread-safe data structures.\n\u2022 **Networking**: TCP/IP, UDP, multicast, network latency, kernel bypass (e.g., Solarflare, Mellanox).\n\u2022 **Data Structures & Algorithms**: Efficient data structures for fast lookups, insertions, and deletions (e.g., hash maps, skip lists, ring buffers).\n\u2022 **Performance Optimization**: Profiling, cache awareness, memory management, compiler optimizations.\n\u2022 **Specific Technologies**: C++, Java (low-latency JVMs), Python (for quant/backtesting), Linux internals.\n\u2022 **Financial Domain Knowledge**: Basic understanding of order types (limit, market, stop), market microstructure, and common financial instruments.",
+          "sections": [
+            {
+              "heading": "Core Components of a Trading System",
+              "points": [
+                "**Market Data Feed Handlers**: Ingest and process real-time market data (quotes, trades) from exchanges.",
+                "**Strategy Engine**: Executes trading logic based on market data and predefined rules.",
+                "**Order Management System (OMS)**: Manages the lifecycle of orders (creation, routing, modification, cancellation).",
+                "**Execution Management System (EMS)**: Routes orders to exchanges/brokers and handles execution reports.",
+                "**Risk Management System**: Monitors and enforces pre-trade and post-trade risk limits.",
+                "**Position Keeping System**: Tracks current holdings, P&L, and exposure.",
+                "**Connectivity Layer**: Interfaces with external venues (exchanges, dark pools, brokers) using protocols like FIX."
+              ]
+            },
+            {
+              "heading": "Key Engineering Challenges",
+              "points": [
+                "**Low Latency**: Minimizing the time between receiving market data and sending an order. Achieved through hardware optimization (FPGAs, specialized network cards), software techniques (lock-free data structures, kernel bypass), and proximity (co-location).",
+                "**High Throughput**: Processing millions of market data updates and thousands of orders per second.",
+                "**Reliability & Resilience**: Ensuring continuous operation, fault tolerance, and rapid recovery from failures. Redundancy, failover mechanisms, and robust error handling are crucial.",
+                "**Scalability**: Ability to handle increasing volumes of data, strategies, and users without significant performance degradation.",
+                "**Determinism**: Predictable behavior and consistent execution times, especially critical for high-frequency trading.",
+                "**Accuracy**: Correct processing of financial data and precise execution of orders.",
+                "**Security**: Protecting sensitive financial data and preventing unauthorized access or manipulation."
+              ]
+            },
+            {
+              "heading": "Interview Focus Areas",
+              "points": [
+                "**System Design**: Expect questions on designing components like an OMS, market data handler, or a low-latency trading path. Focus on data structures, concurrency, network protocols, and error handling.",
+                "**Concurrency & Multithreading**: Understanding race conditions, deadlocks, mutexes, semaphores, lock-free algorithms, and thread-safe data structures.",
+                "**Networking**: TCP/IP, UDP, multicast, network latency, kernel bypass (e.g., Solarflare, Mellanox).",
+                "**Data Structures & Algorithms**: Efficient data structures for fast lookups, insertions, and deletions (e.g., hash maps, skip lists, ring buffers).",
+                "**Performance Optimization**: Profiling, cache awareness, memory management, compiler optimizations.",
+                "**Specific Technologies**: C++, Java (low-latency JVMs), Python (for quant/backtesting), Linux internals.",
+                "**Financial Domain Knowledge**: Basic understanding of order types (limit, market, stop), market microstructure, and common financial instruments."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Core Components of a Trading System",
+              "label": "**Market Data Feed Handlers**: Ingest and process real-time market data (quotes, trades) from exchanges.; **Strategy Engine**: Executes trading logic based on market data and predefined rules.; **Order Management System (OMS)**: Manages the lifecycle of orders (creation, routing, modification, cancellation).; **Execution Management System (EMS)**: Routes orders to exchanges/brokers and handles execution reports.; **Risk Management System**: Monitors and enforces pre-trade and post-trade risk limits.; **Position Keeping System**: Tracks current holdings, P&L, and exposure.; **Connectivity Layer**: Interfaces with external venues (exchanges, dark pools, brokers) using protocols like FIX."
+            },
+            {
+              "time": "Key Engineering Challenges",
+              "label": "**Low Latency**: Minimizing the time between receiving market data and sending an order. Achieved through hardware optimization (FPGAs, specialized network cards), software techniques (lock-free data structures, kernel bypass), and proximity (co-location).; **High Throughput**: Processing millions of market data updates and thousands of orders per second.; **Reliability & Resilience**: Ensuring continuous operation, fault tolerance, and rapid recovery from failures. Redundancy, failover mechanisms, and robust error handling are crucial.; **Scalability**: Ability to handle increasing volumes of data, strategies, and users without significant performance degradation.; **Determinism**: Predictable behavior and consistent execution times, especially critical for high-frequency trading.; **Accuracy**: Correct processing of financial data and precise execution of orders.; **Security**: Protecting sensitive financial data and preventing unauthorized access or manipulation."
+            },
+            {
+              "time": "Interview Focus Areas",
+              "label": "**System Design**: Expect questions on designing components like an OMS, market data handler, or a low-latency trading path. Focus on data structures, concurrency, network protocols, and error handling.; **Concurrency & Multithreading**: Understanding race conditions, deadlocks, mutexes, semaphores, lock-free algorithms, and thread-safe data structures.; **Networking**: TCP/IP, UDP, multicast, network latency, kernel bypass (e.g., Solarflare, Mellanox).; **Data Structures & Algorithms**: Efficient data structures for fast lookups, insertions, and deletions (e.g., hash maps, skip lists, ring buffers).; **Performance Optimization**: Profiling, cache awareness, memory management, compiler optimizations.; **Specific Technologies**: C++, Java (low-latency JVMs), Python (for quant/backtesting), Linux internals.; **Financial Domain Knowledge**: Basic understanding of order types (limit, market, stop), market microstructure, and common financial instruments."
+            }
+          ],
+          "choices": [
+            {
+              "id": "low_latency",
+              "label": "Low-Latency System Design"
+            },
+            {
+              "id": "market_data",
+              "label": "Market Data Processing"
+            },
+            {
+              "id": "order_mgmt",
+              "label": "Order Management Systems (OMS)"
+            },
+            {
+              "id": "risk_mgmt",
+              "label": "Real-time Risk Management"
+            },
+            {
+              "id": "quant_strategies",
+              "label": "Integration with Quantitative Strategies"
+            },
+            {
+              "id": "fix_protocol",
+              "label": "FIX Protocol Deep Dive"
+            },
+            {
+              "id": "system_design_patterns",
+              "label": "Trading System Design Patterns"
+            },
+            {
+              "id": "perf_opt",
+              "label": "Advanced Performance Optimization"
+            },
+            {
+              "id": "regulatory_compliance",
+              "label": "Regulatory Compliance in Trading Systems"
+            },
+            {
+              "id": "cloud_infra",
+              "label": "Cloud vs. On-Premise Trading Infrastructure"
+            }
+          ],
+          "choice_0_label": "Low-Latency System Design",
+          "choice_1_label": "Market Data Processing",
+          "choice_2_label": "Order Management Systems (OMS)",
+          "choice_3_label": "Real-time Risk Management",
+          "choice_4_label": "Integration with Quantitative Strategies",
+          "choice_5_label": "FIX Protocol Deep Dive",
+          "choice_6_label": "Trading System Design Patterns",
+          "choice_7_label": "Advanced Performance Optimization",
+          "choice_8_label": "Regulatory Compliance in Trading Systems",
+          "choice_9_label": "Cloud vs. On-Premise Trading Infrastructure"
+        }
+      },
+      "trail": [
+        "Teach me for a trading-systems engineering interview. Ask me which area to study first."
+      ]
+    },
+    {
+      "goal": "Teach me for a trading-systems engineering interview. Ask me which area to study first.\nThe learner then chose, in order: Low-Latency System Design.\nCompose the next interface for that choice, staying in the trading-systems domain.\nAlways finish by offering 3 to 5 concrete next topics the learner can pick from. Label each one as a short topic name, not as a question.",
+      "run_id": "run-85b91e68a494",
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "component_count": 14,
+      "clean": true,
+      "component_types": {
+        "Column": 2,
+        "Text": 2,
+        "Timeline": 2,
+        "Divider": 2,
+        "Button": 5,
+        "ProgressBar": 1
+      },
+      "buttons": [
+        "Network Protocols for Low Latency",
+        "Hardware Acceleration (FPGAs/GPUs)",
+        "Operating System Tuning for Low Latency",
+        "Advanced Lock-Free Data Structures",
+        "Profiling and Benchmarking Low-Latency Systems"
+      ],
+      "matrix_pointers": [],
+      "used_heatmap": false,
+      "validator": {
+        "proposed": 15,
+        "accepted": 14,
+        "rejected": 1,
+        "rejections": [
+          {
+            "component_id": "next_topics_heading",
+            "field": "text",
+            "invariant": "data-not-code",
+            "reason": "binding must be {'$bind': '/pointer'}"
+          }
+        ]
+      },
+      "surface": {
+        "root": "main_column",
+        "components": [
+          {
+            "id": "main_column",
+            "type": "Column",
+            "children": [
+              "title_text",
+              "intro_text",
+              "content_timeline",
+              "divider_1",
+              "next_topics_heading",
+              "choices_column",
+              "divider_2",
+              "progress_bar",
+              "run_timeline"
+            ]
+          },
+          {
+            "id": "title_text",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "intro_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/intro"
+            }
+          },
+          {
+            "id": "content_timeline",
+            "type": "Timeline",
+            "title": "Low-Latency System Design Concepts",
+            "events": {
+              "$bind": "/section_events"
+            }
+          },
+          {
+            "id": "divider_1",
+            "type": "Divider"
+          },
+          {
+            "id": "choices_column",
+            "type": "Column",
+            "children": [
+              "choice_btn_0",
+              "choice_btn_1",
+              "choice_btn_2",
+              "choice_btn_3",
+              "choice_btn_4"
+            ]
+          },
+          {
+            "id": "choice_btn_0",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_0_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice_btn_1",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_1_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice_btn_2",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_2_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice_btn_3",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_3_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice_btn_4",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_4_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "divider_2",
+            "type": "Divider"
+          },
+          {
+            "id": "progress_bar",
+            "type": "ProgressBar",
+            "value": {
+              "$bind": "/progress_value"
+            },
+            "max": 2
+          },
+          {
+            "id": "run_timeline",
+            "type": "Timeline",
+            "title": "Run Steps",
+            "events": {
+              "$bind": "/timeline"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Low-Latency System Design in Trading",
+          "goal": "Teach me for a trading-systems engineering interview. Ask me which area to study first.\nThe learner then chose, in order: Low-Latency System Design.\nCompose the next interface for that choice, staying in the trading-systems domain.\nAlways finish by offering 3 to 5 concrete next topics the learner can pick from. Label each one as a short topic name, not as a question.",
+          "summary": "Achieving ultra-low latency in trading systems is critical for competitive advantage. It involves optimizing every layer of the technology stack, from hardware to software and network protocols.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Network Protocols for Low Latency",
+            "Hardware Acceleration (FPGAs/GPUs)",
+            "Operating System Tuning for Low Latency",
+            "Advanced Lock-Free Data Structures",
+            "Profiling and Benchmarking Low-Latency Systems"
+          ],
+          "timeline": [
+            {
+              "time": "349",
+              "label": "run_started"
+            },
+            {
+              "time": "350",
+              "label": "graph_patched"
+            },
+            {
+              "time": "351",
+              "label": "task_started content"
+            },
+            {
+              "time": "352",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "353",
+              "label": "graph_patched"
+            },
+            {
+              "time": "354",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Achieving ultra-low latency in trading systems is critical for competitive advantage. It involves optimizing every layer of the technology stack, from hardware to software and network protocols.",
+          "section_0_heading": "Key Principles",
+          "section_0_points": "\u2022 **Minimize Latency at Every Layer**: Identify and eliminate bottlenecks from network ingress to order execution.\n\u2022 **Deterministic Performance**: Aim for predictable, consistent latency rather than just low average latency, especially for tail latencies (e.g., 99th percentile).\n\u2022 **Avoid Unnecessary Work**: Only perform essential computations and operations. Reduce overhead from OS, libraries, and language runtimes.\n\u2022 **Measure Everything**: Implement robust monitoring and profiling to identify latency sources and validate optimizations.",
+          "section_1_heading": "Hardware Considerations",
+          "section_1_points": "\u2022 **Network Interface Cards (NICs)**: Utilize specialized NICs (e.g., Solarflare, Mellanox) with kernel bypass capabilities (e.g., OpenOnload, DPDK) to reduce OS overhead.\n\u2022 **CPU Affinity/Pinning**: Dedicate specific CPU cores to critical application threads to minimize context switching and cache misses.\n\u2022 **NUMA Awareness**: Design applications to access memory primarily from the local NUMA node to avoid slower inter-node memory access.\n\u2022 **Memory Selection**: Use high-speed RAM (e.g., DDR5) and ensure sufficient cache sizes (L1, L2, L3) to reduce memory access latency.",
+          "section_2_heading": "Software Optimizations",
+          "section_2_points": "\u2022 **Kernel Bypass**: Employ user-space networking frameworks (DPDK, OpenOnload) to bypass the kernel's network stack.\n\u2022 **Lock-Free Data Structures**: Use atomic operations and lock-free algorithms (e.g., ring buffers, queues) to avoid mutex contention and context switches.\n\u2022 **Memory Pre-allocation & Object Pooling**: Allocate memory upfront and reuse objects to avoid dynamic memory allocation (malloc/free) and garbage collection pauses.\n\u2022 **Batching**: Process multiple events or orders together to amortize overheads.\n\u2022 **Event-Driven Architecture**: Design systems around efficient event processing, often using a single-threaded, run-to-completion model for critical paths.\n\u2022 **Compiler Optimizations**: Use aggressive compiler flags (e.g., -O3, link-time optimization) and profile-guided optimization.\n\u2022 **Language Choice**: Prefer languages like C++ for direct memory control and minimal runtime overhead. If using managed languages (Java, C#), focus on GC tuning and JIT warm-up strategies.",
+          "section_3_heading": "Network Optimizations",
+          "section_3_points": "\u2022 **Proximity (Co-location)**: Place trading servers as physically close as possible to exchange matching engines.\n\u2022 **Fiber Optics**: Utilize direct, low-latency fiber connections.\n\u2022 **Multicast**: Use UDP multicast for market data distribution to efficiently send data to multiple subscribers with minimal latency.\n\u2022 **Network Topology**: Design flat, low-hop networks with high-performance switches.",
+          "sections": [
+            {
+              "heading": "Key Principles",
+              "points": [
+                "**Minimize Latency at Every Layer**: Identify and eliminate bottlenecks from network ingress to order execution.",
+                "**Deterministic Performance**: Aim for predictable, consistent latency rather than just low average latency, especially for tail latencies (e.g., 99th percentile).",
+                "**Avoid Unnecessary Work**: Only perform essential computations and operations. Reduce overhead from OS, libraries, and language runtimes.",
+                "**Measure Everything**: Implement robust monitoring and profiling to identify latency sources and validate optimizations."
+              ]
+            },
+            {
+              "heading": "Hardware Considerations",
+              "points": [
+                "**Network Interface Cards (NICs)**: Utilize specialized NICs (e.g., Solarflare, Mellanox) with kernel bypass capabilities (e.g., OpenOnload, DPDK) to reduce OS overhead.",
+                "**CPU Affinity/Pinning**: Dedicate specific CPU cores to critical application threads to minimize context switching and cache misses.",
+                "**NUMA Awareness**: Design applications to access memory primarily from the local NUMA node to avoid slower inter-node memory access.",
+                "**Memory Selection**: Use high-speed RAM (e.g., DDR5) and ensure sufficient cache sizes (L1, L2, L3) to reduce memory access latency."
+              ]
+            },
+            {
+              "heading": "Software Optimizations",
+              "points": [
+                "**Kernel Bypass**: Employ user-space networking frameworks (DPDK, OpenOnload) to bypass the kernel's network stack.",
+                "**Lock-Free Data Structures**: Use atomic operations and lock-free algorithms (e.g., ring buffers, queues) to avoid mutex contention and context switches.",
+                "**Memory Pre-allocation & Object Pooling**: Allocate memory upfront and reuse objects to avoid dynamic memory allocation (malloc/free) and garbage collection pauses.",
+                "**Batching**: Process multiple events or orders together to amortize overheads.",
+                "**Event-Driven Architecture**: Design systems around efficient event processing, often using a single-threaded, run-to-completion model for critical paths.",
+                "**Compiler Optimizations**: Use aggressive compiler flags (e.g., -O3, link-time optimization) and profile-guided optimization.",
+                "**Language Choice**: Prefer languages like C++ for direct memory control and minimal runtime overhead. If using managed languages (Java, C#), focus on GC tuning and JIT warm-up strategies."
+              ]
+            },
+            {
+              "heading": "Network Optimizations",
+              "points": [
+                "**Proximity (Co-location)**: Place trading servers as physically close as possible to exchange matching engines.",
+                "**Fiber Optics**: Utilize direct, low-latency fiber connections.",
+                "**Multicast**: Use UDP multicast for market data distribution to efficiently send data to multiple subscribers with minimal latency.",
+                "**Network Topology**: Design flat, low-hop networks with high-performance switches."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Key Principles",
+              "label": "**Minimize Latency at Every Layer**: Identify and eliminate bottlenecks from network ingress to order execution.; **Deterministic Performance**: Aim for predictable, consistent latency rather than just low average latency, especially for tail latencies (e.g., 99th percentile).; **Avoid Unnecessary Work**: Only perform essential computations and operations. Reduce overhead from OS, libraries, and language runtimes.; **Measure Everything**: Implement robust monitoring and profiling to identify latency sources and validate optimizations."
+            },
+            {
+              "time": "Hardware Considerations",
+              "label": "**Network Interface Cards (NICs)**: Utilize specialized NICs (e.g., Solarflare, Mellanox) with kernel bypass capabilities (e.g., OpenOnload, DPDK) to reduce OS overhead.; **CPU Affinity/Pinning**: Dedicate specific CPU cores to critical application threads to minimize context switching and cache misses.; **NUMA Awareness**: Design applications to access memory primarily from the local NUMA node to avoid slower inter-node memory access.; **Memory Selection**: Use high-speed RAM (e.g., DDR5) and ensure sufficient cache sizes (L1, L2, L3) to reduce memory access latency."
+            },
+            {
+              "time": "Software Optimizations",
+              "label": "**Kernel Bypass**: Employ user-space networking frameworks (DPDK, OpenOnload) to bypass the kernel's network stack.; **Lock-Free Data Structures**: Use atomic operations and lock-free algorithms (e.g., ring buffers, queues) to avoid mutex contention and context switches.; **Memory Pre-allocation & Object Pooling**: Allocate memory upfront and reuse objects to avoid dynamic memory allocation (malloc/free) and garbage collection pauses.; **Batching**: Process multiple events or orders together to amortize overheads.; **Event-Driven Architecture**: Design systems around efficient event processing, often using a single-threaded, run-to-completion model for critical paths.; **Compiler Optimizations**: Use aggressive compiler flags (e.g., -O3, link-time optimization) and profile-guided optimization.; **Language Choice**: Prefer languages like C++ for direct memory control and minimal runtime overhead. If using managed languages (Java, C#), focus on GC tuning and JIT warm-up strategies."
+            },
+            {
+              "time": "Network Optimizations",
+              "label": "**Proximity (Co-location)**: Place trading servers as physically close as possible to exchange matching engines.; **Fiber Optics**: Utilize direct, low-latency fiber connections.; **Multicast**: Use UDP multicast for market data distribution to efficiently send data to multiple subscribers with minimal latency.; **Network Topology**: Design flat, low-hop networks with high-performance switches."
+            }
+          ],
+          "choices": [
+            {
+              "id": "network_protocols",
+              "label": "Network Protocols for Low Latency"
+            },
+            {
+              "id": "hardware_acceleration",
+              "label": "Hardware Acceleration (FPGAs/GPUs)"
+            },
+            {
+              "id": "os_tuning",
+              "label": "Operating System Tuning for Low Latency"
+            },
+            {
+              "id": "lock_free_ds",
+              "label": "Advanced Lock-Free Data Structures"
+            },
+            {
+              "id": "profiling_benchmarking",
+              "label": "Profiling and Benchmarking Low-Latency Systems"
+            }
+          ],
+          "choice_0_label": "Network Protocols for Low Latency",
+          "choice_1_label": "Hardware Acceleration (FPGAs/GPUs)",
+          "choice_2_label": "Operating System Tuning for Low Latency",
+          "choice_3_label": "Advanced Lock-Free Data Structures",
+          "choice_4_label": "Profiling and Benchmarking Low-Latency Systems"
+        }
+      },
+      "trail": [
+        "Teach me for a trading-systems engineering interview. Ask me which area to study first.",
+        "Low-Latency System Design"
+      ]
+    },
+    {
+      "goal": "Teach me for a trading-systems engineering interview. Ask me which area to study first.\nThe learner then chose, in order: Low-Latency System Design \u2192 Network Protocols for Low Latency.\nCompose the next interface for that choice, staying in the trading-systems domain.\nAlways finish by offering 3 to 5 concrete next topics the learner can pick from. Label each one as a short topic name, not as a question.",
+      "run_id": "run-4ae4ae5004dc",
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "component_count": 12,
+      "clean": true,
+      "component_types": {
+        "Column": 2,
+        "Text": 3,
+        "ProgressBar": 1,
+        "Timeline": 2,
+        "Button": 4
+      },
+      "buttons": [
+        "Hardware Acceleration (FPGAs, SmartNICs)",
+        "Kernel Bypass Techniques (DPDK, OpenOnload)",
+        "Time Synchronization (PTP, NTP)",
+        "Market Data Feed Handlers"
+      ],
+      "matrix_pointers": [],
+      "used_heatmap": false,
+      "validator": {
+        "proposed": 12,
+        "accepted": 12,
+        "rejected": 0,
+        "rejections": []
+      },
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title_comp",
+              "summary_comp",
+              "progress_bar",
+              "content_timeline",
+              "next_topics_heading",
+              "choices_column",
+              "run_timeline"
+            ]
+          },
+          {
+            "id": "title_comp",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary_comp",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "progress_bar",
+            "type": "ProgressBar",
+            "value": {
+              "$bind": "/progress_value"
+            },
+            "max": {
+              "$bind": "/progress_max"
+            },
+            "tone": "neutral"
+          },
+          {
+            "id": "content_timeline",
+            "type": "Timeline",
+            "title": "Network Protocols for Low Latency in Trading Systems",
+            "events": {
+              "$bind": "/section_events"
+            }
+          },
+          {
+            "id": "next_topics_heading",
+            "type": "Text",
+            "variant": "subtitle",
+            "text": {
+              "$bind": "/goal"
+            }
+          },
+          {
+            "id": "choices_column",
+            "type": "Column",
+            "children": [
+              "button_0",
+              "button_1",
+              "button_2",
+              "button_3"
+            ]
+          },
+          {
+            "id": "button_0",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_0_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "button_1",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_1_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "button_2",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_2_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "button_3",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_3_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "run_timeline",
+            "type": "Timeline",
+            "title": "System Progress",
+            "events": {
+              "$bind": "/timeline"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Teach me for a trading-systems engineering interview. Ask me which area to study first.\nThe learner then chose, in order: Low-Latency System Design \u2192 Network Protocols for Low Latency.\nCompose the next interface for that choice, staying in the trading-systems domain.\nAlways finish by offering 3 to 5 concrete next topics the learner can pick from. Label each one as a short topic name, not as a question.",
+          "goal": "Teach me for a trading-systems engineering interview. Ask me which area to study first.\nThe learner then chose, in order: Low-Latency System Design \u2192 Network Protocols for Low Latency.\nCompose the next interface for that choice, staying in the trading-systems domain.\nAlways finish by offering 3 to 5 concrete next topics the learner can pick from. Label each one as a short topic name, not as a question.",
+          "summary": "Teach me for a trading-systems engineering interview. Ask me which area to study first.\nThe learner then chose, in order: Low-Latency System Design \u2192 Network Protocols for Low Latency.\nCompose the next interface for that choice, staying in the trading-systems domain.\nAlways finish by offering 3 to 5 concrete next topics the learner can pick from. Label each one as a short topic name, not as a question.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Hardware Acceleration (FPGAs, SmartNICs)",
+            "Kernel Bypass Techniques (DPDK, OpenOnload)",
+            "Time Synchronization (PTP, NTP)",
+            "Market Data Feed Handlers"
+          ],
+          "timeline": [
+            {
+              "time": "357",
+              "label": "run_started"
+            },
+            {
+              "time": "358",
+              "label": "graph_patched"
+            },
+            {
+              "time": "359",
+              "label": "task_started content"
+            },
+            {
+              "time": "360",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "361",
+              "label": "graph_patched"
+            },
+            {
+              "time": "362",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "section_0_heading": "Network Protocols for Low Latency in Trading Systems",
+          "section_0_points": "\u2022 In high-frequency trading (HFT), every microsecond counts. Network protocols, often seen as a foundational layer, become a critical battleground for latency optimization.\n\u2022 The choice and configuration of network protocols directly impact the speed at which market data is received and orders are sent to exchanges.\n\u2022 Understanding the trade-offs and specific optimizations for each protocol is essential for designing competitive low-latency trading systems.",
+          "section_1_heading": "Key Protocols and Their Role",
+          "section_1_points": "\u2022 **UDP (User Datagram Protocol):** Favored for market data dissemination due to its connectionless nature and minimal overhead. It offers speed but no guaranteed delivery or ordering, requiring application-level handling for reliability.\n\u2022 **TCP (Transmission Control Protocol):** Provides reliable, ordered, and error-checked delivery. While essential for order submission where reliability is paramount, its overhead (handshakes, flow control, retransmissions) makes it slower than UDP.\n\u2022 **Multicast:** Widely used by exchanges to distribute market data efficiently to multiple subscribers simultaneously. It reduces network traffic and server load compared to sending individual unicast streams.\n\u2022 **RDMA (Remote Direct Memory Access):** Allows direct memory access between servers without involving the CPU, kernel, or OS. This significantly reduces latency and CPU utilization, especially for inter-process communication within a data center or between co-located servers.\n\u2022 **PTP (Precision Time Protocol):** While not a data transfer protocol, PTP is crucial for synchronizing clocks across the trading infrastructure, which is vital for accurate timestamping of events and compliance. Its network-level implementation impacts overall system latency and accuracy.",
+          "section_2_heading": "Optimizations and Considerations",
+          "section_2_points": "\u2022 **Jumbo Frames:** Larger Ethernet frames can reduce the number of packets processed, potentially lowering CPU overhead and improving throughput for large data transfers.\n\u2022 **Kernel Bypass:** Techniques like Solarflare OpenOnload or Mellanox VMA allow applications to interact directly with network hardware, bypassing the kernel's network stack to reduce latency.\n\u2022 **Network Interface Card (NIC) Offloads:** Modern NICs can offload tasks like checksum calculation, TCP segmentation, and interrupt coalescing, freeing up CPU cycles and reducing latency.\n\u2022 **Protocol Tuning:** Fine-tuning OS and network device parameters (e.g., TCP buffer sizes, interrupt moderation, queue depths) can yield significant latency improvements.\n\u2022 **Network Topology:** A well-designed, low-hop network topology with high-speed switches and direct connections minimizes propagation delay and congestion.",
+          "sections": [
+            {
+              "heading": "Network Protocols for Low Latency in Trading Systems",
+              "points": [
+                "In high-frequency trading (HFT), every microsecond counts. Network protocols, often seen as a foundational layer, become a critical battleground for latency optimization.",
+                "The choice and configuration of network protocols directly impact the speed at which market data is received and orders are sent to exchanges.",
+                "Understanding the trade-offs and specific optimizations for each protocol is essential for designing competitive low-latency trading systems."
+              ]
+            },
+            {
+              "heading": "Key Protocols and Their Role",
+              "points": [
+                "**UDP (User Datagram Protocol):** Favored for market data dissemination due to its connectionless nature and minimal overhead. It offers speed but no guaranteed delivery or ordering, requiring application-level handling for reliability.",
+                "**TCP (Transmission Control Protocol):** Provides reliable, ordered, and error-checked delivery. While essential for order submission where reliability is paramount, its overhead (handshakes, flow control, retransmissions) makes it slower than UDP.",
+                "**Multicast:** Widely used by exchanges to distribute market data efficiently to multiple subscribers simultaneously. It reduces network traffic and server load compared to sending individual unicast streams.",
+                "**RDMA (Remote Direct Memory Access):** Allows direct memory access between servers without involving the CPU, kernel, or OS. This significantly reduces latency and CPU utilization, especially for inter-process communication within a data center or between co-located servers.",
+                "**PTP (Precision Time Protocol):** While not a data transfer protocol, PTP is crucial for synchronizing clocks across the trading infrastructure, which is vital for accurate timestamping of events and compliance. Its network-level implementation impacts overall system latency and accuracy."
+              ]
+            },
+            {
+              "heading": "Optimizations and Considerations",
+              "points": [
+                "**Jumbo Frames:** Larger Ethernet frames can reduce the number of packets processed, potentially lowering CPU overhead and improving throughput for large data transfers.",
+                "**Kernel Bypass:** Techniques like Solarflare OpenOnload or Mellanox VMA allow applications to interact directly with network hardware, bypassing the kernel's network stack to reduce latency.",
+                "**Network Interface Card (NIC) Offloads:** Modern NICs can offload tasks like checksum calculation, TCP segmentation, and interrupt coalescing, freeing up CPU cycles and reducing latency.",
+                "**Protocol Tuning:** Fine-tuning OS and network device parameters (e.g., TCP buffer sizes, interrupt moderation, queue depths) can yield significant latency improvements.",
+                "**Network Topology:** A well-designed, low-hop network topology with high-speed switches and direct connections minimizes propagation delay and congestion."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Network Protocols for Low Latency in Trading Systems",
+              "label": "In high-frequency trading (HFT), every microsecond counts. Network protocols, often seen as a foundational layer, become a critical battleground for latency optimization.; The choice and configuration of network protocols directly impact the speed at which market data is received and orders are sent to exchanges.; Understanding the trade-offs and specific optimizations for each protocol is essential for designing competitive low-latency trading systems."
+            },
+            {
+              "time": "Key Protocols and Their Role",
+              "label": "**UDP (User Datagram Protocol):** Favored for market data dissemination due to its connectionless nature and minimal overhead. It offers speed but no guaranteed delivery or ordering, requiring application-level handling for reliability.; **TCP (Transmission Control Protocol):** Provides reliable, ordered, and error-checked delivery. While essential for order submission where reliability is paramount, its overhead (handshakes, flow control, retransmissions) makes it slower than UDP.; **Multicast:** Widely used by exchanges to distribute market data efficiently to multiple subscribers simultaneously. It reduces network traffic and server load compared to sending individual unicast streams.; **RDMA (Remote Direct Memory Access):** Allows direct memory access between servers without involving the CPU, kernel, or OS. This significantly reduces latency and CPU utilization, especially for inter-process communication within a data center or between co-located servers.; **PTP (Precision Time Protocol):** While not a data transfer protocol, PTP is crucial for synchronizing clocks across the trading infrastructure, which is vital for accurate timestamping of events and compliance. Its network-level implementation impacts overall system latency and accuracy."
+            },
+            {
+              "time": "Optimizations and Considerations",
+              "label": "**Jumbo Frames:** Larger Ethernet frames can reduce the number of packets processed, potentially lowering CPU overhead and improving throughput for large data transfers.; **Kernel Bypass:** Techniques like Solarflare OpenOnload or Mellanox VMA allow applications to interact directly with network hardware, bypassing the kernel's network stack to reduce latency.; **Network Interface Card (NIC) Offloads:** Modern NICs can offload tasks like checksum calculation, TCP segmentation, and interrupt coalescing, freeing up CPU cycles and reducing latency.; **Protocol Tuning:** Fine-tuning OS and network device parameters (e.g., TCP buffer sizes, interrupt moderation, queue depths) can yield significant latency improvements.; **Network Topology:** A well-designed, low-hop network topology with high-speed switches and direct connections minimizes propagation delay and congestion."
+            }
+          ],
+          "choices": [
+            {
+              "id": "hardware_accel",
+              "label": "Hardware Acceleration (FPGAs, SmartNICs)"
+            },
+            {
+              "id": "kernel_bypass",
+              "label": "Kernel Bypass Techniques (DPDK, OpenOnload)"
+            },
+            {
+              "id": "time_sync",
+              "label": "Time Synchronization (PTP, NTP)"
+            },
+            {
+              "id": "market_data",
+              "label": "Market Data Feed Handlers"
+            }
+          ],
+          "choice_0_label": "Hardware Acceleration (FPGAs, SmartNICs)",
+          "choice_1_label": "Kernel Bypass Techniques (DPDK, OpenOnload)",
+          "choice_2_label": "Time Synchronization (PTP, NTP)",
+          "choice_3_label": "Market Data Feed Handlers"
+        }
+      },
+      "trail": [
+        "Teach me for a trading-systems engineering interview. Ask me which area to study first.",
+        "Low-Latency System Design",
+        "Network Protocols for Low Latency"
+      ]
+    }
+  ],
+  "summary": {
+    "distinct_component_types": [
+      "Button",
+      "Column",
+      "DataTable",
+      "Divider",
+      "Heatmap",
+      "ProgressBar",
+      "Row",
+      "StatTile",
+      "Text",
+      "Timeline"
+    ],
+    "component_type_counts": {
+      "Column": 9,
+      "Text": 13,
+      "Row": 2,
+      "StatTile": 5,
+      "Heatmap": 1,
+      "Timeline": 11,
+      "ProgressBar": 6,
+      "DataTable": 1,
+      "Button": 14,
+      "Divider": 2
+    },
+    "heatmap_composed_unprompted": true,
+    "turns_captured": 6,
+    "every_turn_clean": true
+  }
+}
