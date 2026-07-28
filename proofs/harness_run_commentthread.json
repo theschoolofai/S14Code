@@ -1,0 +1,768 @@
+{
+  "task": "Build an interface showing customer reviews for a popular noise-cancelling headphone.",
+  "run_id": "run-0b3bccdd228c",
+  "status": "completed",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "gateway_provider_env": "gemini",
+  "graph": {
+    "finished": true,
+    "nodes": {
+      "content": {
+        "skill": "content",
+        "state": "succeeded",
+        "agent": "content",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash"
+      },
+      "surface": {
+        "skill": "compose_surface",
+        "state": "succeeded",
+        "agent": "ui_composer",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash"
+      }
+    },
+    "edges": [
+      [
+        "content",
+        "surface"
+      ]
+    ]
+  },
+  "event_journal": [
+    {
+      "sequence": 1,
+      "kind": "run_started",
+      "node_id": null
+    },
+    {
+      "sequence": 2,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 3,
+      "kind": "task_started",
+      "node_id": "content"
+    },
+    {
+      "sequence": 4,
+      "kind": "task_succeeded",
+      "node_id": "content"
+    },
+    {
+      "sequence": 5,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 6,
+      "kind": "task_started",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 7,
+      "kind": "task_succeeded",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 8,
+      "kind": "graph_patched",
+      "node_id": null
+    }
+  ],
+  "compose_surface_node": {
+    "id": "surface",
+    "skill": "compose_surface",
+    "state": "succeeded",
+    "provider": "gemini_1",
+    "model": "gemini-2.5-flash",
+    "upstream_used": [],
+    "parse_ok": true,
+    "raw_surface": "```json\n{\n  \"root\": \"root\",\n  \"components\": [\n    {\n      \"id\": \"root\",\n      \"type\": \"Column\",\n      \"children\": [\n        \"title\",\n        \"intro\",\n        \"metrics_row\",\n        \"divider1\",\n        \"reviews_thread\",\n        \"divider2\",\n        \"run_timeline\"\n      ]\n    },\n    {\n      \"id\": \"title\",\n      \"type\": \"Text\",\n      \"variant\": \"heading\",\n      \"text\": {\n        \"$bind\": \"/title\"\n      }\n    },\n    {\n      \"id\": \"intro\",\n      \"type\": \"Text\",\n      \"variant\": \"body\",\n      \"text\": {\n        \"$bind\": \"/intro\"\n      }\n    },\n    {\n      \"id\": \"metrics_row\",\n      \"type\": \"Row\",\n      \"justify\": \"spaceBetween\",\n      \"children\": [\n        \"avg_rating_stat\",\n        \"total_reviews_stat\"\n      ]\n    },\n    {\n      \"id\": \"avg_rating_stat\",\n      \"type\": \"StatTile\",\n      \"label\": \"Average Rating\",\n      \"value\": {\n        \"$bind\": \"/metric_0_value\"\n      },\n      \"unit\": \"/ 5\",\n      \"tone\": \"good\"\n    },\n    {\n      \"id\": \"total_reviews_stat\",\n      \"type\": \"StatTile\",\n      \"label\": \"Total Reviews\",\n      \"value\": {\n        \"$bind\": \"/metric_1_value\"\n      },\n      \"unit\": \"\"\n    },\n    {\n      \"id\": \"divider1\",\n      \"type\": \"Divider\"\n    },\n    {\n      \"id\": \"reviews_thread\",\n      \"type\": \"CommentThread\",\n      \"title\": \"Customer Reviews\",\n      \"comments\": {\n        \"$bind\": \"/comments\"\n      }\n    },\n    {\n      \"id\": \"divider2\",\n      \"type\": \"Divider\"\n    },\n    {\n      \"id\": \"run_timeline\",\n      \"type\": \"Timeline\",\n      \"title\": \"Run Steps\",\n      \"events\": {\n        \"$bind\": \"/timeline\"\n      }\n    }\n  ]\n}\n```",
+    "validator": {
+      "proposed": 10,
+      "accepted": 10,
+      "rejected": 0,
+      "ok": true,
+      "rejections": [],
+      "dangling_child_refs": [],
+      "component_types": [
+        "Column",
+        "CommentThread",
+        "Divider",
+        "Row",
+        "StatTile",
+        "Text",
+        "Timeline"
+      ],
+      "component_count": 10
+    },
+    "data_model": {
+      "title": "Customer Reviews: AuraSound ANC Pro Headphones",
+      "goal": "Build an interface showing customer reviews for a popular noise-cancelling headphone.",
+      "summary": "Hear what our customers are saying about the AuraSound ANC Pro, the ultimate noise-cancelling headphones.",
+      "results": [],
+      "items": [],
+      "metrics": [
+        {
+          "label": "Average Rating",
+          "value": 4.7,
+          "unit": "/ 5"
+        },
+        {
+          "label": "Total Reviews",
+          "value": 1245,
+          "unit": ""
+        }
+      ],
+      "spark": [],
+      "table_rows": [],
+      "item_count": 0,
+      "source_count": 0,
+      "subjects": [],
+      "timeline": [
+        {
+          "time": "1",
+          "label": "run_started"
+        },
+        {
+          "time": "2",
+          "label": "graph_patched"
+        },
+        {
+          "time": "3",
+          "label": "task_started content"
+        },
+        {
+          "time": "4",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "5",
+          "label": "graph_patched"
+        },
+        {
+          "time": "6",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "intro": "Hear what our customers are saying about the AuraSound ANC Pro, the ultimate noise-cancelling headphones.",
+      "metric_0_value": 4.7,
+      "metric_1_value": 1245,
+      "comments": [
+        {
+          "author": "TechGuru88",
+          "text": "Absolutely blown away by the noise cancellation! My daily commute is so much more peaceful now. Sound quality is top-notch too.",
+          "time": "2023-10-26T14:30:00Z"
+        },
+        {
+          "author": "MusicLoverJane",
+          "text": "Comfortable for long listening sessions and the battery life is incredible. A must-have for anyone who travels frequently.",
+          "time": "2023-10-25T09:15:00Z"
+        },
+        {
+          "author": "PodcastFanatic",
+          "text": "I can finally focus on my podcasts without distractions. The ambient sound mode is a nice touch for when I need to be aware of my surroundings.",
+          "time": "2023-10-24T18:00:00Z"
+        },
+        {
+          "author": "TravelerMike",
+          "text": "Used these on a transatlantic flight and they made a huge difference. Slept like a baby. Highly recommend!",
+          "time": "2023-10-23T11:45:00Z"
+        },
+        {
+          "author": "StudentLife",
+          "text": "Perfect for studying in noisy dorms or cafes. A bit pricey, but worth every penny for the peace and quiet.",
+          "time": "2023-10-22T20:10:00Z"
+        }
+      ]
+    },
+    "surface_accepted": {
+      "root": "root",
+      "components": [
+        {
+          "id": "root",
+          "type": "Column",
+          "children": [
+            "title",
+            "intro",
+            "metrics_row",
+            "divider1",
+            "reviews_thread",
+            "divider2",
+            "run_timeline"
+          ]
+        },
+        {
+          "id": "title",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "intro",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/intro"
+          }
+        },
+        {
+          "id": "metrics_row",
+          "type": "Row",
+          "justify": "spaceBetween",
+          "children": [
+            "avg_rating_stat",
+            "total_reviews_stat"
+          ]
+        },
+        {
+          "id": "avg_rating_stat",
+          "type": "StatTile",
+          "label": "Average Rating",
+          "value": {
+            "$bind": "/metric_0_value"
+          },
+          "unit": "/ 5",
+          "tone": "good"
+        },
+        {
+          "id": "total_reviews_stat",
+          "type": "StatTile",
+          "label": "Total Reviews",
+          "value": {
+            "$bind": "/metric_1_value"
+          },
+          "unit": ""
+        },
+        {
+          "id": "divider1",
+          "type": "Divider"
+        },
+        {
+          "id": "reviews_thread",
+          "type": "CommentThread",
+          "title": "Customer Reviews",
+          "comments": {
+            "$bind": "/comments"
+          }
+        },
+        {
+          "id": "divider2",
+          "type": "Divider"
+        },
+        {
+          "id": "run_timeline",
+          "type": "Timeline",
+          "title": "Run Steps",
+          "events": {
+            "$bind": "/timeline"
+          }
+        }
+      ],
+      "dataModel": {
+        "title": "Customer Reviews: AuraSound ANC Pro Headphones",
+        "goal": "Build an interface showing customer reviews for a popular noise-cancelling headphone.",
+        "summary": "Hear what our customers are saying about the AuraSound ANC Pro, the ultimate noise-cancelling headphones.",
+        "results": [],
+        "items": [],
+        "metrics": [
+          {
+            "label": "Average Rating",
+            "value": 4.7,
+            "unit": "/ 5"
+          },
+          {
+            "label": "Total Reviews",
+            "value": 1245,
+            "unit": ""
+          }
+        ],
+        "spark": [],
+        "table_rows": [],
+        "item_count": 0,
+        "source_count": 0,
+        "subjects": [],
+        "timeline": [
+          {
+            "time": "1",
+            "label": "run_started"
+          },
+          {
+            "time": "2",
+            "label": "graph_patched"
+          },
+          {
+            "time": "3",
+            "label": "task_started content"
+          },
+          {
+            "time": "4",
+            "label": "task_succeeded content"
+          },
+          {
+            "time": "5",
+            "label": "graph_patched"
+          },
+          {
+            "time": "6",
+            "label": "task_started surface"
+          }
+        ],
+        "progress_value": 1,
+        "progress_max": 2,
+        "intro": "Hear what our customers are saying about the AuraSound ANC Pro, the ultimate noise-cancelling headphones.",
+        "metric_0_value": 4.7,
+        "metric_1_value": 1245,
+        "comments": [
+          {
+            "author": "TechGuru88",
+            "text": "Absolutely blown away by the noise cancellation! My daily commute is so much more peaceful now. Sound quality is top-notch too.",
+            "time": "2023-10-26T14:30:00Z"
+          },
+          {
+            "author": "MusicLoverJane",
+            "text": "Comfortable for long listening sessions and the battery life is incredible. A must-have for anyone who travels frequently.",
+            "time": "2023-10-25T09:15:00Z"
+          },
+          {
+            "author": "PodcastFanatic",
+            "text": "I can finally focus on my podcasts without distractions. The ambient sound mode is a nice touch for when I need to be aware of my surroundings.",
+            "time": "2023-10-24T18:00:00Z"
+          },
+          {
+            "author": "TravelerMike",
+            "text": "Used these on a transatlantic flight and they made a huge difference. Slept like a baby. Highly recommend!",
+            "time": "2023-10-23T11:45:00Z"
+          },
+          {
+            "author": "StudentLife",
+            "text": "Perfect for studying in noisy dorms or cafes. A bit pricey, but worth every penny for the peace and quiet.",
+            "time": "2023-10-22T20:10:00Z"
+          }
+        ]
+      }
+    }
+  },
+  "full_events": [
+    {
+      "sequence": 1,
+      "kind": "run_started",
+      "node_id": null,
+      "payload": {}
+    },
+    {
+      "sequence": 2,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 1,
+        "reason": "first frontier selected for compose_answer",
+        "add": [
+          "content"
+        ],
+        "connect": [],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": false
+      }
+    },
+    {
+      "sequence": 3,
+      "kind": "task_started",
+      "node_id": "content",
+      "payload": {
+        "skill": "content",
+        "agent": "content"
+      }
+    },
+    {
+      "sequence": 4,
+      "kind": "task_succeeded",
+      "node_id": "content",
+      "payload": {
+        "structured": {
+          "title": "Customer Reviews: AuraSound ANC Pro Headphones",
+          "intro": "Hear what our customers are saying about the AuraSound ANC Pro, the ultimate noise-cancelling headphones.",
+          "metrics": [
+            {
+              "label": "Average Rating",
+              "value": 4.7,
+              "unit": "/ 5"
+            },
+            {
+              "label": "Total Reviews",
+              "value": 1245,
+              "unit": ""
+            }
+          ],
+          "comments": [
+            {
+              "author": "TechGuru88",
+              "text": "Absolutely blown away by the noise cancellation! My daily commute is so much more peaceful now. Sound quality is top-notch too.",
+              "time": "2023-10-26T14:30:00Z"
+            },
+            {
+              "author": "MusicLoverJane",
+              "text": "Comfortable for long listening sessions and the battery life is incredible. A must-have for anyone who travels frequently.",
+              "time": "2023-10-25T09:15:00Z"
+            },
+            {
+              "author": "PodcastFanatic",
+              "text": "I can finally focus on my podcasts without distractions. The ambient sound mode is a nice touch for when I need to be aware of my surroundings.",
+              "time": "2023-10-24T18:00:00Z"
+            },
+            {
+              "author": "TravelerMike",
+              "text": "Used these on a transatlantic flight and they made a huge difference. Slept like a baby. Highly recommend!",
+              "time": "2023-10-23T11:45:00Z"
+            },
+            {
+              "author": "StudentLife",
+              "text": "Perfect for studying in noisy dorms or cafes. A bit pricey, but worth every penny for the peace and quiet.",
+              "time": "2023-10-22T20:10:00Z"
+            }
+          ]
+        },
+        "text": "Hear what our customers are saying about the AuraSound ANC Pro, the ultimate noise-cancelling headphones.",
+        "raw": "{\"title\": \"Customer Reviews: AuraSound ANC Pro Headphones\", \"intro\": \"Hear what our customers are saying about the AuraSound ANC Pro, the ultimate noise-cancelling headphones.\", \"metrics\": [{\"label\": \"Average Rating\", \"value\": 4.7, \"unit\": \"/ 5\"}, {\"label\": \"Total Reviews\", \"value\": 1245, \"unit\": \"\"}], \"comments\": [{\"author\": \"TechGuru88\", \"text\": \"Absolutely blown away by the noise cancellation! My daily commute is so much more peaceful now. Sound quality is top-notch too.\", \"time\": \"2023-10-26T14:30:00Z\"}, {\"author\": \"MusicLoverJane\", \"text\": \"Comfortable for long listening sessions and the battery life is incredible. A must-have for anyone who travels frequently.\", \"time\": \"2023-10-25T09:15:00Z\"}, {\"author\": \"PodcastFanatic\", \"text\": \"I can finally focus on my podcasts without distractions. The ambient sound mode is a nice touch for when I need to be aware of my surroundings.\", \"time\": \"2023-10-24T18:00:00Z\"}, {\"author\": \"TravelerMike\", \"text\": \"Used these on a transatlantic flight and they made a huge difference. Slept like a baby. Highly recommend!\", \"time\": \"2023-10-23T11:45:00Z\"}, {\"author\": \"StudentLife\", \"text\": \"Perfect for studying in noisy dorms or cafes. A bit pricey, but worth every penny for the peace and quiet.\", \"time\": \"2023-10-22T20:10:00Z\"}]}",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash",
+        "agent": "content"
+      }
+    },
+    {
+      "sequence": 5,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 4,
+        "reason": "content produced; compose a validated A2UI surface from the real outcome",
+        "add": [
+          "surface"
+        ],
+        "connect": [
+          [
+            "content",
+            "surface"
+          ]
+        ],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": false
+      }
+    },
+    {
+      "sequence": 6,
+      "kind": "task_started",
+      "node_id": "surface",
+      "payload": {
+        "skill": "compose_surface",
+        "agent": "ui_composer"
+      }
+    },
+    {
+      "sequence": 7,
+      "kind": "task_succeeded",
+      "node_id": "surface",
+      "payload": {
+        "agent": "ui_composer",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash",
+        "raw_surface": "```json\n{\n  \"root\": \"root\",\n  \"components\": [\n    {\n      \"id\": \"root\",\n      \"type\": \"Column\",\n      \"children\": [\n        \"title\",\n        \"intro\",\n        \"metrics_row\",\n        \"divider1\",\n        \"reviews_thread\",\n        \"divider2\",\n        \"run_timeline\"\n      ]\n    },\n    {\n      \"id\": \"title\",\n      \"type\": \"Text\",\n      \"variant\": \"heading\",\n      \"text\": {\n        \"$bind\": \"/title\"\n      }\n    },\n    {\n      \"id\": \"intro\",\n      \"type\": \"Text\",\n      \"variant\": \"body\",\n      \"text\": {\n        \"$bind\": \"/intro\"\n      }\n    },\n    {\n      \"id\": \"metrics_row\",\n      \"type\": \"Row\",\n      \"justify\": \"spaceBetween\",\n      \"children\": [\n        \"avg_rating_stat\",\n        \"total_reviews_stat\"\n      ]\n    },\n    {\n      \"id\": \"avg_rating_stat\",\n      \"type\": \"StatTile\",\n      \"label\": \"Average Rating\",\n      \"value\": {\n        \"$bind\": \"/metric_0_value\"\n      },\n      \"unit\": \"/ 5\",\n      \"tone\": \"good\"\n    },\n    {\n      \"id\": \"total_reviews_stat\",\n      \"type\": \"StatTile\",\n      \"label\": \"Total Reviews\",\n      \"value\": {\n        \"$bind\": \"/metric_1_value\"\n      },\n      \"unit\": \"\"\n    },\n    {\n      \"id\": \"divider1\",\n      \"type\": \"Divider\"\n    },\n    {\n      \"id\": \"reviews_thread\",\n      \"type\": \"CommentThread\",\n      \"title\": \"Customer Reviews\",\n      \"comments\": {\n        \"$bind\": \"/comments\"\n      }\n    },\n    {\n      \"id\": \"divider2\",\n      \"type\": \"Divider\"\n    },\n    {\n      \"id\": \"run_timeline\",\n      \"type\": \"Timeline\",\n      \"title\": \"Run Steps\",\n      \"events\": {\n        \"$bind\": \"/timeline\"\n      }\n    }\n  ]\n}\n```",
+        "surface": {
+          "root": "root",
+          "components": [
+            {
+              "id": "root",
+              "type": "Column",
+              "children": [
+                "title",
+                "intro",
+                "metrics_row",
+                "divider1",
+                "reviews_thread",
+                "divider2",
+                "run_timeline"
+              ]
+            },
+            {
+              "id": "title",
+              "type": "Text",
+              "variant": "heading",
+              "text": {
+                "$bind": "/title"
+              }
+            },
+            {
+              "id": "intro",
+              "type": "Text",
+              "variant": "body",
+              "text": {
+                "$bind": "/intro"
+              }
+            },
+            {
+              "id": "metrics_row",
+              "type": "Row",
+              "justify": "spaceBetween",
+              "children": [
+                "avg_rating_stat",
+                "total_reviews_stat"
+              ]
+            },
+            {
+              "id": "avg_rating_stat",
+              "type": "StatTile",
+              "label": "Average Rating",
+              "value": {
+                "$bind": "/metric_0_value"
+              },
+              "unit": "/ 5",
+              "tone": "good"
+            },
+            {
+              "id": "total_reviews_stat",
+              "type": "StatTile",
+              "label": "Total Reviews",
+              "value": {
+                "$bind": "/metric_1_value"
+              },
+              "unit": ""
+            },
+            {
+              "id": "divider1",
+              "type": "Divider"
+            },
+            {
+              "id": "reviews_thread",
+              "type": "CommentThread",
+              "title": "Customer Reviews",
+              "comments": {
+                "$bind": "/comments"
+              }
+            },
+            {
+              "id": "divider2",
+              "type": "Divider"
+            },
+            {
+              "id": "run_timeline",
+              "type": "Timeline",
+              "title": "Run Steps",
+              "events": {
+                "$bind": "/timeline"
+              }
+            }
+          ],
+          "dataModel": {
+            "title": "Customer Reviews: AuraSound ANC Pro Headphones",
+            "goal": "Build an interface showing customer reviews for a popular noise-cancelling headphone.",
+            "summary": "Hear what our customers are saying about the AuraSound ANC Pro, the ultimate noise-cancelling headphones.",
+            "results": [],
+            "items": [],
+            "metrics": [
+              {
+                "label": "Average Rating",
+                "value": 4.7,
+                "unit": "/ 5"
+              },
+              {
+                "label": "Total Reviews",
+                "value": 1245,
+                "unit": ""
+              }
+            ],
+            "spark": [],
+            "table_rows": [],
+            "item_count": 0,
+            "source_count": 0,
+            "subjects": [],
+            "timeline": [
+              {
+                "time": "1",
+                "label": "run_started"
+              },
+              {
+                "time": "2",
+                "label": "graph_patched"
+              },
+              {
+                "time": "3",
+                "label": "task_started content"
+              },
+              {
+                "time": "4",
+                "label": "task_succeeded content"
+              },
+              {
+                "time": "5",
+                "label": "graph_patched"
+              },
+              {
+                "time": "6",
+                "label": "task_started surface"
+              }
+            ],
+            "progress_value": 1,
+            "progress_max": 2,
+            "intro": "Hear what our customers are saying about the AuraSound ANC Pro, the ultimate noise-cancelling headphones.",
+            "metric_0_value": 4.7,
+            "metric_1_value": 1245,
+            "comments": [
+              {
+                "author": "TechGuru88",
+                "text": "Absolutely blown away by the noise cancellation! My daily commute is so much more peaceful now. Sound quality is top-notch too.",
+                "time": "2023-10-26T14:30:00Z"
+              },
+              {
+                "author": "MusicLoverJane",
+                "text": "Comfortable for long listening sessions and the battery life is incredible. A must-have for anyone who travels frequently.",
+                "time": "2023-10-25T09:15:00Z"
+              },
+              {
+                "author": "PodcastFanatic",
+                "text": "I can finally focus on my podcasts without distractions. The ambient sound mode is a nice touch for when I need to be aware of my surroundings.",
+                "time": "2023-10-24T18:00:00Z"
+              },
+              {
+                "author": "TravelerMike",
+                "text": "Used these on a transatlantic flight and they made a huge difference. Slept like a baby. Highly recommend!",
+                "time": "2023-10-23T11:45:00Z"
+              },
+              {
+                "author": "StudentLife",
+                "text": "Perfect for studying in noisy dorms or cafes. A bit pricey, but worth every penny for the peace and quiet.",
+                "time": "2023-10-22T20:10:00Z"
+              }
+            ]
+          }
+        },
+        "data_model": {
+          "title": "Customer Reviews: AuraSound ANC Pro Headphones",
+          "goal": "Build an interface showing customer reviews for a popular noise-cancelling headphone.",
+          "summary": "Hear what our customers are saying about the AuraSound ANC Pro, the ultimate noise-cancelling headphones.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Average Rating",
+              "value": 4.7,
+              "unit": "/ 5"
+            },
+            {
+              "label": "Total Reviews",
+              "value": 1245,
+              "unit": ""
+            }
+          ],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [],
+          "timeline": [
+            {
+              "time": "1",
+              "label": "run_started"
+            },
+            {
+              "time": "2",
+              "label": "graph_patched"
+            },
+            {
+              "time": "3",
+              "label": "task_started content"
+            },
+            {
+              "time": "4",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "5",
+              "label": "graph_patched"
+            },
+            {
+              "time": "6",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Hear what our customers are saying about the AuraSound ANC Pro, the ultimate noise-cancelling headphones.",
+          "metric_0_value": 4.7,
+          "metric_1_value": 1245,
+          "comments": [
+            {
+              "author": "TechGuru88",
+              "text": "Absolutely blown away by the noise cancellation! My daily commute is so much more peaceful now. Sound quality is top-notch too.",
+              "time": "2023-10-26T14:30:00Z"
+            },
+            {
+              "author": "MusicLoverJane",
+              "text": "Comfortable for long listening sessions and the battery life is incredible. A must-have for anyone who travels frequently.",
+              "time": "2023-10-25T09:15:00Z"
+            },
+            {
+              "author": "PodcastFanatic",
+              "text": "I can finally focus on my podcasts without distractions. The ambient sound mode is a nice touch for when I need to be aware of my surroundings.",
+              "time": "2023-10-24T18:00:00Z"
+            },
+            {
+              "author": "TravelerMike",
+              "text": "Used these on a transatlantic flight and they made a huge difference. Slept like a baby. Highly recommend!",
+              "time": "2023-10-23T11:45:00Z"
+            },
+            {
+              "author": "StudentLife",
+              "text": "Perfect for studying in noisy dorms or cafes. A bit pricey, but worth every penny for the peace and quiet.",
+              "time": "2023-10-22T20:10:00Z"
+            }
+          ]
+        },
+        "validator": {
+          "proposed": 10,
+          "accepted": 10,
+          "rejected": 0,
+          "ok": true,
+          "rejections": [],
+          "dangling_child_refs": [],
+          "component_types": [
+            "Column",
+            "CommentThread",
+            "Divider",
+            "Row",
+            "StatTile",
+            "Text",
+            "Timeline"
+          ],
+          "component_count": 10
+        },
+        "upstream_used": [],
+        "parse_ok": true
+      }
+    },
+    {
+      "sequence": 8,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 7,
+        "reason": "Gemini composed a surface the S14 validator accepted",
+        "add": [],
+        "connect": [],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": true
+      }
+    }
+  ]
+}

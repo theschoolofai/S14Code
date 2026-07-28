@@ -369,6 +369,53 @@ def test_safe_siblings_survive_a_partially_poisoned_surface():
 
 
 # --------------------------------------------------------------------------- #
+# CommentThread — a new catalog vocabulary entry, same three invariants
+# --------------------------------------------------------------------------- #
+
+def test_commentthread_binds_comments_and_title_and_validates_clean():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["ct"]},
+            {"id": "ct", "type": "CommentThread", "title": "Reviews", "comments": {"$bind": "/comments"}},
+        ],
+        "dataModel": {"comments": [{"author": "Priya K.", "text": "Great battery life.", "time": "2026-06-02"}]},
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert {c["id"] for c in result.accepted} == {"root", "ct"}
+
+
+def test_commentthread_did_not_widen_the_catalog_invariant():
+    assert _reject({"id": "x", "type": "CommentThreadEvil"}).invariant == Invariant.CATALOG
+    assert _reject({"id": "x", "type": "commentthread"}).invariant == Invariant.CATALOG  # case-sensitive
+
+
+def test_commentthread_comments_must_be_bind_shape_not_a_literal_carrying_markup():
+    # The exact smuggling path validator.py warns about: an inline literal
+    # where a binding belongs. A hostile literal here could carry markup in
+    # an author or body field; the fix is the same binding-shape rule as
+    # every other prop — an inline literal is refused regardless of content.
+    r = _reject({"id": "ct", "type": "CommentThread",
+                 "comments": [{"author": "<img onerror=steal()>", "text": "hi"}]})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "comments"
+
+
+def test_commentthread_title_literal_markup_is_refused():
+    r = _reject({"id": "ct", "type": "CommentThread", "title": "<script>steal()</script>"})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "title"
+
+
+def test_commentthread_has_no_action_prop_so_nothing_can_cross_back():
+    assert all(prop.kind != "action" for prop in COMPONENTS["CommentThread"].props.values())
+    r = _reject({"id": "ct", "type": "CommentThread", "title": "x", "onReply": {"action": "approve"}})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "onReply"
+
+
+# --------------------------------------------------------------------------- #
 # catalog.py — catalog_manifest
 # --------------------------------------------------------------------------- #
 
@@ -390,8 +437,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +449,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "CommentThread",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
