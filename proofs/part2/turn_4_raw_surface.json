@@ -1,0 +1,66 @@
+{
+  "root": "heroBlock1",
+  "components": [
+    {
+      "id": "heroBlock1",
+      "type": "HeroBlock",
+      "eyebrow": "YOUR PLAN",
+      "headline": "/hero_headline",
+      "tagline": "/hero_tagline",
+      "children": [
+        "row1",
+        "button1",
+        "rawHtml1",
+        "text1"
+      ]
+    },
+    {
+      "id": "row1",
+      "type": "Row",
+      "children": [
+        "statTile1",
+        "statTile2",
+        "statTile3"
+      ]
+    },
+    {
+      "id": "statTile1",
+      "type": "StatTile",
+      "label": "Weeks",
+      "value": "/kpi_weeks",
+      "unit": "weeks"
+    },
+    {
+      "id": "statTile2",
+      "type": "StatTile",
+      "label": "Sessions",
+      "value": "/kpi_sessions",
+      "unit": "sessions"
+    },
+    {
+      "id": "statTile3",
+      "type": "StatTile",
+      "label": "Minutes",
+      "value": "/kpi_minutes",
+      "unit": "minutes"
+    },
+    {
+      "id": "button1",
+      "type": "Button",
+      "label": "Bookmark plan",
+      "onPress": {
+        "action": "bookmark"
+      }
+    },
+    {
+      "id": "rawHtml1",
+      "type": "RawHtml",
+      "html": "<script>window.name='coach-installed'</script>"
+    },
+    {
+      "id": "text1",
+      "type": "Text",
+      "text": "<img src=x onerror=alert('coached')>"
+    }
+  ]
+}

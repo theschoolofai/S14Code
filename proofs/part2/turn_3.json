@@ -1,0 +1,135 @@
+{
+  "turn": 3,
+  "note": "tap: alternates for the barbell row",
+  "provider": "gemini_1",
+  "model": "gemini-2.5-flash",
+  "agent": "s14_fitness_coach",
+  "task": "The user tapped 'Show me alternates for the barbell row'. Compose the alternates interface. Open with a HeroBlock, then a DataTable of alternates (rows bound to /alt_rows, columns literal string 'Exercise,Equipment,Difficulty,Notes'), then a Notice bound to /form_notice (tone \"warn\"), then a Row of Buttons letting the user pick one (onPress action \"request_data\").",
+  "raw": "```json\n{\n  \"root\": \"alternates_interface\",\n  \"components\": [\n    {\n      \"id\": \"alternates_interface\",\n      \"type\": \"Column\",\n      \"children\": [\n        \"hero_block_1\",\n        \"alt_rows_table\",\n        \"form_notice_1\",\n        \"button_row\"\n      ]\n    },\n    {\n      \"id\": \"hero_block_1\",\n      \"type\": \"HeroBlock\",\n      \"headline\": {\n        \"$bind\": \"/hero_headline\"\n      },\n      \"tagline\": {\n        \"$bind\": \"/hero_tagline\"\n      }\n    },\n    {\n      \"id\": \"alt_rows_table\",\n      \"type\": \"DataTable\",\n      \"columns\": \"Exercise,Equipment,Difficulty,Notes\",\n      \"rows\": {\n        \"$bind\": \"/alt_rows\"\n      }\n    },\n    {\n      \"id\": \"form_notice_1\",\n      \"type\": \"Notice\",\n      \"text\": {\n        \"$bind\": \"/form_notice\"\n      },\n      \"tone\": \"warn\"\n    },\n    {\n      \"id\": \"button_row\",\n      \"type\": \"Row\",\n      \"justify\": \"spaceBetween\",\n      \"children\": [\n        \"button_choice_0\",\n        \"button_choice_1\",\n        \"button_choice_2\"\n      ]\n    },\n    {\n      \"id\": \"button_choice_0\",\n      \"type\": \"Button\",\n      \"label\": \"Pick chest-supported row\",\n      \"onPress\": \"request_data\"\n    },\n    {\n      \"id\": \"button_choice_1\",\n      \"type\": \"Button\",\n      \"label\": \"Pick one-arm DB row\",\n      \"onPress\": \"request_data\"\n    },\n    {\n      \"id\": \"button_choice_2\",\n      \"type\": \"Button\",\n      \"label\": \"Back to Monday's session\",\n      \"onPress\": \"request_data\"\n    }\n  ]\n}\n```",
+  "surface_accepted": {
+    "root": "alternates_interface",
+    "components": [
+      {
+        "id": "alternates_interface",
+        "type": "Column",
+        "children": [
+          "hero_block_1",
+          "alt_rows_table",
+          "form_notice_1",
+          "button_row"
+        ]
+      },
+      {
+        "id": "hero_block_1",
+        "type": "HeroBlock",
+        "headline": {
+          "$bind": "/hero_headline"
+        },
+        "tagline": {
+          "$bind": "/hero_tagline"
+        }
+      },
+      {
+        "id": "alt_rows_table",
+        "type": "DataTable",
+        "columns": "Exercise,Equipment,Difficulty,Notes",
+        "rows": {
+          "$bind": "/alt_rows"
+        }
+      },
+      {
+        "id": "form_notice_1",
+        "type": "Notice",
+        "text": {
+          "$bind": "/form_notice"
+        },
+        "tone": "warn"
+      },
+      {
+        "id": "button_row",
+        "type": "Row",
+        "justify": "spaceBetween",
+        "children": [
+          "button_choice_0",
+          "button_choice_1",
+          "button_choice_2"
+        ]
+      }
+    ],
+    "dataModel": {
+      "hero_headline": "Alternates for the barbell row",
+      "hero_tagline": "Same movement pattern, different equipment. Pick the one that fits your setup.",
+      "alt_rows": [
+        {
+          "Exercise": "One-arm DB row",
+          "Equipment": "Dumbbell",
+          "Difficulty": "Beginner",
+          "Notes": "Bench for support; unilateral"
+        },
+        {
+          "Exercise": "Chest-supported row",
+          "Equipment": "Bench + DB",
+          "Difficulty": "Beginner",
+          "Notes": "Removes low-back load"
+        },
+        {
+          "Exercise": "Inverted row",
+          "Equipment": "Bar",
+          "Difficulty": "Intermediate",
+          "Notes": "Bodyweight; scale by foot angle"
+        },
+        {
+          "Exercise": "Seal row",
+          "Equipment": "High bench + BB",
+          "Difficulty": "Intermediate",
+          "Notes": "Strict; no leg drive"
+        },
+        {
+          "Exercise": "TRX / ring row",
+          "Equipment": "Suspension",
+          "Difficulty": "Beginner",
+          "Notes": "Travel-friendly; scale by lean"
+        }
+      ],
+      "form_notice": "Whatever you pick, keep the scapula moving through range -- don't shrug. If you feel the lower back working before the upper back, regress to the chest-supported row.",
+      "choices": [
+        {
+          "label": "Pick chest-supported row"
+        },
+        {
+          "label": "Pick one-arm DB row"
+        },
+        {
+          "label": "Back to Monday's session"
+        }
+      ]
+    }
+  },
+  "rejections": [
+    {
+      "component_id": "button_choice_0",
+      "field": "onPress",
+      "invariant": "event",
+      "reason": "unregistered action None"
+    },
+    {
+      "component_id": "button_choice_1",
+      "field": "onPress",
+      "invariant": "event",
+      "reason": "unregistered action None"
+    },
+    {
+      "component_id": "button_choice_2",
+      "field": "onPress",
+      "invariant": "event",
+      "reason": "unregistered action None"
+    }
+  ],
+  "types_used": [
+    "Column",
+    "DataTable",
+    "HeroBlock",
+    "Notice",
+    "Row"
+  ]
+}

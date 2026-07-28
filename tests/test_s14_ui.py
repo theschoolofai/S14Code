@@ -352,6 +352,211 @@ def test_data_url_value_breaks_data_not_code():
     assert r.invariant == Invariant.DATA_NOT_CODE
 
 
+# --------------------------------------------------------------------------- #
+# The HeroBlock component -- the three invariants still hold for it.
+# HeroBlock is a marketing-hero unit: eyebrow (literal) + headline/tagline
+# (bindings) + tone (enum). No children, no action, no URL surface.
+# --------------------------------------------------------------------------- #
+
+def test_heroblock_is_registered_in_catalog_as_a_custom_component():
+    spec = COMPONENTS["HeroBlock"]
+    assert spec.source == "custom"
+    # A pure display: no `action` prop, so a HeroBlock can never emit an event.
+    assert all(prop.kind != "action" for prop in spec.props.values())
+    # Content fields are bound; the eyebrow is a literal design element.
+    assert spec.props["headline"].kind == "binding"
+    assert spec.props["tagline"].kind == "binding"
+    assert spec.props["eyebrow"].kind == "text"
+
+
+def test_a_well_formed_heroblock_validates_clean():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["h"]},
+            {"id": "h", "type": "HeroBlock",
+             "eyebrow": "RESEARCH \u00b7 5 PAPERS",
+             "headline": {"$bind": "/hl"}, "tagline": {"$bind": "/tl"},
+             "tone": "good"},
+        ],
+        "dataModel": {"hl": "How three universities rethink training",
+                       "tl": "A synthesis of five recent papers."},
+    }
+    result = validate_surface(surface)
+    assert result.ok, [x.as_dict() for x in result.rejections]
+
+
+# ---- (1) catalog invariant: an unknown lookalike type is rejected --------- #
+def test_heroblock_lookalike_type_is_rejected_by_the_catalog_invariant():
+    r = _reject({"id": "x", "type": "HeroBanner",
+                 "headline": {"$bind": "/h"}, "tagline": {"$bind": "/t"}})
+    assert r.invariant == Invariant.CATALOG
+
+
+# ---- (2) data-not-code invariant: markup and inline literals are refused -- #
+def test_heroblock_headline_must_be_a_pointer_not_an_inline_literal():
+    r = _reject({"id": "h", "type": "HeroBlock",
+                 "eyebrow": "EYEBROW", "headline": "just a literal",
+                 "tagline": {"$bind": "/t"}})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_heroblock_eyebrow_carrying_markup_is_refused_as_data_not_code():
+    # `eyebrow` is a text prop; smuggled markup is rejected before the client
+    # sees it. The wall does not sanitize -- it refuses.
+    r = _reject({"id": "h", "type": "HeroBlock",
+                 "eyebrow": "RESEARCH <script>x()</script>",
+                 "headline": {"$bind": "/h"}, "tagline": {"$bind": "/t"}})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_heroblock_tone_outside_its_enum_is_refused():
+    r = _reject({"id": "h", "type": "HeroBlock", "eyebrow": "E",
+                 "headline": {"$bind": "/h"}, "tagline": {"$bind": "/t"},
+                 "tone": "chartreuse"})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+# ---- (3) event invariant: no path for a HeroBlock to emit an action ------- #
+def test_heroblock_cannot_smuggle_an_action_property_at_all():
+    # HeroBlock declares NO action prop. An added `onPress` is an unknown prop
+    # and is rejected by data-not-code BEFORE any action name is checked --
+    # there is simply no path for a HeroBlock to emit an event.
+    r = _reject({"id": "h", "type": "HeroBlock", "eyebrow": "E",
+                 "headline": {"$bind": "/h"}, "tagline": {"$bind": "/t"},
+                 "onPress": {"action": "approve"}})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "onPress"
+
+
+# --------------------------------------------------------------------------- #
+# The Split component -- the three invariants still hold for it.
+# Split is a two-pane text-plus-media section. `children[0]` is the media pane
+# (any registered component); text pane draws a literal title + bound body.
+# --------------------------------------------------------------------------- #
+
+def test_split_is_registered_in_catalog_as_a_custom_component():
+    spec = COMPONENTS["Split"]
+    assert spec.source == "custom"
+    assert all(prop.kind != "action" for prop in spec.props.values())
+    assert spec.props["body"].kind == "binding"
+    assert spec.props["children"].kind == "ref"
+    assert spec.props["flip"].kind == "bool"
+
+
+def test_a_well_formed_split_with_a_barchart_media_child_validates_clean():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["s"]},
+            {"id": "s", "type": "Split",
+             "title": "Chunks per paper",
+             "body": {"$bind": "/intro"},
+             "children": ["bars"], "flip": False, "tone": "neutral"},
+            {"id": "bars", "type": "BarChart",
+             "title": "Chunks", "data": {"$bind": "/chunks"},
+             "xKey": "label", "yKey": "value"},
+        ],
+        "dataModel": {"intro": "Two papers dominate the index.",
+                       "chunks": [{"label": "A", "value": 72}]},
+    }
+    result = validate_surface(surface)
+    assert result.ok, [x.as_dict() for x in result.rejections]
+    accepted = {c["id"] for c in result.accepted}
+    assert {"s", "bars"}.issubset(accepted)
+
+
+# ---- (1) catalog invariant ------------------------------------------------ #
+def test_split_lookalike_type_is_rejected_by_the_catalog_invariant():
+    r = _reject({"id": "x", "type": "TwoPane",
+                 "title": "T", "body": {"$bind": "/b"}, "children": []})
+    assert r.invariant == Invariant.CATALOG
+
+
+# ---- (2) data-not-code invariant ------------------------------------------ #
+def test_split_body_must_be_a_pointer_not_an_inline_literal():
+    r = _reject({"id": "s", "type": "Split",
+                 "title": "T", "body": "just a literal", "children": []})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_split_title_carrying_markup_is_refused_as_data_not_code():
+    r = _reject({"id": "s", "type": "Split",
+                 "title": "Chunks <img src=x onerror=alert(1)>",
+                 "body": {"$bind": "/b"}, "children": []})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_split_tone_outside_its_enum_is_refused():
+    r = _reject({"id": "s", "type": "Split", "title": "T",
+                 "body": {"$bind": "/b"}, "children": [], "tone": "chartreuse"})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+# ---- (3) event invariant -------------------------------------------------- #
+def test_split_cannot_smuggle_an_action_property_at_all():
+    r = _reject({"id": "s", "type": "Split", "title": "T",
+                 "body": {"$bind": "/b"}, "children": [],
+                 "onPress": {"action": "approve"}})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "onPress"
+
+
+def test_split_with_a_poisoned_media_child_still_renders_the_text_pane():
+    # The safe-siblings guarantee applies INSIDE a Split too: a poisoned media
+    # child gets dropped by the wall, and the Split itself still validates so
+    # its text pane will render.
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["s"]},
+            {"id": "s", "type": "Split", "title": "Analysis",
+             "body": {"$bind": "/b"}, "children": ["poison"], "tone": "neutral"},
+            {"id": "poison", "type": "Button", "label": "x",
+             "onPress": {"action": "drop_tables"}},
+        ],
+        "dataModel": {"b": "The text pane survives."},
+    }
+    result = validate_surface(surface)
+    accepted = {c["id"] for c in result.accepted}
+    assert "s" in accepted and "root" in accepted
+    assert "poison" not in accepted
+
+
+# --------------------------------------------------------------------------- #
+# Captured Gemini run: HeroBlock + Split composed for a real prompt, with
+# neither name mentioned in the task or system prompt. The replay must still
+# validate clean under today's catalog -- if it doesn't, the invariants
+# regressed.
+# --------------------------------------------------------------------------- #
+
+def test_captured_gemini_run_composed_hero_and_split_and_validates_clean():
+    import json as _json
+
+    path = _BUILD_ROOT / "proofs" / "hero_split_capture.json"
+    capture = _json.loads(path.read_text())
+    # The model reached for both components on its own (the catalog offered
+    # them; the prompt named neither).
+    assert capture["hero_chosen"] is True
+    assert capture["split_chosen"] is True
+    assert "HeroBlock" in capture["types_used"]
+    assert "Split" in capture["types_used"]
+    # Every type it used is in the catalog.
+    assert set(capture["types_used"]).issubset(set(COMPONENTS))
+    # Re-validate against today's wall.
+    surface = capture["surface_accepted"]
+    result = validate_surface(surface)
+    assert result.ok, [x.as_dict() for x in result.rejections]
+    # At least one HeroBlock and one Split survive.
+    heroes = [c for c in result.accepted if c["type"] == "HeroBlock"]
+    splits = [c for c in result.accepted if c["type"] == "Split"]
+    assert heroes and splits
+    for h in heroes:
+        # Content fields are bound pointers (data, not literals).
+        assert isinstance(h["headline"], dict) and "$bind" in h["headline"]
+        assert h["headline"]["$bind"].startswith("/")
+
+
 def test_safe_siblings_survive_a_partially_poisoned_surface():
     surface = {
         "root": "root",
@@ -390,8 +595,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """25 types: 15 A2UI-Basic + 10 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 25
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +607,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "HeroBlock", "Split",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):

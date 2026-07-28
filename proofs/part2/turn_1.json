@@ -1,0 +1,220 @@
+{
+  "turn": 1,
+  "note": "opener: 4-week beginner strength plan",
+  "provider": "gemini_1",
+  "model": "gemini-2.5-flash",
+  "agent": "s14_fitness_coach",
+  "task": "Design me a 4-week beginner strength plan for building baseline strength. Give me a HeroBlock opener that frames the goal, then a Timeline of the 4 weeks with progression notes, a Row of StatTiles for sessions/week, minutes per session, and expected 1-rep-max delta, and ask me which day of the week to focus on with a Row of Buttons (one per weekday, onPress action \"request_data\").",
+  "raw": "```json\n{\n  \"root\": \"root_column\",\n  \"components\": [\n    {\n      \"id\": \"root_column\",\n      \"type\": \"Column\",\n      \"children\": [\n        \"hero_block_1\",\n        \"divider_1\",\n        \"stats_row\",\n        \"divider_2\",\n        \"timeline_1\",\n        \"divider_3\",\n        \"day_focus_prompt\",\n        \"day_focus_buttons_row\"\n      ]\n    },\n    {\n      \"id\": \"hero_block_1\",\n      \"type\": \"HeroBlock\",\n      \"eyebrow\": \"A 4-week baseline strength plan\",\n      \"headline\": {\n        \"$bind\": \"/hero_headline\"\n      },\n      \"tagline\": {\n        \"$bind\": \"/hero_tagline\"\n      },\n      \"tone\": \"neutral\"\n    },\n    {\n      \"id\": \"divider_1\",\n      \"type\": \"Divider\"\n    },\n    {\n      \"id\": \"stats_row\",\n      \"type\": \"Row\",\n      \"justify\": \"spaceAround\",\n      \"children\": [\n        \"stat_sessions\",\n        \"stat_minutes\",\n        \"stat_delta\"\n      ]\n    },\n    {\n      \"id\": \"stat_sessions\",\n      \"type\": \"StatTile\",\n      \"label\": \"Sessions/week\",\n      \"value\": {\n        \"$bind\": \"/kpi_sessions\"\n      },\n      \"unit\": \"sessions\",\n      \"tone\": \"neutral\"\n    },\n    {\n      \"id\": \"stat_minutes\",\n      \"type\": \"StatTile\",\n      \"label\": \"Minutes/session\",\n      \"value\": {\n        \"$bind\": \"/kpi_minutes\"\n      },\n      \"unit\": \"min\",\n      \"tone\": \"neutral\"\n    },\n    {\n      \"id\": \"stat_delta\",\n      \"type\": \"StatTile\",\n      \"label\": \"Expected 1RM Delta\",\n      \"value\": {\n        \"$bind\": \"/kpi_delta_pct\"\n      },\n      \"unit\": \"%\",\n      \"tone\": \"good\"\n    },\n    {\n      \"id\": \"divider_2\",\n      \"type\": \"Divider\"\n    },\n    {\n      \"id\": \"timeline_1\",\n      \"type\": \"Timeline\",\n      \"title\": \"Weekly Progression\",\n      \"events\": {\n        \"$bind\": \"/weeks\"\n      }\n    },\n    {\n      \"id\": \"divider_3\",\n      \"type\": \"Divider\"\n    },\n    {\n      \"id\": \"day_focus_prompt\",\n      \"type\": \"Text\",\n      \"text\": \"Which day of the week would you like to focus on?\",\n      \"variant\": \"subtitle\"\n    },\n    {\n      \"id\": \"day_focus_buttons_row\",\n      \"type\": \"Row\",\n      \"justify\": \"spaceBetween\",\n      \"children\": [\n        \"button_mon\",\n        \"button_tue\",\n        \"button_wed\",\n        \"button_thu\",\n        \"button_fri\",\n        \"button_sat\",\n        \"button_sun\"\n      ]\n    },\n    {\n      \"id\": \"button_mon\",\n      \"type\": \"Button\",\n      \"label\": \"Mon\",\n      \"onPress\": \"request_data\"\n    },\n    {\n      \"id\": \"button_tue\",\n      \"type\": \"Button\",\n      \"label\": \"Tue\",\n      \"onPress\": \"request_data\"\n    },\n    {\n      \"id\": \"button_wed\",\n      \"type\": \"Button\",\n      \"label\": \"Wed\",\n      \"onPress\": \"request_data\"\n    },\n    {\n      \"id\": \"button_thu\",\n      \"type\": \"Button\",\n      \"label\": \"Thu\",\n      \"onPress\": \"request_data\"\n    },\n    {\n      \"id\": \"button_fri\",\n      \"type\": \"Button\",\n      \"label\": \"Fri\",\n      \"onPress\": \"request_data\"\n    },\n    {\n      \"id\": \"button_sat\",\n      \"type\": \"Button\",\n      \"label\": \"Sat\",\n      \"onPress\": \"request_data\"\n    },\n    {\n      \"id\": \"button_sun\",\n      \"type\": \"Button\",\n      \"label\": \"Sun\",\n      \"onPress\": \"request_data\"\n    }\n  ]\n}\n```",
+  "surface_accepted": {
+    "root": "root_column",
+    "components": [
+      {
+        "id": "root_column",
+        "type": "Column",
+        "children": [
+          "hero_block_1",
+          "divider_1",
+          "stats_row",
+          "divider_2",
+          "timeline_1",
+          "divider_3",
+          "day_focus_prompt",
+          "day_focus_buttons_row"
+        ]
+      },
+      {
+        "id": "hero_block_1",
+        "type": "HeroBlock",
+        "eyebrow": "A 4-week baseline strength plan",
+        "headline": {
+          "$bind": "/hero_headline"
+        },
+        "tagline": {
+          "$bind": "/hero_tagline"
+        },
+        "tone": "neutral"
+      },
+      {
+        "id": "divider_1",
+        "type": "Divider"
+      },
+      {
+        "id": "stats_row",
+        "type": "Row",
+        "justify": "spaceAround",
+        "children": [
+          "stat_sessions",
+          "stat_minutes",
+          "stat_delta"
+        ]
+      },
+      {
+        "id": "stat_sessions",
+        "type": "StatTile",
+        "label": "Sessions/week",
+        "value": {
+          "$bind": "/kpi_sessions"
+        },
+        "unit": "sessions",
+        "tone": "neutral"
+      },
+      {
+        "id": "stat_minutes",
+        "type": "StatTile",
+        "label": "Minutes/session",
+        "value": {
+          "$bind": "/kpi_minutes"
+        },
+        "unit": "min",
+        "tone": "neutral"
+      },
+      {
+        "id": "stat_delta",
+        "type": "StatTile",
+        "label": "Expected 1RM Delta",
+        "value": {
+          "$bind": "/kpi_delta_pct"
+        },
+        "unit": "%",
+        "tone": "good"
+      },
+      {
+        "id": "divider_2",
+        "type": "Divider"
+      },
+      {
+        "id": "timeline_1",
+        "type": "Timeline",
+        "title": "Weekly Progression",
+        "events": {
+          "$bind": "/weeks"
+        }
+      },
+      {
+        "id": "divider_3",
+        "type": "Divider"
+      },
+      {
+        "id": "day_focus_buttons_row",
+        "type": "Row",
+        "justify": "spaceBetween",
+        "children": [
+          "button_mon",
+          "button_tue",
+          "button_wed",
+          "button_thu",
+          "button_fri",
+          "button_sat",
+          "button_sun"
+        ]
+      }
+    ],
+    "dataModel": {
+      "hero_headline": "A 4-week baseline strength plan",
+      "hero_tagline": "Three full-body sessions a week, 45 minutes each, progressive overload every week. Beginner-friendly, gym-optional (dumbbells or bodyweight scale down).",
+      "weeks": [
+        {
+          "time": "Week 1",
+          "label": "Learn the six patterns at 60% intensity"
+        },
+        {
+          "time": "Week 2",
+          "label": "Add one set per lift, 65% intensity"
+        },
+        {
+          "time": "Week 3",
+          "label": "Introduce tempo work, 70% intensity"
+        },
+        {
+          "time": "Week 4",
+          "label": "Deload the last two days, retest 1RM"
+        }
+      ],
+      "kpi_sessions": 3,
+      "kpi_minutes": 45,
+      "kpi_delta_pct": 8,
+      "days": [
+        {
+          "label": "Mon"
+        },
+        {
+          "label": "Tue"
+        },
+        {
+          "label": "Wed"
+        },
+        {
+          "label": "Thu"
+        },
+        {
+          "label": "Fri"
+        },
+        {
+          "label": "Sat"
+        },
+        {
+          "label": "Sun"
+        }
+      ]
+    }
+  },
+  "rejections": [
+    {
+      "component_id": "day_focus_prompt",
+      "field": "text",
+      "invariant": "data-not-code",
+      "reason": "binding must be {'$bind': '/pointer'}"
+    },
+    {
+      "component_id": "button_mon",
+      "field": "onPress",
+      "invariant": "event",
+      "reason": "unregistered action None"
+    },
+    {
+      "component_id": "button_tue",
+      "field": "onPress",
+      "invariant": "event",
+      "reason": "unregistered action None"
+    },
+    {
+      "component_id": "button_wed",
+      "field": "onPress",
+      "invariant": "event",
+      "reason": "unregistered action None"
+    },
+    {
+      "component_id": "button_thu",
+      "field": "onPress",
+      "invariant": "event",
+      "reason": "unregistered action None"
+    },
+    {
+      "component_id": "button_fri",
+      "field": "onPress",
+      "invariant": "event",
+      "reason": "unregistered action None"
+    },
+    {
+      "component_id": "button_sat",
+      "field": "onPress",
+      "invariant": "event",
+      "reason": "unregistered action None"
+    },
+    {
+      "component_id": "button_sun",
+      "field": "onPress",
+      "invariant": "event",
+      "reason": "unregistered action None"
+    }
+  ],
+  "types_used": [
+    "Column",
+    "Divider",
+    "HeroBlock",
+    "Row",
+    "StatTile",
+    "Timeline"
+  ]
+}

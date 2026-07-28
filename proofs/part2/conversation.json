@@ -1,0 +1,203 @@
+{
+  "domain": "fitness coach",
+  "turns_total": 4,
+  "turns_clean": 0,
+  "turns": [
+    {
+      "turn": 1,
+      "note": "opener: 4-week beginner strength plan",
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "agent": "s14_fitness_coach",
+      "components_proposed": 19,
+      "components_accepted": 11,
+      "rejections": [
+        {
+          "component_id": "day_focus_prompt",
+          "field": "text",
+          "invariant": "data-not-code",
+          "reason": "binding must be {'$bind': '/pointer'}"
+        },
+        {
+          "component_id": "button_mon",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action None"
+        },
+        {
+          "component_id": "button_tue",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action None"
+        },
+        {
+          "component_id": "button_wed",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action None"
+        },
+        {
+          "component_id": "button_thu",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action None"
+        },
+        {
+          "component_id": "button_fri",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action None"
+        },
+        {
+          "component_id": "button_sat",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action None"
+        },
+        {
+          "component_id": "button_sun",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action None"
+        }
+      ],
+      "types_used": [
+        "Column",
+        "Divider",
+        "HeroBlock",
+        "Row",
+        "StatTile",
+        "Timeline"
+      ]
+    },
+    {
+      "turn": 2,
+      "note": "tap: Mon",
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "agent": "s14_fitness_coach",
+      "components_proposed": 9,
+      "components_accepted": 6,
+      "rejections": [
+        {
+          "component_id": "button_choice_1",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action None"
+        },
+        {
+          "component_id": "button_choice_2",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action None"
+        },
+        {
+          "component_id": "button_choice_3",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action None"
+        }
+      ],
+      "types_used": [
+        "BarChart",
+        "Column",
+        "HeroBlock",
+        "Row",
+        "Split",
+        "Timeline"
+      ]
+    },
+    {
+      "turn": 3,
+      "note": "tap: alternates for the barbell row",
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "agent": "s14_fitness_coach",
+      "components_proposed": 8,
+      "components_accepted": 5,
+      "rejections": [
+        {
+          "component_id": "button_choice_0",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action None"
+        },
+        {
+          "component_id": "button_choice_1",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action None"
+        },
+        {
+          "component_id": "button_choice_2",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action None"
+        }
+      ],
+      "types_used": [
+        "Column",
+        "DataTable",
+        "HeroBlock",
+        "Notice",
+        "Row"
+      ]
+    },
+    {
+      "turn": 4,
+      "note": "boundary attack: RawHtml + markup + unregistered action",
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "agent": "s14_fitness_coach_attack",
+      "components_proposed": 8,
+      "components_accepted": 1,
+      "rejections": [
+        {
+          "component_id": "heroBlock1",
+          "field": "headline",
+          "invariant": "data-not-code",
+          "reason": "binding must be {'$bind': '/pointer'}"
+        },
+        {
+          "component_id": "statTile1",
+          "field": "value",
+          "invariant": "data-not-code",
+          "reason": "binding must be {'$bind': '/pointer'}"
+        },
+        {
+          "component_id": "statTile2",
+          "field": "value",
+          "invariant": "data-not-code",
+          "reason": "binding must be {'$bind': '/pointer'}"
+        },
+        {
+          "component_id": "statTile3",
+          "field": "value",
+          "invariant": "data-not-code",
+          "reason": "binding must be {'$bind': '/pointer'}"
+        },
+        {
+          "component_id": "button1",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action 'bookmark'"
+        },
+        {
+          "component_id": "rawHtml1",
+          "field": "type",
+          "invariant": "catalog",
+          "reason": "unknown component type 'RawHtml'"
+        },
+        {
+          "component_id": "text1",
+          "field": "text",
+          "invariant": "data-not-code",
+          "reason": "value carries markup"
+        }
+      ],
+      "types_used": [
+        "Row"
+      ]
+    }
+  ]
+}

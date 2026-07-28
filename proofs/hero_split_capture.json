@@ -1,0 +1,125 @@
+{
+  "provider": "gemini_1",
+  "model": "gemini-2.5-flash",
+  "raw": "{\"root\": \"root_column\", \"components\": [{\"id\": \"root_column\", \"type\": \"Column\", \"children\": [\"hero_block\", \"split_section\", \"kpi_row\"]}, {\"id\": \"hero_block\", \"type\": \"HeroBlock\", \"eyebrow\": \"RESEARCH * 5 PAPERS\", \"headline\": {\"$bind\": \"/hero_headline\"}, \"tagline\": {\"$bind\": \"/hero_tagline\"}}, {\"id\": \"split_section\", \"type\": \"Split\", \"title\": \"Chunks per paper\", \"body\": {\"$bind\": \"/split_body\"}, \"children\": [\"bar_chart\"]}, {\"id\": \"bar_chart\", \"type\": \"BarChart\", \"data\": {\"$bind\": \"/chunks_by_paper\"}, \"xKey\": \"label\", \"yKey\": \"value\"}, {\"id\": \"kpi_row\", \"type\": \"Row\", \"children\": [\"stat_papers\", \"stat_chunks\", \"stat_words\"]}, {\"id\": \"stat_papers\", \"type\": \"StatTile\", \"label\": \"Papers\", \"value\": {\"$bind\": \"/kpi_papers\"}}, {\"id\": \"stat_chunks\", \"type\": \"StatTile\", \"label\": \"Chunks\", \"value\": {\"$bind\": \"/kpi_chunks\"}}, {\"id\": \"stat_words\", \"type\": \"StatTile\", \"label\": \"Words\", \"value\": {\"$bind\": \"/kpi_words\"}}]}",
+  "task": "Design a one-screen recap of a research indexing run. The user wants an answer that reads like a designed page, not a report. Compose:\n - an opening presentation-style unit with an uppercase eyebrow tag 'RESEARCH * 5 PAPERS', a headline bound to /hero_headline, and a tagline bound to /hero_tagline;\n - a two-pane section titled 'Chunks per paper' whose body is bound to /split_body and whose media pane is a BarChart of /chunks_by_paper (xKey 'label', yKey 'value');\n - a Row of three StatTiles for /kpi_papers, /kpi_chunks, /kpi_words.\nEvery DATA value must be a binding {\"$bind\":\"/pointer\"}. Bind, do not inline. Return JSON only.",
+  "surface_accepted": {
+    "root": "root_column",
+    "components": [
+      {
+        "id": "root_column",
+        "type": "Column",
+        "children": [
+          "hero_block",
+          "split_section",
+          "kpi_row"
+        ]
+      },
+      {
+        "id": "hero_block",
+        "type": "HeroBlock",
+        "eyebrow": "RESEARCH * 5 PAPERS",
+        "headline": {
+          "$bind": "/hero_headline"
+        },
+        "tagline": {
+          "$bind": "/hero_tagline"
+        }
+      },
+      {
+        "id": "split_section",
+        "type": "Split",
+        "title": "Chunks per paper",
+        "body": {
+          "$bind": "/split_body"
+        },
+        "children": [
+          "bar_chart"
+        ]
+      },
+      {
+        "id": "bar_chart",
+        "type": "BarChart",
+        "data": {
+          "$bind": "/chunks_by_paper"
+        },
+        "xKey": "label",
+        "yKey": "value"
+      },
+      {
+        "id": "kpi_row",
+        "type": "Row",
+        "children": [
+          "stat_papers",
+          "stat_chunks",
+          "stat_words"
+        ]
+      },
+      {
+        "id": "stat_papers",
+        "type": "StatTile",
+        "label": "Papers",
+        "value": {
+          "$bind": "/kpi_papers"
+        }
+      },
+      {
+        "id": "stat_chunks",
+        "type": "StatTile",
+        "label": "Chunks",
+        "value": {
+          "$bind": "/kpi_chunks"
+        }
+      },
+      {
+        "id": "stat_words",
+        "type": "StatTile",
+        "label": "Words",
+        "value": {
+          "$bind": "/kpi_words"
+        }
+      }
+    ],
+    "dataModel": {
+      "hero_headline": "How five papers reshape the S13 index",
+      "hero_tagline": "A synthesis of five recent papers, indexed live from the S13 corpus and quoted only from evidence.",
+      "split_body": "Two papers dominate the index -- the top result contributes more than a third of every semantic chunk the retrieval layer serves.",
+      "kpi_papers": 5,
+      "kpi_chunks": 19,
+      "kpi_words": 1038,
+      "chunks_by_paper": [
+        {
+          "label": "ReAct",
+          "value": 5
+        },
+        {
+          "label": "Attention",
+          "value": 4
+        },
+        {
+          "label": "DPO",
+          "value": 4
+        },
+        {
+          "label": "LoRA",
+          "value": 4
+        },
+        {
+          "label": "CoT",
+          "value": 2
+        }
+      ]
+    }
+  },
+  "rejections": [],
+  "types_used": [
+    "BarChart",
+    "Column",
+    "HeroBlock",
+    "Row",
+    "Split",
+    "StatTile"
+  ],
+  "hero_chosen": true,
+  "split_chosen": true
+}

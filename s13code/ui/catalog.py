@@ -47,8 +47,8 @@ class ComponentSpec:
 _TONE = PropSpec("enum", ("neutral", "good", "warn", "bad"))
 
 
-# The 23 component types the render client knows how to draw. The first 15 are
-# A2UI Basic's own names; the last 8 are custom extensions A2UI Basic lacks.
+# The 25 component types the render client knows how to draw. The first 15 are
+# A2UI Basic's own names; the last 10 are custom extensions A2UI Basic lacks.
 COMPONENTS: dict[str, ComponentSpec] = {
     # --- A2UI Basic: layout / text / media / inputs / containers (15) --------
     "Row": ComponentSpec("Row", {
@@ -88,7 +88,7 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "Modal": ComponentSpec("Modal", {
         "title": PropSpec("text"), "children": PropSpec("ref"), "open": PropSpec("binding"),
     }, source="a2ui-basic"),
-    # --- Custom extensions: what A2UI Basic does not define (8) ---------------
+    # --- Custom extensions: what A2UI Basic does not define (10) --------------
     "BarChart": ComponentSpec("BarChart", {
         "title": PropSpec("text"), "data": PropSpec("binding"),
         "xKey": PropSpec("text"), "yKey": PropSpec("text"),
@@ -116,6 +116,28 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "ApprovalCard": ComponentSpec("ApprovalCard", {
         "summary": PropSpec("binding"), "params": PropSpec("binding"),
         "confirm": PropSpec("action"), "reject": PropSpec("action"),
+    }, source="custom"),
+    # The marketing-hero unit: a categorical eyebrow tag over a bound headline
+    # and tagline. Pure display -- no `children`, no `action`, no URL surface.
+    # The eyebrow is literal (a design element the model chooses like a label);
+    # the headline and tagline are bindings because they carry the answer's
+    # actual content and must come from the run's data model.
+    "HeroBlock": ComponentSpec("HeroBlock", {
+        "eyebrow": PropSpec("text"),
+        "headline": PropSpec("binding"),
+        "tagline": PropSpec("binding"),
+        "tone": _TONE,
+    }, source="custom"),
+    # A two-pane text-plus-media section. `children[0]` is drawn as the media
+    # pane (any registered component); the text pane draws `title` + `body`.
+    # Reusing the existing `children` ref list means the wall's tree-walk and
+    # per-component validation apply unchanged -- no new validator machinery.
+    "Split": ComponentSpec("Split", {
+        "title": PropSpec("text"),
+        "body": PropSpec("binding"),
+        "children": PropSpec("ref"),
+        "flip": PropSpec("bool"),
+        "tone": _TONE,
     }, source="custom"),
 }
 

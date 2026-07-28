@@ -58,6 +58,20 @@
   .Approval button.ok{background:var(--green);color:#fff;border-color:var(--green)}
   .prog{height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}
   .prog>i{display:block;height:100%;background:var(--green)}
+  /* HeroBlock: a marketing-hero unit (eyebrow, headline, tagline). */
+  .HeroBlock{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:26px 28px 30px;position:relative}
+  .HeroBlock.good{border-top:4px solid var(--green)}.HeroBlock.warn{border-top:4px solid var(--amber)}.HeroBlock.bad{border-top:4px solid var(--red)}.HeroBlock.neutral{border-top:4px solid var(--accent)}
+  .HeroBlock .eb{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);font-weight:600;margin-bottom:12px}
+  .HeroBlock .hl{font-family:var(--font-serif);font-size:32px;line-height:1.15;font-weight:700;color:var(--ink);margin:0 0 10px;white-space:pre-wrap}
+  .HeroBlock .tl{font-family:var(--font-sans);font-size:15px;font-style:italic;color:var(--ink-muted);line-height:1.55;max-width:640px;white-space:pre-wrap}
+  /* Split: a two-pane text-plus-media section. children[0] is the media pane. */
+  .Split{display:grid;grid-template-columns:1fr 1fr;gap:18px;background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:18px 20px;align-items:center}
+  .Split.flip{grid-template-areas:"media text"}.Split:not(.flip){grid-template-areas:"text media"}
+  .Split .side.text{grid-area:text}.Split .side.media{grid-area:media}
+  .Split.good{border-left:3px solid var(--green)}.Split.warn{border-left:3px solid var(--amber)}.Split.bad{border-left:3px solid var(--red)}.Split.neutral{border-left:3px solid var(--accent)}
+  .Split .st{font-family:var(--font-serif);font-size:20px;font-weight:700;color:var(--ink);margin:0 0 8px}
+  .Split .sb{color:var(--ink-body);line-height:1.6}
+  @media (max-width:640px){.Split{grid-template-columns:1fr;grid-template-areas:"text" "media"!important}}
   @media (prefers-color-scheme:dark){:root{--bg:#0d0f14;--surface:#161922;--surface-alt:#11131a;--ink:#f3f5f9;--ink-body:#e4e8f0;--ink-muted:#9aa4b8;--rule:#252a36;--rule-strong:#333a49}body{background:var(--surface-alt)}}
 
   .Text .md-h{font-weight:700;color:var(--ink);margin:12px 0 4px}.Text .md-p{margin:6px 0;line-height:1.6}.Text .md-ul{margin:6px 0 6px 4px;padding-left:18px}.Text .md-ul li{margin:3px 0}
@@ -135,6 +149,8 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  HeroBlock:(c,ctx)=>renderHero(c,ctx),
+  Split:(c,ctx)=>renderSplit(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -185,6 +201,39 @@ function renderApproval(c,ctx){const e=$("div","Approval");const sm=$("div","sm"
   const pre=$("pre");pre.append(text(JSON.stringify(resolve(c.params,ctx.dm),null,2)));const btns=$("div","btns");
   const ok=$("button","ok");ok.append(text("Approve"));ok.onclick=()=>emitAction("approve",resolve(c.params,ctx.dm));
   const no=$("button");no.append(text("Reject"));no.onclick=()=>emitAction("reject",{});btns.append(ok,no);e.append(sm,pre,btns);return e;}
+
+// HeroBlock: eyebrow (literal) over a bound headline + tagline. Every value
+// reaches the DOM as a text node. No children, no action, no URL surface --
+// the wall keeps the eyebrow literal and both content fields bound, so this
+// component structurally cannot smuggle markup or handlers.
+function renderHero(c,ctx){
+  const tone=({good:"good",warn:"warn",bad:"bad",neutral:"neutral"})[c.tone]||"neutral";
+  const wrap=$("div","HeroBlock "+tone);
+  if(c.eyebrow){const eb=$("div","eb");eb.append(text(String(c.eyebrow)));wrap.append(eb);}
+  const hl=$("div","hl");hl.append(text(resolve(c.headline,ctx.dm)));wrap.append(hl);
+  const tagVal=resolve(c.tagline,ctx.dm);
+  if(tagVal!=null&&tagVal!==""){const tl=$("div","tl");tl.append(text(tagVal));wrap.append(tl);}
+  return wrap;
+}
+
+// Split: a two-pane text-plus-media section. `children[0]` is the media pane
+// (any registered component); further children are ignored by the renderer
+// but the wall still validates them so a poisoned one is dropped and
+// `children[0]` remains whichever id survived. The text pane title is a
+// literal; the body goes through the same safe-markdown pipeline as Text.body.
+function renderSplit(c,ctx){
+  const tone=({good:"good",warn:"warn",bad:"bad",neutral:"neutral"})[c.tone]||"neutral";
+  const wrap=$("div","Split "+tone+(c.flip?" flip":""));
+  const t=$("div","side text");
+  if(c.title){const st=$("div","st");st.append(text(String(c.title)));t.append(st);}
+  const sb=$("div","sb Text body");sb.append(md(resolve(c.body,ctx.dm)));t.append(sb);
+  const m=$("div","side media");
+  const mediaId=(c.children||[])[0];
+  const mediaComp=mediaId?ctx.byId[mediaId]:null;
+  if(mediaComp)m.append(renderComponent(mediaComp,ctx));
+  wrap.append(t,m);
+  return wrap;
+}
 
 function emitAction(name,args){ // the only way the surface changes the world: a named, validated event
   document.getElementById("meta").textContent = "action emitted → "+name+" "+JSON.stringify(args);
