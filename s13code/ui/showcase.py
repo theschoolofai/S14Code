@@ -38,6 +38,14 @@ def build_corpus_dashboard(run: dict) -> dict:
         "d_chunks": f"across {len(papers)} papers",
         "d_words": f"~{total_words // len(papers)} per paper",
         "d_floor": f"{below_floor} kept without a model call",
+        "ev_claim": (
+            f"The corpus holds {total_chunks} semantic chunks across {len(papers)} papers, "
+            f"{below_floor} of them kept below the semantic floor without a model call."
+        ),
+        "ev_sources": [
+            {"uri": f"file:///corpus/{p['short'].lower()}.txt", "label": p["short"]}
+            for p in papers
+        ],
         "chunks_by_paper": [{"label": p["short"], "value": p["chunks"]} for p in papers],
         "chunk_spark": [p["chunks"] for p in sorted(papers, key=lambda p: p["year"])],
         "index_progress": total_chunks,
@@ -93,11 +101,21 @@ def build_corpus_dashboard(run: dict) -> dict:
         tab_labels.append(f"paper {i + 1}")
     add({"id": "tabs", "type": "Tabs", "labels": ",".join(tab_labels), "children": tab_ids})
 
+    # The headline number, shown as a claim rather than as a bare figure. The
+    # stance is "derived": deterministic code computed it from the indexer
+    # results, which is a weaker warrant than a source stating it outright, and
+    # the surface should say so rather than let a KPI imply more than it has.
+    add({
+        "id": "evidence", "type": "EvidenceCard",
+        "claim": {"$bind": "/ev_claim"}, "stance": "derived",
+        "sources": {"$bind": "/ev_sources"},
+    })
+
     # Timeline of the graph's own execution
     add({"id": "tl", "type": "Timeline", "title": "How the graph earned this", "events": {"$bind": "/timeline"}})
 
     add({"id": "div", "type": "Divider"})
 
-    root_children = ["title", "kpi_row", "charts_row", "table", "tabs", "div", "tl"]
+    root_children = ["title", "kpi_row", "charts_row", "table", "evidence", "tabs", "div", "tl"]
     C.insert(0, {"id": "root", "type": "Column", "children": root_children})
     return {"root": "root", "components": C, "dataModel": data}
