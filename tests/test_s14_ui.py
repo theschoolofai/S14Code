@@ -369,6 +369,52 @@ def test_safe_siblings_survive_a_partially_poisoned_surface():
 
 
 # --------------------------------------------------------------------------- #
+# CodeDiff — a new catalog vocabulary entry, same three invariants
+# --------------------------------------------------------------------------- #
+
+def test_codediff_binds_diff_and_title_and_validates_clean():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["d"]},
+            {"id": "d", "type": "CodeDiff", "title": "fix.py", "diff": {"$bind": "/diff_text"}},
+        ],
+        "dataModel": {"diff_text": "--- a/fix.py\n+++ b/fix.py\n@@ -1 +1 @@\n-bad\n+good\n"},
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert {c["id"] for c in result.accepted} == {"root", "d"}
+
+
+def test_codediff_did_not_widen_the_catalog_invariant():
+    assert _reject({"id": "x", "type": "CodeDiffEvil"}).invariant == Invariant.CATALOG
+    assert _reject({"id": "x", "type": "codediff"}).invariant == Invariant.CATALOG  # case-sensitive
+
+
+def test_codediff_diff_must_be_bind_shape_not_a_literal_carrying_markup():
+    # A diff of an HTML file is adversarial almost by construction: the
+    # literal diff text itself can contain markup. The defense is the same
+    # binding-shape rule as every other prop — an inline literal is refused
+    # regardless of what it contains, before the content is ever considered.
+    r = _reject({"id": "d", "type": "CodeDiff", "diff": "+<script>steal()</script>"})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "diff"
+
+
+def test_codediff_title_literal_markup_is_refused():
+    r = _reject({"id": "d", "type": "CodeDiff", "title": "<img onerror=steal()>"})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "title"
+
+
+def test_codediff_has_no_action_prop_so_nothing_can_cross_back():
+    assert all(prop.kind != "action" for prop in COMPONENTS["CodeDiff"].props.values())
+    r = _reject({"id": "d", "type": "CodeDiff", "title": "x", "onApply": {"action": "approve"}})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "onApply"
+
+
+# --------------------------------------------------------------------------- #
 # catalog.py — catalog_manifest
 # --------------------------------------------------------------------------- #
 
@@ -390,8 +436,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +448,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "CodeDiff",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):

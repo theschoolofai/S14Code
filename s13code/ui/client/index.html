@@ -135,6 +135,7 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  CodeDiff:(c,ctx)=>renderDiff(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -180,6 +181,23 @@ function renderTimeline(c,ctx){const e=$("div","chart");const t=$("div","ct");t.
     const s=$("span","s");s.append(text(String(ev.seq!=null?ev.seq:(ev.time!=null?ev.time:"")).padStart(2)));
     const k=$("span","k");k.append(text(ev.kind!=null?ev.kind:(ev.label!=null?ev.label:"")));
     const n=$("span","n");n.append(text(ev.node!=null?ev.node:""));r.append(s,k,n);box.append(r);});e.append(box);return e;}
+
+// A unified diff is drawn one line at a time as a plain text node, colored by
+// its leading +/-/@@ marker via CSS only — the diff content itself (which
+// could contain anything, including literal markup) is never parsed as raw
+// markup and never evaluated. It is exactly as inert as any other bound
+// string in this client (see the safety contract above).
+function renderDiff(c,ctx){const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"diff"));e.append(t);
+  const box=$("div");box.style.cssText="font-family:var(--font-mono);font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-x:auto;border:1px solid var(--rule);border-radius:8px;margin-top:6px";
+  const raw=resolve(c.diff,ctx.dm);
+  String(raw==null?"":raw).split(/\r?\n/).forEach(line=>{
+    const row=$("div");row.style.cssText="padding:1px 8px";
+    if(line.startsWith("+++")||line.startsWith("---")||line.startsWith("@@")){row.style.color="var(--ink-muted)";}
+    else if(line.startsWith("+")){row.style.background="var(--green-soft)";row.style.color="var(--green-ink)";}
+    else if(line.startsWith("-")){row.style.background="var(--red-soft)";row.style.color="var(--red-ink)";}
+    else{row.style.color="var(--ink-body)";}
+    row.append(text(line));box.append(row);});
+  e.append(box);return e;}
 
 function renderApproval(c,ctx){const e=$("div","Approval");const sm=$("div","sm");sm.append(text(resolve(c.summary,ctx.dm)));
   const pre=$("pre");pre.append(text(JSON.stringify(resolve(c.params,ctx.dm),null,2)));const btns=$("div","btns");
