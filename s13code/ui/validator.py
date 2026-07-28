@@ -28,6 +28,14 @@ _JS_URL = re.compile(r"^\s*(javascript|data|vbscript):", re.I)
 _HANDLER = re.compile(r"^on[a-z]+$", re.I)  # onclick, onerror, onload, ...
 _POINTER = re.compile(r"^/[^\s]*$")  # a JSON Pointer: /rows, /pending/params
 
+# Provenance URIs are the one value the client turns into something navigable,
+# and they arrive from retrieved documents and remote agents, so they are
+# attacker-influenced by construction. Every other check above inspects the
+# property value itself; a binding property carries only a JSON Pointer, so the
+# data it resolves to would otherwise never be inspected at all. An allowlist is
+# therefore applied to the resolved entries, not to the pointer.
+_SAFE_URI_SCHEME = re.compile(r"^(https?|file|mailto):", re.I)
+
 
 class Invariant:
     CATALOG = "catalog"
@@ -69,11 +77,55 @@ def _looks_like_js_url(value) -> bool:
     return isinstance(value, str) and bool(_JS_URL.match(value))
 
 
+def _resolve_pointer(data_model: dict, pointer: str):
+    """Resolve a ``/json/pointer`` against the data model, or None if absent."""
+    cur = data_model
+    for part in pointer.strip("/").split("/"):
+        if part == "":
+            continue
+        if not isinstance(cur, dict) or part not in cur:
+            return None
+        cur = cur[part]
+    return cur
+
+
+def _check_sources(value, data_model: dict) -> str | None:
+    """Validate a ``sources`` property. Returns a reason string, or None if ok.
+
+    The property must be a binding, and every record it resolves to must be a
+    ``{uri, label}`` object whose ``uri`` carries an allowlisted scheme and no
+    markup. This is the only place a resolved data value is inspected, because
+    it is the only value the client may turn into a link.
+    """
+    if not (isinstance(value, dict) and "$bind" in value):
+        return "sources must be {'$bind': '/pointer'}"
+    pointer = value["$bind"]
+    if not (isinstance(pointer, str) and _POINTER.match(pointer)):
+        return f"invalid JSON Pointer {pointer!r}"
+
+    records = _resolve_pointer(data_model, pointer)
+    if records is None:
+        return None  # nothing bound yet; the client renders an empty list
+    if not isinstance(records, list):
+        return "sources must resolve to a list"
+
+    for rec in records:
+        if not isinstance(rec, dict) or "uri" not in rec:
+            return "each source must be an object with a 'uri'"
+        uri = rec.get("uri")
+        if not isinstance(uri, str) or not _SAFE_URI_SCHEME.match(uri):
+            return f"source uri {uri!r} is not an allowed scheme"
+        if _looks_like_markup(uri) or _looks_like_markup(rec.get("label", "")):
+            return "source carries markup"
+    return None
+
+
 def validate_surface(surface: dict) -> ValidationResult:
     """Validate one surface (``{root, components:[...]}``) against the catalog."""
     accepted: list[dict] = []
     rejections: list[Rejection] = []
     components = surface.get("components", [])
+    data_model = surface.get("dataModel") or {}
 
     for comp in components:
         cid = comp.get("id", "<no id>")
@@ -108,6 +160,15 @@ def validate_surface(surface: dict) -> ValidationResult:
                 break
 
             prop = spec.props[field_name]
+            if prop.kind == "sources":
+                reason = _check_sources(value, data_model)
+                if reason:
+                    rejections.append(
+                        Rejection(cid, field_name, Invariant.DATA_NOT_CODE, reason)
+                    )
+                    bad = True
+                    break
+                continue
             if prop.kind in ("text", "binding") and _looks_like_markup(value):
                 rejections.append(
                     Rejection(cid, field_name, Invariant.DATA_NOT_CODE, "value carries markup")

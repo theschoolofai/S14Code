@@ -9,9 +9,10 @@ named by a hostile agent.
 The catalog is aligned to A2UI's Basic component set: the 15 layout / text /
 input / container types A2UI Basic already defines are adopted under their real
 A2UI names (``source="a2ui-basic"``). Only the components A2UI Basic genuinely
-lacks — charts, tiles, tables, timelines, notices, and the approval card — are
-kept as clearly labelled custom extensions (``source="custom"``). Twenty-three
-types in all; a student can read every one and the validator can prove coverage.
+lacks — charts, tiles, tables, timelines, notices, the approval card and sourced
+evidence — are kept as clearly labelled custom extensions (``source="custom"``).
+Twenty-four types in all; a student can read every one and the validator can
+prove coverage.
 
 Property kinds:
   - ``text``   a string shown to the user as literal text, never as markup
@@ -21,6 +22,10 @@ Property kinds:
   - ``action`` a named action + bound args; the only way a surface acts
   - ``number`` a numeric literal
   - ``bool``   a boolean literal
+  - ``sources``a binding to a list of ``{uri, label}`` provenance records. It is
+    a separate kind from ``binding`` because it is the only kind whose *resolved
+    data* becomes a navigable URL, so the validator must check the scheme of
+    every entry rather than only the property value (see validator.py).
 
 The catalog also registers the closed set of action names a surface may emit.
 Anything outside these sets is rejected by validator.py before render.
@@ -33,7 +38,7 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class PropSpec:
-    kind: str  # text | binding | enum | ref | action | number | bool
+    kind: str  # text | binding | enum | ref | action | number | bool | sources
     values: tuple[str, ...] = ()  # for enum
 
 
@@ -47,8 +52,8 @@ class ComponentSpec:
 _TONE = PropSpec("enum", ("neutral", "good", "warn", "bad"))
 
 
-# The 23 component types the render client knows how to draw. The first 15 are
-# A2UI Basic's own names; the last 8 are custom extensions A2UI Basic lacks.
+# The 24 component types the render client knows how to draw. The first 15 are
+# A2UI Basic's own names; the last 9 are custom extensions A2UI Basic lacks.
 COMPONENTS: dict[str, ComponentSpec] = {
     # --- A2UI Basic: layout / text / media / inputs / containers (15) --------
     "Row": ComponentSpec("Row", {
@@ -88,7 +93,7 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "Modal": ComponentSpec("Modal", {
         "title": PropSpec("text"), "children": PropSpec("ref"), "open": PropSpec("binding"),
     }, source="a2ui-basic"),
-    # --- Custom extensions: what A2UI Basic does not define (8) ---------------
+    # --- Custom extensions: what A2UI Basic does not define (9) ---------------
     "BarChart": ComponentSpec("BarChart", {
         "title": PropSpec("text"), "data": PropSpec("binding"),
         "xKey": PropSpec("text"), "yKey": PropSpec("text"),
@@ -116,6 +121,18 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "ApprovalCard": ComponentSpec("ApprovalCard", {
         "summary": PropSpec("binding"), "params": PropSpec("binding"),
         "confirm": PropSpec("action"), "reject": PropSpec("action"),
+    }, source="custom"),
+    # A sourced claim. S13 retrieval returns evidence envelopes carrying the
+    # record's text, its source URI and a score, and asks the answering worker
+    # to label each claim *stated*, *derived* or *inferred*. Until now a surface
+    # could only flatten that into prose, which discards the provenance and
+    # hides the stance. EvidenceCard keeps the three apart and typed, so a
+    # grounded answer stays auditable in the interface a user actually reads.
+    "EvidenceCard": ComponentSpec("EvidenceCard", {
+        "claim": PropSpec("binding"),
+        "stance": PropSpec("enum", ("stated", "derived", "inferred")),
+        "sources": PropSpec("sources"),
+        "score": PropSpec("binding"),
     }, source="custom"),
 }
 
