@@ -121,6 +121,41 @@ const R={
   Text:(c,x)=>{const e=$("div","Text "+(c.variant||"body"));const v=resolve(c.text,x.dm);
     if((c.variant||"body")==="heading"){e.append(T(v));}else{e.append(md(v));}return e;},
   Notice:(c,x)=>{const e=$("div","Notice");e.append(T(resolve(c.text,x.dm)));return e;},
+  // EvidenceCard: a claim, how strongly it is supported, and where it came from.
+  // The server already allowlists every source scheme, but the client repeats the
+  // check, because this is the only renderer that builds an <a href> and it must
+  // never trust a URI it did not itself verify. A refused scheme still renders,
+  // as inert text, so a poisoned source stays visible instead of vanishing.
+  EvidenceCard:(c,x)=>{
+    const e=$("div","Card");
+    const st=String(c.stance||"stated");
+    const head=$("div");head.style.cssText="display:flex;align-items:center;gap:8px;margin-bottom:6px";
+    const chip=$("span");chip.append(T(st));
+    chip.style.cssText="font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:999px;border:1px solid var(--border);color:"+
+      (st==="stated"?"var(--green)":st==="derived"?"var(--accent)":"var(--ink-muted)");
+    head.append(chip);
+    const sc=resolve(c.score,x.dm);
+    if(sc!=null&&sc!==""){const s=$("span");s.append(T("score "+sc));
+      s.style.cssText="font-size:11px;color:var(--ink-muted)";head.append(s);}
+    const claim=$("div");claim.style.cssText="font-size:14px;line-height:1.5";
+    const cv=resolve(c.claim,x.dm);mdInline(String(cv==null?"":cv),claim);
+    const srcs=$("div");srcs.style.cssText="display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px";
+    (resolve(c.sources,x.dm)||[]).forEach(s=>{
+      const uri=String(s&&s.uri!=null?s.uri:"");
+      const label=String(s&&s.label!=null?s.label:uri);
+      if(/^(https?|mailto):/i.test(uri)){
+        const a=document.createElement("a");
+        a.href=uri;a.rel="noopener noreferrer";a.target="_blank";
+        a.append(T(label));a.style.cssText="font-size:12px;color:var(--accent)";
+        srcs.append(a);
+      }else{
+        const sp=$("span");sp.append(T(label+" ("+uri+")"));
+        sp.title="scheme not linkable, shown as text";
+        sp.style.cssText="font-size:12px;color:var(--ink-muted)";
+        srcs.append(sp);
+      }
+    });
+    e.append(head,claim,srcs);return e;},
   StatTile:(c,x)=>{const e=$("div","StatTile");const l=$("div","lab");l.append(T(c.label));const v=$("div","val");v.append(T(String(resolve(c.value,x.dm))+(c.unit?" "+c.unit:"")));const d=$("div","dl");d.append(T(resolve(c.delta,x.dm)||""));e.append(l,v,d);return e;},
   Timeline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"timeline"));const b=$("div");b.style.cssText="display:flex;flex-direction:column;gap:8px;margin-top:4px";(resolve(c.events,x.dm)||[]).forEach(ev=>{const r=$("div");r.style.cssText="display:flex;gap:10px;align-items:flex-start;font-size:14px";const dot=$("span");dot.textContent="●";dot.style.cssText="color:var(--accent);font-size:10px;margin-top:5px";const lab=$("div");lab.style.flex="1";mdInline(String(ev.label!=null?ev.label:(ev.kind!=null?ev.kind:JSON.stringify(ev))),lab);r.append(dot,lab);b.append(r);});e.append(t,b);return e;},
   ProgressBar:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("progress"));const p=$("div","prog");const i=$("i");const val=+resolve(c.value,x.dm)||0;i.style.width=Math.min(100,val/(c.max||100)*100)+"%";p.append(i);e.append(t,p);return e;},
