@@ -34,7 +34,7 @@ from fastapi.testclient import TestClient
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from s13code.runtime import _coerce_number, _matrix_pointers  # noqa: E402
+from s13code.runtime import _coerce_number, _matrix_pointers, _sequence_pointers  # noqa: E402
 from s13code.ui.catalog import COMPONENTS, REGISTERED_ACTIONS, catalog_manifest  # noqa: E402
 from s13code.ui.routes import router as ui_router  # noqa: E402
 from s13code.ui.validator import Invariant, validate_surface  # noqa: E402
@@ -251,13 +251,133 @@ def test_coerce_number_rejects_bools_and_junk_but_accepts_numeric_text():
 
 
 # --------------------------------------------------------------------------- #
+# 3b. SequenceDiagram — the second contributed component
+# --------------------------------------------------------------------------- #
+
+def _sequence(**overrides) -> dict:
+    """A clean, catalog-legal SequenceDiagram; override one field to poison it."""
+    component = {
+        "id": "sq",
+        "type": "SequenceDiagram",
+        "title": "FIX session handshake",
+        "actors": {"$bind": "/sequence_actors"},
+        "messages": {"$bind": "/sequence_messages"},
+        "tone": "neutral",
+    }
+    component.update(overrides)
+    return component
+
+
+def test_sequencediagram_is_a_custom_catalog_component():
+    assert COMPONENTS["SequenceDiagram"].source == "custom"
+
+
+def test_sequencediagram_props_are_typed_the_way_the_renderer_reads_them():
+    props = COMPONENTS["SequenceDiagram"].props
+    assert {name: spec.kind for name, spec in props.items()} == {
+        "title": "text", "actors": "binding", "messages": "binding", "tone": "enum",
+    }
+
+
+def test_sequencediagram_declares_no_property_a_client_would_ever_execute():
+    for name, spec in COMPONENTS["SequenceDiagram"].props.items():
+        assert not re.match(r"^on[a-z]+$", name, re.I), name
+        assert spec.kind in ("text", "binding", "enum")
+
+
+def test_manifest_offers_sequencediagram_to_the_model():
+    manifest = catalog_manifest()
+    assert manifest["components"]["SequenceDiagram"]["source"] == "custom"
+    assert set(manifest["components"]["SequenceDiagram"]["props"]) == \
+        set(COMPONENTS["SequenceDiagram"].props)
+
+
+def test_a_clean_sequencediagram_surface_validates_clean():
+    surface = {
+        "root": "root",
+        "components": [{"id": "root", "type": "Column", "children": ["sq"]}, _sequence()],
+        "dataModel": {"sequence_actors": ["Client", "Engine"],
+                      "sequence_messages": [{"from": "Client", "to": "Engine", "label": "NewOrderSingle"}]},
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+
+
+@pytest.mark.parametrize("poison,invariant,field", [
+    ({"type": "Sequencediagram"}, Invariant.CATALOG, "type"),        # close does not count
+    ({"onclick": "steal()"}, Invariant.DATA_NOT_CODE, "onclick"),
+    ({"title": "<img src=x onerror=alert(1)>"}, Invariant.DATA_NOT_CODE, "title"),
+    ({"title": "javascript:steal()"}, Invariant.DATA_NOT_CODE, "title"),
+    ({"actors": ["Client", "Engine"]}, Invariant.DATA_NOT_CODE, "actors"),   # inline, not bound
+    ({"messages": {"$bind": "sequence_messages"}}, Invariant.DATA_NOT_CODE, "messages"),
+    ({"tone": "chartreuse"}, Invariant.DATA_NOT_CODE, "tone"),
+    ({"lifelineColour": "red"}, Invariant.DATA_NOT_CODE, "lifelineColour"),
+])
+def test_the_three_invariants_hold_for_sequencediagram(poison, invariant, field):
+    rejection = _first_rejection(_sequence(**poison))
+    assert rejection.invariant == invariant
+    assert rejection.field == field
+
+
+def test_sequencediagram_declares_no_action_so_it_cannot_cross_back():
+    """The event invariant holds vacuously: the component has no action-kind prop,
+    so there is no path from this widget to the graph at all."""
+    assert not any(spec.kind == "action" for spec in COMPONENTS["SequenceDiagram"].props.values())
+
+
+def test_sequence_pointers_expose_a_declared_interaction():
+    pointers = _sequence_pointers({
+        "title": "Order lifecycle", "actors": ["Client", "Gateway", "Engine"],
+        "messages": [{"from": "Client", "to": "Gateway", "label": "NewOrderSingle", "note": "tag 35=D"},
+                     {"from": "Gateway", "to": "Engine", "label": "Validate"}],
+    })
+    assert pointers["sequence_actors"] == ["Client", "Gateway", "Engine"]
+    assert pointers["sequence_title"] == "Order lifecycle"
+    assert pointers["sequence_messages"][0]["note"] == "tag 35=D"
+    assert "note" not in pointers["sequence_messages"][1]
+
+
+def test_sequence_pointers_default_the_title():
+    pointers = _sequence_pointers({"actors": ["A", "B"],
+                                   "messages": [{"from": "A", "to": "B", "label": "ping"}]})
+    assert pointers["sequence_title"] == "interaction"
+
+
+@pytest.mark.parametrize("sequence", [
+    None,
+    "not a dict",
+    {},
+    {"actors": ["Only one"], "messages": [{"from": "Only one", "to": "Only one", "label": "x"}]},
+    {"actors": ["A", "B"], "messages": []},                                   # nothing happens
+    {"actors": ["A", "B"], "messages": [{"from": "A", "to": "C", "label": "x"}]},   # undeclared actor
+    {"actors": ["A", "B"], "messages": [{"from": "A", "to": "B"}]},           # no label
+    {"actors": ["A", "B"], "messages": ["A talks to B"]},                     # not a message object
+])
+def test_sequence_pointers_refuse_an_interaction_that_is_not_fully_declared(sequence):
+    """An exchange whose participants are unknown is not evidence. Nothing is
+    exposed, so the model has nothing to draw and draws nothing."""
+    assert _sequence_pointers(sequence) == {}
+
+
+# --------------------------------------------------------------------------- #
 # 4. The renderers execute nothing
 # --------------------------------------------------------------------------- #
 
 @pytest.mark.parametrize("filename", ["index.html", "academy.html", "app.html"])
-def test_every_client_registers_a_heatmap_renderer(filename):
+@pytest.mark.parametrize("component", ["Heatmap", "SequenceDiagram"])
+def test_every_client_registers_the_contributed_renderers(filename, component):
     html = (_CLIENT_DIR / filename).read_text(encoding="utf-8")
-    assert "Heatmap:" in html, f"{filename} would skip the new type"
+    assert f"{component}:" in html, f"{filename} would skip {component}"
+
+
+@pytest.mark.parametrize("filename", ["index.html", "academy.html", "app.html"])
+def test_sequence_lane_spans_are_computed_from_the_actor_list_not_from_data(filename):
+    """A message decides only WHICH COLUMN a cell starts in and how far it spans —
+    integers derived from the actor list here, never a value the agent supplied."""
+    html = (_CLIENT_DIR / filename).read_text(encoding="utf-8")
+    assert "Math.min(" in html and "Math.max(" in html
+    assert "findIndex" in html          # actor names resolve to indices, not to markup
+    assert "colSpan" in html
 
 
 @pytest.mark.parametrize("filename", ["index.html", "academy.html"])

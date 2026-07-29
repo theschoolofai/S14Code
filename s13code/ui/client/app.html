@@ -54,6 +54,13 @@
   table.heat th{text-transform:none;letter-spacing:0;font-size:10px;padding:6px;text-align:center;background:transparent;border-bottom:none;word-break:break-word}
   table.heat th.rowlab{text-align:right;white-space:nowrap;width:1%;padding-right:10px;color:var(--ink-muted)}
   table.heat td.cell{text-align:center;font-family:var(--font-mono);font-size:12px;font-weight:600;border:2px solid var(--surface);border-radius:6px;padding:9px 4px}
+  table.seq{table-layout:fixed;border:none;background:transparent}
+  table.seq th{text-transform:none;letter-spacing:0;font-size:10px;padding:6px 4px;text-align:center;background:var(--surface-alt);border:1px solid var(--rule);border-radius:6px;word-break:break-word}
+  table.seq td{border-bottom:none;padding:3px 2px;font-size:12px}
+  table.seq td.seqlane{text-align:center;color:var(--rule-strong);font-family:var(--font-mono)}
+  table.seq td.seqmsg{text-align:center;border-bottom:2px solid var(--accent);padding-bottom:5px}
+  table.seq .seqarrow{font-family:var(--font-mono);letter-spacing:-1px;margin-right:6px;color:var(--accent)}
+  table.seq td.seqnote{text-align:center;font-size:10.5px;color:var(--ink-muted);font-style:italic}
   .tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
   .tabs button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-mono);color:var(--ink-muted)}
   .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
@@ -132,6 +139,7 @@ const R={
   BarChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"chart"));e.append(t,bars(resolve(c.data,x.dm)||[],c.xKey,c.yKey));return e;},
   DataTable:(c,x)=>table(c,x),
   Heatmap:(c,x)=>heat(c,x),
+  SequenceDiagram:(c,x)=>seqd(c,x),
   Tabs:(c,x)=>tabs(c,x),
   Button:(c,x)=>{const b=$("button","actbtn");let lab=resolve(c.label,x.dm);if(lab&&typeof lab==="object")lab=lab.label||lab.name||lab.text||lab.id||"Choose";lab=String(lab==null?"Choose":lab);b.append(T(lab));b.onclick=()=>choose(lab);return b;},
   Image:(c,x)=>{const e=$("div","chart");e.append(T("[image]"));return e;},
@@ -166,6 +174,26 @@ function heat(c,x){const wrap=$("div","chart");const t=$("div","ct");t.append(T(
         td.style.backgroundColor="rgba("+rgb+","+(0.08+a*0.82).toFixed(3)+")";td.append(T(String(n)+unit));}
       else{td.append(T(raw==null?"":String(raw)));}
       tr.append(td);});
+    tb.append(tr);});
+  wrap.append(tb);return wrap;}
+
+// SequenceDiagram: ordered messages between named actors. Names and labels are
+// text nodes; a bound value only decides which column a cell starts in.
+function seqd(c,x){const wrap=$("div","chart");const t=$("div","ct");t.append(T(str(c.title,x.dm)||"sequence"));wrap.append(t);
+  const actors=(resolve(c.actors,x.dm)||[]).map(a=>(a&&typeof a==="object")?(a.name||a.label||a.id||""):a);
+  const msgs=resolve(c.messages,x.dm)||[];
+  const tb=$("table","seq");const hd=$("tr");actors.forEach(a=>{const th=$("th");th.append(T(a));hd.append(th);});tb.append(hd);
+  const ix=n=>actors.findIndex(a=>String(a)===String(n));
+  msgs.forEach(m=>{if(!m||typeof m!=="object")return;const f=ix(m.from),t2=ix(m.to);const tr=$("tr");
+    if(f<0||t2<0||!actors.length){const td=$("td","seqnote");td.colSpan=Math.max(1,actors.length);
+      td.append(T([m.from,m.to].filter(Boolean).join(" → ")+(m.label?": "+m.label:"")));tr.append(td);tb.append(tr);return;}
+    const lo=Math.min(f,t2),hi=Math.max(f,t2);
+    for(let i=0;i<lo;i++){const p=$("td","seqlane");p.append(T("│"));tr.append(p);}
+    const cell=$("td","seqmsg");cell.colSpan=hi-lo+1;
+    const ar=$("span","seqarrow");ar.append(T(f===t2?"↻":(t2>f?"───▶":"◀───")));
+    const lb=$("span","seqlabel");lb.append(T(m.label==null?"":String(m.label)));
+    cell.append(ar,lb);tr.append(cell);
+    for(let i=hi+1;i<actors.length;i++){const p=$("td","seqlane");p.append(T("│"));tr.append(p);}
     tb.append(tr);});
   wrap.append(tb);return wrap;}
 

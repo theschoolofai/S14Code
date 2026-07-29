@@ -9,9 +9,10 @@ named by a hostile agent.
 The catalog is aligned to A2UI's Basic component set: the 15 layout / text /
 input / container types A2UI Basic already defines are adopted under their real
 A2UI names (``source="a2ui-basic"``). Only the components A2UI Basic genuinely
-lacks — charts, tiles, tables, timelines, notices, the approval card, and the
-heatmap — are kept as clearly labelled custom extensions (``source="custom"``).
-Twenty-four types in all; a student can read every one and the validator can
+lacks — charts, tiles, tables, timelines, notices, the approval card, the
+heatmap and the sequence diagram — are kept as clearly labelled custom
+extensions (``source="custom"``).
+Twenty-five types in all; a student can read every one and the validator can
 prove coverage.
 
 Property kinds:
@@ -48,8 +49,8 @@ class ComponentSpec:
 _TONE = PropSpec("enum", ("neutral", "good", "warn", "bad"))
 
 
-# The 24 component types the render client knows how to draw. The first 15 are
-# A2UI Basic's own names; the last 9 are custom extensions A2UI Basic lacks.
+# The 25 component types the render client knows how to draw. The first 15 are
+# A2UI Basic's own names; the last 10 are custom extensions A2UI Basic lacks.
 COMPONENTS: dict[str, ComponentSpec] = {
     # --- A2UI Basic: layout / text / media / inputs / containers (15) --------
     "Row": ComponentSpec("Row", {
@@ -89,7 +90,7 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "Modal": ComponentSpec("Modal", {
         "title": PropSpec("text"), "children": PropSpec("ref"), "open": PropSpec("binding"),
     }, source="a2ui-basic"),
-    # --- Custom extensions: what A2UI Basic does not define (8) ---------------
+    # --- Custom extensions: what A2UI Basic does not define (10) --------------
     "BarChart": ComponentSpec("BarChart", {
         "title": PropSpec("text"), "data": PropSpec("binding"),
         "xKey": PropSpec("text"), "yKey": PropSpec("text"),
@@ -123,6 +124,20 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "columns": PropSpec("binding"),   # ["Matching", "FIX", ...]   (x labels)
         "values": PropSpec("binding"),    # [[3, 1, 4], [2, 5, 0]]     (row-major)
         "unit": PropSpec("text"),
+        "tone": _TONE,
+    }, source="custom"),
+    # SequenceDiagram: who talks to whom, in what order. A Timeline is
+    # one-dimensional — a list of moments with no second party — so it cannot say
+    # that the gateway answered the client, only that something happened. A
+    # protocol handshake, an order's lifecycle across venue and risk gate, a
+    # retry between services: all of them are ordered messages BETWEEN named
+    # actors, and that is the shape this carries. Actors and messages are both
+    # bindings; the renderer places each message in its own row, so an actor the
+    # message list never names simply gets no lane.
+    "SequenceDiagram": ComponentSpec("SequenceDiagram", {
+        "title": PropSpec("text"),
+        "actors": PropSpec("binding"),    # ["Client", "Gateway", "Engine"]
+        "messages": PropSpec("binding"),  # [{"from","to","label","note"}, ...]
         "tone": _TONE,
     }, source="custom"),
     "Notice": ComponentSpec("Notice", {

@@ -748,6 +748,208 @@
           ]
         }
       }
+    },
+    {
+      "goal": "Explain how a FIX session is established and an order is filled: exactly who sends what message to whom, in order, from the client through the gateway to the matching engine.",
+      "run_id": "run-ce6cebdcb565",
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "component_count": 6,
+      "clean": true,
+      "component_types": {
+        "Column": 1,
+        "Text": 2,
+        "SequenceDiagram": 1,
+        "ProgressBar": 1,
+        "Timeline": 1
+      },
+      "buttons": [],
+      "matrix_pointers": [],
+      "used_heatmap": false,
+      "used_sequence": true,
+      "sequence_pointers": [
+        "sequence_actors",
+        "sequence_messages",
+        "sequence_title"
+      ],
+      "validator": {
+        "proposed": 6,
+        "accepted": 6,
+        "rejected": 0,
+        "rejections": []
+      },
+      "surface": {
+        "root": "root_column",
+        "components": [
+          {
+            "id": "root_column",
+            "type": "Column",
+            "children": [
+              "title_text",
+              "summary_text",
+              "sequence_diagram",
+              "progress_bar",
+              "timeline_comp"
+            ]
+          },
+          {
+            "id": "title_text",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "sequence_diagram",
+            "type": "SequenceDiagram",
+            "title": {
+              "$bind": "/sequence_title"
+            },
+            "actors": {
+              "$bind": "/sequence_actors"
+            },
+            "messages": {
+              "$bind": "/sequence_messages"
+            }
+          },
+          {
+            "id": "progress_bar",
+            "type": "ProgressBar",
+            "value": {
+              "$bind": "/progress_value"
+            },
+            "max": {
+              "$bind": "/progress_max"
+            }
+          },
+          {
+            "id": "timeline_comp",
+            "type": "Timeline",
+            "title": "Run Steps",
+            "events": {
+              "$bind": "/timeline"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Explain how a FIX session is established and an order is filled: exactly who sends what message to whom, in order, from the client through the gateway to the matching engine.",
+          "goal": "Explain how a FIX session is established and an order is filled: exactly who sends what message to whom, in order, from the client through the gateway to the matching engine.",
+          "summary": "Explain how a FIX session is established and an order is filled: exactly who sends what message to whom, in order, from the client through the gateway to the matching engine.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [],
+          "timeline": [
+            {
+              "time": "373",
+              "label": "run_started"
+            },
+            {
+              "time": "374",
+              "label": "graph_patched"
+            },
+            {
+              "time": "375",
+              "label": "task_started content"
+            },
+            {
+              "time": "376",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "377",
+              "label": "graph_patched"
+            },
+            {
+              "time": "378",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "sequence_actors": [
+            "Client",
+            "Gateway",
+            "Matching Engine"
+          ],
+          "sequence_messages": [
+            {
+              "from": "Client",
+              "to": "Gateway",
+              "label": "Logon (MsgType=A)",
+              "note": "Initiates FIX session"
+            },
+            {
+              "from": "Gateway",
+              "to": "Client",
+              "label": "Logon (MsgType=A)",
+              "note": "Confirms FIX session establishment"
+            },
+            {
+              "from": "Client",
+              "to": "Gateway",
+              "label": "New Order Single (MsgType=D)",
+              "note": "Submits a new order"
+            },
+            {
+              "from": "Gateway",
+              "to": "Matching Engine",
+              "label": "New Order Single (MsgType=D)",
+              "note": "Forwards order to matching engine"
+            },
+            {
+              "from": "Matching Engine",
+              "to": "Gateway",
+              "label": "Execution Report (MsgType=8)",
+              "note": "Order Status: New (Acknowledges order receipt)"
+            },
+            {
+              "from": "Gateway",
+              "to": "Client",
+              "label": "Execution Report (MsgType=8)",
+              "note": "Order Status: New (Forwards acknowledgment to client)"
+            },
+            {
+              "from": "Matching Engine",
+              "to": "Gateway",
+              "label": "Execution Report (MsgType=8)",
+              "note": "Order Status: Partially Filled (Reports a partial fill)"
+            },
+            {
+              "from": "Gateway",
+              "to": "Client",
+              "label": "Execution Report (MsgType=8)",
+              "note": "Order Status: Partially Filled (Forwards partial fill report)"
+            },
+            {
+              "from": "Matching Engine",
+              "to": "Gateway",
+              "label": "Execution Report (MsgType=8)",
+              "note": "Order Status: Filled (Reports the final fill)"
+            },
+            {
+              "from": "Gateway",
+              "to": "Client",
+              "label": "Execution Report (MsgType=8)",
+              "note": "Order Status: Filled (Forwards final fill report)"
+            }
+          ],
+          "sequence_title": "FIX Session Establishment and Order Filling"
+        }
+      }
     }
   ],
   "thread": [
@@ -1667,24 +1869,27 @@
       "Heatmap",
       "ProgressBar",
       "Row",
+      "SequenceDiagram",
       "StatTile",
       "Text",
       "Timeline"
     ],
     "component_type_counts": {
-      "Column": 9,
-      "Text": 13,
+      "Column": 10,
+      "Text": 15,
       "Row": 2,
       "StatTile": 5,
       "Heatmap": 1,
-      "Timeline": 11,
-      "ProgressBar": 6,
+      "Timeline": 12,
+      "ProgressBar": 7,
       "DataTable": 1,
+      "SequenceDiagram": 1,
       "Button": 14,
       "Divider": 2
     },
     "heatmap_composed_unprompted": true,
-    "turns_captured": 6,
+    "sequencediagram_composed_unprompted": true,
+    "turns_captured": 7,
     "every_turn_clean": true
   }
 }

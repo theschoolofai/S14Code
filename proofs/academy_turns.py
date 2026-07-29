@@ -7,8 +7,10 @@ re-implementation of it.
 
 Two things are proved:
 
-  A. VARIETY  — three different prompts produce three genuinely different
+  A. VARIETY  — four differently-shaped prompts produce four genuinely different
      interfaces, each built from the components the data actually calls for.
+     Two of those components (``Heatmap``, ``SequenceDiagram``) are contributed
+     by this PR and are never named to the model.
   B. CONVERSATION — a three-turn thread where a tap in one interface shapes the
      next. The follow-up is not scripted: the script reads the Button labels the
      agent itself composed and taps one, exactly as a user would.
@@ -42,8 +44,8 @@ OUT = Path(__file__).parent / "academy_turns.json"
 PACE_SECONDS = float(os.getenv("S14_PACE_SECONDS", "30"))
 ATTEMPTS = int(os.getenv("S14_ATTEMPTS", "3"))
 
-# A. Three prompts whose data has three different shapes, so a catalog-reading
-#    composer should reach for three different sets of components.
+# A. Four prompts whose data has four different shapes, so a catalog-reading
+#    composer should reach for four different sets of components.
 PROMPTS = [
     # a two-dimensional shape: topic x week
     "Teach me how a stock exchange matching engine works. I have 4 weeks. Show me how much "
@@ -54,6 +56,9 @@ PROMPTS = [
     # a one-dimensional numeric series: latency per stage
     "Walk me through the path of a market data tick from the exchange to a trading application. "
     "For each stage give me the typical latency in microseconds so I can see where the time goes.",
+    # an ordered exchange between named parties
+    "Explain how a FIX session is established and an order is filled: exactly who sends what "
+    "message to whom, in order, from the client through the gateway to the matching engine.",
 ]
 
 # B. The conversation opens here; turns 2 and 3 are taps on what the agent drew.
@@ -143,6 +148,8 @@ def compose(goal: str, attempts: int = ATTEMPTS) -> dict:
                     if component.get("type") == "Button"],
         "matrix_pointers": sorted(key for key in data_model if key.startswith("matrix_")),
         "used_heatmap": any(component["type"] == "Heatmap" for component in components),
+        "used_sequence": any(component["type"] == "SequenceDiagram" for component in components),
+        "sequence_pointers": sorted(key for key in data_model if key.startswith("sequence_")),
         "validator": {"proposed": validator.get("proposed"), "accepted": validator.get("accepted"),
                       "rejected": validator.get("rejected"),
                       "rejections": validator.get("rejections") or []},
@@ -193,10 +200,10 @@ def main() -> int:
         print(f"resuming : {len(done_variety)} variety and {len(done_thread)} thread turn(s) already captured")
     print()
 
-    print("=== A. VARIETY — three prompts, three interfaces ===")
+    print(f"=== A. VARIETY — {len(PROMPTS)} prompts, {len(PROMPTS)} interfaces ===")
     variety = []
     for index, prompt in enumerate(PROMPTS, 1):
-        print(f"\n[{index}/3] {prompt[:78]}…")
+        print(f"\n[{index}/{len(PROMPTS)}] {prompt[:78]}…")
         if prompt in done_variety:
             cached = done_variety[prompt]
             variety.append(cached)
@@ -214,6 +221,8 @@ def main() -> int:
         print(f"      types: {turn['component_types']}")
         if turn["used_heatmap"]:
             print("      -> composed a Heatmap unprompted")
+        if turn["used_sequence"]:
+            print("      -> composed a SequenceDiagram unprompted")
 
     print("\n=== B. CONVERSATION — a tap shapes the next turn ===")
     trail: list[str] = [THREAD_OPENER]
@@ -255,6 +264,7 @@ def main() -> int:
             "distinct_component_types": sorted(all_types),
             "component_type_counts": dict(all_types),
             "heatmap_composed_unprompted": any(turn.get("used_heatmap") for turn in variety + thread),
+            "sequencediagram_composed_unprompted": any(turn.get("used_sequence") for turn in variety + thread),
             "turns_captured": len([t for t in variety + thread if "error" not in t]),
             "every_turn_clean": all(turn.get("clean") for turn in variety + thread if "error" not in turn),
         },
@@ -265,9 +275,10 @@ def main() -> int:
     print(f"turns captured   : {proof['summary']['turns_captured']}")
     print(f"distinct types   : {proof['summary']['distinct_component_types']}")
     print(f"heatmap unprompted: {proof['summary']['heatmap_composed_unprompted']}")
+    print(f"sequence unprompted: {proof['summary']['sequencediagram_composed_unprompted']}")
     print(f"every turn clean : {proof['summary']['every_turn_clean']}")
     print(f"\nwrote {OUT}")
-    return 0 if proof["summary"]["turns_captured"] >= 5 else 3
+    return 0 if proof["summary"]["turns_captured"] >= 6 else 3
 
 
 if __name__ == "__main__":

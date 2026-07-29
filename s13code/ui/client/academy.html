@@ -87,6 +87,15 @@
   table.heat td.cell{text-align:center;font-family:var(--font-mono);font-size:12px;font-weight:600;
                      color:var(--ink);border:2px solid var(--surface);border-radius:6px;padding:10px 3px}
   .heatlegend{margin-top:9px;font-family:var(--font-mono);font-size:10px;color:var(--ink-muted)}
+  table.seq{table-layout:fixed;border:none;background:transparent}
+  table.seq th{text-transform:none;letter-spacing:0;font-size:10px;padding:6px 4px;text-align:center;
+               background:var(--surface-alt);border:1px solid var(--rule);border-radius:6px;word-break:break-word}
+  table.seq td{border-bottom:none;padding:3px 2px;font-size:12px}
+  table.seq td.seqlane{text-align:center;color:var(--rule-strong);font-family:var(--font-mono)}
+  table.seq td.seqmsg{text-align:center;border-bottom:2px solid var(--accent);padding-bottom:5px}
+  table.seq .seqarrow{font-family:var(--font-mono);letter-spacing:-1px;margin-right:6px}
+  table.seq .seqlabel{font-size:11.5px;color:var(--ink-body)}
+  table.seq td.seqnote{text-align:center;font-size:10.5px;color:var(--ink-muted);font-style:italic;padding:2px 4px 7px}
   .tabs{display:flex;gap:6px;margin-bottom:11px;flex-wrap:wrap}
   .tabs button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:5px 13px;
                font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-mono);color:var(--ink-muted)}
@@ -231,6 +240,7 @@ const R={
     e.append(t, barSvg(resolve(c.data,x.dm)||[], c.xKey, c.yKey)); return e;},
   DataTable:(c,x)=>renderTable(c,x),
   Heatmap:(c,x)=>renderHeatmap(c,x),
+  SequenceDiagram:(c,x)=>renderSequence(c,x),
   Timeline:(c,x)=>renderTimeline(c,x),
   ApprovalCard:(c,x)=>renderApproval(c,x),
 };
@@ -324,6 +334,46 @@ function renderHeatmap(c,x){
   wrap.append(tb);
   const cap=$("div","heatlegend"); cap.append(T("low "+mn+"  →  high "+mx+(unit?" "+unit:""))); wrap.append(cap);
   return wrap;
+}
+
+// SequenceDiagram (custom, contributed in this PR): ordered messages BETWEEN
+// named actors — the thing a Timeline structurally cannot say, because a
+// Timeline has moments but no second party. Actor lanes are columns; each
+// message is a row whose cell spans sender to receiver. Every name, label and
+// note is a text node; the only thing a bound value decides is which column a
+// cell starts in and how far it spans — integers derived here from the actor
+// list. A message naming an unknown actor becomes a note, never a silent drop.
+function renderSequence(c,x){
+  const title=str(c.title,x.dm)||"sequence";
+  const wrap=$("div","chart"); const t=$("div","ct"); t.append(T(title)); wrap.append(t);
+  const actors=(resolve(c.actors,x.dm)||[]).map(a=>(a&&typeof a==="object")?(a.name||a.label||a.id||""):a);
+  const messages=resolve(c.messages,x.dm)||[];
+  const accent=({good:"var(--green)",warn:"var(--amber)",bad:"var(--red)"}[c.tone]||"var(--accent)");
+  const tb=$("table","seq");
+  const head=$("tr"); actors.forEach(a=>{const th=$("th"); th.append(T(a)); head.append(th);}); tb.append(head);
+  const index=name=>actors.findIndex(a=>String(a)===String(name));
+  messages.forEach(m=>{
+    if(!m||typeof m!=="object") return;
+    const from=index(m.from), to=index(m.to);
+    const tr=$("tr");
+    if(from<0||to<0||!actors.length){
+      const td=$("td","seqnote"); td.colSpan=Math.max(1,actors.length);
+      td.append(T([m.from,m.to].filter(Boolean).join(" → ")+(m.label?": "+m.label:"")));
+      tr.append(td); tb.append(tr); return;
+    }
+    const lo=Math.min(from,to), hi=Math.max(from,to), span=hi-lo+1;
+    for(let i=0;i<lo;i++){ const pad=$("td","seqlane"); pad.append(T("│")); tr.append(pad); }
+    const cell=$("td","seqmsg"); cell.colSpan=span; cell.style.borderBottomColor=accent;
+    const arrow=$("span","seqarrow"); arrow.style.color=accent;
+    arrow.append(T(from===to?"↻":(to>from?"───▶":"◀───")));
+    const lab=$("span","seqlabel"); lab.append(T(m.label==null?"":String(m.label)));
+    cell.append(arrow,lab); tr.append(cell);
+    for(let i=hi+1;i<actors.length;i++){ const pad=$("td","seqlane"); pad.append(T("│")); tr.append(pad); }
+    tb.append(tr);
+    if(m.note){ const nr=$("tr"); const nd=$("td","seqnote"); nd.colSpan=Math.max(1,actors.length);
+      nd.append(T(String(m.note))); nr.append(nd); tb.append(nr); }
+  });
+  wrap.append(tb); return wrap;
 }
 
 function renderTimeline(c,x){
@@ -462,6 +512,8 @@ const SEEDS=[
    "Compare market, limit, stop and iceberg orders side by side: how each behaves in the order book, its visibility, its typical use and its slippage risk. Give me the key counts too."],
   ["Tick latency path",
    "Walk me through the path of a market data tick from the exchange to a trading application. For each stage give me the typical latency in microseconds so I can see where the time goes."],
+  ["FIX session handshake",
+   "Explain how a FIX session is established and an order is filled: exactly who sends what message to whom, in order, from the client through the gateway to the matching engine."],
   ["Interview prep (multi-turn)",
    "Teach me for a trading-systems engineering interview. Ask me which area to study first."],
   ["Adversarial prompt", "__ATTACK__"],
