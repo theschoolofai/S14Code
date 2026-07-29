@@ -5,9 +5,12 @@
   GET  /v1/runs/{id}/dashboard      build + validate the rich showcase dashboard
   GET  /v1/runs/{id}/events         AG-UI event stream over SSE
   GET  /v1/harness/surface          the real surface a recorded S13 harness composed
+  GET  /v1/proofs/stepper           the captured run where Gemini composed Stepper unprompted
   POST /v1/validate                 validate an arbitrary surface (injection wall)
   POST /v1/action                   a validated user action (approve/reject/rerun)
   GET  /s/{id}                      the render client, pointed at a run
+  GET  /app                         the generic "teach me X" UI-only app viewer
+  GET  /trip                        Wayfarer, a UI-only trip-planner app (Part 2)
 
 The data source is the runtime's own graph, read in-process off
 ``request.app.state.s13_runtime`` — the same attribute S13's ``GET
@@ -159,6 +162,38 @@ async def harness_surface():
     }
 
 
+@router.get("/v1/proofs/stepper")
+async def stepper_proof():
+    """Serve the real, captured run in which Gemini composed the new Stepper
+    component on its own (see proofs/generate_stepper_gemini.py).
+
+    Same pattern as /v1/harness/surface: read the recorded proof, re-validate
+    on serve, and return only what survives the same wall that guards
+    injection. The compose_surface prompt never named "Stepper"; the model
+    found it by reading the catalog, exactly like every other custom type.
+    """
+    path = Path(__file__).resolve().parents[2] / "proofs" / "stepper_gemini_run.json"
+    if not path.exists():
+        raise HTTPException(404, "stepper_gemini_run.json not found — run proofs/generate_stepper_gemini.py first")
+    data = json.loads(path.read_text())
+    node = data["compose_surface_node"]
+    acc = node["surface_accepted"]
+    surface = {"root": acc["root"], "components": acc["components"], "dataModel": node["data_model"]}
+    result = validate_surface(surface)
+    return {
+        "run_id": data.get("run_id"),
+        "topic": data.get("topic"),
+        "surface": surface,
+        "component_count": len(result.accepted),
+        "validator": {"proposed": len(surface["components"]), "accepted": len(result.accepted),
+                      "rejected": len(result.rejections)},
+        "clean": result.ok,
+        "provider": node.get("provider"),
+        "model": node.get("model"),
+        "stepper_composed_unprompted": "Stepper" in {c.get("type") for c in result.accepted},
+    }
+
+
 class ValidateBody(BaseModel):
     surface: dict
 
@@ -233,4 +268,19 @@ async def app_viewer():
     path = Path(__file__).parent / "client" / "app.html"
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
+    return path.read_text()
+
+
+@router.get("/trip", response_class=HTMLResponse)
+@router.get("/trip/", response_class=HTMLResponse)
+async def trip_planner():
+    """Wayfarer: a UI-only trip planner (Session 14 Part 2). Forked from the
+    /app render engine — same catalog-validated components, same tap-becomes-
+    next-turn loop — with its own domain-specific goal-building instead of a
+    fixed drill-down depth: a day-by-day itinerary, then whichever facet
+    (a day, a comparison, a cost breakdown, a checklist) the traveler taps
+    next. No backend changes; the generic runtime carries the whole app."""
+    path = Path(__file__).parent / "client" / "trip.html"
+    if not path.exists():
+        raise HTTPException(500, "trip planner missing")
     return path.read_text()

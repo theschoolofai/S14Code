@@ -369,6 +369,132 @@ def test_safe_siblings_survive_a_partially_poisoned_surface():
 
 
 # --------------------------------------------------------------------------- #
+# catalog.py — the new Stepper component: the three invariants hold for it too
+# --------------------------------------------------------------------------- #
+
+def test_stepper_clean_component_is_accepted():
+    surface = {
+        "root": "s",
+        "components": [{
+            "id": "s", "type": "Stepper", "title": "Setup",
+            "steps": {"$bind": "/steps"}, "labelKey": "heading", "detailKey": "points",
+            "current": 1, "onSelect": {"action": "request_data"},
+        }],
+        "dataModel": {"steps": [{"heading": "Create account", "points": ["Pick a username"]}]},
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert result.accepted[0]["type"] == "Stepper"
+
+
+def test_stepper_lookalike_type_breaks_catalog_invariant():
+    # A near-miss name for the new type is still unregistered: the catalog
+    # invariant is closed, not fuzzy-matched.
+    r = _reject({"id": "x", "type": "StepWizard", "steps": {"$bind": "/steps"}})
+    assert r.invariant == Invariant.CATALOG
+
+
+def test_stepper_title_carrying_markup_breaks_data_not_code():
+    r = _reject({
+        "id": "s", "type": "Stepper", "title": "<img src=x onerror=steal()>",
+        "steps": {"$bind": "/steps"},
+    })
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "title"
+
+
+def test_stepper_steps_as_inline_literal_breaks_data_not_code():
+    # `steps` is a binding prop; a raw list where a {"$bind": "/pointer"} is
+    # required is exactly how an agent would try to smuggle its own content in.
+    r = _reject({"id": "s", "type": "Stepper", "steps": [{"heading": "hi"}]})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_stepper_unregistered_action_never_crosses_back():
+    r = _reject({
+        "id": "s", "type": "Stepper", "steps": {"$bind": "/steps"},
+        "onSelect": {"action": "wire_funds"},
+    })
+    assert r.invariant == Invariant.EVENT
+
+
+def test_stepper_safe_sibling_survives_a_poisoned_stepper():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["good", "poison"]},
+            {"id": "good", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+            {"id": "poison", "type": "Stepper", "steps": {"$bind": "/steps"}, "onSelect": {"action": "escalate"}},
+        ],
+        "dataModel": {"title": "Onboarding", "steps": []},
+    }
+    result = validate_surface(surface)
+    accepted_ids = {c["id"] for c in result.accepted}
+    assert accepted_ids == {"root", "good"}
+
+
+def test_stepper_multi_step_surface_validates_clean():
+    # The real shape run_content/compose_surface now produce for a sequential
+    # procedure: one Stepper bound to several distinct step records, not one
+    # record with several bullet points folded together.
+    surface = {
+        "root": "s",
+        "components": [{
+            "id": "s", "type": "Stepper", "title": "Process Overview",
+            "steps": {"$bind": "/sections"}, "labelKey": "heading", "detailKey": "points",
+        }],
+        "dataModel": {"sections": [
+            {"heading": "Preparation", "points": ["Gather materials"]},
+            {"heading": "Execution", "points": ["Do the thing"]},
+            {"heading": "Cleanup", "points": ["Put tools away"]},
+        ]},
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    stepper = result.accepted[0]
+    assert stepper["steps"] == {"$bind": "/sections"}
+    assert len(surface["dataModel"]["sections"]) == 3
+
+
+def test_stepper_only_required_steps_prop_still_accepted():
+    # title / labelKey / detailKey / current / onSelect are all optional in
+    # the schema; a Stepper naming only `steps` must still validate clean.
+    r = validate_surface({
+        "root": "s",
+        "components": [{"id": "s", "type": "Stepper", "steps": {"$bind": "/steps"}}],
+        "dataModel": {"steps": []},
+    })
+    assert r.ok, [x.as_dict() for x in r.rejections]
+
+
+def test_stepper_onselect_as_bare_string_breaks_event():
+    # onSelect must be an {"action": "..."} object; a bare string (as if the
+    # agent tried to shortcut straight to an action name) isn't one.
+    r = _reject({"id": "s", "type": "Stepper", "steps": {"$bind": "/steps"}, "onSelect": "approve"})
+    assert r.invariant == Invariant.EVENT
+
+
+def test_stepper_onselect_object_missing_action_key_breaks_event():
+    # A syntactically-valid object that just never names an action at all.
+    r = _reject({"id": "s", "type": "Stepper", "steps": {"$bind": "/steps"}, "onSelect": {}})
+    assert r.invariant == Invariant.EVENT
+
+
+def test_stepper_current_out_of_range_is_a_render_concern_not_a_validator_one():
+    # The validator checks STRUCTURE (type/value-shape/action), not runtime
+    # semantics against the data model it can't see the size of. `current`
+    # pointing past the end of `steps` is still structurally valid; the
+    # render client is what clamps it (Math.min/Math.max in app.html) so an
+    # out-of-range index never crashes the page.
+    r = validate_surface({
+        "root": "s",
+        "components": [{"id": "s", "type": "Stepper", "steps": {"$bind": "/steps"}, "current": 999}],
+        "dataModel": {"steps": [{"heading": "only one step"}]},
+    })
+    assert r.ok, [x.as_dict() for x in r.rejections]
+
+
+# --------------------------------------------------------------------------- #
 # catalog.py — catalog_manifest
 # --------------------------------------------------------------------------- #
 
@@ -390,8 +516,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +528,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "Stepper",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -463,11 +589,53 @@ def test_route_harness_surface_is_clean_and_stays_in_the_realigned_catalog(clien
     assert types.isdisjoint({"Heading", "Grid", "Table", "Tab", "Badge", "LineChart"})
 
 
+def test_route_stepper_proof_is_clean_and_composed_unprompted(client):
+    """The captured live-Gemini run (proofs/generate_stepper_gemini.py) proves
+    the new Stepper component: compose_surface's prompt never names it, only
+    the catalog does, and Gemini still picked it for a real request."""
+    resp = client.get("/v1/proofs/stepper")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["clean"] is True
+    assert body["validator"]["rejected"] == 0
+    assert body["stepper_composed_unprompted"] is True
+    types = {c["type"] for c in body["surface"]["components"]}
+    assert "Stepper" in types
+    assert types.issubset(set(COMPONENTS))
+    stepper = next(c for c in body["surface"]["components"] if c["type"] == "Stepper")
+    assert stepper["steps"] == {"$bind": "/sections"}
+
+
 def test_route_render_client_has_no_run_id_placeholder(client):
     resp = client.get("/s/harness")
     assert resp.status_code == 200
     assert "__RUN_ID__" not in resp.text
     assert "harness" in resp.text
+
+
+def test_route_app_viewer_serves_the_generic_trainer(client):
+    resp = client.get("/app")
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers["content-type"]
+    assert "/v1/agent/runs" in resp.text
+    assert 'respond_as:"ui"' in resp.text.replace(" ", "")
+
+
+def test_route_trip_planner_serves_wayfarer(client):
+    """Session 14 Part 2: the UI-only trip-planner app is reachable, is the
+    SAME generic render engine (not a rewrite), and answers via the SAME
+    respond_as="ui" contract as every other app built on this runtime."""
+    resp = client.get("/trip")
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers["content-type"]
+    assert "Wayfarer" in resp.text
+    assert "/v1/agent/runs" in resp.text
+    assert 'respond_as:"ui"' in resp.text.replace(" ", "")
+    # Every component value is drawn through createTextNode, never innerHTML
+    # (index.html's stricter zero-innerHTML property doesn't apply here — like
+    # app.html, this file also uses innerHTML for its OWN trusted status-bar
+    # chrome text, never for a model-bound value).
+    assert "createTextNode" in resp.text
 
 
 def test_route_validate_rejects_a_wormhole_on_catalog(client):

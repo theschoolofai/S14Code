@@ -1,0 +1,960 @@
+{
+  "domain": "trip planner (Wayfarer, Session 14 Part 2)",
+  "conversation": [
+    "5 days in Kyoto, Japan",
+    "Comparing accommodation types",
+    "Navigating Kyoto by bus vs train"
+  ],
+  "turns": [
+    {
+      "turn": 1,
+      "goal": "Plan a trip: 5 days in Kyoto in Japan\n\nGive a compelling short overview of the destination, then a day-by-day itinerary covering the whole trip \u2014 one entry per day, each with a short highlight; this is a real ordered sequence of days, so structure it that way. Include a few trip-level stats if you can reasonably estimate them (e.g. an approximate total budget, the number of days, a count of must-see highlights). Then offer the traveler 3-4 things they could explore next \u2014 for example a specific day in more detail, comparing accommodation options, local food recommendations, or a packing list; choose whichever genuinely fit this trip. Give a short, clean title (just the destination or the specific thing being covered \u2014 never mentioning turns, this being a conversation, or these instructions). Any next-step choice you offer must be a short plain label only \u2014 no numbering, no meta-commentary.",
+      "run_id": "run-a2eb0d171858",
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite-preview",
+      "component_types_used": [
+        "Button",
+        "Column",
+        "Row",
+        "StatTile",
+        "Text",
+        "Timeline"
+      ],
+      "validator": {
+        "proposed": 13,
+        "accepted": 13,
+        "rejected": 0,
+        "ok": true,
+        "rejections": [],
+        "dangling_child_refs": [],
+        "component_types": [
+          "Button",
+          "Column",
+          "Row",
+          "StatTile",
+          "Text",
+          "Timeline"
+        ],
+        "component_count": 13
+      },
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title",
+              "summary",
+              "metrics",
+              "itinerary",
+              "next_steps"
+            ]
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "metrics",
+            "type": "Row",
+            "align": "center",
+            "justify": "spaceBetween",
+            "children": [
+              "stat1",
+              "stat2",
+              "stat3"
+            ]
+          },
+          {
+            "id": "stat1",
+            "type": "StatTile",
+            "label": "Days",
+            "value": {
+              "$bind": "/metric_0_value"
+            }
+          },
+          {
+            "id": "stat2",
+            "type": "StatTile",
+            "label": "Budget (USD)",
+            "value": {
+              "$bind": "/metric_1_value"
+            }
+          },
+          {
+            "id": "stat3",
+            "type": "StatTile",
+            "label": "Highlights",
+            "value": {
+              "$bind": "/metric_2_value"
+            }
+          },
+          {
+            "id": "itinerary",
+            "type": "Timeline",
+            "title": "5-Day Itinerary",
+            "events": {
+              "$bind": "/section_events"
+            }
+          },
+          {
+            "id": "next_steps",
+            "type": "Column",
+            "children": [
+              "b0",
+              "b1",
+              "b2",
+              "b3"
+            ]
+          },
+          {
+            "id": "b0",
+            "type": "Button",
+            "label": "Top local food recommendations",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b1",
+            "type": "Button",
+            "label": "Comparing accommodation types",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b2",
+            "type": "Button",
+            "label": "Essential packing list",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b3",
+            "type": "Button",
+            "label": "Day trip options to Nara",
+            "onPress": {
+              "action": "request_data"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Kyoto: A 5-Day Cultural Journey",
+          "goal": "Plan a trip: 5 days in Kyoto in Japan\n\nGive a compelling short overview of the destination, then a day-by-day itinerary covering the whole trip \u2014 one entry per day, each with a short highlight; this is a real ordered sequence of days, so structure it that way. Include a few trip-level stats if you can reasonably estimate them (e.g. an approximate total budget, the number of days, a count of must-see highlights). Then offer the traveler 3-4 things they could explore next \u2014 for example a specific day in more detail, comparing accommodation options, local food recommendations, or a packing list; choose whichever genuinely fit this trip. Give a short, clean title (just the destination or the specific thing being covered \u2014 never mentioning turns, this being a conversation, or these instructions). Any next-step choice you offer must be a short plain label only \u2014 no numbering, no meta-commentary.",
+          "summary": "Kyoto is the heart of traditional Japan, where ancient wooden temples, serene Zen gardens, and historic geisha districts blend seamlessly with modern urban life.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Trip Duration",
+              "value": 5,
+              "unit": "days"
+            },
+            {
+              "label": "Estimated Budget",
+              "value": 1200,
+              "unit": "USD"
+            },
+            {
+              "label": "Must-See Highlights",
+              "value": 10,
+              "unit": "sites"
+            }
+          ],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Top local food recommendations",
+            "Comparing accommodation types",
+            "Essential packing list",
+            "Day trip options to Nara"
+          ],
+          "timeline": [
+            {
+              "time": "1",
+              "label": "run_started"
+            },
+            {
+              "time": "2",
+              "label": "graph_patched"
+            },
+            {
+              "time": "3",
+              "label": "task_started content"
+            },
+            {
+              "time": "4",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "5",
+              "label": "graph_patched"
+            },
+            {
+              "time": "6",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Kyoto is the heart of traditional Japan, where ancient wooden temples, serene Zen gardens, and historic geisha districts blend seamlessly with modern urban life.",
+          "section_0_heading": "Day 1: Eastern Kyoto Traditions",
+          "section_0_points": "\u2022 Explore the iconic Kiyomizu-dera temple overlooking the city.\n\u2022 Walk through the preserved historic streets of Sannenzaka and Ninenzaka.",
+          "section_1_heading": "Day 2: Arashiyama Nature",
+          "section_1_points": "\u2022 Stroll through the famous Arashiyama Bamboo Grove at sunrise.\n\u2022 Visit the Tenryu-ji temple and the Iwatayama Monkey Park.",
+          "section_2_heading": "Day 3: The Golden Pavilion and Zen",
+          "section_2_points": "\u2022 Marvel at the gold-leaf exterior of Kinkaku-ji.\n\u2022 Experience the meditative rock garden at Ryoan-ji.",
+          "section_3_heading": "Day 4: Fushimi Inari and Sake",
+          "section_3_points": "\u2022 Hike through thousands of vermilion torii gates at Fushimi Inari Shrine.\n\u2022 Visit the Fushimi Sake District for local brewery tours and tastings.",
+          "section_4_heading": "Day 5: Gion and Cultural Immersion",
+          "section_4_points": "\u2022 Explore the Yasaka Shrine and the historic Gion geisha district.\n\u2022 Participate in a traditional tea ceremony in a local machiya house.",
+          "sections": [
+            {
+              "heading": "Day 1: Eastern Kyoto Traditions",
+              "points": [
+                "Explore the iconic Kiyomizu-dera temple overlooking the city.",
+                "Walk through the preserved historic streets of Sannenzaka and Ninenzaka."
+              ]
+            },
+            {
+              "heading": "Day 2: Arashiyama Nature",
+              "points": [
+                "Stroll through the famous Arashiyama Bamboo Grove at sunrise.",
+                "Visit the Tenryu-ji temple and the Iwatayama Monkey Park."
+              ]
+            },
+            {
+              "heading": "Day 3: The Golden Pavilion and Zen",
+              "points": [
+                "Marvel at the gold-leaf exterior of Kinkaku-ji.",
+                "Experience the meditative rock garden at Ryoan-ji."
+              ]
+            },
+            {
+              "heading": "Day 4: Fushimi Inari and Sake",
+              "points": [
+                "Hike through thousands of vermilion torii gates at Fushimi Inari Shrine.",
+                "Visit the Fushimi Sake District for local brewery tours and tastings."
+              ]
+            },
+            {
+              "heading": "Day 5: Gion and Cultural Immersion",
+              "points": [
+                "Explore the Yasaka Shrine and the historic Gion geisha district.",
+                "Participate in a traditional tea ceremony in a local machiya house."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Day 1: Eastern Kyoto Traditions",
+              "label": "Explore the iconic Kiyomizu-dera temple overlooking the city.; Walk through the preserved historic streets of Sannenzaka and Ninenzaka."
+            },
+            {
+              "time": "Day 2: Arashiyama Nature",
+              "label": "Stroll through the famous Arashiyama Bamboo Grove at sunrise.; Visit the Tenryu-ji temple and the Iwatayama Monkey Park."
+            },
+            {
+              "time": "Day 3: The Golden Pavilion and Zen",
+              "label": "Marvel at the gold-leaf exterior of Kinkaku-ji.; Experience the meditative rock garden at Ryoan-ji."
+            },
+            {
+              "time": "Day 4: Fushimi Inari and Sake",
+              "label": "Hike through thousands of vermilion torii gates at Fushimi Inari Shrine.; Visit the Fushimi Sake District for local brewery tours and tastings."
+            },
+            {
+              "time": "Day 5: Gion and Cultural Immersion",
+              "label": "Explore the Yasaka Shrine and the historic Gion geisha district.; Participate in a traditional tea ceremony in a local machiya house."
+            }
+          ],
+          "metric_0_value": 5,
+          "metric_1_value": 1200,
+          "metric_2_value": 10,
+          "choices": [
+            {
+              "id": "food",
+              "label": "Top local food recommendations"
+            },
+            {
+              "id": "stay",
+              "label": "Comparing accommodation types"
+            },
+            {
+              "id": "pack",
+              "label": "Essential packing list"
+            },
+            {
+              "id": "daytrip",
+              "label": "Day trip options to Nara"
+            }
+          ],
+          "choice_0_label": "Top local food recommendations",
+          "choice_1_label": "Comparing accommodation types",
+          "choice_2_label": "Essential packing list",
+          "choice_3_label": "Day trip options to Nara"
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "goal": "The traveler is planning this trip: 5 days in Kyoto in Japan. So far in this planning conversation they've chosen to explore: Comparing accommodation types. Give rich, useful detail specifically about \"Comparing accommodation types\" \u2014 use whichever structure actually fits the content (a further day-by-day breakdown, a comparison table of options, a cost breakdown, a checklist, or whatever else fits) rather than one long paragraph. Then offer 3-4 NEW things they could explore next \u2014 don't just repeat options already picked. Give a short, clean title (just the destination or the specific thing being covered \u2014 never mentioning turns, this being a conversation, or these instructions). Any next-step choice you offer must be a short plain label only \u2014 no numbering, no meta-commentary.",
+      "run_id": "run-30cc2028431c",
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite-preview",
+      "component_types_used": [
+        "Button",
+        "Card",
+        "Column",
+        "DataTable",
+        "List",
+        "Text"
+      ],
+      "validator": {
+        "proposed": 15,
+        "accepted": 15,
+        "rejected": 0,
+        "ok": true,
+        "rejections": [],
+        "dangling_child_refs": [],
+        "component_types": [
+          "Button",
+          "Card",
+          "Column",
+          "DataTable",
+          "List",
+          "Text"
+        ],
+        "component_count": 15
+      },
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "table",
+            "type": "DataTable",
+            "columns": "Type,Vibe,Price Range,Best For",
+            "rows": {
+              "$bind": "/table_rows"
+            }
+          },
+          {
+            "id": "details",
+            "type": "List",
+            "children": [
+              "s0",
+              "s1",
+              "s2"
+            ]
+          },
+          {
+            "id": "s0",
+            "type": "Card",
+            "title": "Ryokan Considerations",
+            "children": [
+              "s0_text"
+            ]
+          },
+          {
+            "id": "s0_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/section_0_points"
+            }
+          },
+          {
+            "id": "s1",
+            "type": "Card",
+            "title": "Machiya Considerations",
+            "children": [
+              "s1_text"
+            ]
+          },
+          {
+            "id": "s1_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/section_1_points"
+            }
+          },
+          {
+            "id": "s2",
+            "type": "Card",
+            "title": "Business Hotel Considerations",
+            "children": [
+              "s2_text"
+            ]
+          },
+          {
+            "id": "s2_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/section_2_points"
+            }
+          },
+          {
+            "id": "next_steps",
+            "type": "Column",
+            "children": [
+              "b0",
+              "b1",
+              "b2",
+              "b3"
+            ]
+          },
+          {
+            "id": "b0",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_0_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b1",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_1_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b2",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_2_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b3",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_3_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Kyoto Accommodation Comparison",
+          "goal": "The traveler is planning this trip: 5 days in Kyoto in Japan. So far in this planning conversation they've chosen to explore: Comparing accommodation types. Give rich, useful detail specifically about \"Comparing accommodation types\" \u2014 use whichever structure actually fits the content (a further day-by-day breakdown, a comparison table of options, a cost breakdown, a checklist, or whatever else fits) rather than one long paragraph. Then offer 3-4 NEW things they could explore next \u2014 don't just repeat options already picked. Give a short, clean title (just the destination or the specific thing being covered \u2014 never mentioning turns, this being a conversation, or these instructions). Any next-step choice you offer must be a short plain label only \u2014 no numbering, no meta-commentary.",
+          "summary": "Choosing the right base in Kyoto significantly impacts your cultural experience and daily logistics.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [
+            {
+              "Type": "Ryokan",
+              "Vibe": "Traditional, serene, tatami mats",
+              "Price Range": "$$$$",
+              "Best For": "Authentic immersion"
+            },
+            {
+              "Type": "Machiya",
+              "Vibe": "Restored wooden townhouse",
+              "Price Range": "$$$",
+              "Best For": "Groups and privacy"
+            },
+            {
+              "Type": "Business Hotel",
+              "Vibe": "Compact, efficient, modern",
+              "Price Range": "$$",
+              "Best For": "Solo travelers/convenience"
+            },
+            {
+              "Type": "Capsule Hotel",
+              "Vibe": "Futuristic, minimalist, shared",
+              "Price Range": "$",
+              "Best For": "Budget/short stays"
+            }
+          ],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Navigating Kyoto by bus vs train",
+            "Must-try local Kyoto cuisine",
+            "Strategic temple-hopping routes",
+            "Cultural etiquette and local customs"
+          ],
+          "timeline": [
+            {
+              "time": "9",
+              "label": "run_started"
+            },
+            {
+              "time": "10",
+              "label": "graph_patched"
+            },
+            {
+              "time": "11",
+              "label": "task_started content"
+            },
+            {
+              "time": "12",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "13",
+              "label": "graph_patched"
+            },
+            {
+              "time": "14",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Choosing the right base in Kyoto significantly impacts your cultural experience and daily logistics.",
+          "section_0_heading": "Ryokan Considerations",
+          "section_0_points": "\u2022 Includes multi-course kaiseki dinners and public baths.\n\u2022 Expect strict check-in times and communal etiquette.",
+          "section_1_heading": "Machiya Considerations",
+          "section_1_points": "\u2022 Offers a private kitchen and authentic neighborhood feel.\n\u2022 Often located in quiet residential alleys away from main hubs.",
+          "section_2_heading": "Business Hotel Considerations",
+          "section_2_points": "\u2022 Strategically located near Kyoto Station or subway lines.\n\u2022 High-speed Wi-Fi and laundry facilities are standard.",
+          "sections": [
+            {
+              "heading": "Ryokan Considerations",
+              "points": [
+                "Includes multi-course kaiseki dinners and public baths.",
+                "Expect strict check-in times and communal etiquette."
+              ]
+            },
+            {
+              "heading": "Machiya Considerations",
+              "points": [
+                "Offers a private kitchen and authentic neighborhood feel.",
+                "Often located in quiet residential alleys away from main hubs."
+              ]
+            },
+            {
+              "heading": "Business Hotel Considerations",
+              "points": [
+                "Strategically located near Kyoto Station or subway lines.",
+                "High-speed Wi-Fi and laundry facilities are standard."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Ryokan Considerations",
+              "label": "Includes multi-course kaiseki dinners and public baths.; Expect strict check-in times and communal etiquette."
+            },
+            {
+              "time": "Machiya Considerations",
+              "label": "Offers a private kitchen and authentic neighborhood feel.; Often located in quiet residential alleys away from main hubs."
+            },
+            {
+              "time": "Business Hotel Considerations",
+              "label": "Strategically located near Kyoto Station or subway lines.; High-speed Wi-Fi and laundry facilities are standard."
+            }
+          ],
+          "table_columns": [
+            "Type",
+            "Vibe",
+            "Price Range",
+            "Best For"
+          ],
+          "choices": [
+            {
+              "id": "transport",
+              "label": "Navigating Kyoto by bus vs train"
+            },
+            {
+              "id": "dining",
+              "label": "Must-try local Kyoto cuisine"
+            },
+            {
+              "id": "temples",
+              "label": "Strategic temple-hopping routes"
+            },
+            {
+              "id": "etiquette",
+              "label": "Cultural etiquette and local customs"
+            }
+          ],
+          "choice_0_label": "Navigating Kyoto by bus vs train",
+          "choice_1_label": "Must-try local Kyoto cuisine",
+          "choice_2_label": "Strategic temple-hopping routes",
+          "choice_3_label": "Cultural etiquette and local customs"
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "goal": "The traveler is planning this trip: 5 days in Kyoto in Japan. So far in this planning conversation they've chosen to explore: Comparing accommodation types \u203a Navigating Kyoto by bus vs train. Give rich, useful detail specifically about \"Navigating Kyoto by bus vs train\" \u2014 use whichever structure actually fits the content (a further day-by-day breakdown, a comparison table of options, a cost breakdown, a checklist, or whatever else fits) rather than one long paragraph. Then offer 3-4 NEW things they could explore next \u2014 don't just repeat options already picked. Give a short, clean title (just the destination or the specific thing being covered \u2014 never mentioning turns, this being a conversation, or these instructions). Any next-step choice you offer must be a short plain label only \u2014 no numbering, no meta-commentary.",
+      "run_id": "run-4daae82592a9",
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite-preview",
+      "component_types_used": [
+        "Button",
+        "Card",
+        "Column",
+        "DataTable",
+        "Row",
+        "StatTile",
+        "Text"
+      ],
+      "validator": {
+        "proposed": 18,
+        "accepted": 17,
+        "rejected": 1,
+        "ok": false,
+        "rejections": [
+          {
+            "component_id": "choices_title",
+            "field": "text",
+            "invariant": "data-not-code",
+            "reason": "binding must be {'$bind': '/pointer'}"
+          }
+        ],
+        "dangling_child_refs": [
+          "choices_title"
+        ],
+        "component_types": [
+          "Button",
+          "Card",
+          "Column",
+          "DataTable",
+          "Row",
+          "StatTile",
+          "Text"
+        ],
+        "component_count": 17
+      },
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title",
+              "summary",
+              "metrics",
+              "comparison",
+              "strategies",
+              "choices_title",
+              "choices"
+            ]
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "metrics",
+            "type": "Row",
+            "align": "center",
+            "justify": "spaceAround",
+            "children": [
+              "m1",
+              "m2"
+            ]
+          },
+          {
+            "id": "m1",
+            "type": "StatTile",
+            "label": "Bus Fare",
+            "value": {
+              "$bind": "/metric_0_value"
+            },
+            "unit": "JPY"
+          },
+          {
+            "id": "m2",
+            "type": "StatTile",
+            "label": "Subway Fare",
+            "value": {
+              "$bind": "/metric_1_value"
+            },
+            "unit": "JPY"
+          },
+          {
+            "id": "comparison",
+            "type": "DataTable",
+            "columns": "Feature,Bus,Train/Subway",
+            "rows": {
+              "$bind": "/table_rows"
+            }
+          },
+          {
+            "id": "strategies",
+            "type": "Column",
+            "children": [
+              "s1",
+              "s2"
+            ]
+          },
+          {
+            "id": "s1",
+            "type": "Card",
+            "title": "Bus Strategy",
+            "children": [
+              "s1_text"
+            ]
+          },
+          {
+            "id": "s1_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/section_0_points"
+            }
+          },
+          {
+            "id": "s2",
+            "type": "Card",
+            "title": "Train Strategy",
+            "children": [
+              "s2_text"
+            ]
+          },
+          {
+            "id": "s2_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/section_1_points"
+            }
+          },
+          {
+            "id": "choices",
+            "type": "Column",
+            "children": [
+              "c0",
+              "c1",
+              "c2",
+              "c3"
+            ]
+          },
+          {
+            "id": "c0",
+            "type": "Button",
+            "label": "Must-try local Kyoto cuisine",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "c1",
+            "type": "Button",
+            "label": "Cultural etiquette and temple manners",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "c2",
+            "type": "Button",
+            "label": "Day trips to Nara or Osaka",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "c3",
+            "type": "Button",
+            "label": "Best times to visit for festivals",
+            "onPress": {
+              "action": "request_data"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Kyoto Transit: Bus vs. Train",
+          "goal": "The traveler is planning this trip: 5 days in Kyoto in Japan. So far in this planning conversation they've chosen to explore: Comparing accommodation types \u203a Navigating Kyoto by bus vs train. Give rich, useful detail specifically about \"Navigating Kyoto by bus vs train\" \u2014 use whichever structure actually fits the content (a further day-by-day breakdown, a comparison table of options, a cost breakdown, a checklist, or whatever else fits) rather than one long paragraph. Then offer 3-4 NEW things they could explore next \u2014 don't just repeat options already picked. Give a short, clean title (just the destination or the specific thing being covered \u2014 never mentioning turns, this being a conversation, or these instructions). Any next-step choice you offer must be a short plain label only \u2014 no numbering, no meta-commentary.",
+          "summary": "Kyoto's transit network relies on a hybrid system. Buses cover the city's interior and historic sites, while trains provide rapid transit between major hubs and outer districts.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Bus One-Way Fare",
+              "value": 230,
+              "unit": "JPY"
+            },
+            {
+              "label": "Subway Base Fare",
+              "value": 260,
+              "unit": "JPY"
+            }
+          ],
+          "spark": [],
+          "table_rows": [
+            {
+              "Feature": "Coverage",
+              "Bus": "Extensive; reaches most temples",
+              "Train/Subway": "Limited; connects major hubs"
+            },
+            {
+              "Feature": "Speed",
+              "Bus": "Slow; prone to traffic",
+              "Train/Subway": "Fast; reliable timing"
+            },
+            {
+              "Feature": "Ease of Use",
+              "Bus": "Can be crowded/confusing",
+              "Train/Subway": "Intuitive; clear signage"
+            },
+            {
+              "Feature": "Best For",
+              "Bus": "Short hops between sites",
+              "Train/Subway": "Long distances/Arashiyama/Fushimi Inari"
+            }
+          ],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Must-try local Kyoto cuisine",
+            "Cultural etiquette and temple manners",
+            "Day trips to Nara or Osaka",
+            "Best times to visit for festivals"
+          ],
+          "timeline": [
+            {
+              "time": "17",
+              "label": "run_started"
+            },
+            {
+              "time": "18",
+              "label": "graph_patched"
+            },
+            {
+              "time": "19",
+              "label": "task_started content"
+            },
+            {
+              "time": "20",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "21",
+              "label": "graph_patched"
+            },
+            {
+              "time": "22",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Kyoto's transit network relies on a hybrid system. Buses cover the city's interior and historic sites, while trains provide rapid transit between major hubs and outer districts.",
+          "section_0_heading": "Bus Strategy",
+          "section_0_points": "\u2022 Enter through the back door, pay at the front when exiting.\n\u2022 Use a flat-fare IC card (Suica/Pasmo/Icoca) for seamless boarding.",
+          "section_1_heading": "Train Strategy",
+          "section_1_points": "\u2022 Use the Karasuma and Tozai subway lines for north-south/east-west travel.\n\u2022 Use JR lines for Fushimi Inari and Keifuku/Hankyu lines for Arashiyama.",
+          "sections": [
+            {
+              "heading": "Bus Strategy",
+              "points": [
+                "Enter through the back door, pay at the front when exiting.",
+                "Use a flat-fare IC card (Suica/Pasmo/Icoca) for seamless boarding."
+              ]
+            },
+            {
+              "heading": "Train Strategy",
+              "points": [
+                "Use the Karasuma and Tozai subway lines for north-south/east-west travel.",
+                "Use JR lines for Fushimi Inari and Keifuku/Hankyu lines for Arashiyama."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Bus Strategy",
+              "label": "Enter through the back door, pay at the front when exiting.; Use a flat-fare IC card (Suica/Pasmo/Icoca) for seamless boarding."
+            },
+            {
+              "time": "Train Strategy",
+              "label": "Use the Karasuma and Tozai subway lines for north-south/east-west travel.; Use JR lines for Fushimi Inari and Keifuku/Hankyu lines for Arashiyama."
+            }
+          ],
+          "metric_0_value": 230,
+          "metric_1_value": 260,
+          "table_columns": [
+            "Feature",
+            "Bus",
+            "Train/Subway"
+          ],
+          "choices": [
+            {
+              "id": "dining",
+              "label": "Must-try local Kyoto cuisine"
+            },
+            {
+              "id": "etiquette",
+              "label": "Cultural etiquette and temple manners"
+            },
+            {
+              "id": "daytrips",
+              "label": "Day trips to Nara or Osaka"
+            },
+            {
+              "id": "seasonal",
+              "label": "Best times to visit for festivals"
+            }
+          ],
+          "choice_0_label": "Must-try local Kyoto cuisine",
+          "choice_1_label": "Cultural etiquette and temple manners",
+          "choice_2_label": "Day trips to Nara or Osaka",
+          "choice_3_label": "Best times to visit for festivals"
+        }
+      }
+    }
+  ]
+}
