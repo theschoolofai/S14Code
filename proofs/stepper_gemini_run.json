@@ -1,0 +1,306 @@
+{
+  "topic": "Change a flat tire on a car",
+  "goal": "Change a flat tire on a car\n\nTeach this topic as a hierarchical drill-down lesson of up to 5 levels. This is level 1 of 5: give focused introductory teaching content for the topic overall, then ask the user to pick a subtopic of it to go deeper into next. Give a short, clean title (a few words naming the subject matter, never mentioning levels, drill-downs or these instructions). Any subtopic choice you offer must be a short plain subtopic name only \u2014 no numbering, no \"Level\" prefix, no meta-commentary.",
+  "run_id": "run-e37bb5c89ac5",
+  "status": "completed",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "gateway_provider_env": "gemini",
+  "compose_surface_node": {
+    "id": "surface",
+    "skill": "compose_surface",
+    "state": "succeeded",
+    "provider": "gemini_1",
+    "model": "gemini-3.1-flash-lite-preview",
+    "parse_ok": true,
+    "raw_surface": "{\"root\":\"root\",\"components\":[{\"id\":\"root\",\"type\":\"Column\",\"children\":[\"title\",\"intro\",\"steps\",\"choice_row\"]},{\"id\":\"title\",\"type\":\"Text\",\"variant\":\"heading\",\"text\":{\"$bind\":\"/title\"}},{\"id\":\"intro\",\"type\":\"Text\",\"variant\":\"body\",\"text\":{\"$bind\":\"/intro\"}},{\"id\":\"steps\",\"type\":\"Stepper\",\"title\":\"Core Safety Principles\",\"steps\":{\"$bind\":\"/sections\"},\"labelKey\":\"heading\",\"detailKey\":\"points\"},{\"id\":\"choice_row\",\"type\":\"Column\",\"children\":[\"c0\",\"c1\",\"c2\",\"c3\"]},{\"id\":\"c0\",\"type\":\"Button\",\"label\":{\"$bind\":\"/choice_0_label\"},\"onPress\":{\"action\":\"request_data\"}},{\"id\":\"c1\",\"type\":\"Button\",\"label\":{\"$bind\":\"/choice_1_label\"},\"onPress\":{\"action\":\"request_data\"}},{\"id\":\"c2\",\"type\":\"Button\",\"label\":{\"$bind\":\"/choice_2_label\"},\"onPress\":{\"action\":\"request_data\"}},{\"id\":\"c3\",\"type\":\"Button\",\"label\":{\"$bind\":\"/choice_3_label\"},\"onPress\":{\"action\":\"request_data\"}}]}",
+    "validator": {
+      "proposed": 9,
+      "accepted": 9,
+      "rejected": 0,
+      "ok": true,
+      "rejections": [],
+      "dangling_child_refs": [],
+      "component_types": [
+        "Button",
+        "Column",
+        "Stepper",
+        "Text"
+      ],
+      "component_count": 9
+    },
+    "data_model": {
+      "title": "Changing a Flat Tire",
+      "goal": "Change a flat tire on a car\n\nTeach this topic as a hierarchical drill-down lesson of up to 5 levels. This is level 1 of 5: give focused introductory teaching content for the topic overall, then ask the user to pick a subtopic of it to go deeper into next. Give a short, clean title (a few words naming the subject matter, never mentioning levels, drill-downs or these instructions). Any subtopic choice you offer must be a short plain subtopic name only \u2014 no numbering, no \"Level\" prefix, no meta-commentary.",
+      "summary": "Changing a flat tire is a fundamental roadside skill that ensures safety and mobility. The process involves securing the vehicle, removing the damaged tire, and installing a spare.",
+      "results": [],
+      "items": [],
+      "metrics": [],
+      "spark": [],
+      "table_rows": [],
+      "item_count": 0,
+      "source_count": 0,
+      "subjects": [
+        "Preparation and Safety",
+        "Required Tools",
+        "Removing the Flat Tire",
+        "Installing the Spare"
+      ],
+      "timeline": [
+        {
+          "time": "1",
+          "label": "run_started"
+        },
+        {
+          "time": "2",
+          "label": "graph_patched"
+        },
+        {
+          "time": "3",
+          "label": "task_started content"
+        },
+        {
+          "time": "4",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "5",
+          "label": "graph_patched"
+        },
+        {
+          "time": "6",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "intro": "Changing a flat tire is a fundamental roadside skill that ensures safety and mobility. The process involves securing the vehicle, removing the damaged tire, and installing a spare.",
+      "section_0_heading": "Core Safety Principles",
+      "section_0_points": "\u2022 Find a flat, stable surface away from traffic.\n\u2022 Engage the parking brake firmly.\n\u2022 Use hazard lights to alert other drivers.\n\u2022 Ensure all passengers are in a safe location.",
+      "sections": [
+        {
+          "heading": "Core Safety Principles",
+          "points": [
+            "Find a flat, stable surface away from traffic.",
+            "Engage the parking brake firmly.",
+            "Use hazard lights to alert other drivers.",
+            "Ensure all passengers are in a safe location."
+          ]
+        }
+      ],
+      "section_events": [
+        {
+          "time": "Core Safety Principles",
+          "label": "Find a flat, stable surface away from traffic.; Engage the parking brake firmly.; Use hazard lights to alert other drivers.; Ensure all passengers are in a safe location."
+        }
+      ],
+      "choices": [
+        {
+          "id": "preparation",
+          "label": "Preparation and Safety"
+        },
+        {
+          "id": "tools",
+          "label": "Required Tools"
+        },
+        {
+          "id": "removal",
+          "label": "Removing the Flat Tire"
+        },
+        {
+          "id": "installation",
+          "label": "Installing the Spare"
+        }
+      ],
+      "choice_0_label": "Preparation and Safety",
+      "choice_1_label": "Required Tools",
+      "choice_2_label": "Removing the Flat Tire",
+      "choice_3_label": "Installing the Spare"
+    },
+    "surface_accepted": {
+      "root": "root",
+      "components": [
+        {
+          "id": "root",
+          "type": "Column",
+          "children": [
+            "title",
+            "intro",
+            "steps",
+            "choice_row"
+          ]
+        },
+        {
+          "id": "title",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "intro",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/intro"
+          }
+        },
+        {
+          "id": "steps",
+          "type": "Stepper",
+          "title": "Core Safety Principles",
+          "steps": {
+            "$bind": "/sections"
+          },
+          "labelKey": "heading",
+          "detailKey": "points"
+        },
+        {
+          "id": "choice_row",
+          "type": "Column",
+          "children": [
+            "c0",
+            "c1",
+            "c2",
+            "c3"
+          ]
+        },
+        {
+          "id": "c0",
+          "type": "Button",
+          "label": {
+            "$bind": "/choice_0_label"
+          },
+          "onPress": {
+            "action": "request_data"
+          }
+        },
+        {
+          "id": "c1",
+          "type": "Button",
+          "label": {
+            "$bind": "/choice_1_label"
+          },
+          "onPress": {
+            "action": "request_data"
+          }
+        },
+        {
+          "id": "c2",
+          "type": "Button",
+          "label": {
+            "$bind": "/choice_2_label"
+          },
+          "onPress": {
+            "action": "request_data"
+          }
+        },
+        {
+          "id": "c3",
+          "type": "Button",
+          "label": {
+            "$bind": "/choice_3_label"
+          },
+          "onPress": {
+            "action": "request_data"
+          }
+        }
+      ],
+      "dataModel": {
+        "title": "Changing a Flat Tire",
+        "goal": "Change a flat tire on a car\n\nTeach this topic as a hierarchical drill-down lesson of up to 5 levels. This is level 1 of 5: give focused introductory teaching content for the topic overall, then ask the user to pick a subtopic of it to go deeper into next. Give a short, clean title (a few words naming the subject matter, never mentioning levels, drill-downs or these instructions). Any subtopic choice you offer must be a short plain subtopic name only \u2014 no numbering, no \"Level\" prefix, no meta-commentary.",
+        "summary": "Changing a flat tire is a fundamental roadside skill that ensures safety and mobility. The process involves securing the vehicle, removing the damaged tire, and installing a spare.",
+        "results": [],
+        "items": [],
+        "metrics": [],
+        "spark": [],
+        "table_rows": [],
+        "item_count": 0,
+        "source_count": 0,
+        "subjects": [
+          "Preparation and Safety",
+          "Required Tools",
+          "Removing the Flat Tire",
+          "Installing the Spare"
+        ],
+        "timeline": [
+          {
+            "time": "1",
+            "label": "run_started"
+          },
+          {
+            "time": "2",
+            "label": "graph_patched"
+          },
+          {
+            "time": "3",
+            "label": "task_started content"
+          },
+          {
+            "time": "4",
+            "label": "task_succeeded content"
+          },
+          {
+            "time": "5",
+            "label": "graph_patched"
+          },
+          {
+            "time": "6",
+            "label": "task_started surface"
+          }
+        ],
+        "progress_value": 1,
+        "progress_max": 2,
+        "intro": "Changing a flat tire is a fundamental roadside skill that ensures safety and mobility. The process involves securing the vehicle, removing the damaged tire, and installing a spare.",
+        "section_0_heading": "Core Safety Principles",
+        "section_0_points": "\u2022 Find a flat, stable surface away from traffic.\n\u2022 Engage the parking brake firmly.\n\u2022 Use hazard lights to alert other drivers.\n\u2022 Ensure all passengers are in a safe location.",
+        "sections": [
+          {
+            "heading": "Core Safety Principles",
+            "points": [
+              "Find a flat, stable surface away from traffic.",
+              "Engage the parking brake firmly.",
+              "Use hazard lights to alert other drivers.",
+              "Ensure all passengers are in a safe location."
+            ]
+          }
+        ],
+        "section_events": [
+          {
+            "time": "Core Safety Principles",
+            "label": "Find a flat, stable surface away from traffic.; Engage the parking brake firmly.; Use hazard lights to alert other drivers.; Ensure all passengers are in a safe location."
+          }
+        ],
+        "choices": [
+          {
+            "id": "preparation",
+            "label": "Preparation and Safety"
+          },
+          {
+            "id": "tools",
+            "label": "Required Tools"
+          },
+          {
+            "id": "removal",
+            "label": "Removing the Flat Tire"
+          },
+          {
+            "id": "installation",
+            "label": "Installing the Spare"
+          }
+        ],
+        "choice_0_label": "Preparation and Safety",
+        "choice_1_label": "Required Tools",
+        "choice_2_label": "Removing the Flat Tire",
+        "choice_3_label": "Installing the Spare"
+      }
+    }
+  },
+  "component_types_used": [
+    "Button",
+    "Column",
+    "Stepper",
+    "Text"
+  ],
+  "stepper_composed_unprompted": true
+}

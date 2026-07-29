@@ -51,6 +51,19 @@
   .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .tl{background:#0f1117;border-radius:12px;padding:12px 14px;font-family:var(--font-mono);font-size:12px;color:#c8d0e0;max-height:220px;overflow:auto}
   .tl .r{display:flex;gap:10px;padding:2px 0}.tl .s{color:#6b7594}.tl .k{color:#4ade80}.tl .n{color:#c8d0e0}
+  .Stepper{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
+  .Stepper .st-title{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:10px;font-family:var(--font-mono)}
+  .Stepper .st-row{display:flex;align-items:flex-start;flex-wrap:wrap}
+  .st-item{flex:1;min-width:110px;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;padding:0 6px 4px;cursor:default}
+  .st-item.clickable{cursor:pointer}
+  .st-item:not(:first-child)::before{content:"";position:absolute;top:12px;left:-50%;width:100%;height:2px;background:var(--rule-strong);z-index:0}
+  .st-item.done:not(:first-child)::before{background:var(--accent)}
+  .st-dot{width:26px;height:26px;border-radius:50%;background:var(--surface);border:2px solid var(--rule-strong);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-mono);color:var(--ink-muted);z-index:1}
+  .st-item.current .st-dot{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .st-item.done .st-dot{border-color:var(--accent);color:#fff;background:var(--accent)}
+  .st-lab{font-size:12px;font-weight:600;margin-top:7px;color:var(--ink-body)}
+  .st-det{font-size:11px;color:var(--ink-muted);margin-top:2px;max-width:150px}
+  .st-item.clickable:hover .st-lab{color:var(--accent)}
   .Approval{background:var(--surface);border:1px solid var(--amber);border-radius:12px;padding:16px;border-left:4px solid var(--amber)}
   .Approval .sm{font-weight:600;margin-bottom:6px}.Approval pre{background:var(--surface-alt);padding:8px;border-radius:8px;font-size:12px;overflow:auto;font-family:var(--font-mono)}
   .Approval .btns{display:flex;gap:8px;margin-top:10px}
@@ -82,6 +95,17 @@ const $ = (t, cls) => { const e = document.createElement(t); if (cls) e.classNam
 const text = (t) => document.createTextNode(t == null ? "" : String(t));
 
 function resolve(v, dm){ return (v && typeof v === "object" && "$bind" in v) ? pointer(dm, v["$bind"]) : v; }
+// The catalog's "text" kind means "a literal string", but the validator only
+// enforces the {"$bind":...} SHAPE for "binding"-kind props — a "text" prop
+// is still legal if the model binds it anyway (it isn't markup, so it passes
+// data-not-code clean). Every literal-text read goes through this so a
+// binding there resolves to its real value instead of stringifying to
+// "[object Object]".
+function rtext(v, dm){
+  const r = resolve(v, dm);
+  if (r && typeof r === "object") return r.label || r.name || r.text || r.title || r.id || "";
+  return r;
+}
 // safe markdown -> DOM (createElement + text nodes only; never raw HTML)
 function mdInline(line,parent){const re=/(\*\*([^*]+)\*\*|\*([^*]+)\*|_([^_]+)_)/g;let last=0,m;while((m=re.exec(line))){if(m.index>last)parent.append(text(line.slice(last,m.index)));if(m[2]!=null){const s=document.createElement("strong");s.textContent=m[2];parent.append(s);}else{const e=document.createElement("em");e.textContent=(m[3]!=null?m[3]:m[4]);parent.append(e);}last=re.lastIndex;}if(last<line.length)parent.append(text(line.slice(last)));}
 function md(t){const f=document.createDocumentFragment();let ul=null;for(const raw of String(t==null?"":t).split(/\r?\n/)){const line=raw.trim();if(!line){ul=null;continue;}const h=line.match(/^(#{1,4})\s+(.*)/),b=line.match(/^[*\-]\s+(.*)/);if(h){ul=null;const d=$("div","md-h");mdInline(h[2],d);f.append(d);}else if(b){if(!ul){ul=document.createElement("ul");ul.className="md-ul";f.append(ul);}const li=document.createElement("li");mdInline(b[1],li);ul.append(li);}else{ul=null;const p=$("div","md-p");mdInline(line,p);f.append(p);}}return f;}
@@ -100,44 +124,77 @@ const RENDERERS = {
   Column:(c,ctx)=>{const e=$("div","Column");kids(c,ctx,e);return e;},
   List:(c,ctx)=>{const e=$("div","List");kids(c,ctx,e);return e;},
   Row:(c,ctx)=>{const e=$("div","Row");if(c.align)e.style.alignItems=ALIGN[c.align]||"center";if(c.justify)e.style.justifyContent=JUSTIFY[c.justify]||"space-between";kids(c,ctx,e);return e;},
-  Card:(c,ctx)=>{const e=$("div","Card");if(c.title){const h=$("div");h.style.cssText="font-weight:600;margin-bottom:8px";h.append(text(c.title));e.append(h);}kids(c,ctx,e);return e;},
+  Card:(c,ctx)=>{const e=$("div","Card");const title=rtext(c.title,ctx.dm);if(title){const h=$("div");h.style.cssText="font-weight:600;margin-bottom:8px";h.append(text(title));e.append(h);}kids(c,ctx,e);return e;},
   Divider:()=>$("div","Divider"),
   Text:(c,ctx)=>{const e=$("div","Text "+(c.variant||"body"));const v=resolve(c.text,ctx.dm);(c.variant||"body")==="heading"?e.append(text(v)):e.append(md(v));return e;}, // heading = literal; body = safe markdown DOM
-  Image:(c)=>{const e=$("img");const src=c.src;if(isSafeUrl(src))e.setAttribute("src",src);e.setAttribute("alt",c.alt==null?"":String(c.alt));e.style.cssText="max-width:100%;border-radius:8px";return e;},
-  TextField:(c,ctx)=>field(c,()=>{const i=$("input");i.type="text";i.value=resolve(c.value,ctx.dm)??"";if(c.placeholder)i.placeholder=c.placeholder;
-    i.oninput=()=>{if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,i.value);};return i;}),
+  Image:(c,ctx)=>{const e=$("img");const src=rtext(c.src,ctx.dm);if(isSafeUrl(src))e.setAttribute("src",src);e.setAttribute("alt",String(rtext(c.alt,ctx.dm)||""));e.style.cssText="max-width:100%;border-radius:8px";return e;},
+  TextField:(c,ctx)=>field(c,()=>{const i=$("input");i.type="text";i.value=resolve(c.value,ctx.dm)??"";const ph=rtext(c.placeholder,ctx.dm);if(ph)i.placeholder=ph;
+    i.oninput=()=>{if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,i.value);};return i;},ctx.dm),
   CheckBox:(c,ctx)=>{const wrap=$("label","field check");const i=$("input");i.type="checkbox";i.checked=!!resolve(c.checked,ctx.dm);
-    i.onchange=()=>{if(c.checked&&c.checked.$bind)setPointer(ctx.dm,c.checked.$bind,i.checked);};const s=$("span");s.append(text(c.label||""));wrap.append(i,s);return wrap;},
+    i.onchange=()=>{if(c.checked&&c.checked.$bind)setPointer(ctx.dm,c.checked.$bind,i.checked);};const s=$("span");s.append(text(rtext(c.label,ctx.dm)||""));wrap.append(i,s);return wrap;},
   Slider:(c,ctx)=>field(c,()=>{const i=$("input");i.type="range";i.min=c.min??0;i.max=c.max??100;i.value=+resolve(c.value,ctx.dm)||0;
-    i.oninput=()=>{if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,+i.value);};return i;}),
+    i.oninput=()=>{if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,+i.value);};return i;},ctx.dm),
   InputChoice:(c,ctx)=>field(c,()=>{const s=$("select");const opts=resolve(c.options,ctx.dm)||[];const cur=resolve(c.value,ctx.dm);
     opts.forEach(o=>{const op=$("option");op.value=String(o);op.append(text(o));if(String(o)===String(cur))op.selected=true;s.append(op);});
-    s.onchange=()=>{if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,s.value);};return s;}),
+    s.onchange=()=>{if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,s.value);};return s;},ctx.dm),
   DateTime:(c,ctx)=>field(c,()=>{const i=$("input");i.type="datetime-local";i.value=resolve(c.value,ctx.dm)??"";
-    i.oninput=()=>{if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,i.value);};return i;}),
+    i.oninput=()=>{if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,i.value);};return i;},ctx.dm),
   Button:(c,ctx)=>{const b=$("button","");b.className="";b.style.cssText="border:1px solid var(--rule-strong);background:var(--surface);border-radius:8px;padding:6px 14px;font-weight:600;cursor:pointer";
-    b.append(text(c.label));b.onclick=()=>emitAction(c.onPress&&c.onPress.action,{});return b;},
+    const lab=String(rtext(c.label,ctx.dm)||"Choose");
+    b.append(text(lab));b.onclick=()=>emitAction(c.onPress&&c.onPress.action,{});return b;},
   Tabs:(c,ctx)=>renderTabs(c,ctx),
   Modal:(c,ctx)=>{const e=$("div","Modal");const tag=$("div","mtag");tag.append(text((resolve(c.open,ctx.dm)?"modal · open":"modal · preview")));
-    const h=$("div","mt");h.append(text(c.title||""));e.append(tag,h);kids(c,ctx,e);return e;},
+    const h=$("div","mt");h.append(text(rtext(c.title,ctx.dm)||""));e.append(tag,h);kids(c,ctx,e);return e;},
   // --- Custom extensions -----------------------------------------------------
   Notice:(c,ctx)=>{const e=$("div","Card");e.style.borderLeft="4px solid var(--"+({good:"green",warn:"amber",bad:"red"}[c.tone]||"accent")+")";e.append(text(resolve(c.text,ctx.dm)));return e;},
   StatTile:(c,ctx)=>{const e=$("div","StatTile "+(c.tone||"neutral"));
-    const l=$("div","lab");l.append(text(c.label));const v=$("div","val");v.append(text(resolve(c.value,ctx.dm)+(c.unit||"")));
+    const l=$("div","lab");l.append(text(rtext(c.label,ctx.dm)));const unit=rtext(c.unit,ctx.dm);const v=$("div","val");v.append(text(resolve(c.value,ctx.dm)+(unit||"")));
     const d=$("div","dl");d.append(text(resolve(c.delta,ctx.dm)||""));e.append(l,v,d);return e;},
   ProgressBar:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text("progress"));
     const p=$("div","prog");const i=$("i");const val=+resolve(c.value,ctx.dm)||0;i.style.width=Math.min(100,val/(c.max||100)*100)+"%";
     p.append(i);e.append(t,p);const cap=$("div");cap.style.cssText="font-size:11px;color:var(--ink-muted);margin-top:6px;font-family:var(--font-mono)";cap.append(text(val+" / "+(c.max||100)));e.append(cap);return e;},
   Sparkline:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text("trend"));e.append(t);
     const d=resolve(c.data,ctx.dm)||[];e.append(sparkSvg(d,c.tone));return e;},
-  BarChart:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"bar chart"));e.append(t);
-    e.append(barSvg(resolve(c.data,ctx.dm)||[],c.xKey,c.yKey));return e;},
+  BarChart:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text(rtext(c.title,ctx.dm)||"bar chart"));e.append(t);
+    e.append(barSvg(resolve(c.data,ctx.dm)||[],rtext(c.xKey,ctx.dm),rtext(c.yKey,ctx.dm)));return e;},
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  Stepper:(c,ctx)=>renderStepper(c,ctx),
 };
 
-function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
+// Stepper helper: reads a named field off a step record, falling back through
+// a list of common alternates. Only ever reads a plain value into a text node.
+function stepField(s,key,fallbacks){
+  for(const k of [key,...fallbacks]){
+    if(s&&s[k]!=null){const v=s[k];return Array.isArray(v)?v.join(" · "):v;}
+  }
+  return "";
+}
+function renderStepper(c,ctx){
+  const e=$("div","Stepper");
+  const title=rtext(c.title,ctx.dm);
+  if(title){const t=$("div","st-title");t.append(text(title));e.append(t);}
+  const row=$("div","st-row");e.append(row);
+  const steps=resolve(c.steps,ctx.dm)||[];
+  const lk=rtext(c.labelKey,ctx.dm)||"label", dk=rtext(c.detailKey,ctx.dm)||"detail";
+  const cur=c.current==null?-1:+c.current;
+  steps.forEach((s,i)=>{
+    const label=stepField(s,lk,["label","heading","title","name","id"])||("Step "+(i+1));
+    const detail=stepField(s,dk,["detail","points","text","body"]);
+    const item=$("div","st-item"+(c.onSelect?" clickable":""));
+    if(i===cur)item.classList.add("current");else if(cur>-1&&i<cur)item.classList.add("done");
+    const dot=$("div","st-dot");dot.append(text(String(i+1)));
+    const lab=$("div","st-lab");lab.append(text(String(label)));
+    item.append(dot,lab);
+    if(detail){const det=$("div","st-det");det.append(text(String(detail)));item.append(det);}
+    if(c.onSelect)item.onclick=()=>emitAction(c.onSelect.action,{index:i,label});
+    row.append(item);
+  });
+  return e;
+}
+
+function field(c,mk,dm){const wrap=$("label","field");const label=rtext(c.label,dm);if(label){const l=$("span","lb");l.append(text(label));wrap.append(l);}wrap.append(mk());return wrap;}
 
 function kids(c,ctx,e){ for(const id of (c.children||[])){ const child=ctx.byId[id]; if(child) e.append(renderComponent(child,ctx)); } }
 function renderComponent(c,ctx){ const r=RENDERERS[c.type]; if(!r){ const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(text("[skipped unknown type: "+c.type+"]"));return s;} return r(c,ctx); }
@@ -157,11 +214,12 @@ function barSvg(data,xk,yk,unit){const ns="http://www.w3.org/2000/svg";const w=3
     const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","10");tl.setAttribute("font-family","var(--font-mono)");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=d[xk];svg.append(tl);});
   return svg;}
 
-function renderTable(c,ctx){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());let rows=(resolve(c.rows,ctx.dm)||[]).slice();
-  if(c.filterKey){const f=$("input","filter");f.placeholder="filter "+c.filterKey+"…";f.oninput=()=>draw(f.value);wrap.append(f);}
+function renderTable(c,ctx){const wrap=$("div");const cols=(rtext(c.columns,ctx.dm)||"").split(",").map(s=>s.trim());let rows=(resolve(c.rows,ctx.dm)||[]).slice();
+  const filterKey=rtext(c.filterKey,ctx.dm);
+  if(filterKey){const f=$("input","filter");f.placeholder="filter "+filterKey+"…";f.oninput=()=>draw(f.value);wrap.append(f);}
   const t=$("table");wrap.append(t);let sortCol=null,sortDir=1;
   function draw(filter){t.textContent="";const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(text(col));th.onclick=()=>{sortDir=sortCol===col?-sortDir:1;sortCol=col;draw(filter);};if(c.sortable&&sortCol===col)th.append(text(sortDir>0?" ▲":" ▼"));tr.append(th);});t.append(tr);
-    let view=rows;if(filter)view=view.filter(r=>String(r[c.filterKey]||"").toLowerCase().includes(filter.toLowerCase()));
+    let view=rows;if(filter)view=view.filter(r=>String(r[filterKey]||"").toLowerCase().includes(filter.toLowerCase()));
     if(sortCol)view=view.slice().sort((a,b)=>{const x=a[sortCol],y=b[sortCol];return(x>y?1:x<y?-1:0)*sortDir;});
     view.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(text(r[col]));rr.append(td);});t.append(rr);});}
   draw("");return wrap;}
@@ -169,12 +227,12 @@ function renderTable(c,ctx){const wrap=$("div");const cols=(c.columns||"").split
 function renderTabs(c,ctx){const wrap=$("div");const nav=$("div","tabs");wrap.append(nav);const body=$("div");wrap.append(body);
   // A2UI Basic Tabs: each child IS a panel; `labels` names the tabs (comma list).
   const panels=(c.children||[]).map(id=>ctx.byId[id]).filter(Boolean);
-  const labels=(c.labels||"").split(",").map(s=>s.trim());
+  const labels=(rtext(c.labels,ctx.dm)||"").split(",").map(s=>s.trim());
   function show(i){body.textContent="";[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));const p=panels[i];if(p)body.append(renderComponent(p,ctx));}
   panels.forEach((p,i)=>{const b=$("button");b.append(text(labels[i]||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});
   if(panels.length)show(0);return wrap;}
 
-function renderTimeline(c,ctx){const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"timeline"));e.append(t);
+function renderTimeline(c,ctx){const e=$("div","chart");const t=$("div","ct");t.append(text(rtext(c.title,ctx.dm)||"timeline"));e.append(t);
   // Accepts either the showcase {seq,kind,node} or the compose {time,label} shape.
   const box=$("div","tl");(resolve(c.events,ctx.dm)||[]).forEach(ev=>{const r=$("div","r");
     const s=$("span","s");s.append(text(String(ev.seq!=null?ev.seq:(ev.time!=null?ev.time:"")).padStart(2)));
@@ -190,8 +248,20 @@ function emitAction(name,args){ // the only way the surface changes the world: a
   document.getElementById("meta").textContent = "action emitted → "+name+" "+JSON.stringify(args);
 }
 
+// Defensive fallback: nothing guarantees the model's declared "root" id
+// names an accepted component. Render every already-validated component no
+// other component claims as a child, wrapped in a plain Column, instead of
+// crashing on an undefined node — the same "show what's safe" spirit the
+// validator already applies to individual poisoned components.
+function resolveRoot(surface,byId){
+  if(byId[surface.root])return byId[surface.root];
+  const referenced=new Set();
+  Object.values(byId).forEach(c=>(c.children||[]).forEach(id=>referenced.add(id)));
+  const orphans=Object.keys(byId).filter(id=>!referenced.has(id));
+  return {id:"_fallback_root",type:"Column",children:orphans.length?orphans:Object.keys(byId)};
+}
 function render(surface){const byId={};surface.components.forEach(c=>byId[c.id]=c);const ctx={byId,dm:surface.dataModel||{}};
-  const mount=document.getElementById("mount");mount.textContent="";mount.append(renderComponent(byId[surface.root],ctx));}
+  const mount=document.getElementById("mount");mount.textContent="";mount.append(renderComponent(resolveRoot(surface,byId),ctx));}
 
 // ---- AG-UI live state channel, with STATE_SNAPSHOT reconnect ---------------
 // The client folds STATE_DELTA events into a data model exactly as the server
@@ -258,6 +328,30 @@ async function boot(){
     document.getElementById("meta").textContent = `composed by ${data.model} inside the live graph — 0 model-authored code`;
     document.getElementById("run").textContent = "run " + (data.run_id||"harness");
     render(data.surface); return;
+  }
+  if (RUN === "stepper") {
+    const res = await fetch(`/v1/proofs/stepper`); const data = await res.json();
+    const v = data.validator || {};
+    document.getElementById("badge").textContent = `composed by ${data.provider} · ${data.component_count} components · ${v.rejected||0} rejected · Stepper unprompted: ${data.stepper_composed_unprompted}`;
+    document.getElementById("meta").textContent = `topic "${data.topic}" — composed by ${data.model}, 0 model-authored code`;
+    document.getElementById("run").textContent = "run " + (data.run_id||"stepper");
+    render(data.surface); return;
+  }
+  if (!RUN.includes("corpus")) {
+    // Generic case: if THIS run actually composed an interface (any
+    // respond_as="ui" run — not just the two special-cased proofs above),
+    // show that composed interface, not the plain node-progress view. This
+    // is what makes a link to an arbitrary run_id (e.g. from client/app.html,
+    // pointed at whatever the user's own last query produced) show the real
+    // thing instead of always falling back to a fixed example.
+    const composedRes = await fetch(`/v1/runs/${RUN}/composed`);
+    if (composedRes.ok) {
+      const data = await composedRes.json();
+      document.getElementById("badge").textContent = `composed by ${data.provider||"model"} · ${data.component_count} components · 0 executable`;
+      document.getElementById("meta").textContent = `composed by ${data.model||"model"} inside the live graph — 0 model-authored code`;
+      document.getElementById("run").textContent = "run " + (data.run_id||RUN);
+      render(data.surface); return;
+    }
   }
   const path = RUN.includes("corpus") ? "dashboard" : "surface";
   const res = await fetch(`/v1/runs/${RUN}/${path}`);const data = await res.json();
