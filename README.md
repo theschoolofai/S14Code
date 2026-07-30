@@ -109,6 +109,7 @@ All served by the runtime on 8113, defined in
 | Route | Serves |
 |---|---|
 | `GET /v1/catalog` | the trusted component catalog |
+| `GET /v1/interview-coach` | the validator-gated Interview Coach assignment flow |
 | `GET /v1/runs/{id}/surface` | a validated declarative surface built from the in-process graph |
 | `GET /v1/runs/{id}/dashboard` | the rich showcase dashboard, validated |
 | `GET /v1/runs/{id}/events` | the S13 journal mapped to AG-UI events over SSE |
@@ -116,6 +117,12 @@ All served by the runtime on 8113, defined in
 | `POST /v1/validate` | run any surface through the injection wall |
 | `POST /v1/action` | a validated user action (approve/reject), bound to final params |
 | `GET /s/{id}` | the render client, pointed at a run |
+
+The Interview Coach is available without a live model or run at
+`http://127.0.0.1:8113/s/interview-coach`. It demonstrates response capture,
+rubric feedback, a read-only target Rating, and an interactive readiness
+Rating. Both rating values are data bindings; a rating interaction can only
+emit the registered `rate_interview_answer` event.
 
 ## The generative loop (UI composed by the harness)
 
@@ -147,9 +154,11 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
+| `interview_coach_proof.json` | `interview_coach_proof.py` | clean Interview Coach surface plus rejected unsafe Rating cases |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
+uv run python proofs/interview_coach_proof.py # writes Rating validator proof
 uv run pytest -q                             # S13 core + regression tests + the S14 invariant tests
 ```
 

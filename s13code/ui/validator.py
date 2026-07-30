@@ -134,6 +134,18 @@ def validate_surface(surface: dict) -> ValidationResult:
                 )
                 bad = True
                 break
+            if prop.kind == "number" and (not isinstance(value, (int, float)) or isinstance(value, bool)):
+                rejections.append(
+                    Rejection(cid, field_name, Invariant.DATA_NOT_CODE, "number property must be numeric")
+                )
+                bad = True
+                break
+            if prop.kind == "bool" and not isinstance(value, bool):
+                rejections.append(
+                    Rejection(cid, field_name, Invariant.DATA_NOT_CODE, "bool property must be boolean")
+                )
+                bad = True
+                break
             if prop.kind == "enum" and value not in prop.values:
                 rejections.append(
                     Rejection(cid, field_name, Invariant.DATA_NOT_CODE, f"{value!r} not in {prop.values}")
@@ -150,6 +162,16 @@ def validate_surface(surface: dict) -> ValidationResult:
                     )
                     bad = True
                     break
+
+        # Rating's maximum is part of its safety boundary: it prevents a
+        # surface from presenting an unbounded numeric control as a score.
+        if not bad and ctype == "Rating" and "max" in comp:
+            maximum = comp["max"]
+            if not isinstance(maximum, int) or isinstance(maximum, bool) or not 1 <= maximum <= 10:
+                rejections.append(
+                    Rejection(cid, "max", Invariant.DATA_NOT_CODE, "rating max must be an integer from 1 to 10")
+                )
+                bad = True
 
         if not bad:
             accepted.append(comp)

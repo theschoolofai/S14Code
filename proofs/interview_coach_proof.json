@@ -1,0 +1,176 @@
+{
+  "coach": {
+    "component_count": 14,
+    "clean": true,
+    "surface": {
+      "root": "root",
+      "components": [
+        {
+          "id": "root",
+          "type": "Column",
+          "children": [
+            "title",
+            "step",
+            "question_card",
+            "answer",
+            "submit",
+            "feedback_card",
+            "self_rating",
+            "rating_hint"
+          ]
+        },
+        {
+          "id": "title",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "step",
+          "type": "Text",
+          "variant": "caption",
+          "text": {
+            "$bind": "/step"
+          }
+        },
+        {
+          "id": "question_card",
+          "type": "Card",
+          "title": "Your interview question",
+          "children": [
+            "question",
+            "prompt"
+          ]
+        },
+        {
+          "id": "question",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/question"
+          }
+        },
+        {
+          "id": "prompt",
+          "type": "Text",
+          "variant": "subtitle",
+          "text": {
+            "$bind": "/prompt"
+          }
+        },
+        {
+          "id": "answer",
+          "type": "TextField",
+          "label": "Your answer",
+          "placeholder": "Write or paste your response\u2026",
+          "value": {
+            "$bind": "/answer"
+          }
+        },
+        {
+          "id": "submit",
+          "type": "Button",
+          "label": "Get coaching feedback",
+          "onPress": {
+            "action": "submit_interview_answer"
+          }
+        },
+        {
+          "id": "feedback_card",
+          "type": "Card",
+          "title": "Coach rubric",
+          "children": [
+            "feedback_title",
+            "feedback",
+            "coach_score"
+          ]
+        },
+        {
+          "id": "feedback_title",
+          "type": "Text",
+          "variant": "subtitle",
+          "text": {
+            "$bind": "/feedback_title"
+          }
+        },
+        {
+          "id": "feedback",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/feedback"
+          }
+        },
+        {
+          "id": "coach_score",
+          "type": "Rating",
+          "label": "Rubric target",
+          "value": {
+            "$bind": "/coach_score"
+          },
+          "max": 5,
+          "readOnly": true
+        },
+        {
+          "id": "self_rating",
+          "type": "Rating",
+          "label": "Your readiness",
+          "value": {
+            "$bind": "/candidate_rating"
+          },
+          "max": 5,
+          "readOnly": false,
+          "onRate": {
+            "action": "rate_interview_answer"
+          }
+        },
+        {
+          "id": "rating_hint",
+          "type": "Text",
+          "variant": "caption",
+          "text": {
+            "$bind": "/rating_hint"
+          }
+        }
+      ],
+      "dataModel": {
+        "title": "Interview Coach",
+        "step": "Question 1 of 3 \u00b7 product-thinking practice",
+        "question": "Tell me about a time you used evidence to change a product decision.",
+        "prompt": "Use STAR: situation, task, action, and measurable result.",
+        "answer": "",
+        "feedback_title": "What strong answers demonstrate",
+        "feedback": "Name the decision, cite the evidence, explain the trade-off, and quantify the outcome.",
+        "coach_score": 4,
+        "candidate_rating": 0,
+        "rating_hint": "After reviewing the rubric, rate how ready you feel to answer this question."
+      }
+    }
+  },
+  "attacks": {
+    "unbounded_rating": {
+      "rejected": true,
+      "rejections": [
+        {
+          "component_id": "rating",
+          "field": "max",
+          "invariant": "data-not-code",
+          "reason": "rating max must be an integer from 1 to 10"
+        }
+      ]
+    },
+    "unregistered_rating_event": {
+      "rejected": true,
+      "rejections": [
+        {
+          "component_id": "rating",
+          "field": "onRate",
+          "invariant": "event",
+          "reason": "unregistered action 'exfiltrate'"
+        }
+      ]
+    }
+  }
+}

@@ -30,6 +30,7 @@ from s13code.ui.agui import (
 from s13code.ui.catalog import COMPONENTS, REGISTERED_ACTIONS, catalog_manifest
 from s13code.ui.fixtures import RecordedS13
 from s13code.ui.hitl import PendingAction, decide_resume
+from s13code.ui.interview_coach import build_interview_coach_surface, coach_feedback
 from s13code.ui.routes import router as ui_router
 from s13code.ui.showcase import build_corpus_dashboard
 from s13code.ui.surface import build_run_surface
@@ -390,8 +391,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +403,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "Rating",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -411,6 +412,30 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     m = catalog_manifest()
     assert m["components"]["Text"]["source"] == "a2ui-basic"
     assert m["components"]["BarChart"]["source"] == "custom"
+
+
+def test_interview_coach_flow_is_a_clean_rating_surface():
+    surface = build_interview_coach_surface()
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    ratings = [c for c in surface["components"] if c["type"] == "Rating"]
+    assert len(ratings) == 2
+    assert any(r.get("onRate", {}).get("action") == "rate_interview_answer" for r in ratings)
+
+
+def test_rating_rejects_unbounded_max_and_unknown_event():
+    oversized = _reject({"id": "rating", "type": "Rating", "label": "Readiness", "value": {"$bind": "/score"}, "max": 11})
+    assert oversized.invariant == Invariant.DATA_NOT_CODE
+    event = _reject({"id": "rating", "type": "Rating", "label": "Readiness", "value": {"$bind": "/score"}, "max": 5, "onRate": {"action": "steal"}})
+    assert event.invariant == Invariant.EVENT
+
+
+def test_interview_coach_feedback_rewards_star_evidence_and_result():
+    feedback = coach_feedback(
+        "In my previous role, analytics showed drop-off. I proposed a test using the evidence and increased completion by 18%."
+    )
+    assert feedback["coach_score"] >= 4
+    assert "evidence" in feedback["feedback"]
 
 
 # --------------------------------------------------------------------------- #

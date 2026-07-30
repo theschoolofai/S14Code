@@ -1,6 +1,7 @@
 """HTTP + SSE UI surface, folded into the S13 runtime.
 
   GET  /v1/catalog                  the trusted component catalog
+  GET  /v1/interview-coach          the validator-gated Interview Coach flow
   GET  /v1/runs/{id}/surface        build + validate a declarative surface
   GET  /v1/runs/{id}/dashboard      build + validate the rich showcase dashboard
   GET  /v1/runs/{id}/events         AG-UI event stream over SSE
@@ -27,6 +28,7 @@ from pydantic import BaseModel, Field
 from .agui import run_data_model, state_snapshot, stream_agui
 from .catalog import catalog_manifest
 from .hitl import PendingAction, decide_resume
+from .interview_coach import build_interview_coach_surface, coach_feedback
 from .showcase import build_corpus_dashboard
 from .surface import build_run_surface
 from .validator import validate_surface
@@ -64,6 +66,32 @@ def _read_run(request: Request, run_id: str) -> dict:
 @router.get("/v1/catalog")
 async def catalog():
     return catalog_manifest()
+
+
+@router.get("/v1/interview-coach")
+async def interview_coach():
+    """Serve the deterministic, validator-gated Interview Coach assignment flow."""
+    built = build_interview_coach_surface()
+    result = validate_surface(built)
+    return {
+        "surface": {"root": built["root"], "components": result.accepted, "dataModel": built["dataModel"]},
+        "component_count": len(result.accepted),
+        "clean": result.ok,
+        "rejections": [r.as_dict() for r in result.rejections],
+    }
+
+
+class InterviewFeedbackBody(BaseModel):
+    answer: str = Field(min_length=1, max_length=10_000)
+
+
+@router.post("/v1/interview-coach/feedback")
+async def interview_coach_feedback(body: InterviewFeedbackBody):
+    """Score one answer against the transparent offline Interview Coach rubric."""
+    answer = body.answer.strip()
+    if not answer:
+        raise HTTPException(422, "answer must contain non-whitespace text")
+    return coach_feedback(answer)
 
 
 @router.get("/v1/runs/{run_id}/surface")
@@ -142,7 +170,7 @@ async def harness_surface():
     path = Path(__file__).resolve().parents[2] / "proofs" / "harness_run.json"
     if not path.exists():
         raise HTTPException(404, "harness_run.json not found — run proofs/harness_run.py first")
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     node = data["compose_surface_node"]
     acc = node["surface_accepted"]
     surface = {"root": acc["root"], "components": acc["components"], "dataModel": node["data_model"]}
@@ -222,7 +250,7 @@ async def composed(run_id: str, request: Request):
 async def client(run_id: str):
     if not _CLIENT.exists():
         raise HTTPException(500, "render client missing")
-    return _CLIENT.read_text().replace("__RUN_ID__", run_id)
+    return _CLIENT.read_text(encoding="utf-8").replace("__RUN_ID__", run_id)
 
 
 @router.get("/app", response_class=HTMLResponse)
@@ -233,4 +261,4 @@ async def app_viewer():
     path = Path(__file__).parent / "client" / "app.html"
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
-    return path.read_text()
+    return path.read_text(encoding="utf-8")

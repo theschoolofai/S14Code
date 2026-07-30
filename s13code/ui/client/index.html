@@ -39,6 +39,10 @@
   .StatTile .val{font-size:30px;font-weight:700;color:var(--ink);line-height:1.1;margin-top:6px}
   .StatTile .dl{font-size:11px;color:var(--ink-muted);margin-top:4px}
   .StatTile.good{border-top:3px solid var(--green)}.StatTile.warn{border-top:3px solid var(--amber)}.StatTile.neutral{border-top:3px solid var(--accent)}
+  .Rating{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
+  .Rating .lab{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);font-weight:600;font-family:var(--font-mono)}
+  .Rating .stars{display:flex;gap:4px}.Rating button{border:0;background:none;padding:0 2px;font-size:24px;line-height:1;color:var(--rule-strong);cursor:pointer}
+  .Rating button.on{color:var(--amber)}.Rating.readonly button{cursor:default}
   .chart{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
   .chart .ct{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:8px;font-family:var(--font-mono)}
   table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
@@ -116,7 +120,7 @@ const RENDERERS = {
   DateTime:(c,ctx)=>field(c,()=>{const i=$("input");i.type="datetime-local";i.value=resolve(c.value,ctx.dm)??"";
     i.oninput=()=>{if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,i.value);};return i;}),
   Button:(c,ctx)=>{const b=$("button","");b.className="";b.style.cssText="border:1px solid var(--rule-strong);background:var(--surface);border-radius:8px;padding:6px 14px;font-weight:600;cursor:pointer";
-    b.append(text(c.label));b.onclick=()=>emitAction(c.onPress&&c.onPress.action,{});return b;},
+    b.append(text(c.label));b.onclick=()=>emitAction(c.onPress&&c.onPress.action,{},ctx);return b;},
   Tabs:(c,ctx)=>renderTabs(c,ctx),
   Modal:(c,ctx)=>{const e=$("div","Modal");const tag=$("div","mtag");tag.append(text((resolve(c.open,ctx.dm)?"modal · open":"modal · preview")));
     const h=$("div","mt");h.append(text(c.title||""));e.append(tag,h);kids(c,ctx,e);return e;},
@@ -135,6 +139,7 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  Rating:(c,ctx)=>renderRating(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -186,11 +191,32 @@ function renderApproval(c,ctx){const e=$("div","Approval");const sm=$("div","sm"
   const ok=$("button","ok");ok.append(text("Approve"));ok.onclick=()=>emitAction("approve",resolve(c.params,ctx.dm));
   const no=$("button");no.append(text("Reject"));no.onclick=()=>emitAction("reject",{});btns.append(ok,no);e.append(sm,pre,btns);return e;}
 
-function emitAction(name,args){ // the only way the surface changes the world: a named, validated event
+function renderRating(c,ctx){const e=$("div","Rating"+(c.readOnly?" readonly":""));const l=$("div","lab");l.append(text(c.label||"rating"));const stars=$("div","stars");
+  const max=Math.max(1,Math.min(10,Number(c.max)||5));let value=Math.max(0,Math.min(max,Number(resolve(c.value,ctx.dm))||0));
+  function paint(){[...stars.children].forEach((b,i)=>b.classList.toggle("on",i<value));}
+  for(let i=1;i<=max;i++){const b=$("button");b.type="button";b.setAttribute("aria-label",`${i} of ${max}`);b.append(text(String.fromCodePoint(0x2605)));b.onclick=()=>{if(c.readOnly)return;value=i;if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,value);paint();emitAction(c.onRate&&c.onRate.action,{rating:value});};stars.append(b);}paint();e.append(l,stars);return e;}
+
+function legacyEmitAction(name,args){ // retained for ordinary diagnostic actions
   document.getElementById("meta").textContent = "action emitted → "+name+" "+JSON.stringify(args);
 }
 
-function render(surface){const byId={};surface.components.forEach(c=>byId[c.id]=c);const ctx={byId,dm:surface.dataModel||{}};
+async function emitAction(name,args,ctx){
+  if(name==="submit_interview_answer"){
+    const answer=String(ctx.dm.answer||"").trim();
+    if(!answer){document.getElementById("meta").textContent="Please write an answer before requesting feedback.";return;}
+    document.getElementById("meta").textContent="reviewing your answer…";
+    try { const res=await fetch("/v1/interview-coach/feedback",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({answer})});
+      const data=await res.json(); if(!res.ok)throw new Error(data.detail||"feedback request failed");
+      Object.assign(ctx.dm,data); render(activeSurface);
+      document.getElementById("meta").textContent="feedback ready · transparent offline rubric";
+    } catch(err) { document.getElementById("meta").textContent="feedback unavailable: "+err.message; }
+    return;
+  }
+  legacyEmitAction(name,args);
+}
+
+let activeSurface=null;
+function render(surface){activeSurface=surface;const byId={};surface.components.forEach(c=>byId[c.id]=c);const ctx={byId,dm:surface.dataModel||{}};
   const mount=document.getElementById("mount");mount.textContent="";mount.append(renderComponent(byId[surface.root],ctx));}
 
 // ---- AG-UI live state channel, with STATE_SNAPSHOT reconnect ---------------
@@ -251,6 +277,13 @@ function openStream(){
 }
 
 async function boot(){
+  if (RUN === "interview-coach") {
+    const res = await fetch("/v1/interview-coach"); const data = await res.json();
+    document.getElementById("badge").textContent = `safe · Interview Coach · ${data.component_count} components`;
+    document.getElementById("meta").textContent = "rating and answer events are schema-validated";
+    document.getElementById("run").textContent = "Interview Coach";
+    render(data.surface); return;
+  }
   if (RUN === "harness") {
     const res = await fetch(`/v1/harness/surface`); const data = await res.json();
     const v = data.validator || {};

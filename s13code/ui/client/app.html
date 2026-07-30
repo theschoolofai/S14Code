@@ -43,6 +43,7 @@
   .StatTile .lab{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);font-weight:600;font-family:var(--font-mono)}
   .StatTile .val{font-size:28px;font-weight:700;color:var(--ink);margin-top:5px}
   .StatTile .dl{font-size:11px;color:var(--ink-muted);margin-top:3px}
+  .Rating{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}.Rating .lab{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);font-family:var(--font-mono);font-weight:600}.Rating .stars{display:flex;gap:4px;margin-top:6px}.Rating button{border:0;background:none;padding:0 2px;font-size:24px;color:var(--rule-strong);cursor:pointer}.Rating button.on{color:var(--amber)}.Rating.readonly button{cursor:default}
   .chart{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
   .chart .ct{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:8px;font-family:var(--font-mono)}
   .prog{height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}.prog>i{display:block;height:100%;background:var(--green)}
@@ -137,6 +138,7 @@ const R={
   DateTime:(c,x)=>{const i=$("input","field");i.type="date";return i;},
   Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
   ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
+  Rating:(c,x)=>{const e=$("div","Rating"+(c.readOnly?" readonly":""));const l=$("div","lab");l.append(T(c.label||"rating"));const stars=$("div","stars");const max=Math.max(1,Math.min(10,Number(c.max)||5));let value=Math.max(0,Math.min(max,Number(resolve(c.value,x.dm))||0));function paint(){[...stars.children].forEach((b,i)=>b.classList.toggle("on",i<value));}for(let i=1;i<=max;i++){const b=$("button");b.type="button";b.append(T(String.fromCodePoint(0x2605)));b.onclick=()=>{if(c.readOnly)return;value=i;if(c.value&&c.value.$bind){let p=x.dm;const parts=c.value.$bind.split("/").slice(1);for(const part of parts.slice(0,-1))p=p[part]||(p[part]={});p[parts.at(-1)]=value;}paint();choose("rating "+value);};stars.append(b);}paint();e.append(l,stars);return e;},
 };
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
