@@ -47,8 +47,8 @@ class ComponentSpec:
 _TONE = PropSpec("enum", ("neutral", "good", "warn", "bad"))
 
 
-# The 23 component types the render client knows how to draw. The first 15 are
-# A2UI Basic's own names; the last 8 are custom extensions A2UI Basic lacks.
+# The component types the render client knows how to draw. The first 15 are
+# A2UI Basic's own names; the last 9 are custom extensions A2UI Basic lacks.
 COMPONENTS: dict[str, ComponentSpec] = {
     # --- A2UI Basic: layout / text / media / inputs / containers (15) --------
     "Row": ComponentSpec("Row", {
@@ -88,7 +88,7 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "Modal": ComponentSpec("Modal", {
         "title": PropSpec("text"), "children": PropSpec("ref"), "open": PropSpec("binding"),
     }, source="a2ui-basic"),
-    # --- Custom extensions: what A2UI Basic does not define (8) ---------------
+    # --- Custom extensions: what A2UI Basic does not define (9) ---------------
     "BarChart": ComponentSpec("BarChart", {
         "title": PropSpec("text"), "data": PropSpec("binding"),
         "xKey": PropSpec("text"), "yKey": PropSpec("text"),
@@ -117,11 +117,26 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "summary": PropSpec("binding"), "params": PropSpec("binding"),
         "confirm": PropSpec("action"), "reject": PropSpec("action"),
     }, source="custom"),
+    # ========== NEW: KANBAN BOARD COMPONENT ==========
+    # --- S14 additive: KanbanBoard for project management workflows
+    "KanbanBoard": ComponentSpec("KanbanBoard", {
+        "columns": PropSpec("binding"),      # Array of column objects
+        "cards": PropSpec("binding"),        # Array of card objects
+        "onCardMove": PropSpec("action"),    # Action when card is dragged
+        "onCardClick": PropSpec("action"),   # Action when card is clicked
+        "onColumnClick": PropSpec("action"), # Action when column header clicked
+        "title": PropSpec("text"),           # Optional board title
+        "showAddCard": PropSpec("bool"),     # Show add card button
+    }, source="custom"),
 }
 
 # The closed set of action names a surface may emit. An action the agent did
 # not register cannot cross back into the graph.
-REGISTERED_ACTIONS: frozenset[str] = frozenset({"approve", "reject", "rerun", "request_data"})
+REGISTERED_ACTIONS: frozenset[str] = frozenset({
+    "approve", "reject", "rerun", "request_data",
+    # ========== NEW: KanbanBoard actions ==========
+    "move_task", "view_task", "view_project"
+})
 
 
 def catalog_manifest() -> dict:
