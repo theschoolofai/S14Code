@@ -727,7 +727,24 @@ def test_the_composer_is_told_never_to_draw_the_graphs_own_steps():
     # /timeline is set from the content's own ordered sections.
     assert 'data_model["timeline"] = data_model["section_events"]' in source
     # And the instruction says which is which, in as many words.
-    assert "Never draw /run_events in an interface for the user" in source
+    assert "NEVER draw the graph's own machinery" in source
+
+
+def test_graph_progress_is_not_offered_as_a_drawable_pointer():
+    """The same defect as the journal, in a second place.
+
+    progress_value counted succeeded graph nodes — computed by the surface node,
+    which is still running while it counts. A ProgressBar bound to it could never
+    reach its max, so a finished run rendered a bar stuck short of the end with
+    all of its content already on screen. Renamed out of reach, and counted
+    honestly for anything that reads it directly.
+    """
+    source = (_BUILD_ROOT / "s13code" / "runtime.py").read_text()
+    assert 'data_model["run_progress_value"]' in source
+    assert 'data_model["progress_value"]' not in source
+    assert 'data_model["progress_max"]' not in source
+    # A ProgressBar is now for a fraction of the SUBJECT, not for run machinery.
+    assert "add a ProgressBar ONLY when some pointer is a real fraction of the SUBJECT" in source
 
 
 @pytest.mark.parametrize("page", ["index.html", "app.html", "jobs.html"])

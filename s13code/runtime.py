@@ -772,9 +772,17 @@ class S13Runtime:
             data_model["run_events"] = [{"time": str(event.sequence),
                                          "label": f"{event.kind} {event.node_id or ''}".strip()}
                                         for event in journal]
+            # Graph progress, and plumbing for the same reason /run_events is: the
+            # node counting succeeded nodes is itself still running, so this can
+            # never reach its own max. Drawn as a ProgressBar it produced a bar
+            # stuck short of the end on a run that had in fact finished — the
+            # interface reporting itself incomplete while showing all its content.
+            # Renamed so a composer cannot bind it by reaching for "progress", and
+            # the surface node is counted as the success it is about to be, so the
+            # number is at least true for anything that reads it directly.
             succeeded = sum(1 for node in snapshot.nodes.values() if node["state"] == "succeeded")
-            data_model["progress_value"] = succeeded
-            data_model["progress_max"] = max(1, len(snapshot.nodes))
+            data_model["run_progress_value"] = min(succeeded + 1, max(1, len(snapshot.nodes)))
+            data_model["run_progress_max"] = max(1, len(snapshot.nodes))
 
             # Merge the single-goal content role's GENERIC STRUCTURED answer into
             # the data model under clean, domain-neutral pointers so the compose
@@ -957,11 +965,14 @@ class S13Runtime:
                             "\"cards\" so it reads the right fields; "
                             "for /choices (the goal asks the user to pick) render one tappable Button per entry, "
                             "label the literal /choice_N_label, onPress action \"request_data\"; "
-                            "you may also add a ProgressBar bound to /progress_value (max /progress_max), and a "
-                            "Timeline bound to /timeline when that pointer exists — it carries the SUBJECT's own "
-                            "sequence. Never draw /run_events in an interface for the user: those are the graph's "
-                            "internal steps, they stop before this interface was finished being composed, and a "
-                            "Timeline of them always looks like the run is still running. Do NOT dump everything "
+                            "add a ProgressBar ONLY when some pointer is a real fraction of the SUBJECT (a "
+                            "percentage or a completed-out-of-total the user cares about), never as decoration; "
+                            "and a Timeline bound to /timeline when that pointer exists — it carries the "
+                            "SUBJECT's own sequence. NEVER draw the graph's own machinery in an interface for the "
+                            "user: /run_events and /run_progress_value are this run's internal steps and node "
+                            "count, they are recorded before this interface has finished being composed, and "
+                            "drawing them produces a log that stops mid-run and a progress bar that never "
+                            "completes, on a run that in fact succeeded. Do NOT dump everything "
                             "into one Text. Bind every DATA value to a /pointer listed in available_pointers."),
             }
             body = await _gateway_surface_call(json.dumps(instruction), system)

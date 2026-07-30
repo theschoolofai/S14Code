@@ -396,6 +396,12 @@ async function runTurn(userText,isBack){
   if(!isBack)convo.push(userText);else convo.push(userText);
   trail();
   setStatus([{text:"composing…",tone:"think"},'the agent is writing an interface for: "'+userText+'"']);
+  // Clear the previous interface before composing the next one. Leaving it up
+  // read as though the new prompt had been answered by the old screen — ask the
+  // tutor question and the job board sat there for a minute looking like the
+  // reply. A composed interface belongs to exactly one turn, and the wall panel
+  // below it belongs to that same turn, so both go at once.
+  composing(userText);
   const started=performance.now();
   try{
     const res=await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -412,6 +418,24 @@ async function runTurn(userText,isBack){
   }finally{
     busy=false;document.getElementById("ask").disabled=false;
   }
+}
+
+// The waiting state: the old interface goes, and what replaces it says which
+// prompt is being answered. Built from text nodes like everything else here.
+function composing(userText){
+  const mount=document.getElementById("mount");
+  mount.textContent="";
+  const box=$("div","empty");
+  box.append(T("composing an interface for"));
+  box.append(document.createElement("br"));
+  const q=document.createElement("strong");
+  q.append(T("“"+userText+"”"));
+  box.append(q);
+  box.append(document.createElement("br"));
+  box.append(T("the agent is choosing components off the catalog — this takes a moment"));
+  mount.append(box);
+  document.getElementById("wall").style.display="none";
+  document.getElementById("wallrows").textContent="";
 }
 
 // Draw one composed interface, however it was obtained. Composing a turn and
