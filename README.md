@@ -113,9 +113,14 @@ All served by the runtime on 8113, defined in
 | `GET /v1/runs/{id}/dashboard` | the rich showcase dashboard, validated |
 | `GET /v1/runs/{id}/events` | the S13 journal mapped to AG-UI events over SSE |
 | `GET /v1/harness/surface` | the real surface a recorded S13 harness run composed (re-validated on serve) |
+| `GET /v1/proofs/checklist` | the captured run where Gemini composed `Checklist` unprompted (re-validated on serve) |
+| `GET /v1/runs/{id}/proof` | goal + raw model reply + validator verdict for **any** run's composed interface |
 | `POST /v1/validate` | run any surface through the injection wall |
 | `POST /v1/action` | a validated user action (approve/reject), bound to final params |
 | `GET /s/{id}` | the render client, pointed at a run |
+| `GET /proof/{id}` | a human-readable proof page for one run's composed interface |
+| `GET /app` | the generic "teach me X" UI-only app viewer |
+| `GET /checkpoint` | Checkpoint, a UI-only readiness-planner app (see below) |
 
 ## The generative loop (UI composed by the harness)
 
@@ -136,6 +141,83 @@ S14_SELFCORRECT_CITY=Berlin GLC_BASE_URL=http://127.0.0.1:8111 \
   uv run python proofs/harness_selfcorrect.py  # -> proofs/harness_selfcorrect.json
 ```
 
+## Checklist — a new catalog component, and Checkpoint
+
+A 24th catalog type, added on top of the 23 above (`s13code/ui/catalog.py`):
+a checkable task list — `title`, an `items` binding, `labelKey`/`doneKey`,
+and an optional `onToggle` action. It's the one interface shape none of the
+other 23 types cover: `List`/`Card` render a flat ordered group, `Timeline`
+renders chronological events, but nothing renders "here's what's left to do,
+and here's what's already done." It's drawn by all three render clients
+(`client/index.html`, `client/app.html`, `client/checkpoint.html`,
+`client/proof.html`), from text nodes only — the same no-innerHTML,
+no-`eval` contract every other component follows.
+
+**Checkpoint** (`GET /checkpoint`, `s13code/ui/client/checkpoint.html`) is a
+UI-only readiness planner built on the exact same generic runtime Wayfarer/`
+/app` use — zero backend changes beyond the one route and a small tweak to
+`compose_surface`'s own instruction text (see below). Domain: getting ready
+for a real deadline — moving apartments, a first race, a website launch.
+Turn 1 composes an overview plus a prep list (a `Checklist` when the tasks
+are flat and checkable, a `Timeline` when they read as scheduled) plus
+readiness `StatTile`s plus next-step `Button`s; every following turn takes
+whichever choice was tapped and composes whichever structure actually fits
+that facet — `DataTable`, `BarChart`, another `Checklist` — never naming a
+component in the prompt.
+
+**Unprompted composition, and what it actually took to get there.**
+`compose_surface`'s system prompt never contains the string `"Checklist"` —
+only the catalog manifest handed to the model as data does — and Gemini
+reaches for it on its own (`proofs/generate_checklist_gemini.py` →
+`proofs/checklist_gemini_run.json`, replayed live at `/v1/proofs/checklist`).
+That took one real fix, not just prompt luck: the existing `compose`
+instruction hard-coded only two options — `Timeline` or a `List`/`Column` of
+`Card`s — for `/sections`-shaped data, the one path a flat task list
+naturally produces. Without a change, `Checklist` was structurally
+*unreachable* through that path no matter how a goal was phrased. Adding it
+as a third *eligible* (not forced) option — the same technique this
+codebase's Stepper contribution used — is the one line changed in
+`s13code/runtime.py` outside of the new files.
+
+**A real adversarial prompt, refused.** `proofs/attack_boundary_checklist.py`
+sends one goal with three embedded instructions (an unregistered `RawHtml`
+type, a literal `<script>` string where a binding is required, an
+unregistered `onPress` action) straight through the live graph. Gemini
+complied with all three; the validator caught all three — one per invariant
+— while still rendering the 12 legitimate components alongside them. Ground
+truth, checked in the script itself: neither `RawHtml` nor the injected
+action name ever entered `COMPONENTS` / `REGISTERED_ACTIONS`.
+
+**A proof link on every turn, not just a captured fixture.**
+`GET /v1/runs/{id}/proof` re-validates *any* run's composed interface on
+serve and returns its goal, raw (unedited) model reply, and
+proposed/accepted/rejected verdict; `GET /proof/{id}` renders that as a page
+— goal, a validator panel, the interface itself redrawn read-only. Every
+turn in Checkpoint (and `/app`) links "view proof ↗" to its own run's page,
+so the three invariants aren't only demonstrated once in a canned capture —
+they're inspectable for every single composition a user actually triggers.
+
+**The honest gaps**, in full in [`PR_DESCRIPTION_CHECKLIST.md`](PR_DESCRIPTION_CHECKLIST.md):
+component choice isn't fully deterministic even at `temperature: 0` (the
+same goal shape produced `Timeline` once, `Checklist` another time, `List`/
+`Card`s a third); the harness's generic `/sections` binding groups a flat
+task list as one section with an array-valued `points` field, which needed a
+defensive array-join fix in the renderer (mirroring `Stepper`'s existing
+`stepField` pattern) to avoid an `[object Object]`-shaped row; and latency is
+~5–8s per turn, two sequential live model calls with no progress mid-flight
+beyond an elapsed-time pill.
+
+```bash
+uv run pytest -q                                    # 122 tests, hermetic
+
+# live captures (need glc_v3 + s14code serve running, see above)
+uv run python proofs/generate_checklist_gemini.py    # unprompted Checklist composition
+uv run python proofs/attack_boundary_checklist.py     # adversarial prompt + validator refusal
+
+open http://127.0.0.1:8113/checkpoint                 # the app
+open http://127.0.0.1:8113/v1/proofs/checklist         # the captured proof, re-validated on serve
+```
+
 ## Proofs and tests
 
 Everything the Session 14 widgets replay is real captured output under `proofs/`:
@@ -147,6 +229,8 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
+| `checklist_gemini_run.json` | `generate_checklist_gemini.py` | Gemini composes the new `Checklist` type, unprompted |
+| `attack_boundary_checklist_run.json` | `attack_boundary_checklist.py` | a live adversarial prompt, refused (all 3 invariants) |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
