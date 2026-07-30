@@ -5,9 +5,14 @@
   GET  /v1/runs/{id}/dashboard      build + validate the rich showcase dashboard
   GET  /v1/runs/{id}/events         AG-UI event stream over SSE
   GET  /v1/harness/surface          the real surface a recorded S13 harness composed
+  GET  /v1/proofs/checklist         the captured run where Gemini composed Checklist unprompted
+  GET  /v1/runs/{id}/proof          goal + raw reply + validator verdict for ANY run's composed interface
   POST /v1/validate                 validate an arbitrary surface (injection wall)
   POST /v1/action                   a validated user action (approve/reject/rerun)
   GET  /s/{id}                      the render client, pointed at a run
+  GET  /proof/{id}                  a human-readable proof page for one run's composed interface
+  GET  /app                         the generic "teach me X" UI-only app viewer
+  GET  /checkpoint                  Checkpoint, a UI-only readiness-planner app (Part 2)
 
 The data source is the runtime's own graph, read in-process off
 ``request.app.state.s13_runtime`` — the same attribute S13's ``GET
@@ -33,6 +38,7 @@ from .validator import validate_surface
 
 router = APIRouter()
 _CLIENT = Path(__file__).parent / "client" / "index.html"
+_PROOF_CLIENT = Path(__file__).parent / "client" / "proof.html"
 
 
 def _read_run(request: Request, run_id: str) -> dict:
@@ -159,6 +165,39 @@ async def harness_surface():
     }
 
 
+@router.get("/v1/proofs/checklist")
+async def checklist_proof():
+    """Serve the real, captured run in which Gemini composed the new Checklist
+    component on its own (see proofs/generate_checklist_gemini.py).
+
+    Same pattern as /v1/harness/surface: read the recorded proof, re-validate
+    on serve, and return only what survives the same wall that guards
+    injection. The compose_surface prompt never names "Checklist"; the model
+    found it by reading the catalog manifest, exactly like every other custom
+    type.
+    """
+    path = Path(__file__).resolve().parents[2] / "proofs" / "checklist_gemini_run.json"
+    if not path.exists():
+        raise HTTPException(404, "checklist_gemini_run.json not found — run proofs/generate_checklist_gemini.py first")
+    data = json.loads(path.read_text())
+    node = data["compose_surface_node"]
+    acc = node["surface_accepted"]
+    surface = {"root": acc["root"], "components": acc["components"], "dataModel": node["data_model"]}
+    result = validate_surface(surface)
+    return {
+        "run_id": data.get("run_id"),
+        "goal": data.get("goal"),
+        "surface": surface,
+        "component_count": len(result.accepted),
+        "validator": {"proposed": len(surface["components"]), "accepted": len(result.accepted),
+                      "rejected": len(result.rejections)},
+        "clean": result.ok,
+        "provider": node.get("provider"),
+        "model": node.get("model"),
+        "checklist_composed_unprompted": "Checklist" in {c.get("type") for c in result.accepted},
+    }
+
+
 class ValidateBody(BaseModel):
     surface: dict
 
@@ -218,11 +257,53 @@ async def composed(run_id: str, request: Request):
     }
 
 
+@router.get("/v1/runs/{run_id}/proof")
+async def run_proof(run_id: str, request: Request):
+    """The full validator proof for ONE run's composed interface: the goal
+    that produced it, the raw (unedited) model reply, and proposed vs.
+    accepted vs. rejected — re-validated on serve, same as every other proof
+    route. Unlike /v1/proofs/checklist (one captured fixture on disk), this
+    works for ANY run this server has produced, so a UI-only app can link
+    every single turn to its own permanent, inspectable proof."""
+    run = _read_run(request, run_id)
+    node = run["nodes"].get("surface") or {}
+    res = node.get("result") or {}
+    surf = res.get("surface") or {}
+    if not surf.get("components"):
+        raise HTTPException(404, "run has no composed interface (no compose_surface node)")
+    result = validate_surface(surf)
+    goal = (node.get("input") or {}).get("query", "")
+    return {
+        "run_id": run_id,
+        "goal": goal,
+        "raw_surface": res.get("raw_surface"),
+        "surface": {"root": surf.get("root"), "components": result.accepted,
+                    "dataModel": res.get("data_model") or surf.get("dataModel") or {}},
+        "validator": {"proposed": len(surf.get("components", [])), "accepted": len(result.accepted),
+                      "rejected": len(result.rejections), "ok": result.ok,
+                      "rejections": [r.as_dict() for r in result.rejections]},
+        "clean": result.ok,
+        "provider": res.get("provider"),
+        "model": res.get("model"),
+    }
+
+
 @router.get("/s/{run_id}", response_class=HTMLResponse)
 async def client(run_id: str):
     if not _CLIENT.exists():
         raise HTTPException(500, "render client missing")
     return _CLIENT.read_text().replace("__RUN_ID__", run_id)
+
+
+@router.get("/proof/{run_id}", response_class=HTMLResponse)
+async def proof_viewer(run_id: str):
+    """A per-run proof page: the goal, the composed interface re-rendered,
+    and the validator's proposed/accepted/rejected verdict for that exact
+    turn — the same wall every other surface passes through, made visible
+    for one specific run instead of a canned fixture."""
+    if not _PROOF_CLIENT.exists():
+        raise HTTPException(500, "proof viewer missing")
+    return _PROOF_CLIENT.read_text().replace("__RUN_ID__", run_id)
 
 
 @router.get("/app", response_class=HTMLResponse)
@@ -233,4 +314,20 @@ async def app_viewer():
     path = Path(__file__).parent / "client" / "app.html"
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
+    return path.read_text()
+
+
+@router.get("/checkpoint", response_class=HTMLResponse)
+@router.get("/checkpoint/", response_class=HTMLResponse)
+async def checkpoint_planner():
+    """Checkpoint: a UI-only readiness planner (Session 14 Part 2). Forked
+    from the /app render engine — same catalog-validated components, same
+    tap-becomes-next-turn loop — with its own domain-specific goal-building
+    instead of a fixed drill-down depth: a prep checklist for whatever the
+    user is getting ready for, then whichever facet (a comparison, a cost
+    breakdown, a deeper checklist) they tap next. No backend changes; the
+    generic runtime carries the whole app."""
+    path = Path(__file__).parent / "client" / "checkpoint.html"
+    if not path.exists():
+        raise HTTPException(500, "checkpoint planner missing")
     return path.read_text()
