@@ -6,9 +6,11 @@
   GET  /v1/runs/{id}/events         AG-UI event stream over SSE
   GET  /v1/harness/surface          the real surface a recorded S13 harness composed
   GET  /v1/proofs/checklist         the captured run where Gemini composed Checklist unprompted
+  GET  /v1/runs/{id}/proof          goal + raw reply + validator verdict for ANY run's composed interface
   POST /v1/validate                 validate an arbitrary surface (injection wall)
   POST /v1/action                   a validated user action (approve/reject/rerun)
   GET  /s/{id}                      the render client, pointed at a run
+  GET  /proof/{id}                  a human-readable proof page for one run's composed interface
   GET  /app                         the generic "teach me X" UI-only app viewer
   GET  /checkpoint                  Checkpoint, a UI-only readiness-planner app (Part 2)
 
@@ -36,6 +38,7 @@ from .validator import validate_surface
 
 router = APIRouter()
 _CLIENT = Path(__file__).parent / "client" / "index.html"
+_PROOF_CLIENT = Path(__file__).parent / "client" / "proof.html"
 
 
 def _read_run(request: Request, run_id: str) -> dict:
@@ -254,11 +257,53 @@ async def composed(run_id: str, request: Request):
     }
 
 
+@router.get("/v1/runs/{run_id}/proof")
+async def run_proof(run_id: str, request: Request):
+    """The full validator proof for ONE run's composed interface: the goal
+    that produced it, the raw (unedited) model reply, and proposed vs.
+    accepted vs. rejected — re-validated on serve, same as every other proof
+    route. Unlike /v1/proofs/checklist (one captured fixture on disk), this
+    works for ANY run this server has produced, so a UI-only app can link
+    every single turn to its own permanent, inspectable proof."""
+    run = _read_run(request, run_id)
+    node = run["nodes"].get("surface") or {}
+    res = node.get("result") or {}
+    surf = res.get("surface") or {}
+    if not surf.get("components"):
+        raise HTTPException(404, "run has no composed interface (no compose_surface node)")
+    result = validate_surface(surf)
+    goal = (node.get("input") or {}).get("query", "")
+    return {
+        "run_id": run_id,
+        "goal": goal,
+        "raw_surface": res.get("raw_surface"),
+        "surface": {"root": surf.get("root"), "components": result.accepted,
+                    "dataModel": res.get("data_model") or surf.get("dataModel") or {}},
+        "validator": {"proposed": len(surf.get("components", [])), "accepted": len(result.accepted),
+                      "rejected": len(result.rejections), "ok": result.ok,
+                      "rejections": [r.as_dict() for r in result.rejections]},
+        "clean": result.ok,
+        "provider": res.get("provider"),
+        "model": res.get("model"),
+    }
+
+
 @router.get("/s/{run_id}", response_class=HTMLResponse)
 async def client(run_id: str):
     if not _CLIENT.exists():
         raise HTTPException(500, "render client missing")
     return _CLIENT.read_text().replace("__RUN_ID__", run_id)
+
+
+@router.get("/proof/{run_id}", response_class=HTMLResponse)
+async def proof_viewer(run_id: str):
+    """A per-run proof page: the goal, the composed interface re-rendered,
+    and the validator's proposed/accepted/rejected verdict for that exact
+    turn — the same wall every other surface passes through, made visible
+    for one specific run instead of a canned fixture."""
+    if not _PROOF_CLIENT.exists():
+        raise HTTPException(500, "proof viewer missing")
+    return _PROOF_CLIENT.read_text().replace("__RUN_ID__", run_id)
 
 
 @router.get("/app", response_class=HTMLResponse)

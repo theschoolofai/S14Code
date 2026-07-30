@@ -217,7 +217,8 @@ async function runTurn(userText){
   const rid = run.run_id;
   const c = await (await fetch(API+"/v1/runs/"+rid+"/composed")).json();
   if(c.surface){ render(c.surface);
-    setStatus('<span class="pill good">'+(c.provider||"gemini")+' · '+c.component_count+' components · 0 executable</span> composed live, validated in-catalog'); }
+    setStatus('<span class="pill good">'+(c.provider||"gemini")+' · '+c.component_count+' components · 0 executable</span> composed live, validated in-catalog'
+      +' · <a href="/proof/'+encodeURIComponent(rid)+'" target="_blank" rel="noopener" style="color:var(--accent)">view proof ↗</a>'); }
   else { setStatus("no interface composed"); }
 }
 function choose(label){ if(label) runTurn(label); }

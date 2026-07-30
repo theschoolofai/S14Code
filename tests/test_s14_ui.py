@@ -562,6 +562,78 @@ def test_route_render_client_has_no_run_id_placeholder(client):
     assert "harness" in resp.text
 
 
+# --------------------------------------------------------------------------- #
+# /v1/runs/{id}/proof and /proof/{id} — a per-turn proof, not just a fixture
+# --------------------------------------------------------------------------- #
+
+_PROOF_RUN = {
+    "finished": True,
+    "nodes": {
+        "surface": {
+            "id": "surface", "skill": "compose_surface", "state": "succeeded",
+            "input": {"query": "Help someone get ready for this: test the proof route"},
+            "result": {
+                "agent": "ui_composer", "provider": "gemini_1", "model": "gemini-test",
+                "raw_surface": '{"root":"root","components":[...one poisoned Button included...]}',
+                "surface": {
+                    "root": "root",
+                    "components": [
+                        {"id": "root", "type": "Column", "children": ["title", "cl", "poison"]},
+                        {"id": "title", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+                        {"id": "cl", "type": "Checklist", "title": "Prep", "items": {"$bind": "/tasks"}},
+                        {"id": "poison", "type": "Button", "label": "Go",
+                         "onPress": {"action": "drop_tables"}},
+                    ],
+                    "dataModel": {"title": "Test Proof Run", "tasks": [{"label": "Do a thing", "done": False}]},
+                },
+                "data_model": {"title": "Test Proof Run", "tasks": [{"label": "Do a thing", "done": False}]},
+            },
+        },
+    },
+    "edges": {},
+    "events": [],
+}
+
+
+@pytest.fixture(scope="module")
+def proof_client() -> TestClient:
+    app = FastAPI()
+    app.include_router(ui_router)
+    app.state.s13_runtime = _PopulatedRuntime("proof-run", _PROOF_RUN)
+    return TestClient(app)
+
+
+def test_route_run_proof_carries_the_goal_raw_reply_and_validator_verdict(proof_client):
+    resp = proof_client.get("/v1/runs/proof-run/proof")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["goal"] == "Help someone get ready for this: test the proof route"
+    assert body["raw_surface"]
+    v = body["validator"]
+    assert v["proposed"] == 4 and v["accepted"] == 3 and v["rejected"] == 1
+    assert v["ok"] is False
+    assert v["rejections"][0]["invariant"] == Invariant.EVENT
+    # The poisoned Button never reaches the accepted surface, but the
+    # legitimate Checklist alongside it does — same "show what's safe"
+    # property the validator applies everywhere, proven here for a live run.
+    types = {c["type"] for c in body["surface"]["components"]}
+    assert "Checklist" in types
+    assert "poison" not in {c["id"] for c in body["surface"]["components"]}
+
+
+def test_route_run_proof_unknown_run_is_404(proof_client):
+    assert proof_client.get("/v1/runs/nope/proof").status_code == 404
+
+
+def test_route_proof_viewer_serves_html_pointed_at_the_run(proof_client):
+    resp = proof_client.get("/proof/proof-run")
+    assert resp.status_code == 200
+    assert "__RUN_ID__" not in resp.text
+    assert "proof-run" in resp.text
+    # It fetches its data client-side, not server-rendered.
+    assert "/v1/runs/" in resp.text and "/proof" in resp.text
+
+
 def test_route_validate_rejects_a_wormhole_on_catalog(client):
     surface = {"root": "r", "components": [{"id": "r", "type": "Wormhole"}]}
     resp = client.post("/v1/validate", json={"surface": surface})
@@ -696,7 +768,7 @@ def test_render_clients_wire_up_checklist():
     # additionally carries the strict "never innerHTML from a bound value"
     # contract (checked above); this Checklist renderer must not be the
     # exception that breaks it.
-    for name in ("index.html", "app.html", "checkpoint.html"):
+    for name in ("index.html", "app.html", "checkpoint.html", "proof.html"):
         html = (_BUILD_ROOT / "s13code" / "ui" / "client" / name).read_text()
         assert "Checklist:(c," in html, name
         assert "renderChecklist" in html or "function renderChecklist" in html or 'cb.type="checkbox"' in html, name

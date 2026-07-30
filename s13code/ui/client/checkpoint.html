@@ -74,6 +74,8 @@
   .badges{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 6px}
   .badges .sub{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted)}
   .badges .runid{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--ink-muted)}
+  .proof-link{font-family:var(--font-mono);font-size:11px;color:var(--accent);text-decoration:none;padding:2px 9px;border:1px solid var(--accent-soft);border-radius:999px}
+  .proof-link:hover{background:var(--accent-soft);text-decoration:underline}
   .hint{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);margin-bottom:10px}
   .actbtn{width:100%;text-align:center;border:1px solid var(--rule-strong);background:var(--surface);border-radius:12px;padding:14px;font-weight:600;font-size:15px;cursor:pointer;color:var(--ink);transition:all 120ms}
   .actbtn:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
@@ -305,16 +307,25 @@ function cleanLabel(label){
   return String(label == null ? "" : label).replace(/^\s*(turn|level)\s*\d+\s*[:\-–]\s*/i, "").trim();
 }
 
-// ---- run chrome: badges read from data the backend already exposes. ----
+// ---- run chrome: badges read from data the backend already exposes. Every
+// turn gets its own permanent proof link — /proof/{run_id} re-validates that
+// exact composition on serve and shows the goal, the raw model reply, and
+// the proposed/accepted/rejected verdict, not just "it worked". ----
 function renderBadges(c, rid){
   const b=document.getElementById("badges"); b.innerHTML="";
   const good=$("span","pill good");
   good.append(T("composed by "+(c.provider||"gemini")+" inside the live graph · "+c.component_count+" components · 0 executable"));
   const sub=$("span","sub");
   sub.append(T("composed by "+(c.model||"model")+" · 0 model-authored code"));
+  const proofLink=document.createElement("a");
+  proofLink.href="/proof/"+encodeURIComponent(rid);
+  proofLink.target="_blank";
+  proofLink.rel="noopener";
+  proofLink.className="proof-link";
+  proofLink.append(T("view proof ↗"));
   const rtag=$("span","runid");
   rtag.append(T("run "+rid));
-  b.append(good, sub, rtag);
+  b.append(good, sub, proofLink, rtag);
 }
 
 const STAGES = [
