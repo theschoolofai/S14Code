@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
@@ -255,7 +256,11 @@ async def jobs_app():
     path = Path(__file__).parent / "client" / "jobs.html"
     if not path.exists():
         raise HTTPException(500, "jobs app missing")
-    return path.read_text()
+    # The page needs to know whether this deployment can compose. A replay-only
+    # public build carries no credential, so it offers the captured runs instead
+    # of a Compose box that could only ever fail.
+    return path.read_text().replace("__REPLAY_ONLY__",
+                                    "true" if os.getenv("S14_REPLAY_ONLY") == "1" else "false")
 
 
 @router.get("/app", response_class=HTMLResponse)

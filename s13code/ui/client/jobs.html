@@ -502,8 +502,55 @@ document.getElementById("attack").onclick=()=>{
   document.getElementById("ask").click();
 };
 
+// ---------------------------------------------------------------------------
+// Replay-only deployments. A public build can ship the durable journal and no
+// provider credential at all: every interface below was composed live against
+// the real gateway and is re-read from that journal, so the page costs nothing
+// to serve and cannot break. Composing a NEW one needs a key, so the shell says
+// so plainly instead of offering a button that could only fail.
+// ---------------------------------------------------------------------------
+// Quoted so the file is valid JavaScript with the token UNREPLACED: served by a
+// local runtime it reads as false and the shell composes as usual, and the test
+// probe can evaluate this page straight off disk.
+const REPLAY_ONLY = ("__REPLAY_ONLY__" === "true");
+
+const CAPTURES = [
+  ["run-95ac36ad7ec1", "turn 1 · the pipeline board",       "Kanban StatTile Timeline"],
+  ["run-46b669967469", "turn 2 · tapped a company card",    "BarChart ProgressBar Timeline"],
+  ["run-947ba9e7badf", "turn 3 · tapped the interview round","DataTable Card Button"],
+  ["run-fa666b624248", "the attack the wall refused",       "3 unregistered actions refused"],
+  ["run-b282f6e74ce2", "same code, another domain",         "IIT JEE roadmap"],
+  ["run-6b14550dcca6", "Gemini picks Kanban unprompted",    "the Part 1 capture"],
+];
+
+function galleryMode(){
+  document.querySelector(".startbar").style.display="none";
+  document.querySelector(".presets").textContent="";
+  const sub=document.querySelector(".sub");
+  sub.textContent="";
+  sub.append(T("Every interface here was composed live by Gemini against the real gateway and is "
+             + "re-read from the durable journal this deployment ships with. No key, no model call, "
+             + "nothing to drain — the interface was never more than a projection of a durable run. "));
+  const em=document.createElement("em");
+  em.append(T("Pick one:"));
+  sub.append(em);
+
+  const bar=$("div","presets");
+  CAPTURES.forEach(([rid,label,hint])=>{
+    const b=document.createElement("button");
+    b.append(T(label));
+    b.title=hint;
+    b.onclick=()=>{history.replaceState(null,"","?run="+rid);replayRun(rid);
+                   [...bar.children].forEach(x=>x.style.borderColor="");b.style.borderColor="var(--accent)";};
+    bar.append(b);
+  });
+  document.querySelector(".trail").before(bar);
+}
+
 const REPLAY=new URLSearchParams(location.search).get("run");
+if(REPLAY_ONLY)galleryMode();
 if(REPLAY)replayRun(REPLAY);
+else if(REPLAY_ONLY)replayRun(CAPTURES[0][0]);
 </script>
 </body>
 </html>
