@@ -390,8 +390,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +402,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "Checklist",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -411,6 +411,80 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     m = catalog_manifest()
     assert m["components"]["Text"]["source"] == "a2ui-basic"
     assert m["components"]["BarChart"]["source"] == "custom"
+
+
+# --------------------------------------------------------------------------- #
+# Checklist — the new component: shape, and the three invariants hold for it
+# --------------------------------------------------------------------------- #
+
+def test_checklist_is_in_the_catalog_with_its_declared_props():
+    assert "Checklist" in COMPONENTS
+    spec = COMPONENTS["Checklist"]
+    assert spec.source == "custom"
+    assert set(spec.props) == {"title", "items", "labelKey", "doneKey", "onToggle"}
+    assert spec.props["items"].kind == "binding"
+    assert spec.props["onToggle"].kind == "action"
+
+
+def test_checklist_with_a_clean_binding_and_registered_action_is_accepted():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["cl"]},
+            {"id": "cl", "type": "Checklist", "title": "Prep tasks",
+             "items": {"$bind": "/tasks"}, "labelKey": "label", "doneKey": "done",
+             "onToggle": {"action": "request_data"}},
+        ],
+        "dataModel": {"tasks": [{"label": "Book flights", "done": False}]},
+    }
+    result = validate_surface(surface)
+    assert result.ok
+    assert {c["id"] for c in result.accepted} == {"root", "cl"}
+
+
+def test_checklist_unknown_type_variant_breaks_catalog_invariant():
+    # A hostile agent renaming the type it wants ("RawHtml", "ChecklistHtml", ...)
+    # never reaches the catalog invariant's allowlist.
+    assert _reject({"id": "x", "type": "ChecklistHtml", "items": {"$bind": "/tasks"}}).invariant == Invariant.CATALOG
+
+
+def test_checklist_items_as_inline_literal_instead_of_bind_breaks_data_not_code():
+    r = _reject({"id": "cl", "type": "Checklist", "items": [{"label": "<img onerror=alert(1)>"}]})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "items"
+
+
+def test_checklist_title_carrying_markup_breaks_data_not_code():
+    r = _reject({"id": "cl", "type": "Checklist", "title": "<script>steal()</script>",
+                 "items": {"$bind": "/tasks"}})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "title"
+
+
+def test_checklist_ontoggle_with_unregistered_action_breaks_event():
+    r = _reject({"id": "cl", "type": "Checklist", "items": {"$bind": "/tasks"},
+                 "onToggle": {"action": "export_all_contacts"}})
+    assert r.invariant == Invariant.EVENT
+    assert r.field == "onToggle"
+
+
+def test_checklist_survives_alongside_a_poisoned_sibling():
+    # Same "show what's safe" property test_safe_siblings_survive_a_partially_poisoned_surface
+    # already proves for Text/Button — repeated for Checklist specifically, since
+    # it is the new type this PR adds to the trusted vocabulary.
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["cl", "poison"]},
+            {"id": "cl", "type": "Checklist", "title": "Prep tasks", "items": {"$bind": "/tasks"}},
+            {"id": "poison", "type": "RawHtml", "html": "<script>alert(1)</script>"},
+        ],
+        "dataModel": {"tasks": [{"label": "Book flights", "done": False}]},
+    }
+    result = validate_surface(surface)
+    accepted_ids = {c["id"] for c in result.accepted}
+    assert accepted_ids == {"root", "cl"}
+    assert result.rejections[0].invariant == Invariant.CATALOG
 
 
 # --------------------------------------------------------------------------- #
@@ -461,6 +535,24 @@ def test_route_harness_surface_is_clean_and_stays_in_the_realigned_catalog(clien
     types = {c["type"] for c in body["surface"]["components"]}
     assert types.issubset(set(COMPONENTS))
     assert types.isdisjoint({"Heading", "Grid", "Table", "Tab", "Badge", "LineChart"})
+
+
+def test_route_proofs_checklist_replays_the_captured_unprompted_composition(client):
+    """proofs/checklist_gemini_run.json is the real, captured run in which
+    Gemini reached for Checklist on its own — never named in the prompt, only
+    present in the catalog manifest it was handed. The route re-validates on
+    serve, so this proves the SAME wall guards a real captured composition,
+    not just hand-built fixtures."""
+    resp = client.get("/v1/proofs/checklist")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["clean"] is True
+    assert body["checklist_composed_unprompted"] is True
+    assert body["component_count"] == body["validator"]["accepted"] > 0
+    assert body["validator"]["rejected"] == 0
+    types = {c["type"] for c in body["surface"]["components"]}
+    assert "Checklist" in types
+    assert types.issubset(set(COMPONENTS))
 
 
 def test_route_render_client_has_no_run_id_placeholder(client):
@@ -596,6 +688,18 @@ def test_render_client_never_uses_innerhtml_and_documents_the_contract():
     # The one place the word appears is the documented safety contract itself.
     assert html.count("innerHTML") == 1
     assert "NEVER sets" in html and "innerHTML from a bound value" in html
+
+
+def test_render_clients_wire_up_checklist():
+    # All three render clients (the proof/run viewer, the generic app shell,
+    # and Checkpoint's own forked engine) know how to draw Checklist. index.html
+    # additionally carries the strict "never innerHTML from a bound value"
+    # contract (checked above); this Checklist renderer must not be the
+    # exception that breaks it.
+    for name in ("index.html", "app.html", "checkpoint.html"):
+        html = (_BUILD_ROOT / "s13code" / "ui" / "client" / name).read_text()
+        assert "Checklist:(c," in html, name
+        assert "renderChecklist" in html or "function renderChecklist" in html or 'cb.type="checkbox"' in html, name
 
 
 def test_render_client_reconnects_and_rebuilds_from_a_state_snapshot():

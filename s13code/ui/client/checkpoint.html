@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Checkpoint — a UI-only readiness planner</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#F7F8FA;--surface:#FFF;--surface-alt:#FAFAFA;--ink:#111;--ink-body:#1A1A1A;--ink-muted:#555;
+    --rule:#E8E8E8;--rule-strong:#D0D0D0;--accent:#2563EB;--accent-soft:rgba(37,99,235,.08);
+    --green:#16A34A;--green-soft:rgba(22,163,74,.12);--green-ink:#15803D;
+    --amber:#D97706;--amber-soft:rgba(217,119,6,.14);--amber-ink:#B45309;
+    --red:#DC2626;--red-soft:rgba(220,38,38,.10);--red-ink:#B91C1C;
+    --font-sans:'Inter',system-ui,sans-serif;--font-serif:'Palatino Linotype',Palatino,Georgia,serif;--font-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink-body);font-family:var(--font-sans);font-size:15px}
+  .wrap{max-width:720px;margin:0 auto;padding:22px 18px 60px}
+  .head{display:flex;gap:8px;align-items:baseline;margin-bottom:6px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+  .head a{color:var(--accent);text-decoration:none}
+  .head a:hover{text-decoration:underline}
+  .tagline{color:var(--ink-muted);font-size:13px;margin:0 0 16px;font-family:var(--font-sans);text-transform:none;letter-spacing:normal}
+  .startbar{display:flex;gap:8px;margin:10px 0 10px}
+  .startbar input{flex:1;padding:11px 14px;border:1px solid var(--rule-strong);border-radius:10px;font-size:15px;font-family:var(--font-sans)}
+  .startbar input:focus{outline:none;border-color:var(--accent)}
+  .startbar button{padding:11px 18px;border:none;border-radius:10px;background:var(--ink);color:#fff;font-weight:600;font-size:14px;cursor:pointer}
+  .topicbar{display:flex;gap:8px;align-items:center;margin:0 0 18px;font-family:var(--font-mono);font-size:12px;color:var(--ink-muted)}
+  .topicbar select{padding:8px 10px;border:1px solid var(--rule-strong);border-radius:9px;font-size:13px;font-family:var(--font-sans);background:var(--surface);color:var(--ink-body);flex:1}
+  .topicbar select:focus{outline:none;border-color:var(--accent)}
+  .status{font-family:var(--font-mono);font-size:12px;color:var(--ink-muted);min-height:18px;margin-bottom:10px;display:flex;gap:8px;align-items:center}
+  .pill{padding:2px 9px;border-radius:999px;font-weight:600;font-size:11px}
+  .pill.good{background:var(--green-soft);color:var(--green-ink)}.pill.think{background:var(--accent-soft);color:var(--accent)}
+  .startbar input:disabled,.startbar button:disabled,.topicbar select:disabled{opacity:.55;cursor:not-allowed}
+  .elapsed{font-variant-numeric:tabular-nums}
+  .screen{background:var(--surface);border:1px solid var(--rule);border-radius:16px;padding:22px;box-shadow:0 4px 16px -8px rgba(0,20,60,.12);min-height:120px}
+  .empty{color:var(--ink-muted);font-style:italic;text-align:center;padding:30px 0}
+  .crumbs{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);margin-top:12px}
+  /* component styles — the SAME rendering engine s14 app.html uses, forked
+     verbatim: a component is data, this is the one place it becomes DOM. */
+  .Text{color:var(--ink-body);line-height:1.6;white-space:pre-wrap;margin:2px 0}
+  .Text.heading{font-family:var(--font-serif);font-size:26px;font-weight:700;color:var(--ink);white-space:normal;margin:0 0 6px}
+  .Text.subtitle{font-style:italic;color:var(--ink-muted);font-size:16px}
+  .Text.caption{font-size:12px;color:var(--ink-muted);font-family:var(--font-mono)}
+  .Column{display:flex;flex-direction:column;gap:14px}
+  .List{display:flex;flex-direction:column;gap:10px}
+  .Row{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap}
+  .Row>.StatTile,.Row>.chart{flex:1;min-width:120px}
+  .Card{background:var(--surface-alt);border:1px solid var(--rule);border-radius:12px;padding:14px 16px}
+  .Card>.ct{font-weight:600;margin-bottom:8px}
+  .Divider{height:1px;background:var(--rule)}
+  .StatTile{background:var(--surface);border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:12px;padding:14px}
+  .StatTile .lab{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);font-weight:600;font-family:var(--font-mono)}
+  .StatTile .val{font-size:28px;font-weight:700;color:var(--ink);margin-top:5px}
+  .StatTile .dl{font-size:11px;color:var(--ink-muted);margin-top:3px}
+  .chart{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
+  .chart .ct{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:8px;font-family:var(--font-mono)}
+  .prog{height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}.prog>i{display:block;height:100%;background:var(--green)}
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);font-size:14px}
+  th{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--ink-muted);background:var(--surface-alt)}
+  tr:last-child td{border-bottom:none}
+  .tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .tabs button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-mono);color:var(--ink-muted)}
+  .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .Notice{border-left:4px solid var(--amber);background:var(--amber-soft);border-radius:10px;padding:12px 14px}
+  .Checklist{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:18px}
+  .cl-head-title{font-weight:700;font-size:16px;color:var(--ink)}
+  .cl-head-count{font-size:12px;color:var(--ink-muted);margin:2px 0 12px;font-family:var(--font-mono)}
+  .cl-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;font-size:15px}
+  .cl-row+.cl-row{border-top:1px solid var(--rule)}
+  .cl-row input{margin-top:3px}
+  .cl-row.done .cl-lab{color:var(--ink-muted);text-decoration:line-through}
+  .cl-foot{margin-top:14px}
+  .badges{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 6px}
+  .badges .sub{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted)}
+  .badges .runid{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--ink-muted)}
+  .hint{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);margin-bottom:10px}
+  .actbtn{width:100%;text-align:center;border:1px solid var(--rule-strong);background:var(--surface);border-radius:12px;padding:14px;font-weight:600;font-size:15px;cursor:pointer;color:var(--ink);transition:all 120ms}
+  .actbtn:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  .actbtn:active{transform:translateY(1px)}
+  input.field,select.field{padding:9px 11px;border:1px solid var(--rule-strong);border-radius:9px;font-size:14px;font-family:var(--font-sans)}
+  .Text .md-h{font-weight:700;color:var(--ink);margin:12px 0 4px}
+  .Text .md-p{margin:6px 0;line-height:1.6}
+  .Text .md-ul{margin:6px 0 6px 4px;padding-left:18px}
+  .Text .md-ul li{margin:3px 0;line-height:1.55}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head"><span>Checkpoint · a UI-only readiness planner</span><a href="/app" style="margin-left:auto">← the generic trainer (/app) →</a></div>
+  <p class="tagline">Tell it what you're getting ready for. Every answer is a composed interface — a prep checklist, a comparison table, a cost chart — never a paragraph. Tap something to plan it deeper.</p>
+  <div class="startbar">
+    <input id="prompt" value="Move to a new apartment in 3 weeks" />
+    <button id="ask">Get ready</button>
+  </div>
+  <div class="topicbar">
+    <span>goals</span>
+    <select id="goalTopics">
+      <option value="" selected disabled>pick an example or a goal you've planned before…</option>
+    </select>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="badges" id="badges"></div>
+  <div class="hint" id="hint"></div>
+  <div class="screen"><div id="mount"><div class="empty">Name a real-world goal with a deadline, then press Get ready. The agent plans it as a live interface — pick anything it offers to plan that part in more depth.</div></div></div>
+  <div class="crumbs" id="crumbs"></div>
+</div>
+<script>
+// ---- the render engine: forked verbatim from s14 app.html. It maps trusted
+// catalog types to DOM, NEVER sets innerHTML from a bound value, and NEVER
+// evaluates any string. A component is data; a widget draws it. Buttons feed
+// the next turn; that is the only way the interface changes the world. This
+// part of the file is domain-agnostic on purpose — Checkpoint is a NEW goal-
+// building loop layered on top of the same generic renderer, not a rewrite
+// of it. ----
+const API = "";                     // same origin as the runtime (8113)
+let convo = [];                     // the running conversation (context for each turn)
+const $ = (t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
+const T = t=>document.createTextNode(t==null?"":String(t));
+const resolve=(v,dm)=>(v&&typeof v==="object"&&"$bind"in v)?ptr(dm,v["$bind"]):v;
+function ptr(dm,p){let c=dm;for(const s of String(p).split("/").slice(1)){if(c==null)return null;c=c[s];}return c;}
+function rtext(v,dm){
+  const r=resolve(v,dm);
+  if(r&&typeof r==="object")return r.label||r.name||r.text||r.title||r.id||"";
+  return r;
+}
+
+function mdInline(line,parent){
+  const re=/(\*\*([^*]+)\*\*|\*([^*]+)\*|_([^_]+)_)/g;let last=0,m;
+  while((m=re.exec(line))){
+    if(m.index>last)parent.append(T(line.slice(last,m.index)));
+    if(m[2]!=null){const s=document.createElement("strong");s.textContent=m[2];parent.append(s);}
+    else{const e=document.createElement("em");e.textContent=(m[3]!=null?m[3]:m[4]);parent.append(e);}
+    last=re.lastIndex;
+  }
+  if(last<line.length)parent.append(T(line.slice(last)));
+}
+function md(text){
+  const frag=document.createDocumentFragment();let ul=null;
+  for(const raw of String(text==null?"":text).split(/\r?\n/)){
+    const line=raw.trim();if(!line){ul=null;continue;}
+    const h=line.match(/^(#{1,4})\s+(.*)/),b=line.match(/^[*\-]\s+(.*)/);
+    if(h){ul=null;const d=$("div","md-h");mdInline(h[2],d);frag.append(d);}
+    else if(b){if(!ul){ul=document.createElement("ul");ul.className="md-ul";frag.append(ul);}const li=document.createElement("li");mdInline(b[1],li);ul.append(li);}
+    else{ul=null;const p=$("div","md-p");mdInline(line,p);frag.append(p);}
+  }
+  return frag;
+}
+
+const R={
+  Column:(c,x)=>{const e=$("div","Column");kids(c,x,e);return e;},
+  Row:(c,x)=>{const e=$("div","Row");kids(c,x,e);return e;},
+  List:(c,x)=>{const e=$("div","List");kids(c,x,e);return e;},
+  Card:(c,x)=>{const e=$("div","Card");const title=rtext(c.title,x.dm);if(title){const h=$("div","ct");h.append(T(title));e.append(h);}kids(c,x,e);return e;},
+  Divider:()=>$("div","Divider"),
+  Text:(c,x)=>{const e=$("div","Text "+(c.variant||"body"));const v=resolve(c.text,x.dm);
+    if((c.variant||"body")==="heading"){e.append(T(v));}else{e.append(md(v));}return e;},
+  Notice:(c,x)=>{const e=$("div","Notice");e.append(T(resolve(c.text,x.dm)));return e;},
+  StatTile:(c,x)=>{const e=$("div","StatTile");const l=$("div","lab");l.append(T(rtext(c.label,x.dm)));const unit=rtext(c.unit,x.dm);const v=$("div","val");v.append(T(String(resolve(c.value,x.dm))+(unit?" "+unit:"")));const d=$("div","dl");d.append(T(resolve(c.delta,x.dm)||""));e.append(l,v,d);return e;},
+  ProgressBar:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("progress"));const p=$("div","prog");const i=$("i");const val=+resolve(c.value,x.dm)||0;i.style.width=Math.min(100,val/(c.max||100)*100)+"%";p.append(i);e.append(t,p);return e;},
+  Sparkline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("trend"));e.append(t,spark(resolve(c.data,x.dm)||[]));return e;},
+  BarChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(rtext(c.title,x.dm)||"chart"));e.append(t,bars(resolve(c.data,x.dm)||[],rtext(c.xKey,x.dm),rtext(c.yKey,x.dm)));return e;},
+  DataTable:(c,x)=>table(c,x),
+  Tabs:(c,x)=>tabs(c,x),
+  Button:(c,x)=>{const b=$("button","actbtn");const lab=String(rtext(c.label,x.dm)||"Choose");b.append(T(lab));b.onclick=()=>choose(lab);return b;},
+  Image:(c,x)=>{const e=$("div","chart");e.append(T("[image]"));return e;},
+  TextField:(c,x)=>{const w=$("div");const label=rtext(c.label,x.dm);if(label){const l=$("div","lab");l.append(T(label));w.append(l);}const i=$("input","field");i.placeholder=rtext(c.placeholder,x.dm)||"";w.append(i);return w;},
+  CheckBox:(c,x)=>{const w=$("label");w.style.display="flex";w.style.gap="8px";const i=document.createElement("input");i.type="checkbox";w.append(i,T(rtext(c.label,x.dm)||""));return w;},
+  Slider:(c,x)=>{const w=$("div");const label=rtext(c.label,x.dm);if(label){const l=$("div","lab");l.append(T(label));w.append(l);}const i=document.createElement("input");i.type="range";i.min=c.min||0;i.max=c.max||100;w.append(i);return w;},
+  InputChoice:(c,x)=>{const s=$("select","field");(resolve(c.options,x.dm)||[]).forEach(o=>{const op=document.createElement("option");op.append(T(typeof o==="object"?(o.name||o.label||o.id):o));s.append(op);});return s;},
+  DateTime:(c,x)=>{const i=$("input","field");i.type="date";return i;},
+  Modal:(c,x)=>{const e=$("div","Card");const title=rtext(c.title,x.dm);if(title){const h=$("div","ct");h.append(T(title));e.append(h);}kids(c,x,e);return e;},
+  ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
+  // A checkable list of discrete tasks: title, live "N of M done" count, and
+  // one checkbox row per item. Checking a box is pure client-local DOM state
+  // (a class toggle + a recount) — no eval, no server write-back. Only if the
+  // surface itself registered onToggle does a footer "Ask a follow-up"
+  // button appear, reusing the exact same choose()/next-turn path a Button
+  // already uses — the ONE place this reaches back into the app.
+  Checklist:(c,x)=>{
+    const e=$("div","Checklist");
+    const title=rtext(c.title,x.dm);
+    const items=resolve(c.items,x.dm)||[];
+    const lk=rtext(c.labelKey,x.dm)||"label", dk=rtext(c.doneKey,x.dm)||"done";
+    const headTitle=$("div","cl-head-title");headTitle.append(T(title||"Checklist"));e.append(headTitle);
+    const count=$("div","cl-head-count");e.append(count);
+    function updateCount(){
+      const done=[...e.querySelectorAll(".cl-row.done")].length;
+      count.textContent="";count.append(T(done+" of "+items.length+" done"));
+    }
+    items.forEach((it,i)=>{
+      const label=itemField(it,lk,["label","task","name","title","text"]);
+      const doneVal=!!itemField(it,dk,["done","complete","completed","checked"]);
+      const row=$("label","cl-row"+(doneVal?" done":""));
+      const cb=document.createElement("input");cb.type="checkbox";cb.checked=doneVal;
+      const lab=$("span","cl-lab");lab.append(T(String(label==null?("Item "+(i+1)):label)));
+      row.append(cb,lab);
+      cb.onchange=()=>{row.classList.toggle("done",cb.checked);updateCount();};
+      e.append(row);
+    });
+    updateCount();
+    if(c.onToggle){
+      const foot=$("div","cl-foot");
+      const btn=$("button","actbtn");btn.type="button";btn.append(T("Ask a follow-up ↗"));
+      btn.onclick=()=>choose(title||"this checklist");
+      foot.append(btn);e.append(foot);
+    }
+    return e;
+  },
+};
+// Checklist helper: reads a named field off an item record, falling back
+// through a list of common alternates. Only ever reads a plain value.
+function itemField(s,key,fallbacks){
+  for(const k of [key,...fallbacks]){
+    if(s&&s[k]!=null){const v=s[k];return Array.isArray(v)?v.join(" · "):v;}
+  }
+  return undefined;
+}
+function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
+function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
+function spark(v){const ns="http://www.w3.org/2000/svg",w=200,h=44,mx=Math.max(...v,1),mn=Math.min(...v,0),rg=(mx-mn)||1;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");s.setAttribute("height",h);const p=document.createElementNS(ns,"polyline");p.setAttribute("points",v.map((y,i)=>`${i/(v.length-1||1)*w},${h-5-(y-mn)/rg*(h-10)}`).join(" "));p.setAttribute("fill","none");p.setAttribute("stroke","var(--green)");p.setAttribute("stroke-width","2.5");s.append(p);return s;}
+function bars(d,xk,yk){const ns="http://www.w3.org/2000/svg",w=300,h=150,pad=24,mx=Math.max(...d.map(r=>+r[yk]),1),bw=(w-pad*2)/(d.length||1)*.6;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");d.forEach((r,i)=>{const x=pad+i*((w-pad*2)/d.length)+((w-pad*2)/d.length-bw)/2,bh=(+r[yk])/mx*(h-pad*2);const rc=document.createElementNS(ns,"rect");rc.setAttribute("x",x);rc.setAttribute("y",h-pad-bh);rc.setAttribute("width",bw);rc.setAttribute("height",bh);rc.setAttribute("rx",3);rc.setAttribute("fill","var(--accent)");s.append(rc);const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","9");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=r[xk];s.append(tl);});return s;}
+function table(c,x){const wrap=$("div");const cols=(rtext(c.columns,x.dm)||"").split(",").map(s=>s.trim());const rows=resolve(c.rows,x.dm)||[];const t=$("table");const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(T(col));tr.append(th);});t.append(tr);rows.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(r[col]));rr.append(td);});t.append(rr);});wrap.append(t);return wrap;}
+function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);const tabIds=c.children||[];function show(i){body.textContent="";const cc=x.byId[tabIds[i]];if(cc)body.append(node(cc,x));[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}
+  (String(rtext(c.labels,x.dm)||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});
+  if(tabIds.length)show(0);return wrap;}
+
+// Defensive fallback: nothing in the catalog/validator guarantees the
+// model's declared "root" id actually names one of the accepted components
+// (a dangling root isn't one of the three invariants — it's not a type, a
+// value, or an action). Rather than crash on an undefined node, render every
+// already-VALIDATED component no other component claims as a child, wrapped
+// in a plain Column — the same "show what's safe" spirit the validator
+// already applies to individual poisoned components.
+function resolveRoot(surface,byId){
+  if(byId[surface.root])return byId[surface.root];
+  const referenced=new Set();
+  Object.values(byId).forEach(c=>(c.children||[]).forEach(id=>referenced.add(id)));
+  const orphans=Object.keys(byId).filter(id=>!referenced.has(id));
+  return {id:"_fallback_root",type:"Column",children:orphans.length?orphans:Object.keys(byId)};
+}
+function render(surface){const byId={};surface.components.forEach(c=>byId[c.id]=c);const x={byId,dm:surface.dataModel||{}};const m=document.getElementById("mount");m.textContent="";m.append(node(resolveRoot(surface,byId),x));}
+
+// ---- Checkpoint's own turn-shaping loop. This is the part that is NOT
+// forked from app.html: a readiness-planning conversation isn't a fixed-
+// depth ladder — it's an open exploration that accumulates a breadcrumb of
+// what's been planned so far (a phase, a comparison, a budget...) and lets
+// the user pick a NEW facet each turn, capped at MAX_TURNS so a demo session
+// can't run forever. The instruction never names a UI component —
+// compose_surface picks the richest fit (a Checklist for the prep tasks, a
+// DataTable for a comparison, a BarChart for a cost series, StatTiles for
+// readiness stats) from the catalog on its own, exactly as designed. ----
+const MAX_TURNS = 6;
+function setStatus(html){document.getElementById("status").innerHTML=html;}
+function crumbs(){
+  const el=document.getElementById("crumbs");
+  if(!convo.length){ el.textContent=""; return; }
+  el.textContent = "turn "+convo.length+" of "+MAX_TURNS+" · "+convo.join("  ›  ");
+}
+
+const _RULES = "Give a short, clean title (just the goal or the specific thing being covered — never "
+  + "mentioning turns, this being a conversation, or these instructions). Any next-step choice you offer must "
+  + "be a short plain label only — no numbering, no meta-commentary.";
+
+// The runtime's OWN entity-list heuristic (_ENTITY_LIST in runtime.py) exists
+// to detect a genuine "compare A, B and C" prompt and fan it out into real
+// per-entity research nodes. It has no notion of "this comma is just how a
+// goal reads" — a stray comma parses exactly like a request to compare
+// several capitalised things to that regex, which silently reroutes the run
+// into the multi-entity research path (empty sections, garbage per-subject
+// "metrics") instead of the single-goal content path this app needs. That's
+// shared runtime infrastructure, out of scope to change here — so this app
+// avoids triggering it instead: strip commas out of whatever text actually
+// reaches the goal string. Purely cosmetic in meaning; the display text
+// (input box, crumbs) is never touched, only what gets sent as data.
+function goalSafe(text){ return String(text).replace(/,\s*/g, " "); }
+
+function buildGoal(){
+  const turn = convo.length;               // 1-based: how deep this turn is
+  const target = goalSafe(convo[0]);        // the user's original "get ready for X" input
+  if (turn === 1) {
+    return "Help someone get ready for this: " + target + "\n\nGive a short, encouraging overview of what this "
+      + "involves, then a checklist of the concrete tasks to do before the deadline — ordered by priority, each a "
+      + "short actionable item; this is a real checklist someone will check off, so structure it that way, not a "
+      + "narrative. Include a few readiness stats if you can reasonably estimate them (e.g. days remaining, the "
+      + "number of tasks, an approximate total budget). Then offer 3-4 things they could explore next — for "
+      + "example comparing specific options for one task, a cost breakdown, or a deeper checklist for one phase; "
+      + "choose whichever genuinely fit this goal. " + _RULES;
+  }
+  const path = goalSafe(convo.slice(1).join(" › "));
+  const picked = goalSafe(convo[turn - 1]);
+  if (turn < MAX_TURNS) {
+    return "Someone is getting ready for: " + target + ". So far in this planning conversation they've chosen to "
+      + "explore: " + path + ". Give rich, useful detail specifically about \"" + picked + "\" — use whichever "
+      + "structure actually fits the content (a checklist of sub-tasks, a comparison table of options, a cost "
+      + "breakdown, or whatever else fits) rather than one long paragraph. Then offer 3-4 NEW things they could "
+      + "explore next — don't just repeat options already picked. " + _RULES;
+  }
+  return "Someone is getting ready for: " + target + ". So far they've explored: " + path + ". This is the FINAL "
+    + "turn of this planning session — give rich, useful detail specifically about \"" + picked + "\", then a "
+    + "short concluding summary of the whole readiness plan. Do not ask the user to pick anything further. " + _RULES;
+}
+
+function cleanLabel(label){
+  return String(label == null ? "" : label).replace(/^\s*(turn|level)\s*\d+\s*[:\-–]\s*/i, "").trim();
+}
+
+// ---- run chrome: badges read from data the backend already exposes. ----
+function renderBadges(c, rid){
+  const b=document.getElementById("badges"); b.innerHTML="";
+  const good=$("span","pill good");
+  good.append(T("composed by "+(c.provider||"gemini")+" inside the live graph · "+c.component_count+" components · 0 executable"));
+  const sub=$("span","sub");
+  sub.append(T("composed by "+(c.model||"model")+" · 0 model-authored code"));
+  const rtag=$("span","runid");
+  rtag.append(T("run "+rid));
+  b.append(good, sub, rtag);
+}
+
+const STAGES = [
+  { at: 0, label: "writing the plan" },
+  { at: 2, label: "composing interface from the catalog" },
+];
+function setBusy(busy){
+  ["prompt","ask","goalTopics"].forEach(id=>{ document.getElementById(id).disabled = busy; });
+}
+function startProgress(){
+  const started = Date.now();
+  let stageIdx = 0;
+  const tick = () => {
+    const elapsed = (Date.now() - started) / 1000;
+    while(stageIdx < STAGES.length - 1 && elapsed >= STAGES[stageIdx + 1].at) stageIdx++;
+    setStatus('<span class="pill think">'+STAGES[stageIdx].label+'…</span>'
+      +'<span class="elapsed">'+elapsed.toFixed(1)+'s</span>');
+  };
+  tick();
+  return setInterval(tick, 200);
+}
+
+async function runTurn(userText){
+  convo.push(userText);
+  crumbs();
+  document.getElementById("badges").innerHTML="";
+  document.getElementById("hint").textContent="";
+  const turn = convo.length;
+  const atMax = turn >= MAX_TURNS;
+  setBusy(true);
+  const progressTimer = startProgress();
+  try {
+    const goal = buildGoal();
+    const res = await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({prompt:goal, respond_as:"ui", tenant_id:"course", project_id:"s14", user_id:"viewer", agent_id:"checkpoint"})});
+    if(!res.ok) throw new Error("run request failed: HTTP "+res.status);
+    const run = await res.json();
+    const rid = run.run_id;
+    const c = await (await fetch(API+"/v1/runs/"+rid+"/composed")).json();
+    if(c.surface){
+      render(c.surface);
+      setStatus("");
+      renderBadges(c, rid);
+      document.getElementById("hint").textContent = atMax
+        ? "plan complete — press Get ready to start a new one"
+        : "tap something to plan it in more depth";
+    } else { setStatus("no interface composed"); }
+  } catch(err) {
+    setStatus('<span class="pill" style="background:var(--red-soft);color:var(--red-ink)">failed</span> '+String(err&&err.message||err));
+  } finally {
+    clearInterval(progressTimer);
+    setBusy(false);
+  }
+}
+function choose(label){ const clean=cleanLabel(label); if(clean && convo.length < MAX_TURNS) runTurn(clean); }
+
+// ---- goals dropdown: a few example goals, PLUS every real goal actually
+// asked (typed freely or picked), most recent first, persisted in
+// localStorage — same reusable pattern as trip.html's topics dropdown. ----
+const EXAMPLE_GOALS = [
+  "Move to a new apartment in 3 weeks",
+  "Run my first 10K in 8 weeks",
+  "Launch my personal website next month",
+  "Host a dinner party for 12 this Saturday",
+  "Start a new job in 2 weeks",
+];
+const RECENT_KEY = "checkpoint_recent_goals";
+const RECENT_MAX = 10;
+function loadRecent(){ try{ return JSON.parse(localStorage.getItem(RECENT_KEY)||"[]"); }catch(_){ return []; } }
+function saveRecent(query){
+  const q = String(query||"").trim(); if(!q) return;
+  let recent = loadRecent().filter(r=>r.toLowerCase()!==q.toLowerCase());
+  recent.unshift(q);
+  recent = recent.slice(0, RECENT_MAX);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
+  renderTopicsDropdown();
+}
+function renderTopicsDropdown(){
+  const sel = document.getElementById("goalTopics");
+  const recent = loadRecent();
+  sel.innerHTML = "";
+  const placeholder = document.createElement("option");
+  placeholder.value = ""; placeholder.selected = true; placeholder.disabled = true;
+  placeholder.textContent = "pick an example or a goal you've planned before…";
+  sel.append(placeholder);
+  if(recent.length){
+    const g = document.createElement("optgroup"); g.label = "your recent goals";
+    recent.forEach(q=>{ const o=document.createElement("option"); o.textContent=q; g.append(o); });
+    sel.append(g);
+  }
+  const g2 = document.createElement("optgroup"); g2.label = "example goals";
+  EXAMPLE_GOALS.forEach(q=>{ const o=document.createElement("option"); o.textContent=q; g2.append(o); });
+  sel.append(g2);
+}
+renderTopicsDropdown();
+
+document.getElementById("ask").onclick=()=>{
+  const value = document.getElementById("prompt").value.trim();
+  saveRecent(value);
+  convo=[]; runTurn(value);
+};
+document.getElementById("prompt").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("ask").click(); });
+document.getElementById("goalTopics").addEventListener("change",e=>{
+  const topic=e.target.value; if(!topic) return;
+  document.getElementById("prompt").value=topic;
+  document.getElementById("ask").click();
+});
+</script>
+</body>
+</html>

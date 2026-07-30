@@ -1,0 +1,239 @@
+{
+  "run_id": "run-8f6069db7d43",
+  "goal": "Help someone get ready for this: Launch a personal website in 2 weeks\n\nGive a short, encouraging overview, then a checklist of concrete prep tasks \u2014 these are independent to-dos in priority order, NOT scheduled to specific days and NOT a timeline of events, just a flat checklist someone ticks off as they finish each one, so render it as an actual checklist with checkboxes. Include a couple of readiness stats if you can estimate them. Then offer 3-4 things they could explore next.",
+  "compose_surface_node": {
+    "surface_accepted": {
+      "root": "root",
+      "components": [
+        {
+          "id": "root",
+          "type": "Column",
+          "children": [
+            "title",
+            "intro",
+            "metrics",
+            "checklist",
+            "nextSteps"
+          ]
+        },
+        {
+          "id": "title",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "intro",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/intro"
+          }
+        },
+        {
+          "id": "metrics",
+          "type": "Row",
+          "align": "center",
+          "justify": "spaceBetween",
+          "children": [
+            "stat1",
+            "stat2"
+          ]
+        },
+        {
+          "id": "stat1",
+          "type": "StatTile",
+          "label": "Estimated Setup Time",
+          "value": {
+            "$bind": "/metric_0_value"
+          },
+          "unit": "hours"
+        },
+        {
+          "id": "stat2",
+          "type": "StatTile",
+          "label": "Monthly Maintenance",
+          "value": {
+            "$bind": "/metric_1_value"
+          },
+          "unit": "hour"
+        },
+        {
+          "id": "checklist",
+          "type": "Checklist",
+          "title": "Priority Checklist",
+          "items": {
+            "$bind": "/sections"
+          },
+          "labelKey": "points",
+          "doneKey": "done",
+          "onToggle": {
+            "action": "request_data"
+          }
+        },
+        {
+          "id": "nextSteps",
+          "type": "Column",
+          "children": [
+            "nextTitle",
+            "b1",
+            "b2",
+            "b3",
+            "b4"
+          ]
+        },
+        {
+          "id": "b1",
+          "type": "Button",
+          "label": {
+            "$bind": "/choice_0_label"
+          },
+          "onPress": {
+            "action": "request_data"
+          }
+        },
+        {
+          "id": "b2",
+          "type": "Button",
+          "label": {
+            "$bind": "/choice_1_label"
+          },
+          "onPress": {
+            "action": "request_data"
+          }
+        },
+        {
+          "id": "b3",
+          "type": "Button",
+          "label": {
+            "$bind": "/choice_2_label"
+          },
+          "onPress": {
+            "action": "request_data"
+          }
+        },
+        {
+          "id": "b4",
+          "type": "Button",
+          "label": {
+            "$bind": "/choice_3_label"
+          },
+          "onPress": {
+            "action": "request_data"
+          }
+        }
+      ]
+    },
+    "data_model": {
+      "title": "Launch Your Personal Website in 14 Days",
+      "goal": "Help someone get ready for this: Launch a personal website in 2 weeks\n\nGive a short, encouraging overview, then a checklist of concrete prep tasks \u2014 these are independent to-dos in priority order, NOT scheduled to specific days and NOT a timeline of events, just a flat checklist someone ticks off as they finish each one, so render it as an actual checklist with checkboxes. Include a couple of readiness stats if you can estimate them. Then offer 3-4 things they could explore next.",
+      "summary": "Building a personal website is a rewarding project that establishes your digital footprint. With a clear plan and focused effort, you can go from concept to live site in just two weeks.",
+      "results": [],
+      "items": [],
+      "metrics": [
+        {
+          "label": "Estimated Setup Time",
+          "value": 10,
+          "unit": "hours"
+        },
+        {
+          "label": "Average Monthly Maintenance",
+          "value": 1,
+          "unit": "hour"
+        }
+      ],
+      "spark": [],
+      "table_rows": [],
+      "item_count": 0,
+      "source_count": 0,
+      "subjects": [
+        "Explore basic SEO to improve search rankings",
+        "Integrate Google Analytics to track visitors",
+        "Set up a newsletter capture form",
+        "Link your social media profiles for cross-promotion"
+      ],
+      "timeline": [
+        {
+          "time": "2465",
+          "label": "run_started"
+        },
+        {
+          "time": "2466",
+          "label": "graph_patched"
+        },
+        {
+          "time": "2467",
+          "label": "task_started content"
+        },
+        {
+          "time": "2468",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "2469",
+          "label": "graph_patched"
+        },
+        {
+          "time": "2470",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "intro": "Building a personal website is a rewarding project that establishes your digital footprint. With a clear plan and focused effort, you can go from concept to live site in just two weeks.",
+      "section_0_heading": "Priority Checklist",
+      "section_0_points": "\u2022 [ ] Define the primary goal (e.g., portfolio, blog, or resume)\n\u2022 [ ] Choose and register a domain name\n\u2022 [ ] Select a hosting provider or website builder (e.g., Squarespace, Carrd, WordPress)\n\u2022 [ ] Draft core content: About Me, Services/Projects, and Contact info\n\u2022 [ ] Gather high-quality photos and brand assets\n\u2022 [ ] Design the layout and choose a color palette\n\u2022 [ ] Build the site structure and add content pages\n\u2022 [ ] Test mobile responsiveness and link functionality\n\u2022 [ ] Set up a custom email address (optional)\n\u2022 [ ] Connect a custom domain and publish",
+      "sections": [
+        {
+          "heading": "Priority Checklist",
+          "points": [
+            "[ ] Define the primary goal (e.g., portfolio, blog, or resume)",
+            "[ ] Choose and register a domain name",
+            "[ ] Select a hosting provider or website builder (e.g., Squarespace, Carrd, WordPress)",
+            "[ ] Draft core content: About Me, Services/Projects, and Contact info",
+            "[ ] Gather high-quality photos and brand assets",
+            "[ ] Design the layout and choose a color palette",
+            "[ ] Build the site structure and add content pages",
+            "[ ] Test mobile responsiveness and link functionality",
+            "[ ] Set up a custom email address (optional)",
+            "[ ] Connect a custom domain and publish"
+          ]
+        }
+      ],
+      "section_events": [
+        {
+          "time": "Priority Checklist",
+          "label": "[ ] Define the primary goal (e.g., portfolio, blog, or resume); [ ] Choose and register a domain name; [ ] Select a hosting provider or website builder (e.g., Squarespace, Carrd, WordPress); [ ] Draft core content: About Me, Services/Projects, and Contact info; [ ] Gather high-quality photos and brand assets; [ ] Design the layout and choose a color palette; [ ] Build the site structure and add content pages; [ ] Test mobile responsiveness and link functionality; [ ] Set up a custom email address (optional); [ ] Connect a custom domain and publish"
+        }
+      ],
+      "metric_0_value": 10,
+      "metric_1_value": 1,
+      "choices": [
+        {
+          "id": "seo",
+          "label": "Explore basic SEO to improve search rankings"
+        },
+        {
+          "id": "analytics",
+          "label": "Integrate Google Analytics to track visitors"
+        },
+        {
+          "id": "newsletter",
+          "label": "Set up a newsletter capture form"
+        },
+        {
+          "id": "social",
+          "label": "Link your social media profiles for cross-promotion"
+        }
+      ],
+      "choice_0_label": "Explore basic SEO to improve search rankings",
+      "choice_1_label": "Integrate Google Analytics to track visitors",
+      "choice_2_label": "Set up a newsletter capture form",
+      "choice_3_label": "Link your social media profiles for cross-promotion"
+    },
+    "provider": "gemini_1",
+    "model": "gemini-3.1-flash-lite-preview"
+  }
+}

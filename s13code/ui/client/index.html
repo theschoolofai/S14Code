@@ -58,6 +58,14 @@
   .Approval button.ok{background:var(--green);color:#fff;border-color:var(--green)}
   .prog{height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}
   .prog>i{display:block;height:100%;background:var(--green)}
+  .Checklist{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
+  .Checklist .cl-title{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:4px;font-family:var(--font-mono)}
+  .Checklist .cl-prog{font-size:11px;color:var(--ink-muted);margin-bottom:10px;font-family:var(--font-mono)}
+  .cl-row{display:flex;align-items:flex-start;gap:9px;padding:6px 0;cursor:pointer}
+  .cl-row+.cl-row{border-top:1px solid var(--rule)}
+  .cl-row input{margin-top:2px}
+  .cl-row .cl-lab{font-size:14px;color:var(--ink-body)}
+  .cl-row.done .cl-lab{color:var(--ink-muted);text-decoration:line-through}
   @media (prefers-color-scheme:dark){:root{--bg:#0d0f14;--surface:#161922;--surface-alt:#11131a;--ink:#f3f5f9;--ink-body:#e4e8f0;--ink-muted:#9aa4b8;--rule:#252a36;--rule-strong:#333a49}body{background:var(--surface-alt)}}
 
   .Text .md-h{font-weight:700;color:var(--ink);margin:12px 0 4px}.Text .md-p{margin:6px 0;line-height:1.6}.Text .md-ul{margin:6px 0 6px 4px;padding-left:18px}.Text .md-ul li{margin:3px 0}
@@ -135,7 +143,44 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  Checklist:(c,ctx)=>renderChecklist(c,ctx),
 };
+
+// Checklist helper: reads a named field off an item record, falling back
+// through a list of common alternates. Only ever reads a plain value.
+function itemField(s,key,fallbacks){
+  for(const k of [key,...fallbacks]){
+    if(s&&s[k]!=null){const v=s[k];return Array.isArray(v)?v.join(" · "):v;}
+  }
+  return undefined;
+}
+function renderChecklist(c,ctx){
+  const e=$("div","Checklist");
+  if(c.title){const t=$("div","cl-title");t.append(text(c.title));e.append(t);}
+  const items=resolve(c.items,ctx.dm)||[];
+  const lk=c.labelKey||"label", dk=c.doneKey||"done";
+  const prog=$("div","cl-prog");e.append(prog);
+  function count(){
+    const done=[...e.querySelectorAll(".cl-row.done")].length;
+    prog.textContent="";prog.append(text(done+" of "+items.length+" done"));
+  }
+  items.forEach((it,i)=>{
+    const label=itemField(it,lk,["label","task","name","title","text"]);
+    const doneVal=!!itemField(it,dk,["done","complete","completed","checked"]);
+    const row=$("label","cl-row"+(doneVal?" done":""));
+    const cb=$("input");cb.type="checkbox";cb.checked=doneVal;
+    const lab=$("span","cl-lab");lab.append(text(String(label==null?("Item "+(i+1)):label)));
+    row.append(cb,lab);
+    cb.onchange=()=>{
+      row.classList.toggle("done",cb.checked);
+      count();
+      if(c.onToggle)emitAction(c.onToggle.action,{index:i,checked:cb.checked});
+    };
+    e.append(row);
+  });
+  count();
+  return e;
+}
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
 

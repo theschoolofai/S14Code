@@ -5,9 +5,12 @@
   GET  /v1/runs/{id}/dashboard      build + validate the rich showcase dashboard
   GET  /v1/runs/{id}/events         AG-UI event stream over SSE
   GET  /v1/harness/surface          the real surface a recorded S13 harness composed
+  GET  /v1/proofs/checklist         the captured run where Gemini composed Checklist unprompted
   POST /v1/validate                 validate an arbitrary surface (injection wall)
   POST /v1/action                   a validated user action (approve/reject/rerun)
   GET  /s/{id}                      the render client, pointed at a run
+  GET  /app                         the generic "teach me X" UI-only app viewer
+  GET  /checkpoint                  Checkpoint, a UI-only readiness-planner app (Part 2)
 
 The data source is the runtime's own graph, read in-process off
 ``request.app.state.s13_runtime`` — the same attribute S13's ``GET
@@ -159,6 +162,39 @@ async def harness_surface():
     }
 
 
+@router.get("/v1/proofs/checklist")
+async def checklist_proof():
+    """Serve the real, captured run in which Gemini composed the new Checklist
+    component on its own (see proofs/generate_checklist_gemini.py).
+
+    Same pattern as /v1/harness/surface: read the recorded proof, re-validate
+    on serve, and return only what survives the same wall that guards
+    injection. The compose_surface prompt never names "Checklist"; the model
+    found it by reading the catalog manifest, exactly like every other custom
+    type.
+    """
+    path = Path(__file__).resolve().parents[2] / "proofs" / "checklist_gemini_run.json"
+    if not path.exists():
+        raise HTTPException(404, "checklist_gemini_run.json not found — run proofs/generate_checklist_gemini.py first")
+    data = json.loads(path.read_text())
+    node = data["compose_surface_node"]
+    acc = node["surface_accepted"]
+    surface = {"root": acc["root"], "components": acc["components"], "dataModel": node["data_model"]}
+    result = validate_surface(surface)
+    return {
+        "run_id": data.get("run_id"),
+        "goal": data.get("goal"),
+        "surface": surface,
+        "component_count": len(result.accepted),
+        "validator": {"proposed": len(surface["components"]), "accepted": len(result.accepted),
+                      "rejected": len(result.rejections)},
+        "clean": result.ok,
+        "provider": node.get("provider"),
+        "model": node.get("model"),
+        "checklist_composed_unprompted": "Checklist" in {c.get("type") for c in result.accepted},
+    }
+
+
 class ValidateBody(BaseModel):
     surface: dict
 
@@ -233,4 +269,20 @@ async def app_viewer():
     path = Path(__file__).parent / "client" / "app.html"
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
+    return path.read_text()
+
+
+@router.get("/checkpoint", response_class=HTMLResponse)
+@router.get("/checkpoint/", response_class=HTMLResponse)
+async def checkpoint_planner():
+    """Checkpoint: a UI-only readiness planner (Session 14 Part 2). Forked
+    from the /app render engine — same catalog-validated components, same
+    tap-becomes-next-turn loop — with its own domain-specific goal-building
+    instead of a fixed drill-down depth: a prep checklist for whatever the
+    user is getting ready for, then whichever facet (a comparison, a cost
+    breakdown, a deeper checklist) they tap next. No backend changes; the
+    generic runtime carries the whole app."""
+    path = Path(__file__).parent / "client" / "checkpoint.html"
+    if not path.exists():
+        raise HTTPException(500, "checkpoint planner missing")
     return path.read_text()

@@ -54,6 +54,14 @@
   .tabs button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-mono);color:var(--ink-muted)}
   .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .Notice{border-left:4px solid var(--amber);background:var(--amber-soft);border-radius:10px;padding:12px 14px}
+  .Checklist{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:18px}
+  .cl-head-title{font-weight:700;font-size:16px;color:var(--ink)}
+  .cl-head-count{font-size:12px;color:var(--ink-muted);margin:2px 0 12px;font-family:var(--font-mono)}
+  .cl-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;cursor:pointer;font-size:15px}
+  .cl-row+.cl-row{border-top:1px solid var(--rule)}
+  .cl-row input{margin-top:3px}
+  .cl-row.done .cl-lab{color:var(--ink-muted);text-decoration:line-through}
+  .cl-foot{margin-top:14px}
   .actbtn{width:100%;text-align:center;border:1px solid var(--rule-strong);background:var(--surface);border-radius:12px;padding:14px;font-weight:600;font-size:15px;cursor:pointer;color:var(--ink);transition:all 120ms}
   .actbtn:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
   .actbtn:active{transform:translateY(1px)}
@@ -137,7 +145,51 @@ const R={
   DateTime:(c,x)=>{const i=$("input","field");i.type="date";return i;},
   Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
   ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
+  // A checkable list of discrete tasks: title, live "N of M done" count,
+  // and one checkbox row per item. Checking a box is pure client-local DOM
+  // state (a class toggle + a recount) — no eval, no server write-back. Only
+  // if the surface itself registered onToggle does a footer "Continue"
+  // button appear, reusing the exact same choose()/next-turn path a Button
+  // already uses — the ONE place this reaches back into the app.
+  Checklist:(c,x)=>{
+    const e=$("div","Checklist");
+    const title=resolve(c.title,x.dm);
+    const items=resolve(c.items,x.dm)||[];
+    const lk=c.labelKey||"label", dk=c.doneKey||"done";
+    const headTitle=$("div","cl-head-title");headTitle.append(T(title||"Checklist"));e.append(headTitle);
+    const count=$("div","cl-head-count");e.append(count);
+    function updateCount(){
+      const done=[...e.querySelectorAll(".cl-row.done")].length;
+      count.textContent="";count.append(T(done+" of "+items.length+" done"));
+    }
+    items.forEach((it,i)=>{
+      const label=itemField(it,lk,["label","task","name","title","text"]);
+      const doneVal=!!itemField(it,dk,["done","complete","completed","checked"]);
+      const row=$("label","cl-row"+(doneVal?" done":""));
+      const cb=document.createElement("input");cb.type="checkbox";cb.checked=doneVal;
+      const lab=$("span","cl-lab");lab.append(T(String(label==null?("Item "+(i+1)):label)));
+      row.append(cb,lab);
+      cb.onchange=()=>{row.classList.toggle("done",cb.checked);updateCount();};
+      e.append(row);
+    });
+    updateCount();
+    if(c.onToggle){
+      const foot=$("div","cl-foot");
+      const btn=$("button","actbtn");btn.type="button";btn.append(T("Ask a follow-up ↗"));
+      btn.onclick=()=>choose(title||"this checklist");
+      foot.append(btn);e.append(foot);
+    }
+    return e;
+  },
 };
+// Checklist helper: reads a named field off an item record, falling back
+// through a list of common alternates. Only ever reads a plain value.
+function itemField(s,key,fallbacks){
+  for(const k of [key,...fallbacks]){
+    if(s&&s[k]!=null){const v=s[k];return Array.isArray(v)?v.join(" · "):v;}
+  }
+  return undefined;
+}
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
 function spark(v){const ns="http://www.w3.org/2000/svg",w=200,h=44,mx=Math.max(...v,1),mn=Math.min(...v,0),rg=(mx-mn)||1;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");s.setAttribute("height",h);const p=document.createElementNS(ns,"polyline");p.setAttribute("points",v.map((y,i)=>`${i/(v.length-1||1)*w},${h-5-(y-mn)/rg*(h-10)}`).join(" "));p.setAttribute("fill","none");p.setAttribute("stroke","var(--green)");p.setAttribute("stroke-width","2.5");s.append(p);return s;}
