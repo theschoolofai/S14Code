@@ -1,6 +1,8 @@
 """Local S13 runtime endpoints."""
 from __future__ import annotations
 
+import os
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
@@ -9,9 +11,14 @@ from s13code.core.memory import MemoryKind, MemoryScope, Principal
 router = APIRouter(prefix="/v1/agent", tags=["S13 live agent"])
 
 
-async def gateway_text_llm(app, prompt: str, system: str):
-    """Patchable test seam; production crosses HTTP through GatewayClient."""
-    return await app.state.gateway.complete(prompt, system)
+async def gateway_text_llm(app, prompt: str, system: str, **options):
+    """Patchable test seam; production crosses HTTP through GatewayClient.
+
+    ``options`` forwards per-call knobs (today ``max_tokens``) so a role that
+    needs a structured reply can buy the room for one without changing the
+    default every other role gets.
+    """
+    return await app.state.gateway.complete(prompt, system, **options)
 
 
 class ScopeBody(BaseModel):
@@ -57,9 +64,18 @@ class SearchBody(ScopeBody):
 @router.post("/runs")
 async def run(body: RunBody, request: Request):
     runtime = request.app.state.s13_runtime
+    # A public deployment can be published WITHOUT a provider credential: it
+    # serves interfaces that were already composed, read back out of the durable
+    # journal it ships with. Composing needs a real gateway call and a real key,
+    # so in that mode the honest answer is to refuse the run and say why, rather
+    # than to fail somewhere deeper with a confusing 502.
+    if os.getenv("S14_REPLAY_ONLY") == "1":
+        raise HTTPException(503, "this deployment is replay-only: it renders interfaces that were "
+                                 "already composed and carries no provider credential. Run it "
+                                 "locally against glc_v3 to compose new ones.")
     try:
         return await runtime.run(prompt=body.prompt, scope=body.scope(),
-                                 llm=lambda prompt, system: gateway_text_llm(request.app, prompt, system),
+                                 llm=lambda prompt, system, **options: gateway_text_llm(request.app, prompt, system, **options),
                                  source_uri="api://agent/runs", source_author=body.user_id or "api-user",
                                  respond_as=body.respond_as)
     except RuntimeError as error:
@@ -71,7 +87,7 @@ async def resume(run_id: str, request: Request):
     runtime = request.app.state.s13_runtime
     try:
         return await runtime.run(prompt=None, scope=None,
-                                 llm=lambda prompt, system: gateway_text_llm(request.app, prompt, system),
+                                 llm=lambda prompt, system, **options: gateway_text_llm(request.app, prompt, system, **options),
                                  source_uri=None, source_author=None, run_id=run_id, resume=True)
     except KeyError:
         raise HTTPException(404, "run not found") from None

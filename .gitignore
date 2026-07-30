@@ -15,3 +15,8 @@ benchmark.json
 benchmark.md
 a2a-proof.json
 .DS_Store
+
+# The deployment seed is data, but it is also the only thing the public
+# replay build has to render — without it `modal deploy` yields a live URL
+# showing nothing. Built by deploy/build_journal_seed.py.
+!deploy/journal_seed.sqlite

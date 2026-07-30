@@ -1,0 +1,271 @@
+{
+  "run_id": "run-6b14550dcca6",
+  "prompt": "Help me run a job search for a senior backend engineer role. Show the pipeline stages and which companies sit in each stage.",
+  "provider": "gemini_1",
+  "model": "gemini-flash-latest",
+  "unprompted": {
+    "catalog_offered_to_model": true,
+    "component_named_in_prompt": false,
+    "component_named_in_instruction": false,
+    "note": "compose_surface sends the catalog manifest and describes /board_columns by shape only; the component type is the model's choice."
+  },
+  "validator": {
+    "proposed": 9,
+    "accepted": 9,
+    "rejected": 0,
+    "ok": true,
+    "rejections": [],
+    "dangling_child_refs": [],
+    "component_types": [
+      "Column",
+      "Divider",
+      "Kanban",
+      "Row",
+      "StatTile",
+      "Text"
+    ],
+    "component_count": 9
+  },
+  "kanban_components": [
+    {
+      "id": "kanban",
+      "type": "Kanban",
+      "title": "Job Search Pipeline",
+      "groups": {
+        "$bind": "/board_columns"
+      },
+      "titleKey": "name",
+      "cardsKey": "cards",
+      "onCardPress": {
+        "action": "request_data"
+      }
+    }
+  ],
+  "board_data": [
+    {
+      "name": "Target List",
+      "cards": [
+        "Datadog - Distributed Systems",
+        "Snowflake - Database Engine",
+        "Figma - Core Platform",
+        "Discord - Realtime Messaging"
+      ]
+    },
+    {
+      "name": "Applied / Referral",
+      "cards": [
+        "Stripe - Payments Infra",
+        "DoorDash - Logistics",
+        "Plaid - API Platform"
+      ]
+    },
+    {
+      "name": "Tech Screen",
+      "cards": [
+        "Uber - Streaming Data",
+        "Brex - Ledgers & Finance"
+      ]
+    },
+    {
+      "name": "Onsite Loop",
+      "cards": [
+        "Coinbase - Matching Engine",
+        "Cloudflare - Edge Compute"
+      ]
+    },
+    {
+      "name": "Offer / Decision",
+      "cards": [
+        "Reddit - Feed Services"
+      ]
+    }
+  ],
+  "surface": {
+    "root": "root",
+    "components": [
+      {
+        "id": "root",
+        "type": "Column",
+        "children": [
+          "title",
+          "intro",
+          "metrics_row",
+          "divider_1",
+          "kanban"
+        ]
+      },
+      {
+        "id": "title",
+        "type": "Text",
+        "variant": "heading",
+        "text": {
+          "$bind": "/title"
+        }
+      },
+      {
+        "id": "intro",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/intro"
+        }
+      },
+      {
+        "id": "metrics_row",
+        "type": "Row",
+        "align": "center",
+        "justify": "spaceBetween",
+        "children": [
+          "stat_0",
+          "stat_1",
+          "stat_2"
+        ]
+      },
+      {
+        "id": "stat_0",
+        "type": "StatTile",
+        "label": "Total Tracked",
+        "value": {
+          "$bind": "/metric_0_value"
+        },
+        "unit": "companies"
+      },
+      {
+        "id": "stat_1",
+        "type": "StatTile",
+        "label": "Active Loops",
+        "value": {
+          "$bind": "/metric_1_value"
+        },
+        "unit": "companies"
+      },
+      {
+        "id": "stat_2",
+        "type": "StatTile",
+        "label": "Offer Rate",
+        "value": {
+          "$bind": "/metric_2_value"
+        },
+        "unit": "%"
+      },
+      {
+        "id": "divider_1",
+        "type": "Divider"
+      },
+      {
+        "id": "kanban",
+        "type": "Kanban",
+        "title": "Job Search Pipeline",
+        "groups": {
+          "$bind": "/board_columns"
+        },
+        "titleKey": "name",
+        "cardsKey": "cards",
+        "onCardPress": {
+          "action": "request_data"
+        }
+      }
+    ],
+    "dataModel": {
+      "title": "Senior Backend Engineer Job Search Pipeline",
+      "goal": "Help me run a job search for a senior backend engineer role. Show the pipeline stages and which companies sit in each stage.",
+      "summary": "Active tracking board for high-scale backend engineering opportunities.",
+      "results": [],
+      "items": [],
+      "metrics": [
+        {
+          "label": "Total Tracked",
+          "value": 12,
+          "unit": "companies"
+        },
+        {
+          "label": "Active Interview Loops",
+          "value": 5,
+          "unit": "companies"
+        },
+        {
+          "label": "Offer Rate",
+          "value": 8,
+          "unit": "%"
+        }
+      ],
+      "spark": [],
+      "table_rows": [],
+      "item_count": 0,
+      "source_count": 0,
+      "subjects": [],
+      "timeline": [
+        {
+          "time": "75",
+          "label": "run_started"
+        },
+        {
+          "time": "76",
+          "label": "graph_patched"
+        },
+        {
+          "time": "77",
+          "label": "task_started content"
+        },
+        {
+          "time": "78",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "79",
+          "label": "graph_patched"
+        },
+        {
+          "time": "80",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "intro": "Active tracking board for high-scale backend engineering opportunities.",
+      "metric_0_value": 12,
+      "metric_1_value": 5,
+      "metric_2_value": 8,
+      "board_columns": [
+        {
+          "name": "Target List",
+          "cards": [
+            "Datadog - Distributed Systems",
+            "Snowflake - Database Engine",
+            "Figma - Core Platform",
+            "Discord - Realtime Messaging"
+          ]
+        },
+        {
+          "name": "Applied / Referral",
+          "cards": [
+            "Stripe - Payments Infra",
+            "DoorDash - Logistics",
+            "Plaid - API Platform"
+          ]
+        },
+        {
+          "name": "Tech Screen",
+          "cards": [
+            "Uber - Streaming Data",
+            "Brex - Ledgers & Finance"
+          ]
+        },
+        {
+          "name": "Onsite Loop",
+          "cards": [
+            "Coinbase - Matching Engine",
+            "Cloudflare - Edge Compute"
+          ]
+        },
+        {
+          "name": "Offer / Decision",
+          "cards": [
+            "Reddit - Feed Services"
+          ]
+        }
+      ]
+    }
+  },
+  "raw_surface": "{\"root\":\"root\",\"components\":[{\"id\":\"root\",\"type\":\"Column\",\"children\":[\"title\",\"intro\",\"metrics_row\",\"divider_1\",\"kanban\"]},{\"id\":\"title\",\"type\":\"Text\",\"variant\":\"heading\",\"text\":{\"$bind\":\"/title\"}},{\"id\":\"intro\",\"type\":\"Text\",\"variant\":\"body\",\"text\":{\"$bind\":\"/intro\"}},{\"id\":\"metrics_row\",\"type\":\"Row\",\"align\":\"center\",\"justify\":\"spaceBetween\",\"children\":[\"stat_0\",\"stat_1\",\"stat_2\"]},{\"id\":\"stat_0\",\"type\":\"StatTile\",\"label\":\"Total Tracked\",\"value\":{\"$bind\":\"/metric_0_value\"},\"unit\":\"companies\"},{\"id\":\"stat_1\",\"type\":\"StatTile\",\"label\":\"Active Loops\",\"value\":{\"$bind\":\"/metric_1_value\"},\"unit\":\"companies\"},{\"id\":\"stat_2\",\"type\":\"StatTile\",\"label\":\"Offer Rate\",\"value\":{\"$bind\":\"/metric_2_value\"},\"unit\":\"%\"},{\"id\":\"divider_1\",\"type\":\"Divider\"},{\"id\":\"kanban\",\"type\":\"Kanban\",\"title\":\"Job Search Pipeline\",\"groups\":{\"$bind\":\"/board_columns\"},\"titleKey\":\"name\",\"cardsKey\":\"cards\",\"onCardPress\":{\"action\":\"request_data\"}}]}"
+}

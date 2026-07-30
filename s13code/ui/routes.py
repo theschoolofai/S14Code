@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
@@ -203,9 +204,20 @@ async def composed(run_id: str, request: Request):
     node = run["nodes"].get("surface") or {}
     res = node.get("result") or {}
     surf = res.get("surface") or {}
-    if not surf.get("components"):
+    if not node:
         raise HTTPException(404, "run has no composed interface (no compose_surface node)")
+    if not surf.get("components"):
+        # The node ran but produced nothing renderable. Say which of the two it
+        # was: "no compose node" sent readers hunting for a planner bug when the
+        # composer had in fact run and come back empty.
+        raise HTTPException(404, f"compose_surface node is {node.get('state', 'unknown')} but composed no "
+                                 "renderable component")
     result = validate_surface(surf)
+    # ``surf`` has already been through the wall inside the compose node, so this
+    # second pass is a re-check on serve and finds nothing. The interesting
+    # verdict — what the MODEL proposed and what was refused — lives on the node,
+    # so pass it through; a client that cannot see the refusals cannot show them.
+    composed_validator = res.get("validator") or {}
     return {
         "run_id": run_id,
         "finished": run["finished"],
@@ -215,6 +227,15 @@ async def composed(run_id: str, request: Request):
         "clean": result.ok,
         "provider": res.get("provider"),
         "model": res.get("model"),
+        "validator": {
+            "proposed": composed_validator.get("proposed", len(result.accepted)),
+            "accepted": composed_validator.get("accepted", len(result.accepted)),
+            "rejected": composed_validator.get("rejected", 0),
+            "rejections": composed_validator.get("rejections", []),
+            "component_types": composed_validator.get("component_types",
+                                                      sorted({c.get("type") for c in result.accepted})),
+            "revalidated_clean": result.ok,
+        },
     }
 
 
@@ -223,6 +244,23 @@ async def client(run_id: str):
     if not _CLIENT.exists():
         raise HTTPException(500, "render client missing")
     return _CLIENT.read_text().replace("__RUN_ID__", run_id)
+
+
+@router.get("/jobs", response_class=HTMLResponse)
+@router.get("/jobs/", response_class=HTMLResponse)
+async def jobs_app():
+    """Pipeline: a UI-only job-search application. Every turn is a composed,
+    catalog-validated interface and every tap is a registered action that earns
+    the next one. The shell owns the conversation; the runtime stays
+    domain-agnostic, so this page is an application, not a special case."""
+    path = Path(__file__).parent / "client" / "jobs.html"
+    if not path.exists():
+        raise HTTPException(500, "jobs app missing")
+    # The page needs to know whether this deployment can compose. A replay-only
+    # public build carries no credential, so it offers the captured runs instead
+    # of a Compose box that could only ever fail.
+    return path.read_text().replace("__REPLAY_ONLY__",
+                                    "true" if os.getenv("S14_REPLAY_ONLY") == "1" else "false")
 
 
 @router.get("/app", response_class=HTMLResponse)

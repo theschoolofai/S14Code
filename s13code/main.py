@@ -70,7 +70,7 @@ async def lifespan(app: FastAPI):
     async def handle_a2a_task(text: str) -> str:
         result = await app.state.s13_runtime.run(
             prompt=text, scope=MemoryScope("a2a", "inbound", "remote-agent", "s13code"),
-            llm=lambda prompt, system: app.state.gateway.complete(prompt, system),
+            llm=lambda prompt, system, **options: app.state.gateway.complete(prompt, system, **options),
             source_uri="a2a://inbound/task", source_author="remote-agent",
         )
         if result["status"] != "completed":

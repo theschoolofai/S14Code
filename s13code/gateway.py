@@ -13,11 +13,16 @@ class GatewayClient:
         self._client = client or httpx.AsyncClient(timeout=120)
         self._owns_client = client is None
 
-    async def complete(self, prompt: str, system: str, *, session: str | None = None) -> dict[str, Any]:
+    async def complete(self, prompt: str, system: str, *, session: str | None = None,
+                       max_tokens: int | None = None) -> dict[str, Any]:
+        # 700 tokens is enough for a sentence-shaped answer and far too few for a
+        # structured one: a role asked for a JSON object gets cut mid-string and
+        # the caller silently parses nothing. Callers that ask for structure pass
+        # their own budget; S13_MAX_TOKENS moves the default without a code change.
         payload: dict[str, Any] = {
             "messages": [{"role": "user", "content": prompt}],
             "system": system,
-            "max_tokens": 700,
+            "max_tokens": max_tokens or int(os.getenv("S13_MAX_TOKENS", "700")),
             "temperature": 0,
             "reasoning": "off",
             "agent": "s13_answer",
