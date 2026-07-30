@@ -710,6 +710,26 @@ def test_route_reconnect_snapshot_rebuild_equals_full_replay(live_client):
     assert rebuilt == full
 
 
+def test_the_composer_is_told_never_to_draw_the_graphs_own_steps():
+    """/timeline is the subject's sequence; the journal lives at /run_events.
+
+    They were the same pointer once, and the composer reasonably drew the graph's
+    own journal as the interface's timeline. That log can never be complete — the
+    node building the data model is the one still running — so every interface
+    ended on "task_started surface" and looked permanently mid-flight. An
+    interface that misreports its own state is the honesty failure this session
+    warns about, wearing a component that looks authoritative.
+    """
+    source = (_BUILD_ROOT / "s13code" / "runtime.py").read_text()
+    assert 'data_model["run_events"]' in source
+    # The journal must not be reachable as /timeline any more.
+    assert 'data_model["timeline"] = [{"time": str(event.sequence)' not in source
+    # /timeline is set from the content's own ordered sections.
+    assert 'data_model["timeline"] = data_model["section_events"]' in source
+    # And the instruction says which is which, in as many words.
+    assert "Never draw /run_events in an interface for the user" in source
+
+
 @pytest.mark.parametrize("page", ["index.html", "app.html", "jobs.html"])
 def test_client_pages_never_close_their_own_script_element_early(page):
     """A page that quotes an attack payload must escape its closing tag.

@@ -761,9 +761,17 @@ class S13Runtime:
                 data_model[f"item_{index}_detail"] = item["detail"] or item["label"]
             data_model["subjects"] = [item["label"] for item in outcomes]
             journal = runtime.graph.events(run_id)
-            data_model["timeline"] = [{"time": str(event.sequence),
-                                       "label": f"{event.kind} {event.node_id or ''}".strip()}
-                                      for event in journal]
+            # The run's own plumbing, under a name that says so. It used to be
+            # /timeline, which invited the composer to draw it as THE timeline of
+            # a domain interface — and it can never be complete, because the node
+            # building this data model is the one that has not finished yet. Every
+            # interface that drew it therefore ended on "task_started surface" and
+            # looked permanently mid-flight. A domain /timeline is set below from
+            # the content's own ordered sections; when there are none, there is no
+            # /timeline at all, and drawing no sequence beats drawing the wrong one.
+            data_model["run_events"] = [{"time": str(event.sequence),
+                                         "label": f"{event.kind} {event.node_id or ''}".strip()}
+                                        for event in journal]
             succeeded = sum(1 for node in snapshot.nodes.values() if node["state"] == "succeeded")
             data_model["progress_value"] = succeeded
             data_model["progress_max"] = max(1, len(snapshot.nodes))
@@ -813,6 +821,10 @@ class S13Runtime:
                         data_model["section_events"] = [
                             {"time": section["heading"], "label": "; ".join(section["points"])}
                             for section in clean_sections]
+                        # The DOMAIN sequence, and the only thing /timeline ever
+                        # means now: a Timeline drawn from it describes the user's
+                        # subject, not the graph that produced it.
+                        data_model["timeline"] = data_model["section_events"]
 
                 metrics = content_structured.get("metrics")
                 if isinstance(metrics, list) and metrics:
@@ -945,9 +957,12 @@ class S13Runtime:
                             "\"cards\" so it reads the right fields; "
                             "for /choices (the goal asks the user to pick) render one tappable Button per entry, "
                             "label the literal /choice_N_label, onPress action \"request_data\"; "
-                            "you may also add a ProgressBar bound to /progress_value (max /progress_max) and a "
-                            "Timeline bound to /timeline for the run's own steps. Do NOT dump everything into one "
-                            "Text. Bind every DATA value to a /pointer listed in available_pointers."),
+                            "you may also add a ProgressBar bound to /progress_value (max /progress_max), and a "
+                            "Timeline bound to /timeline when that pointer exists — it carries the SUBJECT's own "
+                            "sequence. Never draw /run_events in an interface for the user: those are the graph's "
+                            "internal steps, they stop before this interface was finished being composed, and a "
+                            "Timeline of them always looks like the run is still running. Do NOT dump everything "
+                            "into one Text. Bind every DATA value to a /pointer listed in available_pointers."),
             }
             body = await _gateway_surface_call(json.dumps(instruction), system)
             raw = body.get("text", "")
