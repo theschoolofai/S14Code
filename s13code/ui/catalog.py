@@ -10,7 +10,7 @@ The catalog is aligned to A2UI's Basic component set: the 15 layout / text /
 input / container types A2UI Basic already defines are adopted under their real
 A2UI names (``source="a2ui-basic"``). Only the components A2UI Basic genuinely
 lacks — charts, tiles, tables, timelines, notices, and the approval card — are
-kept as clearly labelled custom extensions (``source="custom"``). Twenty-three
+kept as clearly labelled custom extensions (``source="custom"``). Twenty-four
 types in all; a student can read every one and the validator can prove coverage.
 
 Property kinds:
@@ -48,7 +48,7 @@ _TONE = PropSpec("enum", ("neutral", "good", "warn", "bad"))
 
 
 # The 23 component types the render client knows how to draw. The first 15 are
-# A2UI Basic's own names; the last 8 are custom extensions A2UI Basic lacks.
+# A2UI Basic's own names; the last 9 are custom extensions A2UI Basic lacks.
 COMPONENTS: dict[str, ComponentSpec] = {
     # --- A2UI Basic: layout / text / media / inputs / containers (15) --------
     "Row": ComponentSpec("Row", {
@@ -88,7 +88,7 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "Modal": ComponentSpec("Modal", {
         "title": PropSpec("text"), "children": PropSpec("ref"), "open": PropSpec("binding"),
     }, source="a2ui-basic"),
-    # --- Custom extensions: what A2UI Basic does not define (8) ---------------
+    # --- Custom extensions: what A2UI Basic does not define (9) ---------------
     "BarChart": ComponentSpec("BarChart", {
         "title": PropSpec("text"), "data": PropSpec("binding"),
         "xKey": PropSpec("text"), "yKey": PropSpec("text"),
@@ -117,11 +117,20 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "summary": PropSpec("binding"), "params": PropSpec("binding"),
         "confirm": PropSpec("action"), "reject": PropSpec("action"),
     }, source="custom"),
+    "Rating": ComponentSpec("Rating", {
+        # Rating is deliberately a bounded numeric widget.  The value remains
+        # in the data model and an optional registered event is its only output.
+        "label": PropSpec("text"), "value": PropSpec("binding"),
+        "max": PropSpec("number"), "readOnly": PropSpec("bool"),
+        "onRate": PropSpec("action"),
+    }, source="custom"),
 }
 
 # The closed set of action names a surface may emit. An action the agent did
 # not register cannot cross back into the graph.
-REGISTERED_ACTIONS: frozenset[str] = frozenset({"approve", "reject", "rerun", "request_data"})
+REGISTERED_ACTIONS: frozenset[str] = frozenset({
+    "approve", "reject", "rerun", "request_data", "submit_interview_answer", "rate_interview_answer",
+})
 
 
 def catalog_manifest() -> dict:
