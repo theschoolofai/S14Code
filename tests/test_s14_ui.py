@@ -710,6 +710,25 @@ def test_route_reconnect_snapshot_rebuild_equals_full_replay(live_client):
     assert rebuilt == full
 
 
+@pytest.mark.parametrize("page", ["index.html", "app.html", "jobs.html"])
+def test_client_pages_never_close_their_own_script_element_early(page):
+    """A page that quotes an attack payload must escape its closing tag.
+
+    The HTML parser ends a script element at the first literal ``</script``,
+    even inside a JavaScript string. A page carrying an XSS payload as example
+    text therefore terminates its own script mid-string: everything after it
+    renders as visible source, and every handler below silently never binds.
+
+    Nothing else catches this. The Node probe evaluates the extracted script
+    directly, so it never sees the parser boundary, and the page still LOOKS
+    fine because the code above the break runs normally. Assert the file has
+    exactly one closing tag per script element and the payload stays escaped.
+    """
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / page).read_text()
+    assert html.count("</script") == 1, (
+        f"{page} contains an unescaped </script> — write it <\\/script> inside JS strings")
+
+
 # --------------------------------------------------------------------------- #
 # render client — source-level safety property (no innerHTML from bound data)
 # --------------------------------------------------------------------------- #
