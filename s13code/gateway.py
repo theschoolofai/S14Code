@@ -9,7 +9,15 @@ import httpx
 
 class GatewayClient:
     def __init__(self, base_url: str | None = None, *, client: httpx.AsyncClient | None = None) -> None:
-        self.base_url = (base_url or os.getenv("GLC_BASE_URL", "http://127.0.0.1:8111")).rstrip("/")
+        resolved = (base_url or os.getenv("GLC_BASE_URL", "http://127.0.0.1:8111")).rstrip("/")
+        # Render's `fromService: {property: hostport}` resolves to a bare
+        # "host:port" for its internal private network, with no scheme --
+        # httpx rejects that outright (UnsupportedProtocol). A value that
+        # already carries a scheme (the default, or any manually-set URL) is
+        # untouched; only a bare host:port gets one added.
+        if not resolved.startswith(("http://", "https://")):
+            resolved = f"http://{resolved}"
+        self.base_url = resolved
         self._client = client or httpx.AsyncClient(timeout=120)
         self._owns_client = client is None
 
@@ -17,7 +25,12 @@ class GatewayClient:
         payload: dict[str, Any] = {
             "messages": [{"role": "user", "content": prompt}],
             "system": system,
-            "max_tokens": 700,
+            # 700 truncated any answer that had to cover several subjects: a
+            # three-way database comparison ran out mid-sentence and the THIRD
+            # entity vanished from the summary entirely, so the composed
+            # interface silently dropped a third of what the user asked about.
+            # Env-overridable rather than a new hardcoded number.
+            "max_tokens": int(os.getenv("S13_MAX_TOKENS", "2000")),
             "temperature": 0,
             "reasoning": "off",
             "agent": "s13_answer",

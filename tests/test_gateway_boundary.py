@@ -37,3 +37,16 @@ async def test_s13code_calls_gateway_without_owning_provider_keys(monkeypatch):
 def test_s13code_does_not_reimplement_gateway_routes(app_client):
     assert app_client.post("/v1/chat", json={}).status_code == 404
     assert app_client.get("/v1/providers").status_code == 404
+
+
+def test_bare_hostport_gets_a_scheme_added(monkeypatch):
+    """Render's fromService hostport resolves to "host:port" with no scheme --
+    httpx raises UnsupportedProtocol on that. Regression for the deployed
+    runtime hitting the gateway with GLC_BASE_URL=glc-gateway:10000."""
+    monkeypatch.setenv("GLC_BASE_URL", "glc-gateway:10000")
+    assert GatewayClient().base_url == "http://glc-gateway:10000"
+
+
+def test_a_url_that_already_has_a_scheme_is_untouched(monkeypatch):
+    monkeypatch.setenv("GLC_BASE_URL", "https://glc-gateway.onrender.com/")
+    assert GatewayClient().base_url == "https://glc-gateway.onrender.com"

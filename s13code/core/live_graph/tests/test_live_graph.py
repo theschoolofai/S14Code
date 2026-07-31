@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 import pytest
 
@@ -201,3 +202,37 @@ async def test_resume_replays_outcome_that_crashed_before_its_patch(tmp_path):
     assert done.finished and done.executed == ("second",)
     assert store.pending_planner_events("crash-gap") == []
     assert len([event for event in store.events("crash-gap") if event.kind == "graph_patched" and event.payload["trigger_event"] == outcome.sequence]) == 1
+
+
+def test_record_outcome_measures_wall_clock_duration(tmp_path):
+    """A UI reading 'how long did each step take' needs this on every node
+    that has finished, without depending on the worker to report it itself --
+    a worker cannot time its own execution honestly if the timer starts before
+    the worker is even reached (queueing, retries)."""
+    store = GraphStore(tmp_path / "graph.db")
+    store.start("timing")
+    store.apply_patch("timing", GraphPatch(add=(TaskSpec("slow", "worker"),), reason="start"),
+                      trigger_event=store.latest_event("timing").sequence)
+    ready = store.ready("timing", limit=1)
+    store.mark_running("timing", ready)
+    time.sleep(0.02)
+    outcome = store.record_outcome("timing", "slow", True, {"answer": "done"})
+
+    assert outcome.duration_ms is not None
+    assert outcome.duration_ms >= 15  # slept 20ms; generous floor for CI jitter
+    # The payload the worker returned stays exactly what it returned --
+    # duration lives on the event, not smuggled into the result dict.
+    assert outcome.payload == {"answer": "done"}
+
+    node = store.snapshot("timing").nodes["slow"]
+    assert node["duration_ms"] == pytest.approx(outcome.duration_ms)
+
+
+def test_a_node_that_never_ran_has_no_duration(tmp_path):
+    """A pending node was never started; None is honest, 0 would be a lie."""
+    store = GraphStore(tmp_path / "graph.db")
+    store.start("untimed")
+    store.apply_patch("untimed", GraphPatch(add=(TaskSpec("never_started", "worker"),), reason="start"),
+                      trigger_event=store.latest_event("untimed").sequence)
+    node = store.snapshot("untimed").nodes["never_started"]
+    assert node["duration_ms"] is None

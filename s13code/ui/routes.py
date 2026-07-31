@@ -21,11 +21,12 @@ import json
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from .agui import run_data_model, state_snapshot, stream_agui
 from .catalog import catalog_manifest
+from .gallery import build_gallery
 from .hitl import PendingAction, decide_resume
 from .showcase import build_corpus_dashboard
 from .surface import build_run_surface
@@ -142,7 +143,7 @@ async def harness_surface():
     path = Path(__file__).resolve().parents[2] / "proofs" / "harness_run.json"
     if not path.exists():
         raise HTTPException(404, "harness_run.json not found — run proofs/harness_run.py first")
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     node = data["compose_surface_node"]
     acc = node["surface_accepted"]
     surface = {"root": acc["root"], "components": acc["components"], "dataModel": node["data_model"]}
@@ -156,6 +157,69 @@ async def harness_surface():
         "clean": result.ok,
         "provider": node.get("provider"),
         "model": node.get("model"),
+    }
+
+
+@router.get("/", include_in_schema=False)
+async def root():
+    """The bare host URL had no route at all, so it 404'd on main too. /app is
+    the session's original example viewer and stays the default here; /decide
+    is Part 2's app and is reached by name, not by taking over root."""
+    return RedirectResponse("/app")
+
+
+@router.get("/decide", response_class=HTMLResponse)
+@router.get("/decide/", response_class=HTMLResponse)
+async def second_opinion():
+    """Second Opinion — the Session 14 UI-only application.
+
+    Its own shell rather than an edit of ``/app``: the assignment says "fork it
+    or write your own", and leaving the shipped viewer untouched keeps the
+    IIT-JEE example alive as proof the engine is domain-agnostic.
+
+    Every turn is a composed, catalog-validated interface. There is no text
+    path — ``/v1/runs/{id}/composed`` 404s when a run composed nothing, so a
+    failed turn surfaces as an error rather than degrading into prose.
+    """
+    path = Path(__file__).parent / "client" / "second_opinion.html"
+    if not path.exists():
+        raise HTTPException(500, "second opinion shell missing")
+    return path.read_text(encoding="utf-8")
+
+
+@router.get("/gallery", response_class=HTMLResponse)
+@router.get("/gallery/", response_class=HTMLResponse)
+async def gallery_page():
+    """The catalog gallery, at the URL people actually guess.
+
+    The renderer lives at ``/s/{id}`` because it is the ordinary run-view client
+    pointed at a reserved id — the gallery is a normal surface, not a special
+    page. That is the right internal shape and the wrong thing to have to know,
+    so this serves the same client here.
+    """
+    if not _CLIENT.exists():
+        raise HTTPException(500, "render client missing")
+    return _CLIENT.read_text(encoding="utf-8").replace("__RUN_ID__", "gallery")
+
+
+@router.get("/v1/gallery")
+async def gallery():
+    """Every catalog type, drawn once, as one ordinary validated surface.
+
+    Served through the same builder → validator → client path as any agent
+    output, so it doubles as a drift check: a ComponentSpec without a renderer
+    shows up here as a skipped node instead of hiding until an agent picks it.
+    """
+    built = build_gallery()
+    result = validate_surface(built)
+    return {
+        "run_id": "gallery",
+        "surface": {"root": built["root"], "components": result.accepted,
+                    "dataModel": built["dataModel"]},
+        "component_count": len(result.accepted),
+        "catalog_types": len(catalog_manifest()["components"]),
+        "clean": result.ok,
+        "rejections": [r.as_dict() for r in result.rejections],
     }
 
 
@@ -222,7 +286,11 @@ async def composed(run_id: str, request: Request):
 async def client(run_id: str):
     if not _CLIENT.exists():
         raise HTTPException(500, "render client missing")
-    return _CLIENT.read_text().replace("__RUN_ID__", run_id)
+    # The clients are UTF-8 source files. read_text() without an encoding uses
+    # the platform default, which on Windows is cp1252: index.html then decodes
+    # to mojibake (every ·, …, ▲ mangled) and app.html raises outright on the
+    # timeline bullet ●. Read them as what they are.
+    return _CLIENT.read_text(encoding="utf-8").replace("__RUN_ID__", run_id)
 
 
 @router.get("/app", response_class=HTMLResponse)
@@ -233,4 +301,4 @@ async def app_viewer():
     path = Path(__file__).parent / "client" / "app.html"
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
-    return path.read_text()
+    return path.read_text(encoding="utf-8")
