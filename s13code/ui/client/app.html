@@ -137,6 +137,7 @@ const R={
   DateTime:(c,x)=>{const i=$("input","field");i.type="date";return i;},
   Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
   ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
+  KanbanBoard:(c,x)=>kanban(c,x),
 };
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
@@ -146,6 +147,20 @@ function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").ma
 function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);const tabIds=c.children||[];function show(i){body.textContent="";const cc=x.byId[tabIds[i]];if(cc)body.append(node(cc,x));[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}
   (String(c.labels||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});
   if(tabIds.length)show(0);return wrap;}
+
+function kanban(c,x){const wrap=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));wrap.append(h);}
+  const cols=(c.columns||"Todo,In Progress,Done").split(",").map(s=>s.trim());const b=$("div");b.style.cssText="display:grid;grid-template-columns:repeat("+cols.length+",1fr);gap:10px";
+  const cards=resolve(c.cards,x.dm)||[];
+  cols.forEach(col=>{const colEl=$("div");colEl.style.cssText="background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:8px";
+    const hdr=$("div");hdr.style.cssText="font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px";hdr.append(T(col));colEl.append(hdr);
+    const colCards=cards.filter(card=>String(card.status||"").toLowerCase()===col.toLowerCase()||(!card.status&&col===cols[0]));
+    colCards.forEach(card=>{const cd=$("div","Card");cd.style.cssText="margin-bottom:8px;padding:8px 10px;font-size:13px;cursor:pointer;background:var(--surface)";
+      const tEl=$("div");tEl.style.fontWeight="600";tEl.append(T(card.title||""));cd.append(tEl);
+      if(card.description){const dEl=$("div");dEl.style.cssText="font-size:11px;color:var(--ink-muted);margin-top:2px";dEl.append(T(card.description));cd.append(dEl);}
+      if(card.tag){const tg=$("span");tg.style.cssText="display:inline-block;margin-top:4px;padding:2px 5px;border-radius:4px;font-size:10px;font-family:var(--font-mono);background:var(--accent-soft);color:var(--accent)";tg.append(T(card.tag));cd.append(tg);}
+      cd.onclick=()=>choose(card.title||"Card Selected");colEl.append(cd);});
+    b.append(colEl);});
+  wrap.append(b);return wrap;}
 
 function render(surface){const byId={};surface.components.forEach(c=>byId[c.id]=c);const x={byId,dm:surface.dataModel||{}};const m=document.getElementById("mount");m.textContent="";m.append(node(byId[surface.root],x));}
 

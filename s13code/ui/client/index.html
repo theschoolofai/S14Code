@@ -135,6 +135,7 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  KanbanBoard:(c,ctx)=>renderKanban(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -185,6 +186,20 @@ function renderApproval(c,ctx){const e=$("div","Approval");const sm=$("div","sm"
   const pre=$("pre");pre.append(text(JSON.stringify(resolve(c.params,ctx.dm),null,2)));const btns=$("div","btns");
   const ok=$("button","ok");ok.append(text("Approve"));ok.onclick=()=>emitAction("approve",resolve(c.params,ctx.dm));
   const no=$("button");no.append(text("Reject"));no.onclick=()=>emitAction("reject",{});btns.append(ok,no);e.append(sm,pre,btns);return e;}
+
+function renderKanban(c,ctx){const wrap=$("div","Card");if(c.title){const h=$("div");h.style.cssText="font-weight:700;font-size:15px;margin-bottom:12px;color:var(--ink)";h.append(text(c.title));wrap.append(h);}
+  const cols=(c.columns||"Todo,In Progress,Done").split(",").map(s=>s.trim());const board=$("div");board.style.cssText="display:grid;grid-template-columns:repeat("+cols.length+",1fr);gap:10px";
+  const cards=(resolve(c.cards,ctx.dm)||[]);
+  cols.forEach(col=>{const colEl=$("div");colEl.style.cssText="background:var(--surface-alt);border:1px solid var(--rule);border-radius:8px;padding:8px";
+    const hdr=$("div");hdr.style.cssText="font-family:var(--font-mono);font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px";hdr.append(text(col));colEl.append(hdr);
+    const colCards=cards.filter(card=>String(card.status||"").toLowerCase()===col.toLowerCase()||(!card.status&&col===cols[0]));
+    colCards.forEach(card=>{const cd=$("div","Card");cd.style.cssText="margin-bottom:8px;padding:8px 10px;font-size:13px;cursor:pointer;background:var(--surface)";
+      const tEl=$("div");tEl.style.fontWeight="600";tEl.append(text(card.title||""));cd.append(tEl);
+      if(card.description){const dEl=$("div");dEl.style.cssText="font-size:11px;color:var(--ink-muted);margin-top:2px";dEl.append(text(card.description));cd.append(dEl);}
+      if(card.tag){const tg=$("span");tg.style.cssText="display:inline-block;margin-top:4px;padding:2px 5px;border-radius:4px;font-size:10px;font-family:var(--font-mono);background:var(--accent-soft);color:var(--accent)";tg.append(text(card.tag));cd.append(tg);}
+      cd.onclick=()=>emitAction(c.onSelect&&c.onSelect.action?c.onSelect.action:"select_card",{id:card.id,title:card.title});colEl.append(cd);});
+    board.append(colEl);});
+  wrap.append(board);return wrap;}
 
 function emitAction(name,args){ // the only way the surface changes the world: a named, validated event
   document.getElementById("meta").textContent = "action emitted → "+name+" "+JSON.stringify(args);

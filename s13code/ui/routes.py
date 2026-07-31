@@ -234,3 +234,13 @@ async def app_viewer():
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
     return path.read_text()
+
+
+@router.get("/v1/tutor/turn/{turn_id}")
+async def tutor_turn(turn_id: int, prompt: str = ""):
+    """Serve validated catalog surfaces for the UI-Only Interactive Tutor App."""
+    from s13code.apps.tutor_app import get_tutor_turn
+    if turn_id not in (1, 2, 3):
+        raise HTTPException(400, "turn_id must be 1, 2, or 3")
+    return get_tutor_turn(turn_id, prompt)
+
