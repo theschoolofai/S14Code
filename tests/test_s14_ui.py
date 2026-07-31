@@ -317,13 +317,48 @@ def test_unknown_type_breaks_catalog_invariant():
 
 
 def test_extra_handler_property_breaks_data_not_code():
-    r = _reject({"id": "x", "type": "Button", "label": "Go", "onPress": {"action": "rerun"}, "onclick": "steal()"})
+    r = _reject({
+        "id": "x", "type": "Button", "label": "Go",
+        "onPress": {"action": "rerun"}, "onclick": "steal()",
+    })
     assert r.invariant == Invariant.DATA_NOT_CODE
     assert r.field == "onclick"
 
 
 def test_registered_component_with_unregistered_action_breaks_event():
     r = _reject({"id": "x", "type": "Button", "label": "Go", "onPress": {"action": "drop_tables"}})
+    assert r.invariant == Invariant.EVENT
+
+
+def test_stepwizard_validates_with_bound_steps_and_registered_action():
+    surface = {
+        "root": "wiz",
+        "components": [{
+            "id": "wiz",
+            "type": "StepWizard",
+            "title": "Study path",
+            "steps": {"$bind": "/steps"},
+            "current": {"$bind": "/current_step"},
+            "onSelect": {"action": "request_data"},
+        }],
+        "dataModel": {
+            "steps": [{"label": "Vectors", "status": "current", "detail": "Resolve components."}],
+            "current_step": 0,
+        },
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+
+
+def test_stepwizard_unregistered_action_breaks_event_invariant():
+    r = _reject({
+        "id": "wiz",
+        "type": "StepWizard",
+        "title": "Study path",
+        "steps": {"$bind": "/steps"},
+        "current": {"$bind": "/current_step"},
+        "onSelect": {"action": "execute_javascript"},
+    })
     assert r.invariant == Invariant.EVENT
 
 
@@ -390,8 +425,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +437,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "StepWizard",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -591,6 +626,8 @@ def test_render_client_never_uses_innerhtml_and_documents_the_contract():
     html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "index.html").read_text()
     # The client draws every value through text nodes, never as markup.
     assert "createTextNode" in html
+    assert "StepWizard:(c,ctx)=>renderStepWizard" in html
+    assert "function renderStepWizard" in html
     # innerHTML is never assigned anywhere — no data path can reach it.
     assert not re.search(r"innerHTML\s*=", html)
     # The one place the word appears is the documented safety contract itself.
@@ -608,3 +645,10 @@ def test_render_client_reconnects_and_rebuilds_from_a_state_snapshot():
     assert "rebuiltFromSnapshot" in html
     # The reducer still only ever touches text nodes (contract preserved above).
     assert "createTextNode" in html
+
+
+def test_app_shell_renders_stepwizard_without_innerhtml_assignment():
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "app.html").read_text()
+    assert "StepWizard:(c,x)=>stepWizard" in html
+    assert "function stepWizard" in html
+    assert not re.search(r"innerHTML\s*=", html)
