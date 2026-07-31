@@ -132,6 +132,8 @@ const RENDERERS = {
     const d=resolve(c.data,ctx.dm)||[];e.append(sparkSvg(d,c.tone));return e;},
   BarChart:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"bar chart"));e.append(t);
     e.append(barSvg(resolve(c.data,ctx.dm)||[],c.xKey,c.yKey));return e;},
+  PieChart:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"pie chart"));e.append(t);
+    e.append(donutSvg(resolve(c.data,ctx.dm)||[],c.nameKey,c.valueKey));return e;},
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
@@ -141,6 +143,70 @@ function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span",
 
 function kids(c,ctx,e){ for(const id of (c.children||[])){ const child=ctx.byId[id]; if(child) e.append(renderComponent(child,ctx)); } }
 function renderComponent(c,ctx){ const r=RENDERERS[c.type]; if(!r){ const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(text("[skipped unknown type: "+c.type+"]"));return s;} return r(c,ctx); }
+
+function donutSvg(data,nk,vk){
+  const ns="http://www.w3.org/2000/svg";
+  const s=document.createElementNS(ns,"svg");
+  s.setAttribute("viewBox","0 0 220 120");
+  s.setAttribute("width","100%");
+  const total=data.reduce((sum,d)=>sum+(+d[vk]||0),0)||1;
+  const r=35,c=2*Math.PI*r;
+  const colors=["var(--accent)","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#3b82f6"];
+  let acc=0;
+  data.forEach((d,i)=>{
+    const val=+d[vk]||0;
+    const pct=val/total;
+    const dash=pct*c;
+    const offset=-acc*c;
+    const circ=document.createElementNS(ns,"circle");
+    circ.setAttribute("cx","60");
+    circ.setAttribute("cy","60");
+    circ.setAttribute("r",r);
+    circ.setAttribute("fill","none");
+    circ.setAttribute("stroke",colors[i%colors.length]);
+    circ.setAttribute("stroke-width","14");
+    circ.setAttribute("stroke-dasharray",`${dash} ${c}`);
+    circ.setAttribute("stroke-dashoffset",offset);
+    circ.setAttribute("transform","rotate(-90 60 60)");
+    s.append(circ);
+    acc+=pct;
+  });
+  const txtLabel=document.createElementNS(ns,"text");
+  txtLabel.setAttribute("x","60");
+  txtLabel.setAttribute("y","58");
+  txtLabel.setAttribute("text-anchor","middle");
+  txtLabel.setAttribute("font-size","8");
+  txtLabel.setAttribute("fill","var(--ink-muted)");
+  txtLabel.textContent="TOTAL";
+  s.append(txtLabel);
+  const txtVal=document.createElementNS(ns,"text");
+  txtVal.setAttribute("x","60");
+  txtVal.setAttribute("y","72");
+  txtVal.setAttribute("text-anchor","middle");
+  txtVal.setAttribute("font-weight","bold");
+  txtVal.setAttribute("font-size","12");
+  txtVal.setAttribute("fill","var(--ink)");
+  txtVal.textContent=data.reduce((sum,d)=>sum+(+d[vk]||0),0);
+  s.append(txtVal);
+  data.forEach((d,i)=>{
+    const y=20+i*16;
+    if(y>105)return;
+    const dot=document.createElementNS(ns,"circle");
+    dot.setAttribute("cx","125");
+    dot.setAttribute("cy",y-3);
+    dot.setAttribute("r","4");
+    dot.setAttribute("fill",colors[i%colors.length]);
+    s.append(dot);
+    const txt=document.createElementNS(ns,"text");
+    txt.setAttribute("x","136");
+    txt.setAttribute("y",y);
+    txt.setAttribute("font-size","9");
+    txt.setAttribute("fill","var(--ink)");
+    txt.textContent=`${d[nk]} (${d[vk]})`;
+    s.append(txt);
+  });
+  return s;
+}
 
 function sparkSvg(vals,tone){const w=180,h=44,max=Math.max(...vals,1),min=Math.min(...vals,0);const rng=(max-min)||1;
   const pts=vals.map((v,i)=>`${i/(vals.length-1||1)*w},${h-6-(v-min)/rng*(h-12)}`).join(" ");

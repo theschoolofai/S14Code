@@ -126,6 +126,7 @@ const R={
   ProgressBar:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("progress"));const p=$("div","prog");const i=$("i");const val=+resolve(c.value,x.dm)||0;i.style.width=Math.min(100,val/(c.max||100)*100)+"%";p.append(i);e.append(t,p);return e;},
   Sparkline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("trend"));e.append(t,spark(resolve(c.data,x.dm)||[]));return e;},
   BarChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"chart"));e.append(t,bars(resolve(c.data,x.dm)||[],c.xKey,c.yKey));return e;},
+  PieChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"chart"));e.append(t,donutSvg(resolve(c.data,x.dm)||[],c.nameKey,c.valueKey));return e;},
   DataTable:(c,x)=>table(c,x),
   Tabs:(c,x)=>tabs(c,x),
   Button:(c,x)=>{const b=$("button","actbtn");let lab=resolve(c.label,x.dm);if(lab&&typeof lab==="object")lab=lab.label||lab.name||lab.text||lab.id||"Choose";lab=String(lab==null?"Choose":lab);b.append(T(lab));b.onclick=()=>choose(lab);return b;},
@@ -141,6 +142,69 @@ const R={
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
 function spark(v){const ns="http://www.w3.org/2000/svg",w=200,h=44,mx=Math.max(...v,1),mn=Math.min(...v,0),rg=(mx-mn)||1;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");s.setAttribute("height",h);const p=document.createElementNS(ns,"polyline");p.setAttribute("points",v.map((y,i)=>`${i/(v.length-1||1)*w},${h-5-(y-mn)/rg*(h-10)}`).join(" "));p.setAttribute("fill","none");p.setAttribute("stroke","var(--green)");p.setAttribute("stroke-width","2.5");s.append(p);return s;}
+function donutSvg(data,nk,vk){
+  const ns="http://www.w3.org/2000/svg";
+  const s=document.createElementNS(ns,"svg");
+  s.setAttribute("viewBox","0 0 220 120");
+  s.setAttribute("width","100%");
+  const total=data.reduce((sum,d)=>sum+(+d[vk]||0),0)||1;
+  const r=35,c=2*Math.PI*r;
+  const colors=["var(--accent)","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#3b82f6"];
+  let acc=0;
+  data.forEach((d,i)=>{
+    const val=+d[vk]||0;
+    const pct=val/total;
+    const dash=pct*c;
+    const offset=-acc*c;
+    const circ=document.createElementNS(ns,"circle");
+    circ.setAttribute("cx","60");
+    circ.setAttribute("cy","60");
+    circ.setAttribute("r",r);
+    circ.setAttribute("fill","none");
+    circ.setAttribute("stroke",colors[i%colors.length]);
+    circ.setAttribute("stroke-width","14");
+    circ.setAttribute("stroke-dasharray",`${dash} ${c}`);
+    circ.setAttribute("stroke-dashoffset",offset);
+    circ.setAttribute("transform","rotate(-90 60 60)");
+    s.append(circ);
+    acc+=pct;
+  });
+  const txtLabel=document.createElementNS(ns,"text");
+  txtLabel.setAttribute("x","60");
+  txtLabel.setAttribute("y","58");
+  txtLabel.setAttribute("text-anchor","middle");
+  txtLabel.setAttribute("font-size","8");
+  txtLabel.setAttribute("fill","var(--ink-muted)");
+  txtLabel.textContent="TOTAL";
+  s.append(txtLabel);
+  const txtVal=document.createElementNS(ns,"text");
+  txtVal.setAttribute("x","60");
+  txtVal.setAttribute("y","72");
+  txtVal.setAttribute("text-anchor","middle");
+  txtVal.setAttribute("font-weight","bold");
+  txtVal.setAttribute("font-size","12");
+  txtVal.setAttribute("fill","var(--ink)");
+  txtVal.textContent=data.reduce((sum,d)=>sum+(+d[vk]||0),0);
+  s.append(txtVal);
+  data.forEach((d,i)=>{
+    const y=20+i*16;
+    if(y>105)return;
+    const dot=document.createElementNS(ns,"circle");
+    dot.setAttribute("cx","125");
+    dot.setAttribute("cy",y-3);
+    dot.setAttribute("r","4");
+    dot.setAttribute("fill",colors[i%colors.length]);
+    s.append(dot);
+    const txt=document.createElementNS(ns,"text");
+    txt.setAttribute("x","136");
+    txt.setAttribute("y",y);
+    txt.setAttribute("font-size","9");
+    txt.setAttribute("fill","var(--ink)");
+    txt.textContent=`${d[nk]} (${d[vk]})`;
+    s.append(txt);
+  });
+  return s;
+}
 function bars(d,xk,yk){const ns="http://www.w3.org/2000/svg",w=300,h=150,pad=24,mx=Math.max(...d.map(r=>+r[yk]),1),bw=(w-pad*2)/(d.length||1)*.6;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");d.forEach((r,i)=>{const x=pad+i*((w-pad*2)/d.length)+((w-pad*2)/d.length-bw)/2,bh=(+r[yk])/mx*(h-pad*2);const rc=document.createElementNS(ns,"rect");rc.setAttribute("x",x);rc.setAttribute("y",h-pad-bh);rc.setAttribute("width",bw);rc.setAttribute("height",bh);rc.setAttribute("rx",3);rc.setAttribute("fill","var(--accent)");s.append(rc);const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","9");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=r[xk];s.append(tl);});return s;}
 function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());const rows=resolve(c.rows,x.dm)||[];const t=$("table");const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(T(col));tr.append(th);});t.append(tr);rows.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(r[col]));rr.append(td);});t.append(rr);});wrap.append(t);return wrap;}
 function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);const tabIds=c.children||[];function show(i){body.textContent="";const cc=x.byId[tabIds[i]];if(cc)body.append(node(cc,x));[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}

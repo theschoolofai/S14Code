@@ -93,6 +93,10 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "title": PropSpec("text"), "data": PropSpec("binding"),
         "xKey": PropSpec("text"), "yKey": PropSpec("text"),
     }, source="custom"),
+    "PieChart": ComponentSpec("PieChart", {
+        "title": PropSpec("text"), "data": PropSpec("binding"),
+        "nameKey": PropSpec("text"), "valueKey": PropSpec("text"),
+    }, source="custom"),
     "Sparkline": ComponentSpec("Sparkline", {
         "data": PropSpec("binding"), "tone": _TONE,
     }, source="custom"),

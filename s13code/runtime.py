@@ -863,7 +863,7 @@ class S13Runtime:
                       "type, prop, event handler, URL, or markup. children/labels reference component ids. "
                       "Prefer the RICHEST fitting component for each piece of data, NEVER one big Text blob: a "
                       "Timeline or a List/Column of Cards for ordered groups, StatTiles in a Row for key numbers, "
-                      "a BarChart or Sparkline for a numeric series, a DataTable for tabular rows, and Buttons for "
+                      "a BarChart, PieChart or Sparkline for a numeric series, a DataTable for tabular rows, and Buttons for "
                       "tappable choices. Fall back to a single Text only when the data has no structure. Return "
                       "JSON only: no prose, no fences.")
             instruction = {
@@ -882,6 +882,7 @@ class S13Runtime:
                             "for /metrics render a Row of StatTiles, each StatTile value bound to /metric_N_value "
                             "with a literal label; "
                             "for /series render a BarChart (data bound to /series, xKey \"label\", yKey \"value\") "
+                            "or a PieChart (data bound to /series, nameKey \"label\", valueKey \"value\") "
                             "or a Sparkline bound to /series_values; "
                             "for /table_rows render a DataTable (rows bound to /table_rows, columns the literal "
                             "/table_columns joined by commas); "

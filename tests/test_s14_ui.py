@@ -368,6 +368,23 @@ def test_safe_siblings_survive_a_partially_poisoned_surface():
     assert "poison" not in accepted_ids
 
 
+def test_pie_chart_validates_when_correct():
+    surface = {
+        "root": "pie",
+        "components": [
+            {"id": "pie", "type": "PieChart", "title": "Market Share", "data": {"$bind": "/series"}, "nameKey": "label", "valueKey": "value"}
+        ]
+    }
+    result = validate_surface(surface)
+    assert result.ok
+
+
+def test_pie_chart_invalid_property_breaks_catalog():
+    r = _reject({"id": "pie", "type": "PieChart", "title": "Market Share", "data": {"$bind": "/series"}, "nameKey": "label", "valueKey": "value", "invalidProp": 123})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "invalidProp"
+
+
 # --------------------------------------------------------------------------- #
 # catalog.py — catalog_manifest
 # --------------------------------------------------------------------------- #
@@ -390,8 +407,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -401,7 +418,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
         "CheckBox", "Slider", "InputChoice", "DateTime", "Button", "Tabs", "Modal",
     }
     assert by_source["custom"] == {
-        "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
+        "BarChart", "PieChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
         "Notice", "ApprovalCard",
     }
     # The removed types are truly gone.
