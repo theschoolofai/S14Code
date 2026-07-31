@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>S14 second opinion — the agent answers in UI</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#F7F8FA;--surface:#FFF;--surface-alt:#FAFAFA;--ink:#111;--ink-body:#1A1A1A;--ink-muted:#555;
+    --rule:#E8E8E8;--rule-strong:#D0D0D0;
+    --accent:#2563EB;--accent-2:#7C3AED;--accent-soft:rgba(37,99,235,.08);
+    --green:#16A34A;--green-soft:rgba(22,163,74,.12);--green-ink:#15803D;
+    --amber:#D97706;--amber-soft:rgba(217,119,6,.14);--amber-ink:#B45309;
+    --red:#DC2626;--red-soft:rgba(220,38,38,.10);--red-ink:#B91C1C;
+    /* TradeoffRadar's per-series palette. Only one theme exists here (unlike
+       the deployment repo's four), so a plain reuse of the status tokens
+       already carries four mutually distinct hues -- no dedicated chart
+       tokens with theme-specific overrides are needed. */
+    --chart-1:var(--accent);--chart-2:var(--green);--chart-3:var(--amber);--chart-4:var(--red);
+    --font-sans:'Inter',system-ui,sans-serif;--font-serif:'Palatino Linotype',Palatino,Georgia,serif;--font-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink-body);font-family:var(--font-sans);font-size:15px}
+  .wrap{max-width:980px;margin:0 auto;padding:22px 18px 60px;display:grid;grid-template-columns:1fr 240px;gap:24px}
+  .head{grid-column:1/-1;display:flex;gap:8px;align-items:center;margin-bottom:6px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+  main{min-width:0}
+  .startbar{display:flex;gap:8px;margin:10px 0 14px}
+  .startbar input{flex:1;padding:11px 14px;border:1px solid var(--rule-strong);border-radius:10px;font-size:15px;font-family:var(--font-sans)}
+  .startbar input:focus{outline:none;border-color:var(--accent)}
+  .startbar button{padding:11px 18px;border:none;border-radius:10px;background:var(--ink);color:#fff;font-weight:600;font-size:14px;cursor:pointer}
+  .startbar button:disabled{opacity:.5;cursor:wait}
+  .presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .presets button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:12px;cursor:pointer;color:var(--ink-muted);font-family:var(--font-mono)}
+  .presets button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .status{font-family:var(--font-mono);font-size:12px;color:var(--ink-muted);min-height:18px;margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pill{padding:2px 9px;border-radius:999px;font-weight:600;font-size:11px}
+  .pill.good{background:var(--green-soft);color:var(--green-ink)}.pill.think{background:var(--accent-soft);color:var(--accent)}
+  .pill.bad{background:var(--red-soft);color:var(--red-ink)}
+  .screen{background:var(--surface);border:1px solid var(--rule);border-radius:16px;padding:22px;box-shadow:0 4px 16px -8px rgba(0,20,60,.12);min-height:120px}
+  .empty{color:var(--ink-muted);font-style:italic;text-align:center;padding:30px 0}
+
+  aside{font-size:12px}
+  aside h2{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin:0 0 12px;font-weight:600}
+  .turn{border-left:2px solid var(--rule-strong);padding:0 0 14px 12px;position:relative}
+  .turn.on{border-left-color:var(--accent)}
+  .turn .n{font-family:var(--font-mono);font-size:10px;color:var(--accent);letter-spacing:.06em}
+  .turn .q{font-weight:600;color:var(--ink);margin:3px 0 5px;line-height:1.35;font-size:12.5px}
+  .turn .m{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-muted);line-height:1.6}
+  .turn .types{color:var(--accent);word-break:break-word}
+
+  /* component styles (mirror the S14 render client) */
+  .Text{color:var(--ink-body);line-height:1.6;white-space:pre-wrap;margin:2px 0}
+  .Text.heading{font-family:var(--font-serif);font-size:26px;font-weight:700;color:var(--ink);white-space:normal;margin:0 0 6px}
+  .Text.subtitle{font-style:italic;color:var(--ink-muted);font-size:16px}
+  .Text.caption{font-size:12px;color:var(--ink-muted);font-family:var(--font-mono)}
+  .Column{display:flex;flex-direction:column;gap:14px}
+  .List{display:flex;flex-direction:column;gap:10px}
+  .Row{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap}
+  .Row>*{flex:1;min-width:140px}
+  .Card{background:var(--surface-alt);border:1px solid var(--rule);border-radius:12px;padding:14px 16px}
+  .Card>.ct{font-weight:600;margin-bottom:8px}
+  .Divider{height:1px;background:var(--rule)}
+  .StatTile{background:var(--surface);border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:12px;padding:14px}
+  .StatTile .lab{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);font-weight:600;font-family:var(--font-mono)}
+  .StatTile .val{font-size:28px;font-weight:700;color:var(--ink);margin-top:5px}
+  .StatTile .dl{font-size:11px;color:var(--ink-muted);margin-top:3px}
+  .chart{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
+  .chart .ct{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:8px;font-family:var(--font-mono)}
+  .prog{height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}.prog>i{display:block;height:100%;background:var(--green)}
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);font-size:14px}
+  th{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--ink-muted);background:var(--surface-alt)}
+  tr:last-child td{border-bottom:none}
+  .tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .tabs button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-mono);color:var(--ink-muted)}
+  .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .Notice{border-left:4px solid var(--amber);background:var(--amber-soft);border-radius:10px;padding:12px 14px}
+  .actbtn{width:100%;text-align:left;border:1px solid var(--rule-strong);background:var(--surface);border-radius:12px;padding:14px;font-weight:600;font-size:15px;cursor:pointer;color:var(--ink);transition:all 120ms}
+  .actbtn:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  .actbtn:active{transform:translateY(1px)}
+  input.field,select.field{padding:9px 11px;border:1px solid var(--rule-strong);border-radius:9px;font-size:14px;font-family:var(--font-sans)}
+
+  /* EvidenceTile and its repair affordance -- the load-bearing interaction */
+  .ev{background:var(--surface);border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:12px;padding:14px}
+  .ev .lab{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);font-weight:600;font-family:var(--font-mono)}
+  .ev .val{font-size:26px;font-weight:700;color:var(--ink);margin-top:5px}
+  .ev .conf{font-size:11px;color:var(--ink-muted);margin-top:3px;font-family:var(--font-mono)}
+  .ev .dis{font-size:12px;color:var(--amber-ink);margin-top:6px}
+  .ev details{margin-top:8px}
+  .ev summary{cursor:pointer;font-size:11px;color:var(--ink-muted)}
+  .ev summary:hover{color:var(--accent)}
+  .ev ul{margin:6px 0 0;padding-left:16px;font-size:12px}
+  .ev ul a{color:var(--accent)}
+  .ev .repair{margin-top:10px;border:1px solid var(--amber);background:transparent;color:var(--amber-ink);
+    border-radius:8px;padding:7px 10px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:var(--font-mono);text-align:left}
+  .ev .repair:hover{background:var(--amber-soft)}
+
+  /* safe markdown (built as DOM, never innerHTML) */
+  .md-h{font-weight:700;color:var(--ink);margin:12px 0 4px}
+  .md-p{margin:6px 0;line-height:1.6}
+  .md-ul{margin:6px 0 6px 4px;padding-left:18px}.md-ul li{margin:3px 0;line-height:1.55}
+  @media (max-width:760px){.wrap{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head"><span>S14 second opinion · the agent answers in UI</span><span style="margin-left:auto">a decision desk — every turn is a composed interface, never a paragraph</span></div>
+  <main>
+    <div class="startbar">
+      <input id="prompt" placeholder="State a decision you have to justify to someone else…" />
+      <button id="ask">Ask</button>
+    </div>
+    <div class="presets" id="presets"></div>
+    <div class="status" id="status"></div>
+    <div class="screen"><div id="mount"><div class="empty">
+      Ask a decision question, or pick one above. Every turn returns an interface the agent composed from the trusted catalog.
+    </div></div></div>
+  </main>
+  <aside>
+    <h2>Conversation</h2>
+    <div id="rail"><div class="turn"><div class="m">no turns yet</div></div></div>
+  </aside>
+</div>
+
+<script>
+// =============================================================================
+// Second Opinion — a UI-only application built on the S14 runtime.
+//
+// The agent answers ONLY by composing a catalog-validated interface. There is no
+// text path: /v1/runs/{id}/composed 404s when a run produced no surface, so a
+// failed turn is an error rather than a quiet fall back to prose.
+//
+// The interaction that makes this more than a drill-down browser: an
+// EvidenceTile whose confidence is weak carries a "re-research this" control.
+// Tapping it does not navigate — it aims the next turn at that specific claim,
+// which is the same corrective patch the planner performs on its own when it
+// sees weak evidence (runtime.py: _weak_evidence + the *_retry node). The user
+// becomes the outcome-aware planner.
+//
+// Rendering rules, identical to the other clients: every value goes through a
+// text node; the only attribute a data value ever reaches is a scheme-vetted
+// href; colour comes from a closed-enum lookup, never from data.
+// =============================================================================
+const API = "";
+const $  = (t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
+const T  = t=>document.createTextNode(t==null?"":String(t));
+const resolve=(v,dm)=>(v&&typeof v==="object"&&"$bind" in v)?ptr(dm,v["$bind"]):v;
+function ptr(dm,p){let c=dm;for(const s of String(p).split("/").slice(1)){if(c==null)return null;c=c[s];}return c;}
+function isSafeUrl(u){return typeof u==="string" && !/^\s*(javascript|data|vbscript):/i.test(u);}
+
+// Phrasing matters, and not for style reasons. _work_intent() only fans out one
+// researcher per entity — the path that fills /claims with sourced evidence —
+// when it can extract a comma-separated list of capitalised names. A prose
+// question like "should we move from Postgres to ClickHouse?" takes the
+// single-goal path instead, which produces NO research outcomes, so /claims is
+// empty and an EvidenceTile has nothing to bind.
+//
+// Two rules keep the extraction clean:
+//   * the list sits MID-sentence, so the last name does not absorb the full stop
+//     ("… and DuckDB." would become the subject "DuckDB.");
+//   * the word before the first name is lowercase, or it gets swallowed into it
+//     ("Compare Postgres" would become one subject).
+const PRESETS = [
+  "Our last deploy caused a 20-minute outage from a bad database migration. What process changes would prevent this from happening again?",
+  "Which of these three initiatives should we tackle first: reducing p99 latency, cutting cloud spend, or improving on-call load? It depends on what we value most.",
+  "How do Kafka, RabbitMQ and NATS trade off against each other on throughput, durability and ops simplicity?",
+];
+
+// ---- conversation state -----------------------------------------------------
+let turns = [];            // [{q, types, ms, count, clean}]
+let prevDataModel = null;  // turn n's data, so turn n+1 can show what changed
+let busy = false;
+
+// ---- safe markdown: DOM only, so any HTML in model text stays literal text ---
+function mdInline(line,parent){
+  const re=/(\*\*([^*]+)\*\*|\*([^*]+)\*|_([^_]+)_)/g;let last=0,m;
+  while((m=re.exec(line))){
+    if(m.index>last)parent.append(T(line.slice(last,m.index)));
+    if(m[2]!=null){const s=document.createElement("strong");s.textContent=m[2];parent.append(s);}
+    else{const e=document.createElement("em");e.textContent=(m[3]!=null?m[3]:m[4]);parent.append(e);}
+    last=re.lastIndex;
+  }
+  if(last<line.length)parent.append(T(line.slice(last)));
+}
+function md(text){
+  const f=document.createDocumentFragment();let ul=null;
+  for(const raw of String(text==null?"":text).split(/\r?\n/)){
+    const line=raw.trim();if(!line){ul=null;continue;}
+    const h=line.match(/^(#{1,4})\s+(.*)/),b=line.match(/^[*\-]\s+(.*)/);
+    if(h){ul=null;const d=$("div","md-h");mdInline(h[2],d);f.append(d);}
+    else if(b){if(!ul){ul=document.createElement("ul");ul.className="md-ul";f.append(ul);}const li=document.createElement("li");mdInline(b[1],li);ul.append(li);}
+    else{ul=null;const p=$("div","md-p");mdInline(line,p);f.append(p);}
+  }
+  return f;
+}
+
+// ---- renderers --------------------------------------------------------------
+const WEAK = {"single-source":1,"disputed":1,"unsupported":1};
+const CONF = {corroborated:{c:"var(--green)",w:"corroborated"},"single-source":{c:"var(--amber)",w:"single source"},
+              disputed:{c:"var(--amber)",w:"disputed"},unsupported:{c:"var(--red)",w:"no source"}};
+
+const R = {
+  Column:(c,x)=>{const e=$("div","Column");kids(c,x,e);return e;},
+  Row:(c,x)=>{const e=$("div","Row");kids(c,x,e);return e;},
+  List:(c,x)=>{const e=$("div","List");kids(c,x,e);return e;},
+  Card:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
+  Divider:()=>$("div","Divider"),
+  Text:(c,x)=>{const e=$("div","Text "+(c.variant||"body"));const v=resolve(c.text,x.dm);
+    if((c.variant||"body")==="heading")e.append(T(v));else e.append(md(v));return e;},
+  Notice:(c,x)=>{const e=$("div","Notice");e.append(T(resolve(c.text,x.dm)));return e;},
+  StatTile:(c,x)=>{const e=$("div","StatTile");const l=$("div","lab");l.append(T(c.label));
+    const v=$("div","val");v.append(T(String(resolve(c.value,x.dm)??"—")+(c.unit?" "+c.unit:"")));
+    const d=$("div","dl");d.append(T(resolve(c.delta,x.dm)||""));e.append(l,v,d);return e;},
+  EvidenceTile:(c,x)=>evidence(c,x),
+  RunGraph:(c,x)=>renderRunGraph(c,x),
+  TradeoffRadar:(c,x)=>renderTradeoffRadar(c,x),
+  WhatIfSlider:(c,x)=>renderWhatIfSlider(c,x),
+  Timeline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"timeline"));
+    const b=$("div");b.style.cssText="display:flex;flex-direction:column;gap:8px;margin-top:4px";
+    (resolve(c.events,x.dm)||[]).forEach(ev=>{const r=$("div");r.style.cssText="display:flex;gap:10px;align-items:flex-start;font-size:13.5px";
+      const dot=$("span");dot.textContent="●";dot.style.cssText="color:var(--accent);font-size:9px;margin-top:6px";
+      const lab=$("div");lab.style.flex="1";mdInline(String(ev.label!=null?ev.label:(ev.kind!=null?ev.kind:"")),lab);
+      r.append(dot,lab);b.append(r);});e.append(t,b);return e;},
+  ProgressBar:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("progress"));
+    const p=$("div","prog");const i=$("i");const val=+resolve(c.value,x.dm)||0;
+    i.style.width=Math.min(100,val/(c.max||100)*100)+"%";p.append(i);e.append(t,p);return e;},
+  Sparkline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("trend"));e.append(t,spark(resolve(c.data,x.dm)||[]));return e;},
+  BarChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"chart"));e.append(t,bars(resolve(c.data,x.dm)||[],c.xKey,c.yKey));return e;},
+  DataTable:(c,x)=>table(c,x),
+  Tabs:(c,x)=>tabs(c,x),
+  Button:(c,x)=>{const b=$("button","actbtn");let lab=resolve(c.label,x.dm);
+    if(lab&&typeof lab==="object")lab=lab.label||lab.name||lab.text||lab.id||"Choose";
+    lab=String(lab==null?"Choose":lab);b.append(T(lab));b.onclick=()=>choose(lab);return b;},
+  Image:(c)=>{const e=$("div","chart");e.append(T(c.alt||"[image]"));return e;},
+  TextField:(c)=>{const w=$("div");if(c.label){const l=$("div","lab");l.append(T(c.label));w.append(l);}
+    const i=$("input","field");i.placeholder=c.placeholder||"";w.append(i);return w;},
+  CheckBox:(c)=>{const w=$("label");w.style.cssText="display:flex;gap:8px;align-items:center";
+    const i=document.createElement("input");i.type="checkbox";w.append(i,T(c.label||""));return w;},
+  Slider:(c)=>{const w=$("div");if(c.label){const l=$("div","lab");l.append(T(c.label));w.append(l);}
+    const i=document.createElement("input");i.type="range";i.min=c.min||0;i.max=c.max||100;i.style.width="100%";w.append(i);return w;},
+  InputChoice:(c,x)=>{const s=$("select","field");
+    (resolve(c.options,x.dm)||[]).forEach(o=>{const op=document.createElement("option");op.append(T(typeof o==="object"?(o.name||o.label||o.id):o));s.append(op);});return s;},
+  DateTime:()=>{const i=$("input","field");i.type="date";return i;},
+  Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
+  ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));
+    const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:9px;border-radius:8px;overflow:auto";
+    pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));
+    const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
+};
+
+// The component this application is built around, and the only one that can
+// start a turn by itself. A weak claim gets a repair control; a corroborated one
+// does not, because there is nothing to fix.
+function evidence(c,x){
+  const meta=CONF[c.confidence]||{c:"var(--accent)",w:String(c.confidence||"")};
+  const e=$("div","ev");e.style.borderTopColor=meta.c;
+  const val=resolve(c.value,x.dm), srcs=resolve(c.sources,x.dm)||[], dis=resolve(c.dissent,x.dm);
+  const l=$("div","lab");l.append(T(c.label));
+  const v=$("div","val");v.append(T((val==null?"—":val)+(c.unit?" "+c.unit:"")));
+  const f=$("div","conf");// A confidence word beside an em dash claims certainty about a value that
+  // is not there. When nothing could be attributed, report what IS true:
+  // sources were found, no figure was stated.
+  const noFigure = (val==null || val==="");
+  const confWord = noFigure?"no figure stated":meta.w;
+  f.append(T(srcs.length?confWord+" · "+srcs.length+" source"+(srcs.length===1?"":"s"):confWord));
+  e.append(l,v,f);
+  e.setAttribute("role","group");
+  e.setAttribute("aria-label",String(c.label)+", "+String(val==null?"no value":val)+", "+meta.w+", "+srcs.length+" sources");
+  if(dis&&dis.value!=null){const d=$("div","dis");d.append(T("conflicting: "+dis.value+(dis.source?" ("+dis.source+")":"")));e.append(d);}
+  if(srcs.length){
+    const det=document.createElement("details");const s=document.createElement("summary");s.append(T("sources"));det.append(s);
+    const ul=document.createElement("ul");
+    srcs.forEach(o=>{const li=document.createElement("li");const lab=String((o&&o.title)||(o&&o.url)||o||"");
+      if(o&&isSafeUrl(o.url)){const a=document.createElement("a");a.setAttribute("href",o.url);
+        a.setAttribute("rel","noopener noreferrer");a.setAttribute("target","_blank");a.append(T(lab));li.append(a);}
+      else li.append(T(lab));                       // unvetted scheme: inert text
+      ul.append(li);});
+    det.append(ul);e.append(det);}
+  if(WEAK[c.confidence]){
+    const btn=$("button","repair");btn.append(T("↻ re-research this claim"));
+    btn.onclick=()=>repair(String(c.label));      // a tap that fixes evidence, not navigation
+    e.append(btn);}
+  return e;
+}
+
+// --- RunGraph: the agent's own DAG -----------------------------------------
+// Layered layout via a longest-path ranker (the algorithm dagre calls
+// 'longest-path', ported in ~15 lines rather than shipping the engine): each
+// node's rank is the longest path from any source, which puts every edge in the
+// left-to-right direction. Drawn with createElementNS; every label is a text
+// node and the edge reason goes to aria-label, never into markup.
+const STATE_COLOUR={succeeded:"var(--green)",running:"var(--accent-2)",pending:"var(--rule-strong)",
+                    failed:"var(--red)",waiting:"var(--amber)",cancelled:"var(--amber)"};
+function rankNodes(ids,edges){
+  const out={},indeg={};ids.forEach(i=>{out[i]=[];indeg[i]=0;});
+  edges.forEach(e=>{if(out[e.from]&&indeg[e.to]!=null){out[e.from].push(e.to);indeg[e.to]++;}});
+  const rank={};ids.forEach(i=>rank[i]=0);
+  let queue=ids.filter(i=>indeg[i]===0),guard=0;
+  while(queue.length&&guard++<1000){                 // guard: a cycle cannot hang this
+    const next=[];
+    queue.forEach(u=>out[u].forEach(v=>{
+      if(rank[v]<rank[u]+1){rank[v]=rank[u]+1;next.push(v);}}));
+    queue=next;}
+  return rank;
+}
+function renderRunGraph(c,x){
+  const nodes=(resolve(c.nodes,x.dm)||[]).filter(n=>n&&n.id),
+        edges=(resolve(c.edges,x.dm)||[]).filter(e=>e&&e.from&&e.to),
+        highlight=resolve(c.highlight,x.dm);
+  const wrap=$("div","chart");const t=$("div","ct");t.append(T(c.title||"run graph"));wrap.append(t);
+  if(!nodes.length){const p=$("div");p.append(T("no graph recorded"));wrap.append(p);return wrap;}
+  const ids=nodes.map(n=>n.id), rank=rankNodes(ids,edges);
+  const cols={};ids.forEach(i=>{(cols[rank[i]]=cols[rank[i]]||[]).push(i);});
+  const maxRank=Math.max(...Object.keys(cols).map(Number)), maxRows=Math.max(...Object.values(cols).map(a=>a.length));
+  const CW=190,CH=70,GX=40,GY=18,W=(maxRank+1)*CW+maxRank*GX,H=maxRows*(CH+GY);
+  const pos={};Object.entries(cols).forEach(([r,list])=>list.forEach((id,i)=>{
+    pos[id]={x:Number(r)*(CW+GX),y:i*(CH+GY)+(maxRows-list.length)*(CH+GY)/2};}));
+  const ns="http://www.w3.org/2000/svg";const svg=document.createElementNS(ns,"svg");
+  svg.setAttribute("viewBox",`0 0 ${W} ${Math.max(H,CH)}`);svg.setAttribute("width","100%");
+  svg.setAttribute("height",String(Math.max(H,CH)));svg.setAttribute("role","img");
+  const titleEl=document.createElementNS(ns,"title");titleEl.textContent=(c.title||"run graph");
+  const descEl=document.createElementNS(ns,"desc");
+  descEl.textContent=nodes.map(n=>`${n.label||n.id} (${n.state||"unknown"}${n.detail?", "+n.detail:""})`).join("; ")+
+    ". Dependencies: "+(edges.map(e=>`${e.from} feeds ${e.to}`).join("; ")||"none");
+  svg.setAttribute("aria-labelledby","rg-t rg-d");titleEl.id="rg-t";descEl.id="rg-d";
+  svg.append(titleEl,descEl);
+  edges.forEach(e=>{const a=pos[e.from],b=pos[e.to];if(!a||!b)return;
+    const x1=a.x+CW,y1=a.y+CH/2,x2=b.x,y2=b.y+CH/2;
+    const path=document.createElementNS(ns,"path");
+    path.setAttribute("d",`M${x1},${y1} C${x1+GX/2},${y1} ${x2-GX/2},${y2} ${x2},${y2}`);
+    path.setAttribute("fill","none");path.setAttribute("stroke","var(--rule-strong)");path.setAttribute("stroke-width","1.5");
+    if(e.reason){const et=document.createElementNS(ns,"title");et.textContent=String(e.reason);path.append(et);}
+    svg.append(path);});
+  nodes.forEach(n=>{const p=pos[n.id];if(!p)return;
+    const g=document.createElementNS(ns,"g");
+    const rect=document.createElementNS(ns,"rect");
+    rect.setAttribute("x",p.x);rect.setAttribute("y",p.y);rect.setAttribute("width",CW);rect.setAttribute("height",CH);
+    rect.setAttribute("rx",8);rect.setAttribute("fill","var(--surface)");
+    rect.setAttribute("stroke",String(n.id)===String(highlight)?"var(--accent)":"var(--rule)");
+    rect.setAttribute("stroke-width",String(n.id)===String(highlight)?"2.5":"1");g.append(rect);
+    const bar=document.createElementNS(ns,"rect");
+    bar.setAttribute("x",p.x);bar.setAttribute("y",p.y);bar.setAttribute("width",4);bar.setAttribute("height",CH);
+    bar.setAttribute("fill",STATE_COLOUR[n.state]||"var(--rule-strong)");g.append(bar);
+    const lab=document.createElementNS(ns,"text");
+    lab.setAttribute("x",p.x+14);lab.setAttribute("y",p.y+23);lab.setAttribute("font-size","12");
+    lab.setAttribute("fill","var(--ink-body)");lab.textContent=String(n.label||n.id).slice(0,26);g.append(lab);
+    const st=document.createElementNS(ns,"text");
+    st.setAttribute("x",p.x+14);st.setAttribute("y",p.y+40);st.setAttribute("font-size","10");
+    st.setAttribute("font-family","var(--font-mono)");st.setAttribute("fill","var(--ink-muted)");
+    st.textContent=String(n.state||"");g.append(st);
+    // The trace line: what the step was ABOUT, not just which worker ran it.
+    // A hard slice(0,30) with no ellipsis cut mid-word ("composing th") and
+    // looked like missing/broken content rather than a deliberately shortened
+    // line. Word-boundary truncation plus "…" makes the shortening legible;
+    // the nested <title> (same pattern the edges already use for `reason`)
+    // puts the FULL text one hover away instead of nowhere at all.
+    if(n.detail){const dt=document.createElementNS(ns,"text");
+      dt.setAttribute("x",p.x+14);dt.setAttribute("y",p.y+57);dt.setAttribute("font-size","9");
+      dt.setAttribute("font-family","var(--font-mono)");dt.setAttribute("fill","var(--ink-muted)");
+      dt.setAttribute("opacity","0.85");
+      const full=String(n.detail),budget=29;
+      let shown=full;
+      if(full.length>budget){
+        const cut=full.slice(0,budget),lastSpace=cut.lastIndexOf(" ");
+        shown=(lastSpace>0?cut.slice(0,lastSpace):cut)+"…";
+        const dtt=document.createElementNS(ns,"title");dtt.textContent=full;dt.append(dtt);
+      }
+      dt.append(document.createTextNode(shown));g.append(dt);}
+    svg.append(g);});
+  wrap.append(svg);
+  // Screen readers get the graph as DATA, not as a shape: role="img" + title +
+  // desc above, plus this table, which is visually hidden but fully readable.
+  const tab=$("table");tab.style.cssText="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)";
+  const hr=$("tr");["step","state","feeds"].forEach(h=>{const th=$("th");th.append(T(h));hr.append(th);});tab.append(hr);
+  nodes.forEach(n=>{const tr=$("tr");
+    [String(n.label||n.id),String(n.state||""),edges.filter(e=>e.from===n.id).map(e=>e.to).join(", ")||"—"]
+      .forEach(v=>{const td=$("td");td.append(T(v));tr.append(td);});tab.append(tr);});
+  wrap.append(tab);return wrap;
+}
+
+// --- shape rescue: the model can only bind to pointers the harness already
+// built (available_pointers is a closed list — it can never invent a fresh
+// one), so it reliably reaches for the nearest existing shape instead of the
+// one these two components actually want: a DataTable's flat table_columns /
+// table_rows. Rather than render "no data" every time that happens, detect
+// it and reshape it here — first column becomes the option's name, every
+// other column becomes an axis/criterion, and a qualitative cell ("Very
+// High", "Low (Complex)") becomes a comparable score via keyword matching.
+function qualScore(v){
+  if(v==null||v==="")return 5;
+  const s=String(v).trim();
+  if(/^[+-]?[\d.]+%?$/.test(s))return parseFloat(s);
+  const low=s.toLowerCase();
+  const table=[["very high",9],["extremely high",9],["excellent",9],["high",7.5],
+               ["moderate",5],["medium",5],["average",5],["configurable",5],
+               ["low",3],["very low",1.5],["minimal",1.5],["none",0.5],["poor",1.5],
+               ["complex",2.5],["difficult",2.5],["simple",8],["easy",8]];
+  for(const [key,score] of table){if(low.includes(key))return score;}
+  return 5;
+}
+function reshapeTableSeries(axes,series){
+  if(series.length&&series.every(s=>s&&Array.isArray(s.values)))
+    return {axes,series:series};
+  const cols=axes.length?axes:(series[0]&&typeof series[0]==="object"?Object.keys(series[0]):[]);
+  if(cols.length<2||!series.length)return {axes:[],series:[]};
+  const [nameKey,...axisKeys]=cols;
+  const rows=series.filter(r=>r&&typeof r==="object");
+  // A genuine table_rows match has at least one axis key sitting directly on
+  // the row; a same-shape-but-wrong pointer (a flat {label,value} metrics
+  // list bound where series was expected, say) has none of them — forcing
+  // that through plots an identical meaningless score on every axis for
+  // every option instead of admitting there is nothing here to plot.
+  const usable=rows.filter(row=>axisKeys.some(k=>Object.prototype.hasOwnProperty.call(row,k)));
+  if(usable.length<2)return {axes:[],series:[]};
+  return {axes:axisKeys,
+    series:usable.map(row=>({name:String(row[nameKey]??""),values:axisKeys.map(k=>qualScore(row[k]))}))};
+}
+
+// --- TradeoffRadar: several named things across the SAME axes at once ------
+// A DataTable makes the reader compare cell by cell; a radar polygon per
+// series lets them see where each option wins and loses in one glance. Each
+// axis is normalised against its OWN max across the series being plotted, so
+// an axis measured in raw throughput (thousands) cannot swamp an axis that is
+// a 0-10 ops-burden score — every spoke gets the same visual weight.
+function renderTradeoffRadar(c,x){
+  const rawAxes=(resolve(c.axes,x.dm)||[]).map(String);
+  const rawSeries=resolve(c.series,x.dm)||[];
+  const {axes,series}=reshapeTableSeries(rawAxes,rawSeries);
+  const wrap=$("div","chart");const t=$("div","ct");t.append(T(c.title||"tradeoff"));wrap.append(t);
+  if(!axes.length||!series.length){const p=$("div");p.append(T("no data to plot"));wrap.append(p);return wrap;}
+  const N=axes.length,W=280,H=252,cx=W/2,cy=H/2-4,RAD=Math.min(W,H)/2-42;
+  const ang=i=>-Math.PI/2+i*(2*Math.PI/N);
+  const axisMax=axes.map((_,i)=>Math.max(1,...series.map(s=>+s.values[i]||0)));
+  const pt=(i,v)=>{const r=Math.max(0,Math.min(1,v/axisMax[i]))*RAD,a=ang(i);return [cx+r*Math.cos(a),cy+r*Math.sin(a)];};
+  const ns="http://www.w3.org/2000/svg";const svg=document.createElementNS(ns,"svg");
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.setAttribute("width","100%");svg.setAttribute("height",H);svg.setAttribute("role","img");
+  const titleEl=document.createElementNS(ns,"title");titleEl.textContent=c.title||"tradeoff radar";
+  const descEl=document.createElementNS(ns,"desc");
+  descEl.textContent=series.map(s=>s.name+": "+axes.map((a,i)=>a+"="+s.values[i]).join(", ")).join("; ");
+  svg.setAttribute("aria-labelledby","tr-t tr-d");titleEl.id="tr-t";descEl.id="tr-d";svg.append(titleEl,descEl);
+  axes.forEach((a,i)=>{
+    const [ex,ey]=[cx+RAD*Math.cos(ang(i)),cy+RAD*Math.sin(ang(i))];
+    const line=document.createElementNS(ns,"line");line.setAttribute("x1",cx);line.setAttribute("y1",cy);
+    line.setAttribute("x2",ex);line.setAttribute("y2",ey);
+    line.setAttribute("stroke","var(--rule-strong)");line.setAttribute("stroke-width","1");svg.append(line);
+    const [lx,ly]=[cx+(RAD+18)*Math.cos(ang(i)),cy+(RAD+18)*Math.sin(ang(i))];
+    const lab=document.createElementNS(ns,"text");lab.setAttribute("x",lx);lab.setAttribute("y",ly);
+    lab.setAttribute("font-size","9.5");lab.setAttribute("fill","var(--ink-muted)");lab.setAttribute("text-anchor","middle");
+    lab.setAttribute("font-family","var(--font-mono)");lab.textContent=a.length>16?a.slice(0,15)+"…":a;svg.append(lab);
+  });
+  const PALETTE=["var(--chart-1)","var(--chart-2)","var(--chart-3)","var(--chart-4)"];
+  series.forEach((s,si)=>{const col=PALETTE[si%PALETTE.length];
+    const poly=document.createElementNS(ns,"polygon");
+    poly.setAttribute("points",axes.map((_,i)=>pt(i,+s.values[i]||0).join(",")).join(" "));
+    poly.setAttribute("fill",col);poly.setAttribute("fill-opacity","0.14");
+    poly.setAttribute("stroke",col);poly.setAttribute("stroke-width","2");svg.append(poly);});
+  wrap.append(svg);
+  const leg=$("div");leg.style.cssText="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:11px;font-family:var(--font-mono)";
+  series.forEach((s,si)=>{const item=$("span");item.style.cssText="display:flex;align-items:center;gap:5px";
+    const sw=$("span");sw.style.cssText="width:9px;height:9px;border-radius:2px;background:"+PALETTE[si%PALETTE.length];
+    item.append(sw,T(s.name));leg.append(item);});
+  wrap.append(leg);
+  // Same accessible-table pattern as RunGraph: visually hidden, fully readable.
+  const tab=$("table");tab.style.cssText="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)";
+  const hr=$("tr");["option",...axes].forEach(h=>{const th=$("th");th.append(T(h));hr.append(th);});tab.append(hr);
+  series.forEach(s=>{const tr=$("tr");[s.name,...axes.map((_,i)=>s.values[i])]
+    .forEach(v=>{const td=$("td");td.append(T(String(v)));tr.append(td);});tab.append(tr);});
+  wrap.append(tab);
+  return wrap;
+}
+
+// Same shape-rescue as TradeoffRadar's reshapeTableSeries, for criteria/
+// options instead of axes/series: a flat table_columns/table_rows pair
+// becomes {key,label,weight} criteria (starting weight split evenly at 50)
+// and {name,scores} options, with qualScore() reading each cell.
+function reshapeTableCriteria(rawCriteria,rawOptions){
+  const looksRight=rawCriteria.length&&rawCriteria.every(cr=>cr&&typeof cr==="object"&&cr.key);
+  if(looksRight)return {criteria:rawCriteria,options:rawOptions.filter(o=>o&&o.name&&o.scores)};
+  const cols=rawCriteria.length&&typeof rawCriteria[0]==="string"?rawCriteria
+             :(rawOptions[0]&&typeof rawOptions[0]==="object"?Object.keys(rawOptions[0]):[]);
+  if(cols.length<2||!rawOptions.length)return {criteria:[],options:[]};
+  const [nameKey,...critKeys]=cols;
+  const rows=rawOptions.filter(r=>r&&typeof r==="object");
+  // Same rescue-vs-refuse check as reshapeTableSeries: a row that has none of
+  // the criterion keys on it is bound to the wrong pointer entirely (a flat
+  // metrics list, say), not this table's rows — refuse rather than fabricate
+  // an identical default score under every criterion for every option.
+  const usable=rows.filter(row=>critKeys.some(k=>Object.prototype.hasOwnProperty.call(row,k)));
+  if(usable.length<2)return {criteria:[],options:[]};
+  return {criteria:critKeys.map(k=>({key:k,label:k,weight:50})),
+    options:usable.map(row=>({name:String(row[nameKey]??""),
+      scores:Object.fromEntries(critKeys.map(k=>[k,qualScore(row[k])]))}))};
+}
+
+// --- WhatIfSlider: a ranking the reader can reweigh, not just read ---------
+// Every other data-viz component in this catalog is a fixed rendering of a
+// fixed data model. This one lets a weight move and the ranking below it
+// recompute IMMEDIATELY, entirely in the browser: no action, no round trip,
+// no new run. The insight is in watching the order change, not in any single
+// frozen ranking, so the interaction has to feel instant to mean anything.
+function renderWhatIfSlider(c,x){
+  const rawCriteria=resolve(c.criteria,x.dm)||[];
+  const rawOptions=resolve(c.options,x.dm)||[];
+  const {criteria,options}=reshapeTableCriteria(rawCriteria,rawOptions);
+  const wrap=$("div","chart");const t=$("div","ct");t.append(T(c.title||"what-if"));wrap.append(t);
+  if(!criteria.length||!options.length){const p=$("div");p.append(T("no data to weigh"));wrap.append(p);return wrap;}
+  const weights={};criteria.forEach(cr=>{weights[cr.key]=Math.max(0,Math.min(100,+cr.weight||50));});
+  const sliders=$("div");sliders.style.cssText="display:flex;flex-direction:column;gap:11px;margin:10px 0 4px";
+  const ranked=$("div");ranked.style.cssText="display:flex;flex-direction:column;gap:7px;margin-top:6px";
+
+  function rerank(){
+    const totals=options.map(o=>({name:o.name,
+      total:criteria.reduce((sum,cr)=>sum+(weights[cr.key]/100)*(+o.scores[cr.key]||0),0)}));
+    totals.sort((a,b)=>b.total-a.total);
+    const max=Math.max(...totals.map(t=>t.total),1e-9);
+    ranked.textContent="";
+    totals.forEach((tt,i)=>{
+      const row=$("div");row.style.cssText="display:flex;align-items:center;gap:10px;font-size:13px";
+      const rank=$("span");rank.style.cssText="font-family:var(--font-mono);font-size:11px;width:18px;"+
+        "color:"+(i===0?"var(--accent)":"var(--ink-muted)");rank.append(T("#"+(i+1)));
+      const name=$("span");name.style.cssText="flex:0 0 auto;min-width:120px;color:"+(i===0?"var(--ink)":"var(--ink-body)")+
+        ";font-weight:"+(i===0?"650":"400");name.append(T(tt.name));
+      const bar=$("div");bar.style.cssText="flex:1;height:8px;border-radius:999px;background:var(--surface-alt);"+
+        "border:1px solid var(--rule);overflow:hidden";
+      const fill=$("div");fill.style.cssText="height:100%;width:"+Math.max(2,tt.total/max*100)+"%;"+
+        "background:"+(i===0?"var(--accent)":"var(--rule-strong)");
+      bar.append(fill);row.append(rank,name,bar);ranked.append(row);
+    });
+  }
+
+  criteria.forEach(cr=>{
+    const row=$("div");row.style.cssText="display:flex;align-items:center;gap:10px";
+    const lab=$("span");lab.style.cssText="flex:0 0 auto;min-width:150px;font-size:12px;"+
+      "font-family:var(--font-mono);color:var(--ink-muted)";lab.append(T(cr.label||cr.key));
+    const inp=document.createElement("input");inp.type="range";inp.min="0";inp.max="100";
+    inp.value=String(weights[cr.key]);inp.style.flex="1";
+    const val=$("span");val.style.cssText="width:30px;text-align:right;font-family:var(--font-mono);"+
+      "font-size:12px;color:var(--ink-muted)";val.append(T(String(weights[cr.key])));
+    inp.addEventListener("input",()=>{weights[cr.key]=+inp.value;val.textContent=inp.value;rerank();});
+    row.append(lab,inp,val);sliders.append(row);
+  });
+
+  rerank();
+  wrap.append(sliders,ranked);
+  return wrap;
+}
+
+function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
+function spark(v){const ns="http://www.w3.org/2000/svg",w=200,h=42,mx=Math.max(...v,1),mn=Math.min(...v,0),rg=(mx-mn)||1;
+  const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");s.setAttribute("height",h);
+  const p=document.createElementNS(ns,"polyline");p.setAttribute("points",v.map((y,i)=>`${i/(v.length-1||1)*w},${h-5-(y-mn)/rg*(h-10)}`).join(" "));
+  p.setAttribute("fill","none");p.setAttribute("stroke","var(--green)");p.setAttribute("stroke-width","2.5");s.append(p);return s;}
+function bars(d,xk,yk){const ns="http://www.w3.org/2000/svg",w=300,h=150,pad=24,mx=Math.max(...d.map(r=>+r[yk]),1),bw=(w-pad*2)/(d.length||1)*.6;
+  const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");s.setAttribute("height","150");
+  d.forEach((r,i)=>{const x=pad+i*((w-pad*2)/d.length)+((w-pad*2)/d.length-bw)/2,bh=(+r[yk])/mx*(h-pad*2);
+    const rc=document.createElementNS(ns,"rect");rc.setAttribute("x",x);rc.setAttribute("y",h-pad-bh);rc.setAttribute("width",bw);
+    rc.setAttribute("height",Math.max(0,bh));rc.setAttribute("rx",3);rc.setAttribute("fill","var(--accent)");s.append(rc);
+    const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");
+    tl.setAttribute("font-size","9");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=r[xk];s.append(tl);});
+  return s;}
+function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());
+  const rows=resolve(c.rows,x.dm)||[];const t=$("table");const tr=$("tr");
+  cols.forEach(col=>{const th=$("th");th.append(T(col));tr.append(th);});t.append(tr);
+  rows.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(r[col]));rr.append(td);});t.append(rr);});
+  wrap.append(t);return wrap;}
+function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);
+  const ids=c.children||[];
+  function show(i){body.textContent="";const cc=x.byId[ids[i]];if(cc)body.append(node(cc,x));
+    [...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}
+  (String(c.labels||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});
+  if(ids.length)show(0);return wrap;}
+
+// ---- turn-to-turn morph (View Transitions) ----------------------------------
+let vtSeen=null;
+function reducedMotion(){return !!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);}
+function vtName(c){
+  if(!vtSeen)return null;
+  const base=("vt-"+c.type+"-"+String(c.label||c.title||c.id||"")).toLowerCase()
+              .replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60);
+  const n=(vtSeen.get(base)||0)+1;vtSeen.set(base,n);
+  return n===1?base:base+"-"+n;}
+
+function node(c,x,hop){
+  const f=R[c.type];let el;
+  if(f)el=f(c,x);
+  else if(c.fallback&&R[c.fallback]&&!hop)return node(Object.assign({},c,{type:c.fallback}),x,1);
+  else{const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";
+    s.append(T("[skipped "+c.type+"]"));return s;}
+  const nm=vtName(c);if(nm&&el&&el.style)el.style.viewTransitionName=nm;
+  return el;}
+
+// A composed tree can be structurally broken while every component in it is
+// individually valid: the model can name a root it never defined, or give a
+// container children whose ids do not exist. kids() skips a missing child in
+// silence, so an empty Column renders as an EMPTY SCREEN — the app looked dead
+// while honestly reporting "8 components, 0 executable".
+//
+// Never go blank without saying why. Draw what survived, and hand the caller the
+// structural problems instead of swallowing them.
+function renderInto(mount,surface){
+  const byId={};surface.components.forEach(c=>byId[c.id]=c);
+  const x={byId,dm:surface.dataModel||{}};
+  const ids=new Set(surface.components.map(c=>c.id));
+  const dangling=[...new Set(surface.components.flatMap(c=>(c.children||[]).filter(k=>!ids.has(k))))];
+  mount.textContent="";
+  const root=byId[surface.root];
+  let rendered=null;
+  if(root){
+    rendered=node(root,x);
+    const hasContent=rendered&&(rendered.childNodes.length||String(rendered.textContent||"").trim());
+    if(hasContent)mount.append(rendered);
+    else{ // the root drew nothing: fall back to every component that stands alone
+      const standalone=surface.components.filter(c=>c.id!==surface.root&&!(c.children||[]).length);
+      standalone.forEach(c=>mount.append(node(c,x)));
+      if(!standalone.length&&rendered)mount.append(rendered);}
+  }else{
+    surface.components.forEach(c=>{if(c.id!==surface.root)mount.append(node(c,x));});}
+  return {dangling,rootMissing:!root,drew:mount.childNodes.length};
+}
+
+// The structural faults are a property of the TREE, not of the DOM, so compute
+// them synchronously. Reading them after the paint meant racing the View
+// Transition and reporting a stale result — which is how the status line came
+// to say "NOTHING DREW" over a screen full of content.
+function surfaceReport(surface){
+  const ids=new Set(surface.components.map(c=>c.id));
+  return {rootMissing:!ids.has(surface.root),
+          dangling:[...new Set(surface.components.flatMap(c=>(c.children||[]).filter(k=>!ids.has(k))))]};}
+
+let lastRenderReport={};
+function render(surface){
+  const paint=()=>{vtSeen=new Map();
+    lastRenderReport=renderInto(document.getElementById("mount"),surface);
+    vtSeen=null;};
+  if(!document.startViewTransition||reducedMotion()){paint();return Promise.resolve(lastRenderReport);}
+  // startViewTransition defers paint(); `finished` is the only honest moment to
+  // ask what actually landed in the DOM.
+  const transition=document.startViewTransition(paint);
+  return transition.finished.then(()=>lastRenderReport).catch(()=>lastRenderReport);}
+
+// ---- status + rail (DOM only, never innerHTML) ------------------------------
+function setStatus(kind,pill,detail){
+  const el=document.getElementById("status");el.textContent="";
+  if(pill){const s=$("span","pill"+(kind?" "+kind:""));s.append(T(pill));el.append(s);}
+  if(detail)el.append(T(detail));}
+
+// Which contributed components COULD have been composed for this turn, and
+// which were. A component with no pointer in the data model was never on offer,
+// so "the model didn't use it" and "the model couldn't use it" are different
+// findings — and only the second is a bug. Reported per turn so the difference
+// is visible instead of inferred.
+const NEEDS={EvidenceTile:["claims"],RunGraph:["graph_nodes","graph_edges"]};
+function offerReport(dataModel,typesUsed){
+  const dm=dataModel||{};const offered=[],unavailable=[];
+  for(const [name,keys] of Object.entries(NEEDS)){
+    const has=keys.every(k=>{const v=dm[k];return v!=null&&(!Array.isArray(v)||v.length);});
+    (has?offered:unavailable).push(name);}
+  return {offered,unavailable,chosen:offered.filter(n=>typesUsed.includes(n)),
+          declined:offered.filter(n=>!typesUsed.includes(n))};}
+
+function drawRail(){
+  const rail=document.getElementById("rail");rail.textContent="";
+  if(!turns.length){const d=$("div","turn");const m=$("div","m");m.append(T("no turns yet"));d.append(m);rail.append(d);return;}
+  turns.forEach((t,i)=>{
+    const d=$("div","turn"+(i===turns.length-1?" on":""));
+    const n=$("div","n");n.append(T("TURN "+(i+1)));
+    const q=$("div","q");q.append(T(t.q.length>64?t.q.slice(0,64)+"…":t.q));
+    const m=$("div","m");m.append(T(t.count+" components · "+t.ms+" ms · "+(t.clean?"0 rejected":"REJECTED")));
+    const ty=$("div","m types");ty.append(T(t.types.join(" · ")));
+    d.append(n,q,m,ty);
+    const o=t.offer;
+    if(o){
+      if(o.chosen.length){const c1=$("div","m");c1.style.color="var(--green-ink)";
+        c1.append(T("chose: "+o.chosen.join(", ")));d.append(c1);}
+      if(o.declined.length){const c2=$("div","m");c2.style.color="var(--amber-ink)";
+        c2.append(T("offered, not used: "+o.declined.join(", ")));d.append(c2);}
+      if(o.unavailable.length){const c3=$("div","m");
+        c3.append(T("no data this turn: "+o.unavailable.join(", ")));d.append(c3);}}
+    rail.append(d);});}
+
+// ---- the loop: a tap earns the next turn ------------------------------------
+// A follow-up turn has to be ABOUT one thing, or it repeats the first turn.
+//
+// _work_intent() fans research out over every capitalised entity it can find in
+// the goal. Echoing turn 1's question verbatim carried its whole entity list
+// along — so tapping "Postgres" re-researched Postgres, ClickHouse and DuckDB
+// again and composed the same surface. The tap changed nothing.
+//
+// Lowercasing the carried context keeps the meaning and removes the list from
+// the extractor's view, leaving the tapped subject as the only named entity. The
+// turn then drills into it instead of starting over.
+function contextOf(question){ return String(question||"").toLowerCase(); }
+
+function goalFor(text,kind){
+  if(!turns.length)return text;
+  const first=turns[0].q;
+  const picks=turns.slice(1).map(t=>t.q);
+  if(kind==="repair"){
+    // Names ONE claim, so the graph re-researches that claim specifically — the
+    // same corrective patch the planner makes when it sees weak evidence itself.
+    return "Re-research "+text+" specifically and show what changed and how well "+
+           "supported it now is. Context: the user asked "+contextOf(first)+
+           " and marked this claim as weak.";
+  }
+  return "Explain "+text+" in depth, on its own terms, for someone weighing this decision."+
+         (picks.length?" They have already looked at "+picks.join(", then ")+".":"")+
+         " Context: the original question was "+contextOf(first);
+}
+
+async function runTurn(text,kind){
+  if(busy)return;busy=true;document.getElementById("ask").disabled=true;
+  setStatus("think","composing…", kind==="repair"
+    ? " re-researching the claim you marked weak: \""+text+"\""
+    : " the agent is writing an interface for: \""+text+"\"");
+  const goal=goalFor(text,kind);
+  const t0=Date.now();
+  try{
+    const res=await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({prompt:goal,respond_as:"ui",tenant_id:"course",project_id:"s14",
+                           user_id:"student-01",agent_id:"second-opinion"})});
+    if(!res.ok)throw new Error("run failed: HTTP "+res.status);
+    const run=await res.json();
+    // No text path exists: /composed 404s when a run composed nothing, so a
+    // failed turn surfaces as an error instead of degrading into prose.
+    const cRes=await fetch(API+"/v1/runs/"+run.run_id+"/composed");
+    if(!cRes.ok)throw new Error("no interface composed (HTTP "+cRes.status+")");
+    const c=await cRes.json();
+    if(!c.surface)throw new Error("no interface composed");
+    const ms=Date.now()-t0;
+    const types=[...new Set(c.surface.components.map(x=>x.type))].sort();
+    prevDataModel=c.surface.dataModel||null;
+    const offer=offerReport(c.surface.dataModel,types);
+    turns.push({q:text,types,ms,count:c.component_count||c.surface.components.length,
+                clean:c.clean!==false,offer});
+    // Structural faults come from the tree, so read them before painting; the
+    // paint itself is awaited only to know whether anything landed.
+    const rep=surfaceReport(c.surface);
+    const painted=await render(c.surface);drawRail();
+    rep.drew=(painted||{}).drew;
+    const broken=rep.rootMissing||(rep.dangling||[]).length||!rep.drew;
+    setStatus(c.clean===false?"bad":(broken?"bad":"good"),
+      (c.provider||"gemini")+" · "+turns[turns.length-1].count+" components · 0 executable",
+      " · "+ms+" ms · "+types.length+" distinct types"+
+      (rep.rootMissing?" · ROOT '"+c.surface.root+"' NOT IN SURFACE":"")+
+      ((rep.dangling||[]).length?" · dangling children: "+rep.dangling.join(", "):"")+
+      (!rep.drew?" · NOTHING DREW":""));
+  }catch(err){
+    setStatus("bad","turn failed",String(err.message||err));
+  }finally{busy=false;document.getElementById("ask").disabled=false;}
+}
+
+function choose(label){if(label)runTurn(label,"choice");}
+function repair(claim){if(claim)runTurn(claim,"repair");}
+
+// ---- boot -------------------------------------------------------------------
+const presetBar=document.getElementById("presets");
+const PRESET_LABELS=["Deploy postmortem","Quarterly prioritization","Kafka · RabbitMQ · NATS"];
+PRESETS.forEach((p,i)=>{const b=$("button");b.append(T(PRESET_LABELS[i]||("preset "+(i+1))));
+  b.title=p;b.onclick=()=>{document.getElementById("prompt").value=p;};presetBar.append(b);});
+document.getElementById("prompt").value=PRESETS[0];
+document.getElementById("ask").onclick=()=>{turns=[];prevDataModel=null;drawRail();
+  runTurn(document.getElementById("prompt").value.trim(),"start");};
+document.getElementById("prompt").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("ask").click();});
+drawRail();
+</script>
+</body>
+</html>

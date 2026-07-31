@@ -59,6 +59,11 @@ class Event:
     kind: str
     node_id: str | None
     payload: dict[str, Any]
+    # Wall-clock time the node spent running, set only on task_succeeded /
+    # task_failed. Kept separate from `payload` (which is exactly what the
+    # worker returned) rather than folded into it, so nothing that compares
+    # a worker's own result payload has to account for an unrelated field.
+    duration_ms: float | None = None
 
 
 @dataclass(frozen=True)

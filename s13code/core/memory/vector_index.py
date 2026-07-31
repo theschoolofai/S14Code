@@ -26,7 +26,7 @@ class PersistentFaissIndex:
     def _load(self) -> None:
         if self.index_path and self.ids_path and self.index_path.exists() and self.ids_path.exists():
             self.index = faiss.read_index(str(self.index_path))
-            self.ids = json.loads(self.ids_path.read_text())
+            self.ids = json.loads(self.ids_path.read_text(encoding="utf-8"))
 
     @staticmethod
     def _matrix(vectors: list[list[float]]) -> np.ndarray:

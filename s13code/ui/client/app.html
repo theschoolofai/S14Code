@@ -136,10 +136,71 @@ const R={
   InputChoice:(c,x)=>{const s=$("select","field");(resolve(c.options,x.dm)||[]).forEach(o=>{const op=document.createElement("option");op.append(T(typeof o==="object"?(o.name||o.label||o.id):o));s.append(op);});return s;},
   DateTime:(c,x)=>{const i=$("input","field");i.type="date";return i;},
   Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
+  EvidenceTile:(c,x)=>evidence(c,x),
   ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
 };
+// Same scheme block the validator and the run-view client enforce: a source URL
+// becomes an href ONLY if it is not a javascript:/data:/vbscript: URL.
+function isSafeUrl(u){ return typeof u==="string" && !/^\s*(javascript|data|vbscript):/i.test(u); }
+
+// EvidenceTile: one claim with the evidence behind it. Every value goes through
+// a text node; the only attribute a data value ever reaches is a vetted href.
+// The confidence colour is looked up from the closed enum, never taken from data.
+const CONF={corroborated:{c:"var(--green)",w:"corroborated"},"single-source":{c:"var(--amber)",w:"single source"},
+            disputed:{c:"var(--amber)",w:"disputed"},unsupported:{c:"var(--red)",w:"no source"}};
+function evidence(c,x){
+  const meta=CONF[c.confidence]||{c:"var(--accent)",w:String(c.confidence||"")};
+  const e=$("div","StatTile");e.style.borderTopColor=meta.c;
+  const val=resolve(c.value,x.dm), srcs=resolve(c.sources,x.dm)||[], dis=resolve(c.dissent,x.dm);
+  const l=$("div","lab");l.append(T(c.label));
+  const v=$("div","val");v.append(T((val==null?"—":val)+(c.unit?" "+c.unit:"")));
+  const f=$("div","dl");f.append(T(srcs.length?meta.w+" · "+srcs.length+" source"+(srcs.length===1?"":"s"):meta.w));
+  e.append(l,v,f);
+  e.setAttribute("role","group");
+  e.setAttribute("aria-label",String(c.label)+", "+String(val==null?"no value":val)+", "+meta.w+", "+srcs.length+" sources");
+  if(dis&&dis.value!=null){const d=$("div","dl");d.style.color="var(--amber-ink)";
+    d.append(T("conflicting: "+dis.value+(dis.source?" ("+dis.source+")":"")));e.append(d);}
+  if(srcs.length){const det=document.createElement("details");const s=document.createElement("summary");
+    s.style.cssText="cursor:pointer;font-size:11px;color:var(--ink-muted);margin-top:8px";s.append(T("sources"));det.append(s);
+    const ul=document.createElement("ul");ul.style.cssText="margin:6px 0 0;padding-left:18px;font-size:12px";
+    srcs.forEach(o=>{const li=document.createElement("li");const lab=String((o&&o.title)||(o&&o.url)||o||"");
+      if(o&&isSafeUrl(o.url)){const a=document.createElement("a");a.setAttribute("href",o.url);
+        a.setAttribute("rel","noopener noreferrer");a.setAttribute("target","_blank");a.append(T(lab));li.append(a);}
+      else li.append(T(lab));
+      ul.append(li);});
+    det.append(ul);e.append(det);}
+  return e;
+}
+
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
-function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
+// A real failure: hopping RunGraph -> Timeline by reusing the same props drew
+// a title and an EMPTY body. Timeline reads c.events; RunGraph has no such
+// prop, only nodes/edges, so (resolve(c.events,dm)||[]) was always []. The
+// fallback existed to save the content, and instead threw it away silently.
+// Shape-incompatible hops need a translation, not a type-name swap; this is
+// the one pair the catalog currently has, so it is the one case handled.
+function hoppedProps(c,x){
+  const hopped=Object.assign({},c,{type:c.fallback});
+  if(c.type==="RunGraph"&&c.fallback==="Timeline"&&!hopped.events){
+    const graphNodes=resolve(c.nodes,x.dm)||[];
+    hopped.events=graphNodes.map(n=>({time:n.label||n.id||"",
+      label:[n.state,n.detail].filter(Boolean).join(" — ")||"—"}));
+  }
+  return hopped;
+}
+// Catalog-ahead-of-client degradation: a component may declare a `fallback`
+// naming an older catalog type to draw when this file has no renderer for it.
+// The viewer loses the richer widget, never the information. Exactly ONE hop.
+function node(c,x,hop){
+  const f=R[c.type];
+  let el;
+  if(f) el=f(c,x);
+  else if(c.fallback&&R[c.fallback]&&!hop) return node(hoppedProps(c,x),x,1);
+  else{const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}
+  // Name it for the morph. Derived from (type, label|title) so the SAME logical
+  // component keeps its identity across turns even though the tree is rebuilt.
+  const nm=vtName(c); if(nm&&el&&el.style) el.style.viewTransitionName=nm;
+  return el;}
 function spark(v){const ns="http://www.w3.org/2000/svg",w=200,h=44,mx=Math.max(...v,1),mn=Math.min(...v,0),rg=(mx-mn)||1;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");s.setAttribute("height",h);const p=document.createElementNS(ns,"polyline");p.setAttribute("points",v.map((y,i)=>`${i/(v.length-1||1)*w},${h-5-(y-mn)/rg*(h-10)}`).join(" "));p.setAttribute("fill","none");p.setAttribute("stroke","var(--green)");p.setAttribute("stroke-width","2.5");s.append(p);return s;}
 function bars(d,xk,yk){const ns="http://www.w3.org/2000/svg",w=300,h=150,pad=24,mx=Math.max(...d.map(r=>+r[yk]),1),bw=(w-pad*2)/(d.length||1)*.6;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");d.forEach((r,i)=>{const x=pad+i*((w-pad*2)/d.length)+((w-pad*2)/d.length-bw)/2,bh=(+r[yk])/mx*(h-pad*2);const rc=document.createElementNS(ns,"rect");rc.setAttribute("x",x);rc.setAttribute("y",h-pad-bh);rc.setAttribute("width",bw);rc.setAttribute("height",bh);rc.setAttribute("rx",3);rc.setAttribute("fill","var(--accent)");s.append(rc);const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","9");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=r[xk];s.append(tl);});return s;}
 function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());const rows=resolve(c.rows,x.dm)||[];const t=$("table");const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(T(col));tr.append(th);});t.append(tr);rows.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(r[col]));rr.append(td);});t.append(rr);});wrap.append(t);return wrap;}
@@ -147,16 +208,55 @@ function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("d
   (String(c.labels||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});
   if(tabIds.length)show(0);return wrap;}
 
-function render(surface){const byId={};surface.components.forEach(c=>byId[c.id]=c);const x={byId,dm:surface.dataModel||{}};const m=document.getElementById("mount");m.textContent="";m.append(node(byId[surface.root],x));}
+// ---- turn-to-turn morph -----------------------------------------------------
+// Every turn recomposes the whole surface, so the old render() blanked the
+// screen and rebuilt it — even for components that did not change. That is the
+// session's own second failure: an interface that visibly rearranges itself is
+// harder to use than one that stays put. A View Transition does not stop the
+// agent recomposing, but it makes persistence LEGIBLE: a tile present in turn 1
+// and turn 2 slides to its new place instead of vanishing and reappearing.
+// Pure browser API, no dependency, and it degrades to today's behaviour where
+// unsupported (Firefox) or unwanted (reduced motion).
+let vtSeen = null;
+function reducedMotion(){ return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }
+function vtName(c){
+  if(!vtSeen) return null;
+  const base = ("vt-"+c.type+"-"+String(c.label||c.title||c.id||"")).toLowerCase()
+                 .replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60);
+  // Two live elements may not share a name — the API throws. Suffix duplicates.
+  const n = (vtSeen.get(base)||0)+1; vtSeen.set(base,n);
+  return n===1 ? base : base+"-"+n;
+}
+
+function render(surface){
+  const paint = () => {
+    vtSeen = new Map();
+    const byId={};surface.components.forEach(c=>byId[c.id]=c);
+    const x={byId,dm:surface.dataModel||{}};
+    const m=document.getElementById("mount");m.textContent="";
+    m.append(node(byId[surface.root],x));
+    vtSeen = null;
+  };
+  if(!document.startViewTransition || reducedMotion()) return paint();
+  document.startViewTransition(paint);
+}
 
 // ---- the app loop: a tap becomes the next turn ----
-function setStatus(html){document.getElementById("status").innerHTML=html;}
+// Status is built as DOM, never assigned as markup. The old form took an HTML
+// string and concatenated caller data into it, which meant an agent-supplied
+// Button label could reach innerHTML by way of choose() -> runTurn() -> here.
+// Same call signature shape, same rendered output, no markup path.
+function setStatus(kind,pill,detail){
+  const el=document.getElementById("status");el.textContent="";
+  if(pill){const s=$("span","pill"+(kind?" "+kind:""));s.append(T(pill));el.append(s);}
+  if(detail){el.append(T(" "+detail));}
+}
 function crumbs(){document.getElementById("crumbs").textContent = convo.length? "conversation: "+convo.join("  ›  ") : "";}
 
 async function runTurn(userText){
   convo.push(userText);
   crumbs();
-  setStatus('<span class="pill think">composing…</span> the agent is writing an interface for: "'+userText+'"');
+  setStatus("think","composing…",'the agent is writing an interface for: "'+userText+'"');
   const goal = convo.length===1 ? convo[0]
      : convo[0] + "\nSo far the user then picked: " + convo.slice(1).join(", then ") + ".\nRespond with the next interface for that.";
   const res = await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -165,8 +265,8 @@ async function runTurn(userText){
   const rid = run.run_id;
   const c = await (await fetch(API+"/v1/runs/"+rid+"/composed")).json();
   if(c.surface){ render(c.surface);
-    setStatus('<span class="pill good">'+(c.provider||"gemini")+' · '+c.component_count+' components · 0 executable</span> composed live, validated in-catalog'); }
-  else { setStatus("no interface composed"); }
+    setStatus("good",(c.provider||"gemini")+" · "+c.component_count+" components · 0 executable","composed live, validated in-catalog"); }
+  else { setStatus("",null,"no interface composed"); }
 }
 function choose(label){ if(label) runTurn(label); }
 

@@ -28,7 +28,7 @@ class RecordedS13:
         path = self.directory / f"{run_id}.json"
         if not path.exists():
             raise KeyError(run_id)
-        return json.loads(path.read_text())
+        return json.loads(path.read_text(encoding="utf-8"))
 
     def available(self) -> list[str]:
         return sorted(p.stem for p in self.directory.glob("*.json") if p.stem != "injections")
@@ -36,4 +36,4 @@ class RecordedS13:
 
 def load_injections() -> dict:
     """The catalogue of malicious surfaces used by the injection wall widget."""
-    return json.loads((_FIXTURES / "injections.json").read_text())
+    return json.loads((_FIXTURES / "injections.json").read_text(encoding="utf-8"))

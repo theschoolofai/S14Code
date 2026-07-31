@@ -1,0 +1,708 @@
+{
+  "task": "Research the current population of London, Berlin and Paris, then show me the comparison.",
+  "run_id": "run-112eb30d0c8f",
+  "status": "completed",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "provider": "gemini_5",
+  "model": "gemini-3.1-flash-lite",
+  "unprompted": {
+    "checked_chars": 26466,
+    "component_named_in_compose_surface": false,
+    "component_named_in_whole_runtime": true,
+    "catalog_is_the_only_channel": true
+  },
+  "claims_offered": [
+    {
+      "label": "London",
+      "value": null,
+      "confidence": "corroborated",
+      "sources": [
+        {
+          "title": "Demography | London Datastore",
+          "url": "https://data.london.gov.uk/demography"
+        },
+        {
+          "title": "State of London - London in Figures",
+          "url": "https://apps.london.gov.uk/state-of-london/report/london-in-figures"
+        },
+        {
+          "title": "London only region in England to see population fall, says ONS",
+          "url": "https://www.bbc.co.uk/news/articles/cwyeq8w3zg3o"
+        }
+      ],
+      "detail": "Based on the provided search evidence, the current status of London's population is as follows:\n\n*   **Data Sources:** The Greater London Authority (GLA) City Intelligence Unit is the primary body responsible for producing and maintaining datasets regarding London's current and future population.\n*   **Recent Trends:** According to recent figures from the Office for National Statistics (ONS), London was the only region in England to experience a population decline over the last year.\n*   **Reporting:** Detailed, up-to-date data on London's demographic performance is published annually in the \""
+    },
+    {
+      "label": "Berlin",
+      "value": null,
+      "confidence": "corroborated",
+      "sources": [
+        {
+          "title": "Berlin Population Facts: Size, Density, and Change",
+          "url": "https://factsaboutberlin.com/berlin-population-facts/"
+        },
+        {
+          "title": "Einwohnerbestand Berlin - Grunddaten",
+          "url": "https://www.statistik-berlin-brandenburg.de/a-i-5-hj/"
+        },
+        {
+          "title": "Berlin (Germany): City in State - Population Statistics, Charts and Map",
+          "url": "https://www.citypopulation.de/en/germany/berlin/"
+        }
+      ],
+      "detail": "Based on the provided search evidence, the current population of Berlin is tracked through official registers and census data, with detailed demographic statistics maintained by the Statistical Office of Berlin-Brandenburg. \n\nKey points regarding Berlin's population data include:\n*   **Data Sources:** Official population figures are provided by the Statistical Office of Berlin-Brandenburg, which publishes semi-annual reports on demographic data, including breakdowns by district and neighborhood.\n*   **Scope of Information:** Available data covers population size, density, and recent changes (n"
+    },
+    {
+      "label": "Paris",
+      "value": null,
+      "confidence": "corroborated",
+      "sources": [
+        {
+          "title": "Full set of local data \u2212 Department of Paris (75) | Insee",
+          "url": "https://www.insee.fr/en/statistiques/6457611?geo=DEP-75"
+        },
+        {
+          "title": "Demographics of Paris - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Demographics_of_Paris"
+        },
+        {
+          "title": "Paris (Paris, Paris, France) - Population Statistics, Charts, Map ...",
+          "url": "https://www.citypopulation.de/en/france/paris/paris/75056__paris/"
+        }
+      ],
+      "detail": "Based on the provided search evidence, the official statistics for the population of Paris are maintained by Insee (the French National Institute of Statistics and Economic Studies). While the provided snippets do not list a single current numerical figure, they confirm that Insee provides comprehensive, up-to-date demographic data for the Department of Paris (75), including population, births, and deaths. Historical data indicates that Paris has been one of the most densely populated cities in the European Union."
+    }
+  ],
+  "available_pointers": [
+    "/claim_0_sources",
+    "/claim_0_value",
+    "/claim_1_sources",
+    "/claim_1_value",
+    "/claim_2_sources",
+    "/claim_2_value",
+    "/claims",
+    "/goal",
+    "/graph_edges",
+    "/graph_highlight",
+    "/graph_nodes",
+    "/intro",
+    "/item_0_detail",
+    "/item_0_label",
+    "/item_1_detail",
+    "/item_1_label",
+    "/item_2_detail",
+    "/item_2_label",
+    "/item_count",
+    "/items",
+    "/metrics",
+    "/progress_max",
+    "/progress_value",
+    "/results",
+    "/section_0_heading",
+    "/section_0_points",
+    "/section_events",
+    "/sections",
+    "/source_count",
+    "/spark",
+    "/subjects",
+    "/summary",
+    "/table_columns",
+    "/table_rows",
+    "/title"
+  ],
+  "parse_ok": true,
+  "raw_surface": "{\n  \"root\": \"root\",\n  \"components\": [\n    {\n      \"id\": \"root\",\n      \"type\": \"Column\",\n      \"children\": [\n        \"title\",\n        \"summary\",\n        \"comparison_table\",\n        \"evidence_cards\",\n        \"process_graph\"\n      ]\n    },\n    {\n      \"id\": \"title\",\n      \"type\": \"Text\",\n      \"variant\": \"heading\",\n      \"text\": {\n        \"$bind\": \"/title\"\n      }\n    },\n    {\n      \"id\": \"summary\",\n      \"type\": \"Text\",\n      \"variant\": \"body\",\n      \"text\": {\n        \"$bind\": \"/summary\"\n      }\n    },\n    {\n      \"id\": \"comparison_table\",\n      \"type\": \"DataTable\",\n      \"columns\": \"City,Primary Statistical Authority,Data Status\",\n      \"rows\": {\n        \"$bind\": \"/table_rows\"\n      },\n      \"sortable\": true\n    },\n    {\n      \"id\": \"evidence_cards\",\n      \"type\": \"List\",\n      \"children\": [\n        \"card_0\",\n        \"card_1\",\n        \"card_2\"\n      ]\n    },\n    {\n      \"id\": \"card_0\",\n      \"type\": \"EvidenceTile\",\n      \"label\": \"London\",\n      \"value\": {\n        \"$bind\": \"/item_0_label\"\n      },\n      \"confidence\": \"corroborated\",\n      \"sources\": {\n        \"$bind\": \"/claim_0_sources\"\n      }\n    },\n    {\n      \"id\": \"card_1\",\n      \"type\": \"EvidenceTile\",\n      \"label\": \"Berlin\",\n      \"value\": {\n        \"$bind\": \"/item_1_label\"\n      },\n      \"confidence\": \"corroborated\",\n      \"sources\": {\n        \"$bind\": \"/claim_1_sources\"\n      }\n    },\n    {\n      \"id\": \"card_2\",\n      \"type\": \"EvidenceTile\",\n      \"label\": \"Paris\",\n      \"value\": {\n        \"$bind\": \"/item_2_label\"\n      },\n      \"confidence\": \"corroborated\",\n      \"sources\": {\n        \"$bind\": \"/claim_2_sources\"\n      }\n    },\n    {\n      \"id\": \"process_graph\",\n      \"type\": \"RunGraph\",\n      \"title\": \"Research Process\",\n      \"nodes\": {\n        \"$bind\": \"/graph_nodes\"\n      },\n      \"edges\": {\n        \"$bind\": \"/graph_edges\"\n      }\n    }\n  ]\n}",
+  "component_chosen": true,
+  "component_instances": [
+    {
+      "id": "card_0",
+      "type": "EvidenceTile",
+      "label": "London",
+      "value": {
+        "$bind": "/item_0_label"
+      },
+      "confidence": "corroborated",
+      "sources": {
+        "$bind": "/claim_0_sources"
+      }
+    },
+    {
+      "id": "card_1",
+      "type": "EvidenceTile",
+      "label": "Berlin",
+      "value": {
+        "$bind": "/item_1_label"
+      },
+      "confidence": "corroborated",
+      "sources": {
+        "$bind": "/claim_1_sources"
+      }
+    },
+    {
+      "id": "card_2",
+      "type": "EvidenceTile",
+      "label": "Paris",
+      "value": {
+        "$bind": "/item_2_label"
+      },
+      "confidence": "corroborated",
+      "sources": {
+        "$bind": "/claim_2_sources"
+      }
+    }
+  ],
+  "component_types_used": [
+    "Button",
+    "Column",
+    "DataTable",
+    "EvidenceTile",
+    "List",
+    "Row",
+    "RunGraph",
+    "Text"
+  ],
+  "validator": {
+    "proposed": 9,
+    "accepted": 13,
+    "rejected": 0,
+    "ok": true,
+    "rejections": [],
+    "dangling_child_refs": [],
+    "component_types": [
+      "Button",
+      "Column",
+      "DataTable",
+      "EvidenceTile",
+      "List",
+      "Row",
+      "RunGraph",
+      "Text"
+    ],
+    "component_count": 13
+  },
+  "surface": {
+    "root": "root",
+    "components": [
+      {
+        "id": "root",
+        "type": "Column",
+        "children": [
+          "title",
+          "summary",
+          "comparison_table",
+          "evidence_cards",
+          "process_graph",
+          "_ask_row"
+        ]
+      },
+      {
+        "id": "title",
+        "type": "Text",
+        "variant": "heading",
+        "text": {
+          "$bind": "/title"
+        }
+      },
+      {
+        "id": "summary",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/summary"
+        }
+      },
+      {
+        "id": "comparison_table",
+        "type": "DataTable",
+        "columns": "City,Primary Statistical Authority,Data Status",
+        "rows": {
+          "$bind": "/table_rows"
+        },
+        "sortable": true
+      },
+      {
+        "id": "evidence_cards",
+        "type": "List",
+        "children": [
+          "card_0",
+          "card_1",
+          "card_2"
+        ]
+      },
+      {
+        "id": "card_0",
+        "type": "EvidenceTile",
+        "label": "London",
+        "value": {
+          "$bind": "/item_0_label"
+        },
+        "confidence": "corroborated",
+        "sources": {
+          "$bind": "/claim_0_sources"
+        }
+      },
+      {
+        "id": "card_1",
+        "type": "EvidenceTile",
+        "label": "Berlin",
+        "value": {
+          "$bind": "/item_1_label"
+        },
+        "confidence": "corroborated",
+        "sources": {
+          "$bind": "/claim_1_sources"
+        }
+      },
+      {
+        "id": "card_2",
+        "type": "EvidenceTile",
+        "label": "Paris",
+        "value": {
+          "$bind": "/item_2_label"
+        },
+        "confidence": "corroborated",
+        "sources": {
+          "$bind": "/claim_2_sources"
+        }
+      },
+      {
+        "id": "process_graph",
+        "type": "RunGraph",
+        "title": "Research Process",
+        "nodes": {
+          "$bind": "/graph_nodes"
+        },
+        "edges": {
+          "$bind": "/graph_edges"
+        }
+      },
+      {
+        "id": "_ask_0",
+        "type": "Button",
+        "label": "London",
+        "onPress": {
+          "action": "request_data"
+        }
+      },
+      {
+        "id": "_ask_1",
+        "type": "Button",
+        "label": "Berlin",
+        "onPress": {
+          "action": "request_data"
+        }
+      },
+      {
+        "id": "_ask_2",
+        "type": "Button",
+        "label": "Paris",
+        "onPress": {
+          "action": "request_data"
+        }
+      },
+      {
+        "id": "_ask_row",
+        "type": "Row",
+        "align": "stretch",
+        "justify": "spaceBetween",
+        "children": [
+          "_ask_0",
+          "_ask_1",
+          "_ask_2"
+        ]
+      }
+    ],
+    "dataModel": {
+      "title": "Research the current population of London, Berlin and Paris, then show me the comparison.",
+      "goal": "Research the current population of London, Berlin and Paris, then show me the comparison.",
+      "summary": "A comparison of population data availability for London, Berlin, and Paris based on official statistical sources.",
+      "results": [
+        {
+          "label": "London",
+          "detail": "Based on the provided search evidence, the current status of London's population is as follows:\n\n*   **Data Sources:** The Greater London Authority (GLA) City Intelligence Unit is the primary body responsible for producing and maintaining datasets regarding London's current and future population.\n*   **Recent Trends:** According to recent figures from the Office for National Statistics (ONS), London was the only region in England to experience a population decline over the last year.\n*   **Reporting:** Detailed, up-to-date data on London's demographic performance is published annually in the \""
+        },
+        {
+          "label": "Berlin",
+          "detail": "Based on the provided search evidence, the current population of Berlin is tracked through official registers and census data, with detailed demographic statistics maintained by the Statistical Office of Berlin-Brandenburg. \n\nKey points regarding Berlin's population data include:\n*   **Data Sources:** Official population figures are provided by the Statistical Office of Berlin-Brandenburg, which publishes semi-annual reports on demographic data, including breakdowns by district and neighborhood.\n*   **Scope of Information:** Available data covers population size, density, and recent changes (n"
+        },
+        {
+          "label": "Paris",
+          "detail": "Based on the provided search evidence, the official statistics for the population of Paris are maintained by Insee (the French National Institute of Statistics and Economic Studies). While the provided snippets do not list a single current numerical figure, they confirm that Insee provides comprehensive, up-to-date demographic data for the Department of Paris (75), including population, births, and deaths. Historical data indicates that Paris has been one of the most densely populated cities in the European Union."
+        }
+      ],
+      "items": [
+        {
+          "label": "London"
+        },
+        {
+          "label": "Berlin"
+        },
+        {
+          "label": "Paris"
+        }
+      ],
+      "metrics": [
+        {
+          "label": "London",
+          "value": 3
+        },
+        {
+          "label": "Berlin",
+          "value": 3
+        },
+        {
+          "label": "Paris",
+          "value": 3
+        }
+      ],
+      "spark": [
+        3.0,
+        3.0,
+        3.0
+      ],
+      "table_rows": [
+        {
+          "City": "London",
+          "Primary Statistical Authority": "Greater London Authority (GLA) / ONS",
+          "Data Status": "Annual reporting; recent decline noted"
+        },
+        {
+          "City": "Berlin",
+          "Primary Statistical Authority": "Statistical Office of Berlin-Brandenburg",
+          "Data Status": "Semi-annual updates; 2024 census data available"
+        },
+        {
+          "City": "Paris",
+          "Primary Statistical Authority": "Insee",
+          "Data Status": "Comprehensive demographic tracking"
+        }
+      ],
+      "item_count": 3,
+      "source_count": 9,
+      "claims": [
+        {
+          "label": "London",
+          "value": null,
+          "confidence": "corroborated",
+          "sources": [
+            {
+              "title": "Demography | London Datastore",
+              "url": "https://data.london.gov.uk/demography"
+            },
+            {
+              "title": "State of London - London in Figures",
+              "url": "https://apps.london.gov.uk/state-of-london/report/london-in-figures"
+            },
+            {
+              "title": "London only region in England to see population fall, says ONS",
+              "url": "https://www.bbc.co.uk/news/articles/cwyeq8w3zg3o"
+            }
+          ],
+          "detail": "Based on the provided search evidence, the current status of London's population is as follows:\n\n*   **Data Sources:** The Greater London Authority (GLA) City Intelligence Unit is the primary body responsible for producing and maintaining datasets regarding London's current and future population.\n*   **Recent Trends:** According to recent figures from the Office for National Statistics (ONS), London was the only region in England to experience a population decline over the last year.\n*   **Reporting:** Detailed, up-to-date data on London's demographic performance is published annually in the \""
+        },
+        {
+          "label": "Berlin",
+          "value": null,
+          "confidence": "corroborated",
+          "sources": [
+            {
+              "title": "Berlin Population Facts: Size, Density, and Change",
+              "url": "https://factsaboutberlin.com/berlin-population-facts/"
+            },
+            {
+              "title": "Einwohnerbestand Berlin - Grunddaten",
+              "url": "https://www.statistik-berlin-brandenburg.de/a-i-5-hj/"
+            },
+            {
+              "title": "Berlin (Germany): City in State - Population Statistics, Charts and Map",
+              "url": "https://www.citypopulation.de/en/germany/berlin/"
+            }
+          ],
+          "detail": "Based on the provided search evidence, the current population of Berlin is tracked through official registers and census data, with detailed demographic statistics maintained by the Statistical Office of Berlin-Brandenburg. \n\nKey points regarding Berlin's population data include:\n*   **Data Sources:** Official population figures are provided by the Statistical Office of Berlin-Brandenburg, which publishes semi-annual reports on demographic data, including breakdowns by district and neighborhood.\n*   **Scope of Information:** Available data covers population size, density, and recent changes (n"
+        },
+        {
+          "label": "Paris",
+          "value": null,
+          "confidence": "corroborated",
+          "sources": [
+            {
+              "title": "Full set of local data \u2212 Department of Paris (75) | Insee",
+              "url": "https://www.insee.fr/en/statistiques/6457611?geo=DEP-75"
+            },
+            {
+              "title": "Demographics of Paris - Wikipedia",
+              "url": "https://en.wikipedia.org/wiki/Demographics_of_Paris"
+            },
+            {
+              "title": "Paris (Paris, Paris, France) - Population Statistics, Charts, Map ...",
+              "url": "https://www.citypopulation.de/en/france/paris/paris/75056__paris/"
+            }
+          ],
+          "detail": "Based on the provided search evidence, the official statistics for the population of Paris are maintained by Insee (the French National Institute of Statistics and Economic Studies). While the provided snippets do not list a single current numerical figure, they confirm that Insee provides comprehensive, up-to-date demographic data for the Department of Paris (75), including population, births, and deaths. Historical data indicates that Paris has been one of the most densely populated cities in the European Union."
+        }
+      ],
+      "item_0_label": "London",
+      "item_0_detail": "Based on the provided search evidence, the current status of London's population is as follows:\n\n*   **Data Sources:** The Greater London Authority (GLA) City Intelligence Unit is the primary body responsible for producing and maintaining datasets regarding London's current and future population.\n*   **Recent Trends:** According to recent figures from the Office for National Statistics (ONS), London was the only region in England to experience a population decline over the last year.\n*   **Reporting:** Detailed, up-to-date data on London's demographic performance is published annually in the \"",
+      "claim_0_value": "London",
+      "claim_0_sources": [
+        {
+          "title": "Demography | London Datastore",
+          "url": "https://data.london.gov.uk/demography"
+        },
+        {
+          "title": "State of London - London in Figures",
+          "url": "https://apps.london.gov.uk/state-of-london/report/london-in-figures"
+        },
+        {
+          "title": "London only region in England to see population fall, says ONS",
+          "url": "https://www.bbc.co.uk/news/articles/cwyeq8w3zg3o"
+        }
+      ],
+      "item_1_label": "Berlin",
+      "item_1_detail": "Based on the provided search evidence, the current population of Berlin is tracked through official registers and census data, with detailed demographic statistics maintained by the Statistical Office of Berlin-Brandenburg. \n\nKey points regarding Berlin's population data include:\n*   **Data Sources:** Official population figures are provided by the Statistical Office of Berlin-Brandenburg, which publishes semi-annual reports on demographic data, including breakdowns by district and neighborhood.\n*   **Scope of Information:** Available data covers population size, density, and recent changes (n",
+      "claim_1_value": "Berlin",
+      "claim_1_sources": [
+        {
+          "title": "Berlin Population Facts: Size, Density, and Change",
+          "url": "https://factsaboutberlin.com/berlin-population-facts/"
+        },
+        {
+          "title": "Einwohnerbestand Berlin - Grunddaten",
+          "url": "https://www.statistik-berlin-brandenburg.de/a-i-5-hj/"
+        },
+        {
+          "title": "Berlin (Germany): City in State - Population Statistics, Charts and Map",
+          "url": "https://www.citypopulation.de/en/germany/berlin/"
+        }
+      ],
+      "item_2_label": "Paris",
+      "item_2_detail": "Based on the provided search evidence, the official statistics for the population of Paris are maintained by Insee (the French National Institute of Statistics and Economic Studies). While the provided snippets do not list a single current numerical figure, they confirm that Insee provides comprehensive, up-to-date demographic data for the Department of Paris (75), including population, births, and deaths. Historical data indicates that Paris has been one of the most densely populated cities in the European Union.",
+      "claim_2_value": "Paris",
+      "claim_2_sources": [
+        {
+          "title": "Full set of local data \u2212 Department of Paris (75) | Insee",
+          "url": "https://www.insee.fr/en/statistiques/6457611?geo=DEP-75"
+        },
+        {
+          "title": "Demographics of Paris - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Demographics_of_Paris"
+        },
+        {
+          "title": "Paris (Paris, Paris, France) - Population Statistics, Charts, Map ...",
+          "url": "https://www.citypopulation.de/en/france/paris/paris/75056__paris/"
+        }
+      ],
+      "subjects": [
+        "London",
+        "Berlin",
+        "Paris"
+      ],
+      "graph_nodes": [
+        {
+          "id": "distill",
+          "label": "distill",
+          "state": "succeeded",
+          "detail": "distiller"
+        },
+        {
+          "id": "search_1",
+          "label": "search_1 \u00b7 London",
+          "state": "succeeded",
+          "detail": "researcher \u00b7 3 sources"
+        },
+        {
+          "id": "search_2",
+          "label": "search_2 \u00b7 Berlin",
+          "state": "succeeded",
+          "detail": "researcher \u00b7 3 sources"
+        },
+        {
+          "id": "search_3",
+          "label": "search_3 \u00b7 Paris",
+          "state": "succeeded",
+          "detail": "researcher \u00b7 3 sources"
+        },
+        {
+          "id": "surface",
+          "label": "surface",
+          "state": "running",
+          "detail": "compose_surface \u00b7 composing this view"
+        }
+      ],
+      "graph_edges": [
+        {
+          "from": "distill",
+          "to": "surface",
+          "reason": "research distilled; compose a validated A2UI surface from the real outcomes"
+        },
+        {
+          "from": "search_1",
+          "to": "distill",
+          "reason": "all corrected research evidence landed; synthesis can begin"
+        },
+        {
+          "from": "search_1",
+          "to": "surface",
+          "reason": "research distilled; compose a validated A2UI surface from the real outcomes"
+        },
+        {
+          "from": "search_2",
+          "to": "distill",
+          "reason": "all corrected research evidence landed; synthesis can begin"
+        },
+        {
+          "from": "search_2",
+          "to": "surface",
+          "reason": "research distilled; compose a validated A2UI surface from the real outcomes"
+        },
+        {
+          "from": "search_3",
+          "to": "distill",
+          "reason": "all corrected research evidence landed; synthesis can begin"
+        },
+        {
+          "from": "search_3",
+          "to": "surface",
+          "reason": "research distilled; compose a validated A2UI surface from the real outcomes"
+        }
+      ],
+      "graph_highlight": "",
+      "progress_value": 4,
+      "progress_max": 5,
+      "intro": "A comparison of population data availability for London, Berlin, and Paris based on official statistical sources.",
+      "section_0_heading": "Data Availability Summary",
+      "section_0_points": "\u2022 London's population data is managed by the GLA and ONS, with recent reports highlighting a regional population decline.\n\u2022 Berlin provides the most granular recent updates, with semi-annual reports and specific 2024 census-based figures.\n\u2022 Paris population statistics are maintained by Insee, focusing on detailed demographic metrics including births, deaths, and density.",
+      "sections": [
+        {
+          "heading": "Data Availability Summary",
+          "points": [
+            "London's population data is managed by the GLA and ONS, with recent reports highlighting a regional population decline.",
+            "Berlin provides the most granular recent updates, with semi-annual reports and specific 2024 census-based figures.",
+            "Paris population statistics are maintained by Insee, focusing on detailed demographic metrics including births, deaths, and density."
+          ]
+        }
+      ],
+      "section_events": [
+        {
+          "time": "Data Availability Summary",
+          "label": "London's population data is managed by the GLA and ONS, with recent reports highlighting a regional population decline.; Berlin provides the most granular recent updates, with semi-annual reports and specific 2024 census-based figures.; Paris population statistics are maintained by Insee, focusing on detailed demographic metrics including births, deaths, and density."
+        }
+      ],
+      "table_columns": [
+        "City",
+        "Primary Statistical Authority",
+        "Data Status"
+      ]
+    }
+  },
+  "nodes": {
+    "distill": {
+      "skill": "distiller",
+      "state": "succeeded"
+    },
+    "search_1": {
+      "skill": "researcher",
+      "state": "succeeded"
+    },
+    "search_2": {
+      "skill": "researcher",
+      "state": "succeeded"
+    },
+    "search_3": {
+      "skill": "researcher",
+      "state": "succeeded"
+    },
+    "surface": {
+      "skill": "compose_surface",
+      "state": "succeeded"
+    }
+  },
+  "events": [
+    {
+      "sequence": 1,
+      "kind": "run_started",
+      "node_id": null
+    },
+    {
+      "sequence": 2,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 3,
+      "kind": "task_started",
+      "node_id": "search_1"
+    },
+    {
+      "sequence": 4,
+      "kind": "task_started",
+      "node_id": "search_2"
+    },
+    {
+      "sequence": 5,
+      "kind": "task_started",
+      "node_id": "search_3"
+    },
+    {
+      "sequence": 6,
+      "kind": "task_succeeded",
+      "node_id": "search_3"
+    },
+    {
+      "sequence": 7,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 8,
+      "kind": "task_succeeded",
+      "node_id": "search_1"
+    },
+    {
+      "sequence": 9,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 10,
+      "kind": "task_succeeded",
+      "node_id": "search_2"
+    },
+    {
+      "sequence": 11,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 12,
+      "kind": "task_started",
+      "node_id": "distill"
+    },
+    {
+      "sequence": 13,
+      "kind": "task_succeeded",
+      "node_id": "distill"
+    },
+    {
+      "sequence": 14,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 15,
+      "kind": "task_started",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 16,
+      "kind": "task_succeeded",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 17,
+      "kind": "graph_patched",
+      "node_id": null
+    }
+  ],
+  "outcome": "chosen"
+}

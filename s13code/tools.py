@@ -93,12 +93,32 @@ class _DDGParser(HTMLParser):
             self.current[key] = (self.current[key] + " " + data.strip()).strip()
 
 
-async def web_search(query: str, *, max_results: int = 5) -> dict:
-    max_results = max(1, min(max_results, 5))
+async def _tavily_search(query: str, max_results: int, api_key: str) -> list[dict]:
+    async with httpx.AsyncClient(timeout=30) as client:
+        response = await client.post("https://api.tavily.com/search",
+                                     headers={"Authorization": f"Bearer {api_key}"},
+                                     json={"query": query, "max_results": max_results})
+        response.raise_for_status()
+    return [{"title": r.get("title", ""), "url": r.get("url", ""), "snippet": r.get("content", "")}
+            for r in response.json().get("results", [])]
+
+
+async def _duckduckgo_search(query: str) -> list[dict]:
     async with httpx.AsyncClient(timeout=30, follow_redirects=True,
                                  headers={"User-Agent": "Mozilla/5.0 GLC-S13"}) as client:
         response = await client.get("https://html.duckduckgo.com/html/", params={"q": query})
         response.raise_for_status()
     parser = _DDGParser(); parser.feed(response.text)
-    hits = [hit for hit in parser.hits if hit["url"]][:max_results]
-    return {"query": query, "hits": hits}
+    return [hit for hit in parser.hits if hit["url"]]
+
+
+async def web_search(query: str, *, max_results: int = 5) -> dict:
+    """DuckDuckGo's scraping endpoint needs no key but is unreachable from some
+    cloud egress ranges (Render's among them: a ConnectTimeout, not even a
+    4xx -- an IP-range block, not a code bug). TAVILY_API_KEY opts into a real
+    search API instead; unset, behavior is exactly what it always was."""
+    max_results = max(1, min(max_results, 5))
+    api_key = os.getenv("TAVILY_API_KEY")
+    hits = await (_tavily_search(query, max_results, api_key) if api_key
+                  else _duckduckgo_search(query))
+    return {"query": query, "hits": hits[:max_results]}

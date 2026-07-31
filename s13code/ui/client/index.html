@@ -12,6 +12,7 @@
     --green:#16A34A;--green-soft:rgba(22,163,74,.12);--green-ink:#15803D;
     --amber:#D97706;--amber-soft:rgba(217,119,6,.14);--amber-ink:#B45309;
     --red:#DC2626;--red-soft:rgba(220,38,38,.10);--red-ink:#B91C1C;
+    --chart-1:var(--accent);--chart-2:var(--green);--chart-3:var(--amber);--chart-4:var(--red);
     --font-sans:'Inter',system-ui,sans-serif;--font-serif:'Palatino Linotype',Palatino,Georgia,serif;--font-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
   }
   *{box-sizing:border-box}body{margin:0;background:var(--surface-alt);color:var(--ink-body);font-family:var(--font-sans);font-size:14px;padding:18px}
@@ -116,7 +117,7 @@ const RENDERERS = {
   DateTime:(c,ctx)=>field(c,()=>{const i=$("input");i.type="datetime-local";i.value=resolve(c.value,ctx.dm)??"";
     i.oninput=()=>{if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,i.value);};return i;}),
   Button:(c,ctx)=>{const b=$("button","");b.className="";b.style.cssText="border:1px solid var(--rule-strong);background:var(--surface);border-radius:8px;padding:6px 14px;font-weight:600;cursor:pointer";
-    b.append(text(c.label));b.onclick=()=>emitAction(c.onPress&&c.onPress.action,{});return b;},
+    b.append(text(resolve(c.label,ctx.dm)));b.onclick=()=>emitAction(c.onPress&&c.onPress.action,{});return b;},
   Tabs:(c,ctx)=>renderTabs(c,ctx),
   Modal:(c,ctx)=>{const e=$("div","Modal");const tag=$("div","mtag");tag.append(text((resolve(c.open,ctx.dm)?"modal · open":"modal · preview")));
     const h=$("div","mt");h.append(text(c.title||""));e.append(tag,h);kids(c,ctx,e);return e;},
@@ -135,12 +136,325 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  EvidenceTile:(c,ctx)=>renderEvidence(c,ctx),
+  RunGraph:(c,ctx)=>renderRunGraph(c,ctx),
+  TradeoffRadar:(c,ctx)=>renderTradeoffRadar(c,ctx),
+  WhatIfSlider:(c,ctx)=>renderWhatIfSlider(c,ctx),
 };
+
+// --- RunGraph: the agent's own DAG -----------------------------------------
+// Layered layout via a longest-path ranker (the algorithm dagre calls
+// 'longest-path', ported in ~15 lines rather than shipping the engine): each
+// node's rank is the longest path from any source, which puts every edge in the
+// left-to-right direction. Drawn with createElementNS; every label is a text
+// node and the edge reason goes to aria-label, never into markup.
+const STATE_COLOUR={succeeded:"var(--green)",running:"var(--accent)",pending:"var(--rule-strong)",
+                    failed:"var(--red)",waiting:"var(--amber)",cancelled:"var(--amber)"};
+function rankNodes(ids,edges){
+  const out={},indeg={};ids.forEach(i=>{out[i]=[];indeg[i]=0;});
+  edges.forEach(e=>{if(out[e.from]&&indeg[e.to]!=null){out[e.from].push(e.to);indeg[e.to]++;}});
+  const rank={};ids.forEach(i=>rank[i]=0);
+  let queue=ids.filter(i=>indeg[i]===0),guard=0;
+  while(queue.length&&guard++<1000){                 // guard: a cycle cannot hang this
+    const next=[];
+    queue.forEach(u=>out[u].forEach(v=>{
+      if(rank[v]<rank[u]+1){rank[v]=rank[u]+1;next.push(v);}}));
+    queue=next;}
+  return rank;
+}
+function renderRunGraph(c,ctx){
+  const nodes=(resolve(c.nodes,ctx.dm)||[]).filter(n=>n&&n.id),
+        edges=(resolve(c.edges,ctx.dm)||[]).filter(e=>e&&e.from&&e.to),
+        highlight=resolve(c.highlight,ctx.dm);
+  const wrap=$("div","chart");const t=$("div","ct");t.append(text(c.title||"run graph"));wrap.append(t);
+  if(!nodes.length){const p=$("div");p.append(text("no graph recorded"));wrap.append(p);return wrap;}
+  const ids=nodes.map(n=>n.id), rank=rankNodes(ids,edges);
+  const cols={};ids.forEach(i=>{(cols[rank[i]]=cols[rank[i]]||[]).push(i);});
+  const maxRank=Math.max(...Object.keys(cols).map(Number)), maxRows=Math.max(...Object.values(cols).map(a=>a.length));
+  const CW=190,CH=70,GX=40,GY=18,W=(maxRank+1)*CW+maxRank*GX,H=maxRows*(CH+GY);
+  const pos={};Object.entries(cols).forEach(([r,list])=>list.forEach((id,i)=>{
+    pos[id]={x:Number(r)*(CW+GX),y:i*(CH+GY)+(maxRows-list.length)*(CH+GY)/2};}));
+  const ns="http://www.w3.org/2000/svg";const svg=document.createElementNS(ns,"svg");
+  svg.setAttribute("viewBox",`0 0 ${W} ${Math.max(H,CH)}`);svg.setAttribute("width","100%");
+  svg.setAttribute("height",String(Math.max(H,CH)));svg.setAttribute("role","img");
+  const titleEl=document.createElementNS(ns,"title");titleEl.textContent=(c.title||"run graph");
+  const descEl=document.createElementNS(ns,"desc");
+  descEl.textContent=nodes.map(n=>`${n.label||n.id} (${n.state||"unknown"}${n.detail?", "+n.detail:""})`).join("; ")+
+    ". Dependencies: "+(edges.map(e=>`${e.from} feeds ${e.to}`).join("; ")||"none");
+  svg.setAttribute("aria-labelledby","rg-t rg-d");titleEl.id="rg-t";descEl.id="rg-d";
+  svg.append(titleEl,descEl);
+  edges.forEach(e=>{const a=pos[e.from],b=pos[e.to];if(!a||!b)return;
+    const x1=a.x+CW,y1=a.y+CH/2,x2=b.x,y2=b.y+CH/2;
+    const path=document.createElementNS(ns,"path");
+    path.setAttribute("d",`M${x1},${y1} C${x1+GX/2},${y1} ${x2-GX/2},${y2} ${x2},${y2}`);
+    path.setAttribute("fill","none");path.setAttribute("stroke","var(--rule-strong)");path.setAttribute("stroke-width","1.5");
+    if(e.reason){const et=document.createElementNS(ns,"title");et.textContent=String(e.reason);path.append(et);}
+    svg.append(path);});
+  nodes.forEach(n=>{const p=pos[n.id];if(!p)return;
+    const g=document.createElementNS(ns,"g");
+    const rect=document.createElementNS(ns,"rect");
+    rect.setAttribute("x",p.x);rect.setAttribute("y",p.y);rect.setAttribute("width",CW);rect.setAttribute("height",CH);
+    rect.setAttribute("rx",8);rect.setAttribute("fill","var(--surface)");
+    rect.setAttribute("stroke",String(n.id)===String(highlight)?"var(--accent)":"var(--rule)");
+    rect.setAttribute("stroke-width",String(n.id)===String(highlight)?"2.5":"1");g.append(rect);
+    const bar=document.createElementNS(ns,"rect");
+    bar.setAttribute("x",p.x);bar.setAttribute("y",p.y);bar.setAttribute("width",4);bar.setAttribute("height",CH);
+    bar.setAttribute("fill",STATE_COLOUR[n.state]||"var(--rule-strong)");g.append(bar);
+    const lab=document.createElementNS(ns,"text");
+    lab.setAttribute("x",p.x+14);lab.setAttribute("y",p.y+23);lab.setAttribute("font-size","12");
+    lab.setAttribute("fill","var(--ink-body)");lab.textContent=String(n.label||n.id).slice(0,26);g.append(lab);
+    const st=document.createElementNS(ns,"text");
+    st.setAttribute("x",p.x+14);st.setAttribute("y",p.y+40);st.setAttribute("font-size","10");
+    st.setAttribute("font-family","var(--font-mono)");st.setAttribute("fill","var(--ink-muted)");
+    st.textContent=String(n.state||"");g.append(st);
+    // The trace line: what the step was ABOUT, not just which worker ran it.
+    // A hard slice(0,30) with no ellipsis cut mid-word ("composing th") and
+    // looked like missing/broken content rather than a deliberately shortened
+    // line. Word-boundary truncation plus "…" makes the shortening legible;
+    // the nested <title> (same pattern the edges already use for `reason`)
+    // puts the FULL text one hover away instead of nowhere at all.
+    if(n.detail){const dt=document.createElementNS(ns,"text");
+      dt.setAttribute("x",p.x+14);dt.setAttribute("y",p.y+57);dt.setAttribute("font-size","9");
+      dt.setAttribute("font-family","var(--font-mono)");dt.setAttribute("fill","var(--ink-muted)");
+      dt.setAttribute("opacity","0.85");
+      const full=String(n.detail),budget=29;
+      let shown=full;
+      if(full.length>budget){
+        const cut=full.slice(0,budget),lastSpace=cut.lastIndexOf(" ");
+        shown=(lastSpace>0?cut.slice(0,lastSpace):cut)+"…";
+        const dtt=document.createElementNS(ns,"title");dtt.textContent=full;dt.append(dtt);
+      }
+      dt.append(document.createTextNode(shown));g.append(dt);}
+    svg.append(g);});
+  wrap.append(svg);
+  // Screen readers get the graph as DATA, not as a shape: role="img" + title +
+  // desc above, plus this table, which is visually hidden but fully readable.
+  const tab=$("table");tab.style.cssText="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)";
+  const hr=$("tr");["step","state","feeds"].forEach(h=>{const th=$("th");th.append(text(h));hr.append(th);});tab.append(hr);
+  nodes.forEach(n=>{const tr=$("tr");
+    [String(n.label||n.id),String(n.state||""),edges.filter(e=>e.from===n.id).map(e=>e.to).join(", ")||"—"]
+      .forEach(v=>{const td=$("td");td.append(text(v));tr.append(td);});tab.append(tr);});
+  wrap.append(tab);return wrap;
+}
+
+// --- shape rescue: the model can only bind to pointers the harness already
+// built (available_pointers is a closed list — it can never invent a fresh
+// one), so it reliably reaches for the nearest existing shape instead of the
+// one these two components actually want: a DataTable's flat table_columns /
+// table_rows. Rather than render "no data" every time that happens, detect
+// it and reshape it here — first column becomes the option's name, every
+// other column becomes an axis/criterion, and a qualitative cell ("Very
+// High", "Low (Complex)") becomes a comparable score via keyword matching.
+function qualScore(v){
+  if(v==null||v==="")return 5;
+  const s=String(v).trim();
+  if(/^[+-]?[\d.]+%?$/.test(s))return parseFloat(s);
+  const low=s.toLowerCase();
+  const table=[["very high",9],["extremely high",9],["excellent",9],["high",7.5],
+               ["moderate",5],["medium",5],["average",5],["configurable",5],
+               ["low",3],["very low",1.5],["minimal",1.5],["none",0.5],["poor",1.5],
+               ["complex",2.5],["difficult",2.5],["simple",8],["easy",8]];
+  for(const [key,score] of table){if(low.includes(key))return score;}
+  return 5;
+}
+function reshapeTableSeries(axes,series){
+  if(series.length&&series.every(s=>s&&Array.isArray(s.values)))
+    return {axes,series:series};
+  const cols=axes.length?axes:(series[0]&&typeof series[0]==="object"?Object.keys(series[0]):[]);
+  if(cols.length<2||!series.length)return {axes:[],series:[]};
+  const [nameKey,...axisKeys]=cols;
+  const rows=series.filter(r=>r&&typeof r==="object");
+  // A genuine table_rows match has at least one axis key sitting directly on
+  // the row; a same-shape-but-wrong pointer (a flat {label,value} metrics
+  // list bound where series was expected, say) has none of them — forcing
+  // that through plots an identical meaningless score on every axis for
+  // every option instead of admitting there is nothing here to plot.
+  const usable=rows.filter(row=>axisKeys.some(k=>Object.prototype.hasOwnProperty.call(row,k)));
+  if(usable.length<2)return {axes:[],series:[]};
+  return {axes:axisKeys,
+    series:usable.map(row=>({name:String(row[nameKey]??""),values:axisKeys.map(k=>qualScore(row[k]))}))};
+}
+
+// --- TradeoffRadar: several named things across the SAME axes at once ------
+// A DataTable makes the reader compare cell by cell; a radar polygon per
+// series lets them see where each option wins and loses in one glance. Each
+// axis is normalised against its OWN max across the series being plotted, so
+// an axis measured in raw throughput (thousands) cannot swamp an axis that is
+// a 0-10 ops-burden score — every spoke gets the same visual weight.
+function renderTradeoffRadar(c,ctx){
+  const rawAxes=(resolve(c.axes,ctx.dm)||[]).map(String);
+  const rawSeries=resolve(c.series,ctx.dm)||[];
+  const {axes,series}=reshapeTableSeries(rawAxes,rawSeries);
+  const wrap=$("div","chart");const t=$("div","ct");t.append(text(c.title||"tradeoff"));wrap.append(t);
+  if(!axes.length||!series.length){const p=$("div");p.append(text("no data to plot"));wrap.append(p);return wrap;}
+  const N=axes.length,W=280,H=252,cx=W/2,cy=H/2-4,RAD=Math.min(W,H)/2-42;
+  const ang=i=>-Math.PI/2+i*(2*Math.PI/N);
+  const axisMax=axes.map((_,i)=>Math.max(1,...series.map(s=>+s.values[i]||0)));
+  const pt=(i,v)=>{const r=Math.max(0,Math.min(1,v/axisMax[i]))*RAD,a=ang(i);return [cx+r*Math.cos(a),cy+r*Math.sin(a)];};
+  const ns="http://www.w3.org/2000/svg";const svg=document.createElementNS(ns,"svg");
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.setAttribute("width","100%");svg.setAttribute("height",H);svg.setAttribute("role","img");
+  const titleEl=document.createElementNS(ns,"title");titleEl.textContent=c.title||"tradeoff radar";
+  const descEl=document.createElementNS(ns,"desc");
+  descEl.textContent=series.map(s=>s.name+": "+axes.map((a,i)=>a+"="+s.values[i]).join(", ")).join("; ");
+  svg.setAttribute("aria-labelledby","tr-t tr-d");titleEl.id="tr-t";descEl.id="tr-d";svg.append(titleEl,descEl);
+  axes.forEach((a,i)=>{
+    const [ex,ey]=[cx+RAD*Math.cos(ang(i)),cy+RAD*Math.sin(ang(i))];
+    const line=document.createElementNS(ns,"line");line.setAttribute("x1",cx);line.setAttribute("y1",cy);
+    line.setAttribute("x2",ex);line.setAttribute("y2",ey);
+    line.setAttribute("stroke","var(--rule-strong)");line.setAttribute("stroke-width","1");svg.append(line);
+    const [lx,ly]=[cx+(RAD+18)*Math.cos(ang(i)),cy+(RAD+18)*Math.sin(ang(i))];
+    const lab=document.createElementNS(ns,"text");lab.setAttribute("x",lx);lab.setAttribute("y",ly);
+    lab.setAttribute("font-size","9.5");lab.setAttribute("fill","var(--ink-muted)");lab.setAttribute("text-anchor","middle");
+    lab.setAttribute("font-family","var(--font-mono)");lab.textContent=a.length>16?a.slice(0,15)+"…":a;svg.append(lab);
+  });
+  const PALETTE=["var(--chart-1)","var(--chart-2)","var(--chart-3)","var(--chart-4)"];
+  series.forEach((s,si)=>{const col=PALETTE[si%PALETTE.length];
+    const poly=document.createElementNS(ns,"polygon");
+    poly.setAttribute("points",axes.map((_,i)=>pt(i,+s.values[i]||0).join(",")).join(" "));
+    poly.setAttribute("fill",col);poly.setAttribute("fill-opacity","0.14");
+    poly.setAttribute("stroke",col);poly.setAttribute("stroke-width","2");svg.append(poly);});
+  wrap.append(svg);
+  const leg=$("div");leg.style.cssText="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:11px;font-family:var(--font-mono)";
+  series.forEach((s,si)=>{const item=$("span");item.style.cssText="display:flex;align-items:center;gap:5px";
+    const sw=$("span");sw.style.cssText="width:9px;height:9px;border-radius:2px;background:"+PALETTE[si%PALETTE.length];
+    item.append(sw,text(s.name));leg.append(item);});
+  wrap.append(leg);
+  // Same accessible-table pattern as RunGraph: visually hidden, fully readable.
+  const tab=$("table");tab.style.cssText="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)";
+  const hr=$("tr");["option",...axes].forEach(h=>{const th=$("th");th.append(text(h));hr.append(th);});tab.append(hr);
+  series.forEach(s=>{const tr=$("tr");[s.name,...axes.map((_,i)=>s.values[i])]
+    .forEach(v=>{const td=$("td");td.append(text(String(v)));tr.append(td);});tab.append(tr);});
+  wrap.append(tab);
+  return wrap;
+}
+
+// Same shape-rescue as TradeoffRadar's reshapeTableSeries, for criteria/
+// options instead of axes/series: a flat table_columns/table_rows pair
+// becomes {key,label,weight} criteria (starting weight split evenly at 50)
+// and {name,scores} options, with qualScore() reading each cell.
+function reshapeTableCriteria(rawCriteria,rawOptions){
+  const looksRight=rawCriteria.length&&rawCriteria.every(cr=>cr&&typeof cr==="object"&&cr.key);
+  if(looksRight)return {criteria:rawCriteria,options:rawOptions.filter(o=>o&&o.name&&o.scores)};
+  const cols=rawCriteria.length&&typeof rawCriteria[0]==="string"?rawCriteria
+             :(rawOptions[0]&&typeof rawOptions[0]==="object"?Object.keys(rawOptions[0]):[]);
+  if(cols.length<2||!rawOptions.length)return {criteria:[],options:[]};
+  const [nameKey,...critKeys]=cols;
+  const rows=rawOptions.filter(r=>r&&typeof r==="object");
+  // Same rescue-vs-refuse check as reshapeTableSeries: a row that has none of
+  // the criterion keys on it is bound to the wrong pointer entirely (a flat
+  // metrics list, say), not this table's rows — refuse rather than fabricate
+  // an identical default score under every criterion for every option.
+  const usable=rows.filter(row=>critKeys.some(k=>Object.prototype.hasOwnProperty.call(row,k)));
+  if(usable.length<2)return {criteria:[],options:[]};
+  return {criteria:critKeys.map(k=>({key:k,label:k,weight:50})),
+    options:usable.map(row=>({name:String(row[nameKey]??""),
+      scores:Object.fromEntries(critKeys.map(k=>[k,qualScore(row[k])]))}))};
+}
+
+// --- WhatIfSlider: a ranking the reader can reweigh, not just read ---------
+// Every other data-viz component in this catalog is a fixed rendering of a
+// fixed data model. This one lets a weight move and the ranking below it
+// recompute IMMEDIATELY, entirely in the browser: no action, no round trip,
+// no new run. The insight is in watching the order change, not in any single
+// frozen ranking, so the interaction has to feel instant to mean anything.
+function renderWhatIfSlider(c,ctx){
+  const rawCriteria=resolve(c.criteria,ctx.dm)||[];
+  const rawOptions=resolve(c.options,ctx.dm)||[];
+  const {criteria,options}=reshapeTableCriteria(rawCriteria,rawOptions);
+  const wrap=$("div","chart");const t=$("div","ct");t.append(text(c.title||"what-if"));wrap.append(t);
+  if(!criteria.length||!options.length){const p=$("div");p.append(text("no data to weigh"));wrap.append(p);return wrap;}
+  const weights={};criteria.forEach(cr=>{weights[cr.key]=Math.max(0,Math.min(100,+cr.weight||50));});
+  const sliders=$("div");sliders.style.cssText="display:flex;flex-direction:column;gap:11px;margin:10px 0 4px";
+  const ranked=$("div");ranked.style.cssText="display:flex;flex-direction:column;gap:7px;margin-top:6px";
+
+  function rerank(){
+    const totals=options.map(o=>({name:o.name,
+      total:criteria.reduce((sum,cr)=>sum+(weights[cr.key]/100)*(+o.scores[cr.key]||0),0)}));
+    totals.sort((a,b)=>b.total-a.total);
+    const max=Math.max(...totals.map(t=>t.total),1e-9);
+    ranked.textContent="";
+    totals.forEach((tt,i)=>{
+      const row=$("div");row.style.cssText="display:flex;align-items:center;gap:10px;font-size:13px";
+      const rank=$("span");rank.style.cssText="font-family:var(--font-mono);font-size:11px;width:18px;"+
+        "color:"+(i===0?"var(--accent)":"var(--ink-muted)");rank.append(text("#"+(i+1)));
+      const name=$("span");name.style.cssText="flex:0 0 auto;min-width:120px;color:"+(i===0?"var(--ink)":"var(--ink-body)")+
+        ";font-weight:"+(i===0?"650":"400");name.append(text(tt.name));
+      const bar=$("div");bar.style.cssText="flex:1;height:8px;border-radius:999px;background:var(--surface-alt);"+
+        "border:1px solid var(--rule);overflow:hidden";
+      const fill=$("div");fill.style.cssText="height:100%;width:"+Math.max(2,tt.total/max*100)+"%;"+
+        "background:"+(i===0?"var(--accent)":"var(--rule-strong)");
+      bar.append(fill);row.append(rank,name,bar);ranked.append(row);
+    });
+  }
+
+  criteria.forEach(cr=>{
+    const row=$("div");row.style.cssText="display:flex;align-items:center;gap:10px";
+    const lab=$("span");lab.style.cssText="flex:0 0 auto;min-width:150px;font-size:12px;"+
+      "font-family:var(--font-mono);color:var(--ink-muted)";lab.append(text(cr.label||cr.key));
+    const inp=document.createElement("input");inp.type="range";inp.min="0";inp.max="100";
+    inp.value=String(weights[cr.key]);inp.style.flex="1";
+    const val=$("span");val.style.cssText="width:30px;text-align:right;font-family:var(--font-mono);"+
+      "font-size:12px;color:var(--ink-muted)";val.append(text(String(weights[cr.key])));
+    inp.addEventListener("input",()=>{weights[cr.key]=+inp.value;val.textContent=inp.value;rerank();});
+    row.append(lab,inp,val);sliders.append(row);
+  });
+
+  rerank();
+  wrap.append(sliders,ranked);
+  return wrap;
+}
+
+// One claim with the evidence behind it. Every value is drawn through a text
+// node. The ONLY thing that ever becomes an attribute is a source URL, and only
+// after isSafeUrl(); anything else renders as inert text. Confidence colour is
+// looked up from the closed enum, never interpolated from data.
+const CONF={corroborated:{t:"good",w:"corroborated"},"single-source":{t:"warn",w:"single source"},
+            disputed:{t:"warn",w:"disputed"},unsupported:{t:"bad",w:"no source"}};
+function renderEvidence(c,ctx){
+  const meta=CONF[c.confidence]||{t:"neutral",w:String(c.confidence||"")};
+  const e=$("div","StatTile "+meta.t);
+  const val=resolve(c.value,ctx.dm), srcs=resolve(c.sources,ctx.dm)||[], dis=resolve(c.dissent,ctx.dm);
+  const l=$("div","lab");l.append(text(c.label));
+  const v=$("div","val");v.append(text((val==null?"—":val)+(c.unit?" "+c.unit:"")));
+  const f=$("div","dl");// A confidence word beside an em dash claims certainty about a value that
+  // is not there. When nothing could be attributed, report what IS true:
+  // sources were found, no figure was stated.
+  const noFigure = (val==null || val==="");
+  const confWord = noFigure?"no figure stated":meta.w;
+  f.append(text(srcs.length?confWord+" · "+srcs.length+" source"+(srcs.length===1?"":"s"):confWord));
+  e.append(l,v,f);
+  e.setAttribute("role","group");
+  e.setAttribute("aria-label",String(c.label)+", "+String(val==null?"no value":val)+", "+meta.w+
+                 ", "+srcs.length+" sources"+(dis?", disputed by another figure":""));
+  if(dis&&dis.value!=null){const d=$("div","dl");d.style.color="var(--amber-ink)";
+    d.append(text("conflicting: "+dis.value+(dis.source?" ("+dis.source+")":"")));e.append(d);}
+  if(srcs.length){ // progressive disclosure: <details> works without JS and is keyboard-navigable
+    const det=document.createElement("details");const sum=document.createElement("summary");
+    sum.style.cssText="cursor:pointer;font-size:11px;color:var(--ink-muted);font-family:var(--font-mono);margin-top:8px";
+    sum.append(text("sources"));det.append(sum);
+    const ul=document.createElement("ul");ul.style.cssText="margin:6px 0 0;padding-left:18px;font-size:12px";
+    srcs.forEach(s=>{const li=document.createElement("li");const label=String((s&&s.title)||(s&&s.url)||s||"");
+      if(s&&isSafeUrl(s.url)){const a=document.createElement("a");a.setAttribute("href",s.url);
+        a.setAttribute("rel","noopener noreferrer");a.setAttribute("target","_blank");a.append(text(label));li.append(a);}
+      else li.append(text(label));   // unvetted scheme: inert text, never a link
+      ul.append(li);});
+    det.append(ul);e.append(det);}
+  return e;
+}
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
 
 function kids(c,ctx,e){ for(const id of (c.children||[])){ const child=ctx.byId[id]; if(child) e.append(renderComponent(child,ctx)); } }
-function renderComponent(c,ctx){ const r=RENDERERS[c.type]; if(!r){ const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(text("[skipped unknown type: "+c.type+"]"));return s;} return r(c,ctx); }
+// A catalog can run ahead of a client: a surface validated against a newer
+// catalog may name a type this file has no renderer for. Rather than drop the
+// content, a component may declare a `fallback` naming an OLDER catalog type to
+// draw instead — the viewer loses the richer widget, never the information.
+// Exactly ONE hop is followed (the `hop` guard), so a fallback chain or a
+// self-referential fallback cannot recurse.
+function renderComponent(c,ctx,hop){ const r=RENDERERS[c.type]; if(r) return r(c,ctx);
+  const fb=c.fallback&&RENDERERS[c.fallback];
+  if(fb&&!hop) return renderComponent(Object.assign({},c,{type:c.fallback}),ctx,1);
+  const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(text("[skipped unknown type: "+c.type+"]"));return s; }
 
 function sparkSvg(vals,tone){const w=180,h=44,max=Math.max(...vals,1),min=Math.min(...vals,0);const rng=(max-min)||1;
   const pts=vals.map((v,i)=>`${i/(vals.length-1||1)*w},${h-6-(v-min)/rng*(h-12)}`).join(" ");
@@ -257,6 +571,16 @@ async function boot(){
     document.getElementById("badge").textContent = `harness-composed by ${data.provider} · ${data.component_count} components · ${v.rejected||0} rejected`;
     document.getElementById("meta").textContent = `composed by ${data.model} inside the live graph — 0 model-authored code`;
     document.getElementById("run").textContent = "run " + (data.run_id||"harness");
+    render(data.surface); return;
+  }
+  if (RUN === "gallery") {
+    // The whole catalog as one ordinary surface, drawn by the RENDERERS map
+    // below — no bespoke gallery markup, so what you see is what an agent gets.
+    const res = await fetch(`/v1/gallery`); const data = await res.json();
+    document.getElementById("badge").textContent =
+      `catalog · ${data.catalog_types} types · ${data.component_count} components · ${data.clean ? "0 rejected" : "UNSAFE"}`;
+    document.getElementById("meta").textContent = "every type the agent may name, rendered by the real client";
+    document.getElementById("run").textContent = "gallery";
     render(data.surface); return;
   }
   const path = RUN.includes("corpus") ? "dashboard" : "surface";

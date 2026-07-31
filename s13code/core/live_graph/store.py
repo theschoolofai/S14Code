@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import time
 from pathlib import Path
 from typing import Any
 
@@ -54,6 +55,16 @@ class GraphStore:
         columns = {row["name"] for row in self.db.execute("PRAGMA table_info(runs)")}
         if "context_json" not in columns:
             self.db.execute("ALTER TABLE runs ADD COLUMN context_json TEXT NOT NULL DEFAULT '{}'")
+        # Additive: existing rows read back NULL (no timing recorded before
+        # this column existed), every prior caller is unaffected.
+        node_columns = {row["name"] for row in self.db.execute("PRAGMA table_info(nodes)")}
+        if "started_at" not in node_columns:
+            self.db.execute("ALTER TABLE nodes ADD COLUMN started_at REAL")
+        if "duration_ms" not in node_columns:
+            self.db.execute("ALTER TABLE nodes ADD COLUMN duration_ms REAL")
+        event_columns = {row["name"] for row in self.db.execute("PRAGMA table_info(events)")}
+        if "duration_ms" not in event_columns:
+            self.db.execute("ALTER TABLE events ADD COLUMN duration_ms REAL")
         self.db.commit()
 
     def start(self, run_id: str, *, context: dict[str, Any] | None = None) -> bool:
@@ -91,7 +102,8 @@ class GraphStore:
         rows = self.db.execute("SELECT * FROM nodes WHERE run_id=? ORDER BY id", (run_id,)).fetchall()
         nodes = {r["id"]: {"id": r["id"], "skill": r["skill"], "input": json.loads(r["input_json"]),
                             "metadata": json.loads(r["metadata_json"]), "state": r["state"],
-                            "result": json.loads(r["result_json"]) if r["result_json"] else None}
+                            "result": json.loads(r["result_json"]) if r["result_json"] else None,
+                            "duration_ms": r["duration_ms"]}
                  for r in rows}
         edges = tuple((r["parent_id"], r["child_id"]) for r in self.db.execute(
             "SELECT parent_id, child_id FROM edges WHERE run_id=? ORDER BY parent_id, child_id", (run_id,)))
@@ -110,19 +122,24 @@ class GraphStore:
     def mark_running(self, run_id: str, tasks: list[TaskSpec]) -> None:
         with self.db:
             for task in tasks:
-                self.db.execute("UPDATE nodes SET state=? WHERE run_id=? AND id=? AND state=?",
-                                (NodeState.RUNNING, run_id, task.id, NodeState.PENDING))
+                self.db.execute("UPDATE nodes SET state=?, started_at=? WHERE run_id=? AND id=? AND state=?",
+                                (NodeState.RUNNING, time.time(), run_id, task.id, NodeState.PENDING))
                 self._event(run_id, "task_started", task.id,
                             {"skill": task.skill, "agent": task.metadata.get("agent", task.skill)})
 
     def record_outcome(self, run_id: str, node_id: str, success: bool, payload: dict[str, Any]) -> Event:
         state = NodeState.SUCCEEDED if success else NodeState.FAILED
         with self.db:
-            row = self.db.execute("UPDATE nodes SET state=?, result_json=? WHERE run_id=? AND id=? AND state=?",
-                                  (state, json.dumps(payload), run_id, node_id, NodeState.RUNNING))
+            started = self.db.execute("SELECT started_at FROM nodes WHERE run_id=? AND id=?",
+                                      (run_id, node_id)).fetchone()
+            duration_ms = (time.time() - started["started_at"]) * 1000 if started and started["started_at"] else None
+            row = self.db.execute(
+                "UPDATE nodes SET state=?, result_json=?, duration_ms=? WHERE run_id=? AND id=? AND state=?",
+                (state, json.dumps(payload), duration_ms, run_id, node_id, NodeState.RUNNING))
             if row.rowcount != 1:
                 raise GraphMutationError(f"cannot record outcome for {node_id}: it is not running")
-            return self._event(run_id, "task_succeeded" if success else "task_failed", node_id, payload)
+            return self._event(run_id, "task_succeeded" if success else "task_failed", node_id, payload,
+                               duration_ms=duration_ms)
 
     def pending_planner_events(self, run_id: str) -> list[Event]:
         """Events whose graph mutation was not committed yet."""
@@ -166,7 +183,7 @@ class GraphStore:
                     raise GraphMutationError(f"can only resume waiting task {nid}")
 
             for task in patch.add:
-                self.db.execute("INSERT INTO nodes VALUES (?, ?, ?, ?, ?, ?, NULL)",
+                self.db.execute("INSERT INTO nodes VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, NULL)",
                                 (run_id, task.id, task.skill, json.dumps(task.input), json.dumps(task.metadata), NodeState.PENDING))
             for parent, child in patch.connect:
                 self.db.execute("INSERT OR IGNORE INTO edges VALUES (?, ?, ?)", (run_id, parent, child))
@@ -225,14 +242,17 @@ class GraphStore:
                 raise KeyError(run_id)
             return self._event(run_id, kind, node_id, payload)
 
-    def _event(self, run_id: str, kind: str, node_id: str | None, payload: dict[str, Any]) -> Event:
-        cursor = self.db.execute("INSERT INTO events(run_id, kind, node_id, payload_json) VALUES (?, ?, ?, ?)",
-                                 (run_id, kind, node_id, json.dumps(payload)))
-        return Event(cursor.lastrowid, kind, node_id, payload)
+    def _event(self, run_id: str, kind: str, node_id: str | None, payload: dict[str, Any],
+              *, duration_ms: float | None = None) -> Event:
+        cursor = self.db.execute(
+            "INSERT INTO events(run_id, kind, node_id, payload_json, duration_ms) VALUES (?, ?, ?, ?, ?)",
+            (run_id, kind, node_id, json.dumps(payload), duration_ms))
+        return Event(cursor.lastrowid, kind, node_id, payload, duration_ms)
 
     @staticmethod
     def _event_from_row(row: sqlite3.Row) -> Event:
-        return Event(row["sequence"], row["kind"], row["node_id"], json.loads(row["payload_json"]))
+        return Event(row["sequence"], row["kind"], row["node_id"], json.loads(row["payload_json"]),
+                     row["duration_ms"])
 
     def _has_cycle(self, run_id: str) -> bool:
         edges: dict[str, list[str]] = {}
