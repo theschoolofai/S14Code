@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>S14 app — the agent answers in UI</title>
+<title>S14 JEE Studio</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
   :root{
@@ -53,6 +53,15 @@
   .tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
   .tabs button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-mono);color:var(--ink-muted)}
   .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .StepWizard{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
+  .StepWizard .st{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:10px;font-family:var(--font-mono)}
+  .StepWizard .track{display:grid;gap:8px}
+  .StepWizard button{display:grid;grid-template-columns:26px 1fr;gap:10px;text-align:left;border:1px solid var(--rule);border-radius:10px;background:var(--surface-alt);padding:10px 12px;color:var(--ink-body);cursor:pointer}
+  .StepWizard button.current{border-color:var(--accent);background:var(--accent-soft)}
+  .StepWizard button.done{border-color:var(--green);background:var(--green-soft)}
+  .StepWizard .num{width:26px;height:26px;border-radius:999px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--rule-strong);font-family:var(--font-mono);font-size:12px;font-weight:700}
+  .StepWizard .label{font-weight:650;color:var(--ink)}
+  .StepWizard .detail{font-size:12px;color:var(--ink-muted);line-height:1.45;margin-top:2px}
   .Notice{border-left:4px solid var(--amber);background:var(--amber-soft);border-radius:10px;padding:12px 14px}
   .actbtn{width:100%;text-align:center;border:1px solid var(--rule-strong);background:var(--surface);border-radius:12px;padding:14px;font-weight:600;font-size:15px;cursor:pointer;color:var(--ink);transition:all 120ms}
   .actbtn:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
@@ -67,13 +76,13 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="head"><span>S14 app · the agent answers in UI</span><span style="margin-left:auto">bare-minimal shell · the protocol does the work</span></div>
+  <div class="head"><span>JEE Studio</span><span style="margin-left:auto">S14 composed interface</span></div>
   <div class="startbar">
-    <input id="prompt" value="Teach me for IIT JEE. Ask me which subject to study." />
+    <input id="prompt" value="Teach me for IIT JEE with a three-step study path. Ask me which subject to study." aria-label="Goal" />
     <button id="ask">Ask</button>
   </div>
   <div class="status" id="status"></div>
-  <div class="screen"><div id="mount"><div class="empty">Type a goal and press Ask. Every reply is a live interface the agent composes.</div></div></div>
+  <div class="screen"><div id="mount"><div class="empty">Ready.</div></div></div>
   <div class="crumbs" id="crumbs"></div>
 </div>
 <script>
@@ -128,6 +137,7 @@ const R={
   BarChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"chart"));e.append(t,bars(resolve(c.data,x.dm)||[],c.xKey,c.yKey));return e;},
   DataTable:(c,x)=>table(c,x),
   Tabs:(c,x)=>tabs(c,x),
+  StepWizard:(c,x)=>stepWizard(c,x),
   Button:(c,x)=>{const b=$("button","actbtn");let lab=resolve(c.label,x.dm);if(lab&&typeof lab==="object")lab=lab.label||lab.name||lab.text||lab.id||"Choose";lab=String(lab==null?"Choose":lab);b.append(T(lab));b.onclick=()=>choose(lab);return b;},
   Image:(c,x)=>{const e=$("div","chart");e.append(T("[image]"));return e;},
   TextField:(c,x)=>{const w=$("div");if(c.label){const l=$("div","lab");l.append(T(c.label));w.append(l);}const i=$("input","field");i.placeholder=c.placeholder||"";w.append(i);return w;},
@@ -146,17 +156,18 @@ function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").ma
 function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);const tabIds=c.children||[];function show(i){body.textContent="";const cc=x.byId[tabIds[i]];if(cc)body.append(node(cc,x));[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}
   (String(c.labels||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});
   if(tabIds.length)show(0);return wrap;}
+function stepWizard(c,x){const e=$("div","StepWizard");const title=$("div","st");title.append(T(c.title||"steps"));const steps=resolve(c.steps,x.dm)||[];const current=resolve(c.current,x.dm);const active=typeof current==="number"?current:steps.findIndex(s=>String(s.label||s.id||"")===String(current));const track=$("div","track");steps.forEach((step,i)=>{const status=step.status||(i<active?"done":(i===active?"current":"next"));const b=$("button",status);const num=$("span","num");num.append(T(status==="done"?"✓":i+1));const copy=$("span");const lab=$("div","label");lab.append(T(step.label||("Step "+(i+1))));copy.append(lab);if(step.detail){const det=$("div","detail");det.append(T(step.detail));copy.append(det);}b.append(num,copy);b.onclick=()=>choose(step.label||("Step "+(i+1)));track.append(b);});e.append(title,track);return e;}
 
 function render(surface){const byId={};surface.components.forEach(c=>byId[c.id]=c);const x={byId,dm:surface.dataModel||{}};const m=document.getElementById("mount");m.textContent="";m.append(node(byId[surface.root],x));}
 
 // ---- the app loop: a tap becomes the next turn ----
-function setStatus(html){document.getElementById("status").innerHTML=html;}
+function setStatus(kind,label,detail){const s=document.getElementById("status");s.textContent="";const p=$("span","pill "+kind);p.append(T(label));s.append(p,T(" "+detail));}
 function crumbs(){document.getElementById("crumbs").textContent = convo.length? "conversation: "+convo.join("  ›  ") : "";}
 
 async function runTurn(userText){
   convo.push(userText);
   crumbs();
-  setStatus('<span class="pill think">composing…</span> the agent is writing an interface for: "'+userText+'"');
+  setStatus("think","composing...","building the next interface for this turn");
   const goal = convo.length===1 ? convo[0]
      : convo[0] + "\nSo far the user then picked: " + convo.slice(1).join(", then ") + ".\nRespond with the next interface for that.";
   const res = await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -165,8 +176,8 @@ async function runTurn(userText){
   const rid = run.run_id;
   const c = await (await fetch(API+"/v1/runs/"+rid+"/composed")).json();
   if(c.surface){ render(c.surface);
-    setStatus('<span class="pill good">'+(c.provider||"gemini")+' · '+c.component_count+' components · 0 executable</span> composed live, validated in-catalog'); }
-  else { setStatus("no interface composed"); }
+    setStatus("good",(c.provider||"gemini")+" · "+c.component_count+" components","validated in-catalog"); }
+  else { setStatus("think","no interface","composition did not produce a renderable surface"); }
 }
 function choose(label){ if(label) runTurn(label); }
 

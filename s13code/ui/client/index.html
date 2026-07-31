@@ -51,6 +51,15 @@
   .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .tl{background:#0f1117;border-radius:12px;padding:12px 14px;font-family:var(--font-mono);font-size:12px;color:#c8d0e0;max-height:220px;overflow:auto}
   .tl .r{display:flex;gap:10px;padding:2px 0}.tl .s{color:#6b7594}.tl .k{color:#4ade80}.tl .n{color:#c8d0e0}
+  .StepWizard{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
+  .StepWizard .st{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:10px;font-family:var(--font-mono)}
+  .StepWizard .track{display:grid;gap:8px}
+  .StepWizard button{display:grid;grid-template-columns:26px 1fr;gap:10px;text-align:left;border:1px solid var(--rule);border-radius:10px;background:var(--surface-alt);padding:10px 12px;color:var(--ink-body);cursor:pointer}
+  .StepWizard button.current{border-color:var(--accent);background:var(--accent-soft)}
+  .StepWizard button.done{border-color:var(--green);background:var(--green-soft)}
+  .StepWizard .num{width:26px;height:26px;border-radius:999px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--rule-strong);font-family:var(--font-mono);font-size:12px;font-weight:700}
+  .StepWizard .label{font-weight:650;color:var(--ink)}
+  .StepWizard .detail{font-size:12px;color:var(--ink-muted);line-height:1.45;margin-top:2px}
   .Approval{background:var(--surface);border:1px solid var(--amber);border-radius:12px;padding:16px;border-left:4px solid var(--amber)}
   .Approval .sm{font-weight:600;margin-bottom:6px}.Approval pre{background:var(--surface-alt);padding:8px;border-radius:8px;font-size:12px;overflow:auto;font-family:var(--font-mono)}
   .Approval .btns{display:flex;gap:8px;margin-top:10px}
@@ -134,6 +143,7 @@ const RENDERERS = {
     e.append(barSvg(resolve(c.data,ctx.dm)||[],c.xKey,c.yKey));return e;},
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
+  StepWizard:(c,ctx)=>renderStepWizard(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
 };
 
@@ -180,6 +190,15 @@ function renderTimeline(c,ctx){const e=$("div","chart");const t=$("div","ct");t.
     const s=$("span","s");s.append(text(String(ev.seq!=null?ev.seq:(ev.time!=null?ev.time:"")).padStart(2)));
     const k=$("span","k");k.append(text(ev.kind!=null?ev.kind:(ev.label!=null?ev.label:"")));
     const n=$("span","n");n.append(text(ev.node!=null?ev.node:""));r.append(s,k,n);box.append(r);});e.append(box);return e;}
+
+function renderStepWizard(c,ctx){const e=$("div","StepWizard");const title=$("div","st");title.append(text(c.title||"steps"));e.append(title);
+  const steps=resolve(c.steps,ctx.dm)||[];const current=resolve(c.current,ctx.dm);const active=typeof current==="number"?current:steps.findIndex(s=>String(s.label||s.id||"")===String(current));
+  const track=$("div","track");steps.forEach((step,i)=>{const status=step.status||(i<active?"done":(i===active?"current":"next"));const b=$("button",status);
+    const num=$("span","num");num.append(text(status==="done"?"✓":i+1));const copy=$("span");
+    const lab=$("div","label");lab.append(text(step.label||("Step "+(i+1))));copy.append(lab);
+    if(step.detail){const det=$("div","detail");det.append(text(step.detail));copy.append(det);}
+    b.append(num,copy);b.onclick=()=>emitAction(c.onSelect&&c.onSelect.action,{index:i,label:step.label||("Step "+(i+1))});track.append(b);});
+  e.append(track);return e;}
 
 function renderApproval(c,ctx){const e=$("div","Approval");const sm=$("div","sm");sm.append(text(resolve(c.summary,ctx.dm)));
   const pre=$("pre");pre.append(text(JSON.stringify(resolve(c.params,ctx.dm),null,2)));const btns=$("div","btns");
