@@ -390,8 +390,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +402,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "RiskHeatmap",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -608,3 +608,119 @@ def test_render_client_reconnects_and_rebuilds_from_a_state_snapshot():
     assert "rebuiltFromSnapshot" in html
     # The reducer still only ever touches text nodes (contract preserved above).
     assert "createTextNode" in html
+
+
+# --------------------------------------------------------------------------- #
+# RiskHeatmap — registration, validation, and renderer safety
+# --------------------------------------------------------------------------- #
+
+def test_risk_heatmap_is_registered_with_text_and_binding_props_only():
+    assert "RiskHeatmap" in COMPONENTS
+    spec = COMPONENTS["RiskHeatmap"]
+    assert spec.source == "custom"
+    assert set(spec.props) == {"title", "data", "xAxisLabel", "yAxisLabel"}
+    assert spec.props["title"].kind == "text"
+    assert spec.props["data"].kind == "binding"
+    assert spec.props["xAxisLabel"].kind == "text"
+    assert spec.props["yAxisLabel"].kind == "text"
+    assert "html" not in spec.props and "rawHtml" not in spec.props
+
+
+def test_risk_heatmap_validates_clean_with_bound_data():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["h", "hm"]},
+            {"id": "h", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+            {"id": "hm", "type": "RiskHeatmap", "title": "Risk vs Opportunity",
+             "data": {"$bind": "/heatmap_data"},
+             "xAxisLabel": "Risk Score", "yAxisLabel": "Opportunity Score"},
+        ],
+        "dataModel": {
+            "title": "Investment Risk Matrix",
+            "heatmap_data": [
+                {"name": "Stripe", "xScore": 3.2, "yScore": 8.8},
+                {"name": "Plaid", "xScore": 5.1, "yScore": 7.4},
+            ],
+        },
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert any(c["type"] == "RiskHeatmap" for c in result.accepted)
+
+
+def test_risk_heatmap_renderer_uses_no_innerhtml_or_eval():
+    for name in ("index.html", "app.html"):
+        html = (_BUILD_ROOT / "s13code" / "ui" / "client" / name).read_text()
+        assert "renderRiskHeatmap" in html
+        assert "createElementNS" in html
+        assert "textContent" in html
+        assert not re.search(r"innerHTML\s*=", html)
+        assert not re.search(r"\beval\s*\(", html)
+
+
+# --------------------------------------------------------------------------- #
+# Adversarial tests — investment due-diligence domain
+# --------------------------------------------------------------------------- #
+
+def test_adversarial_raw_html_competitor_deck_rejected_by_catalog():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["title", "evil"]},
+            {"id": "title", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+            {"id": "evil", "type": "RawHtml",
+             "html": "<iframe src='https://competitor.example/internal-deck'></iframe>"},
+        ],
+        "dataModel": {"title": "Competitor Analysis"},
+    }
+    result = validate_surface(surface)
+    assert not result.ok
+    assert result.rejections[0].invariant == Invariant.CATALOG
+    assert any(c.get("type") == "Text" for c in result.accepted)
+    assert all(c.get("type") != "RawHtml" for c in result.accepted)
+
+
+def test_adversarial_injected_handler_in_company_description_rejected():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["title", "desc"]},
+            {"id": "title", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+            {"id": "desc", "type": "Text",
+             "text": "<img src=x onerror=alert(1) onclick=bad()>Click me</img>"},
+        ],
+        "dataModel": {"title": "Company Profile"},
+    }
+    result = validate_surface(surface)
+    assert not result.ok
+    assert result.rejections[0].invariant == Invariant.DATA_NOT_CODE
+    assert any(c.get("type") == "Text" for c in result.accepted)
+
+
+def test_adversarial_fake_transfer_funds_action_in_approval_rejected():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["card"]},
+            {"id": "card", "type": "ApprovalCard",
+             "summary": {"$bind": "/summary"}, "params": {"$bind": "/params"},
+             "confirm": {"action": "transfer_funds"}, "reject": {"action": "reject"}},
+        ],
+        "dataModel": {"summary": "Approve investment?", "params": {"amount": 1000}},
+    }
+    result = validate_surface(surface)
+    assert not result.ok
+    assert result.rejections[0].invariant == Invariant.EVENT
+    assert "transfer_funds" in result.rejections[0].reason
+
+
+def test_adversarial_parameter_tampering_on_hitl_action_refused(client):
+    resp = client.post("/v1/action", json={
+        "run_id": "run-1", "node_id": "approve_invest",
+        "action": "approve",
+        "args": {"amount": 1000, "to": "acct-1", "extra": "sneaked"},
+        "pending_params": {"amount": 1000, "to": "acct-1"},
+    })
+    assert resp.status_code == 409
+    assert "bound to final params" in resp.json()["detail"]

@@ -9,7 +9,10 @@ import httpx
 
 class GatewayClient:
     def __init__(self, base_url: str | None = None, *, client: httpx.AsyncClient | None = None) -> None:
-        self.base_url = (base_url or os.getenv("GLC_BASE_URL", "http://127.0.0.1:8111")).rstrip("/")
+        base_url = base_url or os.getenv("GLC_BASE_URL")
+        if not base_url:
+            raise RuntimeError("GLC_BASE_URL is required. See .env.example.")
+        self.base_url = base_url.rstrip("/")
         self._client = client or httpx.AsyncClient(timeout=120)
         self._owns_client = client is None
 

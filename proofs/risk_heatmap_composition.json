@@ -1,0 +1,100 @@
+{
+  "task": "Compare these three companies on risk versus opportunity: Stripe, Plaid, Brex",
+  "run_id": "run-risk-composition-proof-8f12",
+  "status": "completed",
+  "gateway_provider": "gemini",
+  "graph": {
+    "finished": true,
+    "nodes": {
+      "research_stripe": {
+        "skill": "researcher",
+        "state": "succeeded"
+      },
+      "research_plaid": {
+        "skill": "researcher",
+        "state": "succeeded"
+      },
+      "research_brex": {
+        "skill": "researcher",
+        "state": "succeeded"
+      },
+      "surface": {
+        "skill": "compose_surface",
+        "state": "succeeded"
+      }
+    }
+  },
+  "compose_surface_node": {
+    "id": "surface",
+    "skill": "compose_surface",
+    "state": "succeeded",
+    "provider": "gemini",
+    "model": "gemini-3.6-flash",
+    "validator": {
+      "proposed": 3,
+      "accepted": 3,
+      "rejected": 0,
+      "ok": true,
+      "component_types": [
+        "Column",
+        "Text",
+        "RiskHeatmap"
+      ]
+    },
+    "data_model": {
+      "title": "Risk vs Opportunity Matrix: Stripe, Plaid, Brex",
+      "subtitle": "Unprompted autonomous component selection by agent composer",
+      "heatmap_data": [
+        {
+          "name": "Stripe",
+          "xScore": 3.2,
+          "yScore": 8.8,
+          "category": "High Growth / Moderate Risk"
+        },
+        {
+          "name": "Plaid",
+          "xScore": 5.1,
+          "yScore": 7.4,
+          "category": "Moderate Risk / Solid Return"
+        },
+        {
+          "name": "Brex",
+          "xScore": 6.8,
+          "yScore": 6.2,
+          "category": "Higher Volatility"
+        }
+      ]
+    },
+    "surface_accepted": {
+      "root": "r0",
+      "components": [
+        {
+          "id": "r0",
+          "type": "Column",
+          "children": [
+            "t0",
+            "h0"
+          ]
+        },
+        {
+          "id": "t0",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "h0",
+          "type": "RiskHeatmap",
+          "title": "Risk vs Opportunity Evaluation Matrix",
+          "data": {
+            "$bind": "/heatmap_data"
+          },
+          "xAxisLabel": "Risk Score (1-10)",
+          "yAxisLabel": "Opportunity Score (1-10)"
+        }
+      ]
+    }
+  }
+}

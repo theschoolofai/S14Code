@@ -641,7 +641,10 @@ class S13Runtime:
         # tree is passed through the S14 validator before it becomes the result.
         async def _gateway_surface_call(surface_prompt: str, system: str) -> dict[str, Any]:
             import httpx as _httpx
-            base = os.getenv("GLC_BASE_URL", "http://127.0.0.1:8111").rstrip("/")
+            base = os.getenv("GLC_BASE_URL")
+            if not base:
+                raise RuntimeError("GLC_BASE_URL is required. See .env.example.")
+            base = base.rstrip("/")
             payload = {"messages": [{"role": "user", "content": surface_prompt}], "system": system,
                        "max_tokens": int(os.getenv("S14_SURFACE_MAX_TOKENS", "4000")),
                        "temperature": 0, "reasoning": "off", "agent": "s14_compose_surface",

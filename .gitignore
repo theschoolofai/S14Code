@@ -1,6 +1,9 @@
 .env
 .env.*
 !.env.example
+*.env.local
+*.key
+*.pem
 .venv/
 __pycache__/
 *.py[cod]
@@ -11,6 +14,10 @@ htmlcov/
 *.sqlite
 *.sqlite3
 *.db
+node_modules/
+dist/
+build/
+.s13code/
 benchmark.json
 benchmark.md
 a2a-proof.json

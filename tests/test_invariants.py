@@ -42,6 +42,25 @@ def test_catalog_invariant_names_unknown_type():
     assert result.rejections[0].invariant == Invariant.CATALOG
 
 
+def test_domain_adversarial_attacks_rejected_and_safe_part_renders():
+    """The four due-diligence attacks: each is refused by the right invariant
+    and the safe heading still renders."""
+    cases = {
+        "deck-as-raw-html": Invariant.CATALOG,
+        "fetched-description-onerror": Invariant.DATA_NOT_CODE,
+        "approval-disguised-transfer": Invariant.EVENT,
+        "unregistered-component-type": Invariant.CATALOG,
+    }
+    by_name = {c["name"]: c for c in load_injections()["cases"]}
+    for name, expected in cases.items():
+        result = validate_surface(by_name[name]["surface"])
+        assert not result.ok, f"{name} was not rejected"
+        assert expected in {r.invariant for r in result.rejections}, (name, result.rejections)
+        # The safe Text heading survives; only the offending node is dropped.
+        assert any(c.get("type") == "Text" for c in result.accepted), name
+        assert all(c.get("type") != "RawHtml" and c.get("type") != "WebView" for c in result.accepted), name
+
+
 def test_event_invariant_blocks_unregistered_action():
     surface = {
         "root": "r",

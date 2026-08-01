@@ -14,6 +14,7 @@ from pathlib import Path
 import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
@@ -28,6 +29,9 @@ from s13code.runtime import S13Runtime  # noqa: E402
 from s13code.ui.routes import router as ui_router  # noqa: E402
 
 PORT = int(os.getenv("S13_PORT", "8113"))
+HOST = os.getenv("S13_HOST", "127.0.0.1")
+A2A_GRPC_HOST = os.getenv("S13_A2A_GRPC_HOST", "127.0.0.1")
+A2A_GRPC_PORT = int(os.getenv("S13_A2A_GRPC_PORT", "8114"))
 
 
 def _secrets(name: str) -> set[str]:
@@ -39,14 +43,14 @@ async def lifespan(app: FastAPI):
     app.state.gateway = GatewayClient()
     app.state.s13_runtime = S13Runtime()
     bearers, api_keys = _secrets("S13_A2A_BEARER_TOKENS"), _secrets("S13_A2A_API_KEYS")
-    base_url = os.getenv("S13_BASE_URL", f"http://127.0.0.1:{PORT}").rstrip("/")
+    base_url = os.getenv("S13_BASE_URL", f"http://{HOST}:{PORT}").rstrip("/")
     card = {
         "name": "S13 live-agent runtime",
         "description": "Outcome-driven graph, scoped memory, semantic indexing and A2A delegation",
         "version": "0.1.0",
         "supportedInterfaces": [
             {"url": f"{base_url}/a2a", "protocolBinding": "JSONRPC", "protocolVersion": "1.0"},
-            {"url": f"dns:///127.0.0.1:{int(os.getenv('S13_A2A_GRPC_PORT', '8114'))}",
+            {"url": f"dns:///{A2A_GRPC_HOST}:{A2A_GRPC_PORT}",
              "protocolBinding": "GRPC", "protocolVersion": "1.0"},
         ],
         "capabilities": {"streaming": True, "pushNotifications": True},
@@ -90,7 +94,7 @@ async def lifespan(app: FastAPI):
     if os.getenv("S13_A2A_GRPC_ENABLED", "1").lower() not in {"0", "false", "no"}:
         app.state.s13_a2a_grpc = OfficialA2AServer(
             app.state.s13_a2a, data_dir / "a2a.sqlite",
-            address=f"127.0.0.1:{int(os.getenv('S13_A2A_GRPC_PORT', '8114'))}",
+            address=f"{A2A_GRPC_HOST}:{A2A_GRPC_PORT}",
             bearer_tokens=bearers, api_keys=api_keys,
         )
         await app.state.s13_a2a_grpc.start()
@@ -105,6 +109,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="S13Code — Live Graph, Memory, Semantic Chunking and A2A", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.getenv("S13_CORS_ORIGINS", "*").split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(routes.router)
 app.include_router(a2a_routes.router)
 app.include_router(ui_router)

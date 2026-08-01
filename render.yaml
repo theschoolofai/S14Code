@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: s14code
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    branch: main
+    rootDir: .
+    buildCommand: docker build -t s14code .
+    startCommand: uv run s14code serve --host 0.0.0.0
+    envVars:
+      - key: GLC_BASE_URL
+        value: https://glc-v3.onrender.com
+      - key: S13_PORT
+        value: "8113"
+      - key: S13_HOST
+        value: "0.0.0.0"
+      - key: S13_A2A_GRPC_HOST
+        value: "0.0.0.0"
+      - key: S13_A2A_GRPC_PORT
+        value: "8114"
+      - key: S13_GATEWAY_PROVIDER
+        value: gemini
+    healthCheckPath: /healthz

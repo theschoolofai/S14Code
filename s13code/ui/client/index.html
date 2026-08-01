@@ -135,7 +135,19 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  RiskHeatmap:(c,ctx)=>renderRiskHeatmap(c,ctx),
 };
+
+function renderRiskHeatmap(c,ctx){const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"Risk vs Opportunity Matrix"));e.append(t);
+  const items=resolve(c.data,ctx.dm)||[];const xl=c.xAxisLabel||"Risk";const yl=c.yAxisLabel||"Opportunity";
+  const ns="http://www.w3.org/2000/svg";const w=300,h=180,pad=36;const svg=document.createElementNS(ns,"svg");
+  svg.setAttribute("viewBox",`0 0 ${w} ${h}`);svg.setAttribute("width","100%");svg.setAttribute("height","auto");
+  const qW=(w-pad*2)/2,qH=(h-pad*2)/2;const colors=["rgba(220,38,38,.08)","rgba(217,119,6,.08)","rgba(37,99,235,.08)","rgba(22,163,74,.08)"];
+  for(let i=0;i<2;i++){for(let j=0;j<2;j++){const rect=document.createElementNS(ns,"rect");rect.setAttribute("x",pad+i*qW);rect.setAttribute("y",pad+j*qH);rect.setAttribute("width",qW);rect.setAttribute("height",qH);rect.setAttribute("fill",colors[j*2+i]);rect.setAttribute("stroke","var(--rule)");rect.setAttribute("stroke-width","0.5");svg.append(rect);}}
+  const xt=document.createElementNS(ns,"text");xt.setAttribute("x",w/2);xt.setAttribute("y",h-6);xt.setAttribute("text-anchor","middle");xt.setAttribute("font-size","10");xt.setAttribute("font-family","var(--font-mono)");xt.setAttribute("fill","var(--ink-muted)");xt.textContent=xl+" →";svg.append(xt);
+  const yt=document.createElementNS(ns,"text");yt.setAttribute("x",10);yt.setAttribute("y",h/2);yt.setAttribute("text-anchor","middle");yt.setAttribute("font-size","10");yt.setAttribute("font-family","var(--font-mono)");yt.setAttribute("fill","var(--ink-muted)");yt.setAttribute("transform",`rotate(-90 10 ${h/2})`);yt.textContent=yl+" →";svg.append(yt);
+  items.forEach(it=>{const name=String(it.name||it.label||it.entity||"Item");const xVal=+(it.xScore??it.riskScore??it.x??5);const yVal=+(it.yScore??it.opportunityScore??it.y??5);const cx=pad+(Math.min(10,Math.max(0,xVal))/10)*(w-pad*2);const cy=h-pad-(Math.min(10,Math.max(0,yVal))/10)*(h-pad*2);const dot=document.createElementNS(ns,"circle");dot.setAttribute("cx",cx);dot.setAttribute("cy",cy);dot.setAttribute("r",5);dot.setAttribute("fill","var(--accent)");dot.setAttribute("stroke","#fff");dot.setAttribute("stroke-width","1.5");svg.append(dot);const lbl=document.createElementNS(ns,"text");lbl.setAttribute("x",cx+7);lbl.setAttribute("y",cy+3);lbl.setAttribute("font-size","10");lbl.setAttribute("font-weight","600");lbl.setAttribute("font-family","var(--font-mono)");lbl.setAttribute("fill","var(--ink)");lbl.textContent=name;svg.append(lbl);});
+  e.append(svg);return e;}
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
 
