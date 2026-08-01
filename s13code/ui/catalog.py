@@ -10,7 +10,7 @@ The catalog is aligned to A2UI's Basic component set: the 15 layout / text /
 input / container types A2UI Basic already defines are adopted under their real
 A2UI names (``source="a2ui-basic"``). Only the components A2UI Basic genuinely
 lacks — charts, tiles, tables, timelines, notices, and the approval card — are
-kept as clearly labelled custom extensions (``source="custom"``). Twenty-three
+kept as clearly labelled custom extensions (``source="custom"``). Twenty-four
 types in all; a student can read every one and the validator can prove coverage.
 
 Property kinds:
@@ -47,8 +47,8 @@ class ComponentSpec:
 _TONE = PropSpec("enum", ("neutral", "good", "warn", "bad"))
 
 
-# The 23 component types the render client knows how to draw. The first 15 are
-# A2UI Basic's own names; the last 8 are custom extensions A2UI Basic lacks.
+# The 24 component types the render client knows how to draw. The first 15 are
+# A2UI Basic's own names; the last 9 are custom extensions A2UI Basic lacks.
 COMPONENTS: dict[str, ComponentSpec] = {
     # --- A2UI Basic: layout / text / media / inputs / containers (15) --------
     "Row": ComponentSpec("Row", {
@@ -88,7 +88,7 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "Modal": ComponentSpec("Modal", {
         "title": PropSpec("text"), "children": PropSpec("ref"), "open": PropSpec("binding"),
     }, source="a2ui-basic"),
-    # --- Custom extensions: what A2UI Basic does not define (8) ---------------
+    # --- Custom extensions: what A2UI Basic does not define (9) ---------------
     "BarChart": ComponentSpec("BarChart", {
         "title": PropSpec("text"), "data": PropSpec("binding"),
         "xKey": PropSpec("text"), "yKey": PropSpec("text"),
@@ -116,6 +116,17 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "ApprovalCard": ComponentSpec("ApprovalCard", {
         "summary": PropSpec("binding"), "params": PropSpec("binding"),
         "confirm": PropSpec("action"), "reject": PropSpec("action"),
+    }, source="custom"),
+    # A multi-line draft the agent wrote and the user may revise before sending
+    # it back. Every other input type in this catalog is single-value; this is
+    # the only one that carries prose the user authored. The edited text leaves
+    # through `submit`, which must name a REGISTERED action like any other event.
+    "DraftEditor": ComponentSpec("DraftEditor", {
+        "label": PropSpec("text"),          # literal caption
+        "value": PropSpec("binding"),       # the draft the agent composed
+        "placeholder": PropSpec("text"),
+        "rows": PropSpec("number"),
+        "submit": PropSpec("action"),       # registered action, or the draft is read-only
     }, source="custom"),
 }
 
