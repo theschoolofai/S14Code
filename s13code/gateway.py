@@ -17,7 +17,10 @@ class GatewayClient:
         payload: dict[str, Any] = {
             "messages": [{"role": "user", "content": prompt}],
             "system": system,
-            "max_tokens": 700,
+            # Configurable, default unchanged. A structured answer carrying a long
+            # drafted message does not close its JSON inside 700 tokens; proofs and
+            # demos raise this via S14_CONTENT_MAX_TOKENS rather than editing code.
+            "max_tokens": int(os.getenv("S14_CONTENT_MAX_TOKENS", "700")),
             "temperature": 0,
             "reasoning": "off",
             "agent": "s13_answer",

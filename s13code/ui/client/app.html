@@ -54,6 +54,14 @@
   .tabs button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-mono);color:var(--ink-muted)}
   .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .Notice{border-left:4px solid var(--amber);background:var(--amber-soft);border-radius:10px;padding:12px 14px}
+  .draft{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
+  .draft .lab{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);font-weight:600;font-family:var(--font-mono);margin-bottom:8px}
+  .draft textarea{width:100%;padding:12px 14px;border:1px solid var(--rule-strong);border-radius:10px;font-family:var(--font-sans);font-size:14.5px;line-height:1.6;color:var(--ink-body);background:var(--surface);resize:vertical}
+  .draft textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .draft .dfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
+  .draft .dcount{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted)}
+  .draft .dsend{border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:10px;padding:9px 16px;font-weight:600;font-size:14px;cursor:pointer}
+  .draft .dsend:disabled{opacity:.45;cursor:not-allowed}
   .actbtn{width:100%;text-align:center;border:1px solid var(--rule-strong);background:var(--surface);border-radius:12px;padding:14px;font-weight:600;font-size:15px;cursor:pointer;color:var(--ink);transition:all 120ms}
   .actbtn:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
   .actbtn:active{transform:translateY(1px)}
@@ -83,10 +91,26 @@
 // interface changes the world. ----
 const API = "";                     // same origin as the runtime (8113)
 let convo = [];                     // the running conversation (context for each turn)
+// Mirrors REGISTERED_ACTIONS in s13code/ui/catalog.py. A component is made
+// interactive only when its action prop names one of these, so the event
+// invariant holds at RENDER time, not only at validation time.
+const ACTIONS = new Set(["approve","reject","rerun","request_data"]);
 const $ = (t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
 const T = t=>document.createTextNode(t==null?"":String(t));
 const resolve=(v,dm)=>(v&&typeof v==="object"&&"$bind"in v)?ptr(dm,v["$bind"]):v;
 function ptr(dm,p){let c=dm;for(const s of String(p).split("/").slice(1)){if(c==null)return null;c=c[s];}return c;}
+// Write back into the data model, but ONLY through a pointer the component was
+// actually bound to, and never through a segment that could reach an object's
+// prototype. A component may edit its own value; it may not reach anywhere else.
+const UNSAFE_SEG=new Set(["__proto__","constructor","prototype"]);
+function setPtr(dm,p,val){
+  if(typeof p!=="string"||!p.startsWith("/"))return false;
+  const segs=p.split("/").slice(1);
+  if(!segs.length||segs.some(s=>s===""||UNSAFE_SEG.has(s)))return false;
+  let c=dm;
+  for(let i=0;i<segs.length-1;i++){if(c[segs[i]]==null||typeof c[segs[i]]!=="object")c[segs[i]]={};c=c[segs[i]];}
+  c[segs[segs.length-1]]=val;return true;
+}
 
 // ---- safe markdown: parse the model's text into DOM (createElement + text nodes).
 // It NEVER uses innerHTML, so any HTML/script in the text stays literal text. ----
@@ -128,6 +152,36 @@ const R={
   BarChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"chart"));e.append(t,bars(resolve(c.data,x.dm)||[],c.xKey,c.yKey));return e;},
   DataTable:(c,x)=>table(c,x),
   Tabs:(c,x)=>tabs(c,x),
+  DraftEditor:(c,x)=>{
+    const e=$("div","draft");
+    if(c.label){const l=$("div","lab");l.append(T(c.label));e.append(l);}
+    const ta=document.createElement("textarea");
+    ta.rows=Math.max(3,Math.min(24,+c.rows||10));
+    if(c.placeholder)ta.placeholder=String(c.placeholder);
+    // The agent's draft arrives as DATA through a binding; it is never markup.
+    ta.value=String(resolve(c.value,x.dm)??"");
+    const foot=$("div","dfoot");const count=$("span","dcount");
+    const send=$("button","dsend");send.type="button";send.append(T("Send revision"));
+    // A DraftEditor is only interactive when `submit` names a REGISTERED action —
+    // the same bar Button clears. Otherwise the draft is shown read-only.
+    const act=c.submit&&c.submit.action;
+    const live=!!act&&ACTIONS.has(act);
+    const sync=()=>{
+      count.textContent=ta.value.length+" chars";
+      if(live)send.disabled=!ta.value.trim();
+    };
+    ta.oninput=()=>{
+      if(c.value&&c.value.$bind)setPtr(x.dm,c.value.$bind,ta.value);
+      sync();
+    };
+    if(live){
+      send.onclick=()=>{const t=ta.value.trim();if(t)choose("Here is my revised draft:\n"+t);};
+    }else{
+      ta.readOnly=true;send.disabled=true;send.textContent="";send.append(T("Read-only"));
+    }
+    sync();
+    foot.append(count,send);e.append(ta,foot);return e;
+  },
   Button:(c,x)=>{const b=$("button","actbtn");let lab=resolve(c.label,x.dm);if(lab&&typeof lab==="object")lab=lab.label||lab.name||lab.text||lab.id||"Choose";lab=String(lab==null?"Choose":lab);b.append(T(lab));b.onclick=()=>choose(lab);return b;},
   Image:(c,x)=>{const e=$("div","chart");e.append(T("[image]"));return e;},
   TextField:(c,x)=>{const w=$("div");if(c.label){const l=$("div","lab");l.append(T(c.label));w.append(l);}const i=$("input","field");i.placeholder=c.placeholder||"";w.append(i);return w;},

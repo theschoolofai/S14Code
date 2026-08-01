@@ -1,0 +1,671 @@
+{
+  "claim": "Gemini composed DraftEditor from the catalog alone. The component name appears in the catalog and in no prompt and nowhere in runtime.py, which builds the compose instruction.",
+  "component": "DraftEditor",
+  "no_leak_checks": {
+    "component": "DraftEditor",
+    "in_catalog": true,
+    "named_in_catalog_source": true,
+    "named_in_runtime_source": false,
+    "prompts_naming_component": [],
+    "clean": true
+  },
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "gateway_provider_env": "gemini",
+  "content_max_tokens": 2000,
+  "summary": {
+    "drafting_prompts": 5,
+    "drafting_succeeded": 3,
+    "drafting_composed_component": 3,
+    "control_prompts": 1,
+    "control_succeeded": 0,
+    "control_composed_component": 0,
+    "total_validator_rejections": 0
+  },
+  "runs": [
+    {
+      "id": "time_off",
+      "prompt": "Draft me an email about my time off for next week. my manager name is sam",
+      "expect_draft": true,
+      "ok": false,
+      "attempts": 3,
+      "error": "surface node did not succeed"
+    },
+    {
+      "id": "thank_you",
+      "prompt": "Write a short thank-you note to my professor for a recommendation letter.",
+      "expect_draft": true,
+      "ok": true,
+      "attempts": 1,
+      "run_id": "run-abea84b141dd",
+      "provider": "gemini_6",
+      "model": "gemini-3.6-flash",
+      "component_types": [
+        "Button",
+        "Card",
+        "Column",
+        "DraftEditor",
+        "ProgressBar",
+        "Row",
+        "Text",
+        "Timeline"
+      ],
+      "composed_component": true,
+      "component_instances": [
+        {
+          "id": "draft_editor",
+          "type": "DraftEditor",
+          "label": "Draft Content",
+          "value": {
+            "$bind": "/draft"
+          },
+          "placeholder": "Edit your thank-you note here...",
+          "rows": 8,
+          "submit": {
+            "action": "approve"
+          }
+        }
+      ],
+      "validator": {
+        "proposed": 11,
+        "accepted": 11,
+        "rejected": 0,
+        "ok": true,
+        "rejections": [],
+        "dangling_child_refs": [],
+        "component_types": [
+          "Button",
+          "Card",
+          "Column",
+          "DraftEditor",
+          "ProgressBar",
+          "Row",
+          "Text",
+          "Timeline"
+        ],
+        "component_count": 11
+      },
+      "draft_in_data_model": true,
+      "draft_title": "Thank-You Note for Recommendation Letter",
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "heading",
+              "summary",
+              "progress",
+              "draft_card",
+              "timeline_card"
+            ]
+          },
+          {
+            "id": "heading",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "progress",
+            "type": "ProgressBar",
+            "value": {
+              "$bind": "/progress_value"
+            },
+            "max": 2,
+            "tone": "good"
+          },
+          {
+            "id": "draft_card",
+            "type": "Card",
+            "title": "Thank-You Note Draft",
+            "children": [
+              "draft_editor",
+              "action_row"
+            ]
+          },
+          {
+            "id": "draft_editor",
+            "type": "DraftEditor",
+            "label": "Draft Content",
+            "value": {
+              "$bind": "/draft"
+            },
+            "placeholder": "Edit your thank-you note here...",
+            "rows": 8,
+            "submit": {
+              "action": "approve"
+            }
+          },
+          {
+            "id": "action_row",
+            "type": "Row",
+            "align": "center",
+            "justify": "end",
+            "children": [
+              "rerun_btn",
+              "approve_btn"
+            ]
+          },
+          {
+            "id": "rerun_btn",
+            "type": "Button",
+            "label": "Regenerate",
+            "onPress": {
+              "action": "rerun"
+            }
+          },
+          {
+            "id": "approve_btn",
+            "type": "Button",
+            "label": "Approve Draft",
+            "onPress": {
+              "action": "approve"
+            }
+          },
+          {
+            "id": "timeline_card",
+            "type": "Card",
+            "title": "Activity Log",
+            "children": [
+              "timeline"
+            ]
+          },
+          {
+            "id": "timeline",
+            "type": "Timeline",
+            "title": "Generation Steps",
+            "events": {
+              "$bind": "/timeline"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Write a short thank-you note to my professor for a recommendation letter.",
+          "goal": "Write a short thank-you note to my professor for a recommendation letter.",
+          "summary": "Write a short thank-you note to my professor for a recommendation letter.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [],
+          "timeline": [
+            {
+              "time": "16",
+              "label": "run_started"
+            },
+            {
+              "time": "17",
+              "label": "graph_patched"
+            },
+            {
+              "time": "18",
+              "label": "task_started content"
+            },
+            {
+              "time": "19",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "20",
+              "label": "graph_patched"
+            },
+            {
+              "time": "21",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "draft": "Dear Professor [Last Name],\n\nThank you so much for taking the time to write a recommendation letter on my behalf for [Name of Program/Opportunity]. I truly appreciate your support, advice, and guidance throughout this process.\n\nI will keep you updated on the status of my application.\n\nBest regards,\n\n[Your Name]",
+          "draft_title": "Thank-You Note for Recommendation Letter"
+        }
+      },
+      "raw_surface": "{\"root\":\"root\",\"components\":[{\"id\":\"root\",\"type\":\"Column\",\"children\":[\"heading\",\"summary\",\"progress\",\"draft_card\",\"timeline_card\"]},{\"id\":\"heading\",\"type\":\"Text\",\"variant\":\"heading\",\"text\":{\"$bind\":\"/title\"}},{\"id\":\"summary\",\"type\":\"Text\",\"variant\":\"body\",\"text\":{\"$bind\":\"/summary\"}},{\"id\":\"progress\",\"type\":\"ProgressBar\",\"value\":{\"$bind\":\"/progress_value\"},\"max\":2,\"tone\":\"good\"},{\"id\":\"draft_card\",\"type\":\"Card\",\"title\":\"Thank-You Note Draft\",\"children\":[\"draft_editor\",\"action_row\"]},{\"id\":\"draft_editor\",\"type\":\"DraftEditor\",\"label\":\"Draft Content\",\"value\":{\"$bind\":\"/draft\"},\"placeholder\":\"Edit your thank-you note here...\",\"rows\":8,\"submit\":{\"action\":\"approve\"}},{\"id\":\"action_row\",\"type\":\"Row\",\"align\":\"center\",\"justify\":\"end\",\"children\":[\"rerun_btn\",\"approve_btn\"]},{\"id\":\"rerun_btn\",\"type\":\"Button\",\"label\":\"Regenerate\",\"onPress\":{\"action\":\"rerun\"}},{\"id\":\"approve_btn\",\"type\":\"Button\",\"label\":\"Approve Draft\",\"onPress\":{\"action\":\"approve\"}},{\"id\":\"timeline_card\",\"type\":\"Card\",\"title\":\"Activity Log\",\"children\":[\"timeline\"]},{\"id\":\"timeline\",\"type\":\"Timeline\",\"title\":\"Generation Steps\",\"events\":{\"$bind\":\"/timeline\"}}]}"
+    },
+    {
+      "id": "linkedin",
+      "prompt": "Draft a LinkedIn post announcing I finished an AI course.",
+      "expect_draft": true,
+      "ok": true,
+      "attempts": 2,
+      "run_id": "run-efcc576d6826",
+      "provider": "gemini_6",
+      "model": "gemini-3.6-flash",
+      "component_types": [
+        "Button",
+        "Card",
+        "Column",
+        "Divider",
+        "DraftEditor",
+        "ProgressBar",
+        "Row",
+        "Text",
+        "Timeline"
+      ],
+      "composed_component": true,
+      "component_instances": [
+        {
+          "id": "draft_editor",
+          "type": "DraftEditor",
+          "label": "Post Content",
+          "value": {
+            "$bind": "/draft"
+          },
+          "placeholder": "Edit your post content here...",
+          "rows": 12,
+          "submit": {
+            "action": "approve"
+          }
+        }
+      ],
+      "validator": {
+        "proposed": 13,
+        "accepted": 13,
+        "rejected": 0,
+        "ok": true,
+        "rejections": [],
+        "dangling_child_refs": [],
+        "component_types": [
+          "Button",
+          "Card",
+          "Column",
+          "Divider",
+          "DraftEditor",
+          "ProgressBar",
+          "Row",
+          "Text",
+          "Timeline"
+        ],
+        "component_count": 13
+      },
+      "draft_in_data_model": true,
+      "draft_title": "LinkedIn Post - AI Course Completion",
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title_text",
+              "summary_text",
+              "progress",
+              "divider_1",
+              "draft_card",
+              "divider_2",
+              "timeline_card"
+            ]
+          },
+          {
+            "id": "title_text",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/draft_title"
+            }
+          },
+          {
+            "id": "summary_text",
+            "type": "Text",
+            "variant": "subtitle",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "progress",
+            "type": "ProgressBar",
+            "value": {
+              "$bind": "/progress_value"
+            },
+            "max": 2,
+            "tone": "good"
+          },
+          {
+            "id": "divider_1",
+            "type": "Divider"
+          },
+          {
+            "id": "draft_card",
+            "type": "Card",
+            "title": "LinkedIn Post Draft",
+            "children": [
+              "draft_editor",
+              "button_row"
+            ]
+          },
+          {
+            "id": "draft_editor",
+            "type": "DraftEditor",
+            "label": "Post Content",
+            "value": {
+              "$bind": "/draft"
+            },
+            "placeholder": "Edit your post content here...",
+            "rows": 12,
+            "submit": {
+              "action": "approve"
+            }
+          },
+          {
+            "id": "button_row",
+            "type": "Row",
+            "justify": "end",
+            "children": [
+              "btn_rerun",
+              "btn_approve"
+            ]
+          },
+          {
+            "id": "btn_rerun",
+            "type": "Button",
+            "label": "Regenerate",
+            "onPress": {
+              "action": "rerun"
+            }
+          },
+          {
+            "id": "btn_approve",
+            "type": "Button",
+            "label": "Approve & Publish",
+            "onPress": {
+              "action": "approve"
+            }
+          },
+          {
+            "id": "divider_2",
+            "type": "Divider"
+          },
+          {
+            "id": "timeline_card",
+            "type": "Card",
+            "title": "Generation Steps",
+            "children": [
+              "run_timeline"
+            ]
+          },
+          {
+            "id": "run_timeline",
+            "type": "Timeline",
+            "title": "Execution Timeline",
+            "events": {
+              "$bind": "/timeline"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Draft a LinkedIn post announcing I finished an AI course.",
+          "goal": "Draft a LinkedIn post announcing I finished an AI course.",
+          "summary": "Draft a LinkedIn post announcing I finished an AI course.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [],
+          "timeline": [
+            {
+              "time": "29",
+              "label": "run_started"
+            },
+            {
+              "time": "30",
+              "label": "graph_patched"
+            },
+            {
+              "time": "31",
+              "label": "task_started content"
+            },
+            {
+              "time": "32",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "33",
+              "label": "graph_patched"
+            },
+            {
+              "time": "34",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "draft": "I'm excited to share that I've officially completed [Course Name]! \ud83c\udf93\u2728\n\nOver the past few weeks, I dived deep into the fundamentals and practical applications of Artificial Intelligence, focusing on:\n\u2022 Machine Learning concepts & workflows\n\u2022 Practical prompt engineering strategies\n\u2022 Integrating AI tools to optimize real-world tasks\n\nAI is rapidly transforming how we solve problems and build products. I'm eager to apply these new skills and insights to upcoming projects.\n\nA huge thank you to [Instructor/Platform Name] for such an engaging curriculum!\n\nWhat AI tools or workflows are you finding most valuable in your daily work? I\u2019d love to connect and swap ideas!\n\n#ArtificialIntelligence #ContinuousLearning #Upskilling #TechTrends #ProfessionalDevelopment",
+          "draft_title": "LinkedIn Post - AI Course Completion"
+        }
+      },
+      "raw_surface": "{\"root\":\"root\",\"components\":[{\"id\":\"root\",\"type\":\"Column\",\"children\":[\"title_text\",\"summary_text\",\"progress\",\"divider_1\",\"draft_card\",\"divider_2\",\"timeline_card\"]},{\"id\":\"title_text\",\"type\":\"Text\",\"variant\":\"heading\",\"text\":{\"$bind\":\"/draft_title\"}},{\"id\":\"summary_text\",\"type\":\"Text\",\"variant\":\"subtitle\",\"text\":{\"$bind\":\"/summary\"}},{\"id\":\"progress\",\"type\":\"ProgressBar\",\"value\":{\"$bind\":\"/progress_value\"},\"max\":2,\"tone\":\"good\"},{\"id\":\"divider_1\",\"type\":\"Divider\"},{\"id\":\"draft_card\",\"type\":\"Card\",\"title\":\"LinkedIn Post Draft\",\"children\":[\"draft_editor\",\"button_row\"]},{\"id\":\"draft_editor\",\"type\":\"DraftEditor\",\"label\":\"Post Content\",\"value\":{\"$bind\":\"/draft\"},\"placeholder\":\"Edit your post content here...\",\"rows\":12,\"submit\":{\"action\":\"approve\"}},{\"id\":\"button_row\",\"type\":\"Row\",\"justify\":\"end\",\"children\":[\"btn_rerun\",\"btn_approve\"]},{\"id\":\"btn_rerun\",\"type\":\"Button\",\"label\":\"Regenerate\",\"onPress\":{\"action\":\"rerun\"}},{\"id\":\"btn_approve\",\"type\":\"Button\",\"label\":\"Approve & Publish\",\"onPress\":{\"action\":\"approve\"}},{\"id\":\"divider_2\",\"type\":\"Divider\"},{\"id\":\"timeline_card\",\"type\":\"Card\",\"title\":\"Generation Steps\",\"children\":[\"run_timeline\"]},{\"id\":\"run_timeline\",\"type\":\"Timeline\",\"title\":\"Execution Timeline\",\"events\":{\"$bind\":\"/timeline\"}}]}"
+    },
+    {
+      "id": "invoice",
+      "prompt": "Write a polite reminder message about an unpaid invoice.",
+      "expect_draft": true,
+      "ok": false,
+      "attempts": 3,
+      "error": "surface node did not succeed"
+    },
+    {
+      "id": "bio",
+      "prompt": "Draft a two-line bio for a conference programme.",
+      "expect_draft": true,
+      "ok": true,
+      "attempts": 1,
+      "run_id": "run-9340935ebb76",
+      "provider": "gemini_5",
+      "model": "gemini-3.6-flash",
+      "component_types": [
+        "Button",
+        "Card",
+        "Column",
+        "DraftEditor",
+        "ProgressBar",
+        "Row",
+        "Text",
+        "Timeline"
+      ],
+      "composed_component": true,
+      "component_instances": [
+        {
+          "id": "draft_editor",
+          "type": "DraftEditor",
+          "label": "Two-Line Bio",
+          "value": {
+            "$bind": "/draft"
+          },
+          "placeholder": "Edit bio here...",
+          "rows": 4,
+          "submit": {
+            "action": "approve"
+          }
+        }
+      ],
+      "validator": {
+        "proposed": 10,
+        "accepted": 10,
+        "rejected": 0,
+        "ok": true,
+        "rejections": [],
+        "dangling_child_refs": [],
+        "component_types": [
+          "Button",
+          "Card",
+          "Column",
+          "DraftEditor",
+          "ProgressBar",
+          "Row",
+          "Text",
+          "Timeline"
+        ],
+        "component_count": 10
+      },
+      "draft_in_data_model": true,
+      "draft_title": "Conference Programme Bio",
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "heading",
+              "summary",
+              "progress",
+              "draft_card",
+              "timeline"
+            ]
+          },
+          {
+            "id": "heading",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "progress",
+            "type": "ProgressBar",
+            "value": {
+              "$bind": "/progress_value"
+            },
+            "max": 2,
+            "tone": "good"
+          },
+          {
+            "id": "draft_card",
+            "type": "Card",
+            "title": "Conference Programme Bio",
+            "children": [
+              "draft_editor",
+              "actions_row"
+            ]
+          },
+          {
+            "id": "draft_editor",
+            "type": "DraftEditor",
+            "label": "Two-Line Bio",
+            "value": {
+              "$bind": "/draft"
+            },
+            "placeholder": "Edit bio here...",
+            "rows": 4,
+            "submit": {
+              "action": "approve"
+            }
+          },
+          {
+            "id": "actions_row",
+            "type": "Row",
+            "align": "center",
+            "justify": "end",
+            "children": [
+              "btn_rerun",
+              "btn_approve"
+            ]
+          },
+          {
+            "id": "btn_rerun",
+            "type": "Button",
+            "label": "Regenerate",
+            "onPress": {
+              "action": "rerun"
+            }
+          },
+          {
+            "id": "btn_approve",
+            "type": "Button",
+            "label": "Approve Bio",
+            "onPress": {
+              "action": "approve"
+            }
+          },
+          {
+            "id": "timeline",
+            "type": "Timeline",
+            "title": "Process History",
+            "events": {
+              "$bind": "/timeline"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Draft a two-line bio for a conference programme.",
+          "goal": "Draft a two-line bio for a conference programme.",
+          "summary": "Draft a two-line bio for a conference programme.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [],
+          "timeline": [
+            {
+              "time": "52",
+              "label": "run_started"
+            },
+            {
+              "time": "53",
+              "label": "graph_patched"
+            },
+            {
+              "time": "54",
+              "label": "task_started content"
+            },
+            {
+              "time": "55",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "56",
+              "label": "graph_patched"
+            },
+            {
+              "time": "57",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "draft": "Alex Rivera is a Senior Technology Strategist with over 12 years of experience leading digital transformation and AI integration across global enterprise organizations.\nCurrently Head of Innovation at Nexus Tech, they frequently write and speak on human-centered automation and the future of work.",
+          "draft_title": "Conference Programme Bio"
+        }
+      },
+      "raw_surface": "{\"root\":\"root\",\"components\":[{\"id\":\"root\",\"type\":\"Column\",\"children\":[\"heading\",\"summary\",\"progress\",\"draft_card\",\"timeline\"]},{\"id\":\"heading\",\"type\":\"Text\",\"variant\":\"heading\",\"text\":{\"$bind\":\"/title\"}},{\"id\":\"summary\",\"type\":\"Text\",\"variant\":\"body\",\"text\":{\"$bind\":\"/summary\"}},{\"id\":\"progress\",\"type\":\"ProgressBar\",\"value\":{\"$bind\":\"/progress_value\"},\"max\":2,\"tone\":\"good\"},{\"id\":\"draft_card\",\"type\":\"Card\",\"title\":\"Conference Programme Bio\",\"children\":[\"draft_editor\",\"actions_row\"]},{\"id\":\"draft_editor\",\"type\":\"DraftEditor\",\"label\":\"Two-Line Bio\",\"value\":{\"$bind\":\"/draft\"},\"placeholder\":\"Edit bio here...\",\"rows\":4,\"submit\":{\"action\":\"approve\"}},{\"id\":\"actions_row\",\"type\":\"Row\",\"align\":\"center\",\"justify\":\"end\",\"children\":[\"btn_rerun\",\"btn_approve\"]},{\"id\":\"btn_rerun\",\"type\":\"Button\",\"label\":\"Regenerate\",\"onPress\":{\"action\":\"rerun\"}},{\"id\":\"btn_approve\",\"type\":\"Button\",\"label\":\"Approve Bio\",\"onPress\":{\"action\":\"approve\"}},{\"id\":\"timeline\",\"type\":\"Timeline\",\"title\":\"Process History\",\"events\":{\"$bind\":\"/timeline\"}}]}"
+    },
+    {
+      "id": "control_explain",
+      "prompt": "Explain how photosynthesis works.",
+      "expect_draft": false,
+      "ok": false,
+      "attempts": 3,
+      "error": "surface node did not succeed"
+    }
+  ]
+}

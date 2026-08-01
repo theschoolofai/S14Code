@@ -28,6 +28,13 @@
   .Card{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px 16px}
   .Divider{height:1px;background:var(--rule);margin:2px 0}
   .field{display:flex;flex-direction:column;gap:4px;font-size:13px}
+  .draft{display:flex;flex-direction:column;gap:6px;font-size:13px}
+  .draft .lb{color:var(--ink-muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  .draft textarea{width:100%;padding:10px 12px;border:1px solid var(--rule-strong);border-radius:8px;font-family:inherit;font-size:13.5px;line-height:1.6;resize:vertical}
+  .draft .dfoot{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .draft .dcount{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted)}
+  .draft .dsend{border:1px solid var(--rule-strong);background:var(--surface);border-radius:8px;padding:6px 12px;font-weight:600;font-size:12.5px;cursor:pointer}
+  .draft .dsend:disabled{opacity:.45;cursor:not-allowed}
   .field .lb{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);font-weight:600;font-family:var(--font-mono)}
   .field input[type=text],.field input[type=datetime-local],.field select{padding:6px 10px;border:1px solid var(--rule-strong);border-radius:8px;font-size:13px;font-family:var(--font-sans);background:var(--surface);color:var(--ink-body)}
   .field.check{flex-direction:row;align-items:center;gap:8px}
@@ -88,6 +95,19 @@ function md(t){const f=document.createDocumentFragment();let ul=null;for(const r
 function pointer(dm, ptr){ let cur = dm; for(const seg of ptr.split("/").slice(1)){ if(cur==null) return null; cur = cur[seg]; } return cur; }
 // Two-way inputs write ONLY into the local data model — never back to the agent.
 function setPointer(dm, ptr, val){ const segs=ptr.split("/").slice(1); let cur=dm; for(let i=0;i<segs.length-1;i++){ if(cur[segs[i]]==null) cur[segs[i]]={}; cur=cur[segs[i]]; } if(segs.length) cur[segs[segs.length-1]]=val; }
+// Mirrors REGISTERED_ACTIONS in s13code/ui/catalog.py.
+const REGISTERED = new Set(["approve","reject","rerun","request_data"]);
+// A guarded writer: a component may write ONLY through the pointer it was bound
+// to, and never through a segment that reaches an object's prototype.
+const UNSAFE_SEG = new Set(["__proto__","constructor","prototype"]);
+function setBoundPointer(dm, p, val){
+  if(typeof p!=="string" || !p.startsWith("/")) return false;
+  const segs=p.split("/").slice(1);
+  if(!segs.length || segs.some(s=>s==="" || UNSAFE_SEG.has(s))) return false;
+  let cur=dm;
+  for(let i=0;i<segs.length-1;i++){ if(cur[segs[i]]==null||typeof cur[segs[i]]!=="object") cur[segs[i]]={}; cur=cur[segs[i]]; }
+  cur[segs[segs.length-1]]=val; return true;
+}
 // Same scheme block the validator enforces: an Image src is used ONLY if it is
 // not a javascript:/data:/vbscript: URL. An unvetted scheme yields no src.
 function isSafeUrl(u){ return typeof u==="string" && !/^\s*(javascript|data|vbscript):/i.test(u); }
@@ -113,6 +133,23 @@ const RENDERERS = {
   InputChoice:(c,ctx)=>field(c,()=>{const s=$("select");const opts=resolve(c.options,ctx.dm)||[];const cur=resolve(c.value,ctx.dm);
     opts.forEach(o=>{const op=$("option");op.value=String(o);op.append(text(o));if(String(o)===String(cur))op.selected=true;s.append(op);});
     s.onchange=()=>{if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,s.value);};return s;}),
+  DraftEditor:(c,ctx)=>{
+    const wrap=$("div","draft");
+    if(c.label){const l=$("div","lb");l.append(text(c.label));wrap.append(l);}
+    const ta=document.createElement("textarea");ta.className="field";
+    ta.rows=Math.max(3,Math.min(24,+c.rows||10));
+    if(c.placeholder)ta.placeholder=String(c.placeholder);
+    ta.value=String(resolve(c.value,ctx.dm)??"");   // data, never markup
+    const foot=$("div","dfoot");const count=$("span","dcount");
+    const send=$("button","dsend");send.type="button";send.append(text("Send revision"));
+    const act=c.submit&&c.submit.action;
+    const live=!!act&&REGISTERED.has(act);
+    const sync=()=>{count.textContent=ta.value.length+" chars";if(live)send.disabled=!ta.value.trim();};
+    ta.oninput=()=>{if(c.value&&c.value.$bind)setBoundPointer(ctx.dm,c.value.$bind,ta.value);sync();};
+    if(live){send.onclick=()=>emitAction(act,{text:ta.value});}
+    else{ta.readOnly=true;send.disabled=true;send.textContent="";send.append(text("Read-only"));}
+    sync();foot.append(count,send);wrap.append(ta,foot);return wrap;
+  },
   DateTime:(c,ctx)=>field(c,()=>{const i=$("input");i.type="datetime-local";i.value=resolve(c.value,ctx.dm)??"";
     i.oninput=()=>{if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,i.value);};return i;}),
   Button:(c,ctx)=>{const b=$("button","");b.className="";b.style.cssText="border:1px solid var(--rule-strong);background:var(--surface);border-radius:8px;padding:6px 14px;font-weight:600;cursor:pointer";
