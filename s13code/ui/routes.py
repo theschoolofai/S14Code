@@ -222,7 +222,7 @@ async def composed(run_id: str, request: Request):
 async def client(run_id: str):
     if not _CLIENT.exists():
         raise HTTPException(500, "render client missing")
-    return _CLIENT.read_text().replace("__RUN_ID__", run_id)
+    return _CLIENT.read_text(encoding="utf-8").replace("__RUN_ID__", run_id)
 
 
 @router.get("/app", response_class=HTMLResponse)
@@ -233,4 +233,4 @@ async def app_viewer():
     path = Path(__file__).parent / "client" / "app.html"
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
-    return path.read_text()
+    return path.read_text(encoding="utf-8")
