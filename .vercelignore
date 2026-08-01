@@ -1,0 +1,24 @@
+# The hosted Academy function needs only the dependency-light UI layer, the page
+# and the shared composition contract. Everything else is either too heavy for a
+# serverless bundle (FAISS memory, the A2A stack), irrelevant to it (tests,
+# recorded proofs, the second Vercel project), or local-only.
+.venv/
+.git/
+.github/
+tests/
+proofs/
+sandbox/
+deploy/
+s13code/core/
+s13code/main.py
+s13code/cli.py
+s13code/planner.py
+s13code/runtime.py
+s13code/routes.py
+s13code/a2a_routes.py
+s13code/gateway.py
+s13code/tools.py
+uv.lock
+*.log
+*.sqlite
+__pycache__/

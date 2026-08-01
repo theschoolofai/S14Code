@@ -46,6 +46,20 @@
   th{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);cursor:pointer;user-select:none;background:var(--surface-alt)}
   tr:last-child td{border-bottom:none}
   .filter{margin-bottom:8px;padding:6px 10px;border:1px solid var(--rule-strong);border-radius:8px;font-size:13px;width:100%;max-width:240px;font-family:var(--font-mono)}
+  table.heat{table-layout:fixed}
+  table.heat th{cursor:default;text-transform:none;letter-spacing:0;font-size:10px;padding:6px 6px;text-align:center;background:transparent;border-bottom:none;word-break:break-word}
+  table.heat th.rowlab{text-align:right;white-space:nowrap;width:1%;padding-right:10px;color:var(--ink-muted)}
+  table.heat td.cell{text-align:center;font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--ink);border:2px solid var(--surface);border-radius:6px;padding:9px 4px}
+  .heatlegend{margin-top:8px;font-family:var(--font-mono);font-size:10px;color:var(--ink-muted)}
+  table.seq{table-layout:fixed;border:none;background:transparent}
+  table.seq th{text-transform:none;letter-spacing:0;font-size:10px;padding:5px 4px;text-align:center;
+               background:var(--surface-alt);border:1px solid var(--rule);border-radius:6px;cursor:default;word-break:break-word}
+  table.seq td{border-bottom:none;padding:3px 2px;font-size:12px}
+  table.seq td.seqlane{text-align:center;color:var(--rule-strong);font-family:var(--font-mono)}
+  table.seq td.seqmsg{text-align:center;border-bottom:2px solid var(--accent);padding-bottom:5px}
+  table.seq .seqarrow{font-family:var(--font-mono);letter-spacing:-1px;margin-right:6px}
+  table.seq .seqlabel{font-size:11.5px;color:var(--ink-body)}
+  table.seq td.seqnote{text-align:center;font-size:10.5px;color:var(--ink-muted);font-style:italic;padding:2px 4px 6px}
   .tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
   .tabs button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-mono);color:var(--ink-muted)}
   .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
@@ -133,6 +147,8 @@ const RENDERERS = {
   BarChart:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"bar chart"));e.append(t);
     e.append(barSvg(resolve(c.data,ctx.dm)||[],c.xKey,c.yKey));return e;},
   DataTable:(c,ctx)=>renderTable(c,ctx),
+  Heatmap:(c,ctx)=>renderHeatmap(c,ctx),
+  SequenceDiagram:(c,ctx)=>renderSequence(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
 };
@@ -165,6 +181,86 @@ function renderTable(c,ctx){const wrap=$("div");const cols=(c.columns||"").split
     if(sortCol)view=view.slice().sort((a,b)=>{const x=a[sortCol],y=b[sortCol];return(x>y?1:x<y?-1:0)*sortDir;});
     view.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(text(r[col]));rr.append(td);});t.append(rr);});}
   draw("");return wrap;}
+
+// Heatmap (custom): a rows x columns grid where the magnitude is the message.
+// Every label and every cell is a text node. The ONLY thing a bound value is
+// allowed to influence is an intensity the client computes itself: Number(v),
+// normalised and clamped to 0..1. The colour channel comes from a fixed lookup
+// keyed by the catalog's `tone` enum, so no string the agent wrote ever reaches
+// CSS. A non-numeric cell tints nothing and prints as literal text.
+const HEAT_RGB={good:"22,163,74",warn:"217,119,6",bad:"220,38,38",neutral:"37,99,235"};
+// `title` and `unit` are typed `text`, but the model reliably BINDS them when a
+// matching pointer exists. Both forms are accepted and both end up in a text
+// node, so `str()` resolves a binding, passes a literal through, and coerces
+// anything else to a harmless string rather than "[object Object]".
+function str(v,dm){const r=resolve(v,dm);return (r==null||typeof r==="object")?"":String(r);}
+function renderHeatmap(c,ctx){
+  const title=str(c.title,ctx.dm)||"heatmap",unit=str(c.unit,ctx.dm);
+  const wrap=$("div","chart");const t=$("div","ct");t.append(text(title));wrap.append(t);
+  const rows=resolve(c.rows,ctx.dm)||[],cols=resolve(c.columns,ctx.dm)||[],vals=resolve(c.values,ctx.dm)||[];
+  const nums=[];for(const r of vals){for(const v of (Array.isArray(r)?r:[])){const n=Number(v);if(Number.isFinite(n))nums.push(n);}}
+  const max=nums.length?Math.max(...nums):1,min=nums.length?Math.min(...nums):0,rng=(max-min)||1;
+  const rgb=HEAT_RGB[c.tone]||HEAT_RGB.neutral;
+  const tb=$("table","heat");
+  const head=$("tr");head.append($("th"));cols.forEach(col=>{const th=$("th");th.append(text(col));head.append(th);});tb.append(head);
+  rows.forEach((rowLabel,ri)=>{
+    const tr=$("tr");const rh=$("th","rowlab");rh.append(text(rowLabel));tr.append(rh);
+    cols.forEach((_,ci)=>{
+      const raw=Array.isArray(vals[ri])?vals[ri][ci]:undefined;const n=Number(raw);const td=$("td","cell");
+      if(raw!=null&&raw!==""&&Number.isFinite(n)){
+        const a=Math.max(0,Math.min(1,(n-min)/rng));           // a NUMBER, computed here
+        td.style.backgroundColor="rgba("+rgb+","+(0.08+a*0.82).toFixed(3)+")";
+        td.append(text(String(n)+unit));
+      } else { td.append(text(raw==null?"":String(raw))); }    // never tinted, always literal
+      tr.append(td);
+    });
+    tb.append(tr);
+  });
+  wrap.append(tb);
+  const cap=$("div","heatlegend");cap.append(text("low "+min+"  →  high "+max+(unit?" "+unit:"")));wrap.append(cap);
+  return wrap;}
+
+// SequenceDiagram (custom): ordered messages BETWEEN named actors. Actor lanes
+// are columns; each message is one row whose cell spans from sender to receiver
+// and carries an arrow pointing the right way. Every actor name, label and note
+// is a text node, and the only thing a bound value decides is which COLUMN a
+// cell starts in and how many columns it spans — integers this client derives
+// from the actor list. A message naming an actor that is not in `actors` is
+// drawn as a full-width note rather than silently dropped.
+function renderSequence(c,ctx){
+  const title=str(c.title,ctx.dm)||"sequence";
+  const wrap=$("div","chart");const t=$("div","ct");t.append(text(title));wrap.append(t);
+  const actors=(resolve(c.actors,ctx.dm)||[]).map(a=>(a&&typeof a==="object")?(a.name||a.label||a.id||""):a);
+  const messages=resolve(c.messages,ctx.dm)||[];
+  const accent=({good:"var(--green)",warn:"var(--amber)",bad:"var(--red)"}[c.tone]||"var(--accent)");
+  const tb=$("table","seq");
+  const head=$("tr");
+  actors.forEach(a=>{const th=$("th");th.append(text(a));head.append(th);});
+  tb.append(head);
+  const index=name=>actors.findIndex(a=>String(a)===String(name));
+  messages.forEach(m=>{
+    if(!m||typeof m!=="object"){return;}
+    const from=index(m.from),to=index(m.to);
+    const tr=$("tr");
+    if(from<0||to<0||!actors.length){                       // unknown actor -> a note
+      const td=$("td","seqnote");td.colSpan=Math.max(1,actors.length);
+      td.append(text([m.from,m.to].filter(Boolean).join(" → ")+(m.label?": "+m.label:"")));
+      tr.append(td);tb.append(tr);return;
+    }
+    const lo=Math.min(from,to),hi=Math.max(from,to),span=hi-lo+1;
+    for(let i=0;i<lo;i++){const pad=$("td","seqlane");pad.append(text("│"));tr.append(pad);}
+    const cell=$("td","seqmsg");cell.colSpan=span;cell.style.borderBottomColor=accent;
+    const arrow=$("span","seqarrow");arrow.style.color=accent;
+    arrow.append(text(from===to?"↻" : (to>from?"───▶":"◀───")));
+    const lab=$("span","seqlabel");lab.append(text(m.label==null?"":String(m.label)));
+    cell.append(arrow,lab);
+    tr.append(cell);
+    for(let i=hi+1;i<actors.length;i++){const pad=$("td","seqlane");pad.append(text("│"));tr.append(pad);}
+    tb.append(tr);
+    if(m.note){const nr=$("tr");const nd=$("td","seqnote");nd.colSpan=Math.max(1,actors.length);
+      nd.append(text(String(m.note)));nr.append(nd);tb.append(nr);}
+  });
+  wrap.append(tb);return wrap;}
 
 function renderTabs(c,ctx){const wrap=$("div");const nav=$("div","tabs");wrap.append(nav);const body=$("div");wrap.append(body);
   // A2UI Basic Tabs: each child IS a panel; `labels` names the tabs (comma list).

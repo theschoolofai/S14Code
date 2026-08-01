@@ -14,10 +14,18 @@ class GatewayClient:
         self._owns_client = client is None
 
     async def complete(self, prompt: str, system: str, *, session: str | None = None) -> dict[str, Any]:
+        # ``max_tokens`` is a budget for EVERYTHING the provider generates, and on a
+        # thinking-capable model (gemini-2.5-flash) the reasoning tokens are drawn
+        # from it first. Asking for "reasoning": "off" does not change that: the
+        # gateway simply omits thinkingConfig, which leaves Gemini on its DEFAULT
+        # dynamic thinking budget. At 700 the model spent nearly all of it thinking
+        # and returned ~120 characters, so the content role's JSON came back
+        # truncated and unparseable. The ceiling is therefore configurable, with a
+        # default that leaves room for a structured answer after the thinking.
         payload: dict[str, Any] = {
             "messages": [{"role": "user", "content": prompt}],
             "system": system,
-            "max_tokens": 700,
+            "max_tokens": int(os.getenv("S13_MAX_TOKENS", "4000")),
             "temperature": 0,
             "reasoning": "off",
             "agent": "s13_answer",

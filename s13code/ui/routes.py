@@ -206,6 +206,12 @@ async def composed(run_id: str, request: Request):
     if not surf.get("components"):
         raise HTTPException(404, "run has no composed interface (no compose_surface node)")
     result = validate_surface(surf)
+    # ``surf`` already holds only what the wall accepted at compose time, so
+    # re-validating it is a second, independent pass. The interesting refusals
+    # are the ones the compose node recorded when the model first proposed the
+    # tree; carry them so a client can SHOW the wall working rather than just
+    # assert it. ``rejected_types`` names the types that never reached the DOM.
+    composed = res.get("validator") or {}
     return {
         "run_id": run_id,
         "finished": run["finished"],
@@ -215,6 +221,14 @@ async def composed(run_id: str, request: Request):
         "clean": result.ok,
         "provider": res.get("provider"),
         "model": res.get("model"),
+        "validator": {
+            "proposed": composed.get("proposed", len(surf.get("components", []))),
+            "accepted": len(result.accepted),
+            "rejected": composed.get("rejected", 0),
+            "rejections": composed.get("rejections", []),
+            "component_types": composed.get("component_types", []),
+            "revalidated_rejections": [r.as_dict() for r in result.rejections],
+        },
     }
 
 
@@ -234,3 +248,20 @@ async def app_viewer():
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
     return path.read_text()
+
+
+@router.get("/academy", response_class=HTMLResponse)
+@router.get("/academy/", response_class=HTMLResponse)
+async def academy_app():
+    """Trading Systems Academy — a UI-only application built on this runtime.
+
+    Every turn is a composed, catalog-validated interface; a tap on a rendered
+    Button becomes the next turn. It also carries the adversarial seed, so the
+    injection wall can be watched refusing a hostile composition live.
+    """
+    path = Path(__file__).parent / "client" / "academy.html"
+    if not path.exists():
+        raise HTTPException(500, "academy app missing")
+    # Served by the full runtime, so the page drives the live-graph turn path.
+    # The serverless deployment substitutes "hosted" instead (see api/index.py).
+    return path.read_text(encoding="utf-8").replace("__TURN_MODE__", "runtime")

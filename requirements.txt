@@ -1,0 +1,12 @@
+# Deployment-only. `uv` and the test suite use pyproject.toml + uv.lock; this file
+# exists solely so the Vercel function for the hosted Academy (api/index.py)
+# installs a MINIMAL dependency set.
+#
+# The full runtime needs faiss-cpu, grpcio and a2a-sdk — about 130 MB of wheels
+# and a long-lived gRPC listener — none of which fit a 250 MB serverless function
+# with a single port. api/index.py deliberately imports only the parts of the
+# repo that need nothing heavier than these three packages: the catalog, the
+# validator and the composition contract in s13code/ui/.
+fastapi>=0.115,<1
+httpx>=0.27,<1
+pydantic>=2.6,<3

@@ -116,6 +116,9 @@ All served by the runtime on 8113, defined in
 | `POST /v1/validate` | run any surface through the injection wall |
 | `POST /v1/action` | a validated user action (approve/reject), bound to final params |
 | `GET /s/{id}` | the render client, pointed at a run |
+| `GET /v1/runs/{id}/composed` | the interface the agent COMPOSED, re-validated, with what the wall refused |
+| `GET /app` | the bare-minimal UI-only app shell |
+| `GET /academy` | Trading Systems Academy — the UI-only application (see below) |
 
 ## The generative loop (UI composed by the harness)
 
@@ -136,6 +139,121 @@ S14_SELFCORRECT_CITY=Berlin GLC_BASE_URL=http://127.0.0.1:8111 \
   uv run python proofs/harness_selfcorrect.py  # -> proofs/harness_selfcorrect.json
 ```
 
+## Session 14 assignment: two catalog components and the Academy app
+
+### Part 1 — `Heatmap` and `SequenceDiagram`, contributed to the shared catalog
+
+The catalog is now **25** types: 15 A2UI Basic + 10 custom. Two are new, and each
+carries a shape the existing set structurally could not.
+
+| Component | The shape nothing else could carry |
+|---|---|
+| `Heatmap` | a rows × columns grid where the **number** in each cell is the message. `BarChart` and `Sparkline` are one-dimensional; `DataTable` shows cells but not magnitude. |
+| `SequenceDiagram` | ordered messages **between named actors**. A `Timeline` has moments but no second party, so it can say a thing happened but never that the gateway answered the client. |
+
+Each lives in three places, as the assignment requires:
+
+| Where | What |
+|---|---|
+| [`s13code/ui/catalog.py`](s13code/ui/catalog.py) | the `ComponentSpec`s, tagged `source="custom"` |
+| [`s13code/ui/client/index.html`](s13code/ui/client/index.html) | `renderHeatmap` / `renderSequence` — draw from text nodes and execute no value (also in `app.html` and `academy.html`) |
+| [`proofs/academy_turns.json`](proofs/academy_turns.json) | real runs where Gemini composed each one **without being told its name** |
+
+Nothing names either component to the model. `compose_surface` hands over
+`catalog_manifest()`, the run's data model exposes a generic `/matrix_*` or
+`/sequence_*` pointer set, and the compose instruction deliberately gives **no**
+mapping for either — only a component-neutral line saying that pointers without
+a listed mapping should be served by reading the catalog and matching prop
+shapes. The model found both on its own:
+
+```json
+{ "id": "effort_heatmap", "type": "Heatmap",
+  "title":   {"$bind": "/matrix_title"},
+  "rows":    {"$bind": "/matrix_rows"},
+  "columns": {"$bind": "/matrix_columns"},
+  "values":  {"$bind": "/matrix_values"},
+  "tone": "neutral" }
+
+{ "id": "fix_handshake", "type": "SequenceDiagram",
+  "title":    {"$bind": "/sequence_title"},
+  "actors":   {"$bind": "/sequence_actors"},
+  "messages": {"$bind": "/sequence_messages"},
+  "tone": "neutral" }
+```
+
+The safety property, enforced in both renderers: a bound value may influence
+**only a number the client computes itself**. For `Heatmap` that is an intensity
+— `Number(v)`, normalised and clamped to `0..1` — with the colour channel coming
+from a fixed lookup keyed by the validated `tone` enum, so no string the agent
+wrote ever reaches CSS; a non-numeric cell tints nothing and prints as literal
+text. For `SequenceDiagram` it is a column index and a span, both derived here
+from the actor list; a message naming an actor that was never declared becomes a
+visible note rather than a silent drop.
+
+`_matrix_pointers` and `_sequence_pointers` in
+[`s13code/runtime.py`](s13code/runtime.py) expose their data only when it is
+real: a grid must be fully labelled, rectangular and numeric, and an interaction
+must have at least two actors with every message running between declared ones.
+Anything less is not evidence, so it is never exposed and never drawn — the same
+honesty discipline that makes the runtime emit a `Notice` instead of an invented
+chart.
+
+### Part 2 — Trading Systems Academy, a UI-only application
+
+`GET /academy` ([`s13code/ui/client/academy.html`](s13code/ui/client/academy.html))
+is a tutor for exchange and trading *infrastructure* — matching engines, market
+data, FIX, risk gates, latency. It never answers in prose. Every turn is a
+composed, catalog-validated interface, and a tap on a rendered `Button` becomes
+the next turn.
+
+The app adds one standing requirement of its own (`KEEP_GOING`): always finish by
+offering 3–5 concrete next topics. That is the *application's* need — it can only
+be driven by tapping — and it names no component, so which one carries the
+choices is still the composer's call.
+
+The strip above the screen reports the live verdict on every turn: model,
+component count, `0 executable`, and how many components the wall refused. When
+anything is refused, the panel below names each one and the invariant it broke.
+
+### Reproducing all of it from a fresh checkout
+
+```bash
+# terminal 1 — the gateway (owns every credential)
+cd glc_v3 && uv sync && uv run glc serve
+
+# terminal 2 — this runtime
+cd S14Code && uv sync
+export GLC_BASE_URL=http://127.0.0.1:8111
+export S13_GATEWAY_PROVIDER=gemini
+export S13_MAX_TOKENS=6000            # see note below
+export S14_SURFACE_MAX_TOKENS=20000
+uv run s14code serve
+
+# the invariants, hermetically (no gateway, no Ollama, no network)
+uv run pytest -q
+
+# the live captures
+uv run python proofs/academy_turns.py    # 4 prompts -> 4 interfaces, + a 3-turn thread
+uv run python proofs/academy_attack.py   # the injection wall, deterministic + live
+
+open http://127.0.0.1:8113/academy
+```
+
+> **Token budgets.** `max_tokens` is a budget for everything the provider
+> generates, and on `gemini-2.5-flash` the reasoning tokens are drawn from it
+> first. Asking for `"reasoning": "off"` does not change that — the gateway just
+> omits `thinkingConfig`, which leaves Gemini on its default *dynamic* thinking
+> budget. At the old hardcoded 700 the model spent nearly all of it thinking and
+> returned ~120 characters, so the content role's JSON came back truncated and
+> unparseable and every interface collapsed to a single `Text`. The ceiling is
+> now `S13_MAX_TOKENS` (default 4000).
+
+> **Free-tier quota.** Each turn spends several large model calls. On free-tier
+> Gemini keys the per-key request budget is the binding constraint, and the
+> gateway answers `502` once the pool is burned. Both proof scripts pace
+> themselves (`S14_PACE_SECONDS`, default 30) and retry, and `academy_turns.py`
+> reuses turns it has already captured so a quota stall never discards good ones.
+
 ## Proofs and tests
 
 Everything the Session 14 widgets replay is real captured output under `proofs/`:
@@ -147,6 +265,8 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
+| `academy_turns.json` | `academy_turns.py` | 4 prompts → 4 interfaces, a 3-turn tap-driven thread, both new components chosen unprompted |
+| `academy_attack.json` | `academy_attack.py` | six attack forms refused, plus two live hostile prompts |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
