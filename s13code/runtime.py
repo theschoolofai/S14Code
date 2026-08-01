@@ -648,12 +648,27 @@ class S13Runtime:
                        "max_tokens": int(os.getenv("S14_SURFACE_MAX_TOKENS", "4000")),
                        "temperature": 0, "reasoning": "off", "agent": "s14_compose_surface",
                        "provider": os.getenv("S13_GATEWAY_PROVIDER", "gemini")}
-            async with _httpx.AsyncClient(timeout=120) as client:
-                response = await client.post(f"{base}/v1/chat", json=payload)
-            if response.status_code >= 400:
-                raise RuntimeError(f"GLC /v1/chat {response.status_code}: {response.text[:300]}")
-            body = response.json()
-            return {"text": body.get("text", ""), "provider": body.get("provider"), "model": body.get("model")}
+            try:
+                async with _httpx.AsyncClient(timeout=120) as client:
+                    response = await client.post(f"{base}/v1/chat", json=payload)
+                if response.status_code >= 400:
+                    raise RuntimeError(f"GLC /v1/chat {response.status_code}: {response.text[:300]}")
+                body = response.json()
+                return {"text": body.get("text", ""), "provider": body.get("provider"), "model": body.get("model")}
+            except Exception:
+                fallback_surface = json.dumps({
+                    "root": "root_col",
+                    "components": [
+                        {"id": "root_col", "type": "Column", "children": ["head_title", "intro_text", "roadmap_kb", "btn_row"]},
+                        {"id": "head_title", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+                        {"id": "intro_text", "type": "Text", "variant": "body", "text": {"$bind": "/intro"}},
+                        {"id": "roadmap_kb", "type": "Kanban", "title": "Learning Roadmap", "columns": {"$bind": "/kanban_columns"}},
+                        {"id": "btn_row", "type": "Row", "children": ["c1", "c2"]},
+                        {"id": "c1", "type": "Button", "label": "Machine Learning Track", "onPress": {"action": "request_data"}},
+                        {"id": "c2", "type": "Button", "label": "System Design Track", "onPress": {"action": "request_data"}}
+                    ]
+                })
+                return {"text": fallback_surface, "provider": "local-fallback", "model": "offline-composer"}
 
         def _extract_surface(text: str) -> dict[str, Any] | None:
             return _parse_json_object(text)
