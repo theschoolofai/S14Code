@@ -262,4 +262,6 @@ async def academy_app():
     path = Path(__file__).parent / "client" / "academy.html"
     if not path.exists():
         raise HTTPException(500, "academy app missing")
-    return path.read_text(encoding="utf-8")
+    # Served by the full runtime, so the page drives the live-graph turn path.
+    # The serverless deployment substitutes "hosted" instead (see api/index.py).
+    return path.read_text(encoding="utf-8").replace("__TURN_MODE__", "runtime")

@@ -16,3 +16,6 @@ benchmark.md
 a2a-proof.json
 .DS_Store
 *.log
+
+.vercel
+.env*

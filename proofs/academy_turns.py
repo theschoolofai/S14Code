@@ -48,17 +48,17 @@ ATTEMPTS = int(os.getenv("S14_ATTEMPTS", "3"))
 #    composer should reach for four different sets of components.
 PROMPTS = [
     # a two-dimensional shape: topic x week
-    "Teach me how a stock exchange matching engine works. I have 4 weeks. Show me how much "
-    "study effort each core topic deserves in each week, plus the key numbers and a study path.",
+    ("Teach me how a stock exchange matching engine works. I have 4 weeks. Show me how much "
+     "study effort each core topic deserves in each week, plus the key numbers and a study path."),
     # a row/column shape: one row per order type
-    "Compare market, limit, stop and iceberg orders side by side: how each behaves in the order "
-    "book, its visibility, its typical use and its slippage risk. Give me the key counts too.",
+    ("Compare market, limit, stop and iceberg orders side by side: how each behaves in the order "
+     "book, its visibility, its typical use and its slippage risk. Give me the key counts too."),
     # a one-dimensional numeric series: latency per stage
-    "Walk me through the path of a market data tick from the exchange to a trading application. "
-    "For each stage give me the typical latency in microseconds so I can see where the time goes.",
+    ("Walk me through the path of a market data tick from the exchange to a trading application. "
+     "For each stage give me the typical latency in microseconds so I can see where the time goes."),
     # an ordered exchange between named parties
-    "Explain how a FIX session is established and an order is filled: exactly who sends what "
-    "message to whom, in order, from the client through the gateway to the matching engine.",
+    ("Explain how a FIX session is established and an order is filled: exactly who sends what "
+     "message to whom, in order, from the client through the gateway to the matching engine."),
 ]
 
 # B. The conversation opens here; turns 2 and 3 are taps on what the agent drew.

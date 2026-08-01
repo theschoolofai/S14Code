@@ -34,10 +34,10 @@ from fastapi.testclient import TestClient
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from s13code.runtime import _coerce_number, _matrix_pointers, _sequence_pointers  # noqa: E402
-from s13code.ui.catalog import COMPONENTS, REGISTERED_ACTIONS, catalog_manifest  # noqa: E402
-from s13code.ui.routes import router as ui_router  # noqa: E402
-from s13code.ui.validator import Invariant, validate_surface  # noqa: E402
+from s13code.runtime import _coerce_number, _matrix_pointers, _sequence_pointers
+from s13code.ui.catalog import COMPONENTS, REGISTERED_ACTIONS, catalog_manifest
+from s13code.ui.routes import router as ui_router
+from s13code.ui.validator import Invariant, validate_surface
 
 _BUILD_ROOT = Path(__file__).resolve().parent.parent
 _CLIENT_DIR = _BUILD_ROOT / "s13code" / "ui" / "client"
@@ -87,7 +87,7 @@ def test_heatmap_props_are_typed_the_way_the_renderer_reads_them():
 def test_heatmap_declares_no_property_a_client_would_ever_execute():
     """The load-bearing property: nothing here is a handler, a URL or markup."""
     for name, spec in COMPONENTS["Heatmap"].props.items():
-        assert not re.match(r"^on[a-z]+$", name, re.I), name
+        assert not re.match(r"^on[a-z]+$", name, re.IGNORECASE), name
         assert spec.kind in ("text", "binding", "enum")
 
 
@@ -281,7 +281,7 @@ def test_sequencediagram_props_are_typed_the_way_the_renderer_reads_them():
 
 def test_sequencediagram_declares_no_property_a_client_would_ever_execute():
     for name, spec in COMPONENTS["SequenceDiagram"].props.items():
-        assert not re.match(r"^on[a-z]+$", name, re.I), name
+        assert not re.match(r"^on[a-z]+$", name, re.IGNORECASE), name
         assert spec.kind in ("text", "binding", "enum")
 
 

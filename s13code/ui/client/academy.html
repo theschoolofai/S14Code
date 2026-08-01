@@ -153,8 +153,17 @@
 // never executed. A tap is the ONLY way the interface changes the world, and it
 // changes it by starting the next turn — not by calling a tool.
 // ===========================================================================
-const API = "";                 // same origin as the runtime (8113)
+const API = "";                 // same origin as whatever served this page
 let trail = [];                 // the running conversation, oldest first
+
+// How this page gets a turn composed. The server that served it substitutes the
+// value, so there is ONE page and ONE renderer for both deployments:
+//   "runtime" — the full S14 runtime on 8113: POST /v1/agent/runs (respond_as
+//               "ui") drives the live graph, then GET the composed interface.
+//   "hosted"  — the serverless deployment, which has no graph and a 60s ceiling:
+//               /api/content then /api/compose, one model call each.
+// Either way the surface arrives validated and this file renders it identically.
+const TURN_MODE = "__TURN_MODE__";
 
 const $  = (t,c)=>{const e=document.createElement(t); if(c) e.className=c; return e;};
 const T  = t=>document.createTextNode(t==null?"":String(t));
@@ -469,19 +478,13 @@ async function runTurn(){
   el("mount").textContent=""; const wait=$("div","empty");
   wait.append(T("the agent is composing an interface…")); el("mount").append(wait);
 
-  let run;
-  try{
-    const res = await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({prompt:goal, respond_as:"ui", tenant_id:"course", project_id:"s14",
-                           user_id:"student-01", agent_id:"academy"})});
-    run = await res.json();
-  }catch(err){ setStrip([{text:"run failed",tone:"bad"}]); return; }
-
-  if(!run || !run.run_id){ setStrip([{text:"no run id",tone:"bad"}]); return; }
-
   let c;
-  try{ c = await (await fetch(API+"/v1/runs/"+run.run_id+"/composed")).json(); }
-  catch(err){ setStrip([{text:"composed fetch failed",tone:"bad"}]); return; }
+  try{
+    c = (TURN_MODE==="hosted") ? await hostedTurn(goal) : await runtimeTurn(goal);
+  }catch(err){
+    setStrip([{text:"turn failed",tone:"bad"},{text:String(err&&err.message||err),tone:"warn"}]);
+    return;
+  }
 
   if(!c || !c.surface){
     setStrip([{text:"no interface composed",tone:"bad"},{text:(c&&c.detail)||"",tone:"warn"}]);
@@ -498,6 +501,34 @@ async function runTurn(){
     {text:types.join(" · "),tone:"think"},
   ]);
   setWall(v.rejections||[]);
+  if(c.degraded) setStrip([{text:"degraded",tone:"warn"},{text:"an honest Notice, not an invented answer",tone:"think"}]);
+}
+
+// One turn against the full runtime: the live graph composes, we read the result.
+async function runtimeTurn(goal){
+  const res = await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({prompt:goal, respond_as:"ui", tenant_id:"course", project_id:"s14",
+                         user_id:"student-01", agent_id:"academy"})});
+  const run = await res.json();
+  if(!run || !run.run_id) throw new Error("no run id");
+  return await (await fetch(API+"/v1/runs/"+run.run_id+"/composed")).json();
+}
+
+// One turn against the serverless deployment: two calls, because each is a model
+// call of 10-30s and the platform caps a function at 60s. Same prompts, same
+// catalog, same validator — see api/index.py.
+async function hostedTurn(goal){
+  const post = async (path,body)=>{
+    const r = await fetch(API+path,{method:"POST",headers:{"Content-Type":"application/json"},
+                                    body:JSON.stringify(body)});
+    const j = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(j.error || ("HTTP "+r.status));
+    return j;
+  };
+  setStrip([{text:"reading the goal…",tone:"think"},{text:"step 1 of 2",tone:"think"}]);
+  const step1 = await post("/api/content",{goal});
+  setStrip([{text:"composing the interface…",tone:"think"},{text:"step 2 of 2",tone:"think"}]);
+  return await post("/api/compose",{goal, dataModel: step1.dataModel});
 }
 
 function nextTurn(label){ if(!label) return; trail.push(label); runTurn(); }
