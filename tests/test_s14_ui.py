@@ -390,8 +390,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +402,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "Kanban",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -411,6 +411,22 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     m = catalog_manifest()
     assert m["components"]["Text"]["source"] == "a2ui-basic"
     assert m["components"]["BarChart"]["source"] == "custom"
+    assert m["components"]["Kanban"]["source"] == "custom"
+
+
+def test_kanban_component_validates_clean():
+    surface = {
+        "root": "k1",
+        "components": [{
+            "id": "k1", "type": "Kanban", "title": "Roadmap", "columns": {"$bind": "/kanban_columns"}
+        }],
+        "dataModel": {
+            "kanban_columns": [{"title": "Todo", "cards": ["Task 1", "Task 2"]}]
+        }
+    }
+    result = validate_surface(surface)
+    assert result.ok
+    assert len(result.rejections) == 0
 
 
 # --------------------------------------------------------------------------- #
