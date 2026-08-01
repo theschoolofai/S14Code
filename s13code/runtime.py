@@ -670,19 +670,43 @@ class S13Runtime:
                 body = response.json()
                 return {"text": body.get("text", ""), "provider": body.get("provider"), "model": body.get("model")}
             except Exception:
-                fallback_surface = json.dumps({
-                    "root": "root_col",
-                    "components": [
-                        {"id": "root_col", "type": "Column", "children": ["head_title", "intro_text", "roadmap_kb", "btn_row"]},
-                        {"id": "head_title", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
-                        {"id": "intro_text", "type": "Text", "variant": "body", "text": {"$bind": "/intro"}},
-                        {"id": "roadmap_kb", "type": "Kanban", "title": "Learning Roadmap", "columns": {"$bind": "/kanban_columns"}},
-                        {"id": "btn_row", "type": "Row", "children": ["c1", "c2"]},
-                        {"id": "c1", "type": "Button", "label": "Machine Learning Track", "onPress": {"action": "request_data"}},
-                        {"id": "c2", "type": "Button", "label": "System Design Track", "onPress": {"action": "request_data"}}
-                    ]
-                })
-                return {"text": fallback_surface, "provider": "local-fallback", "model": "offline-composer"}
+                if "Neural Networks" in surface_prompt:
+                    fallback_obj = {
+                        "root": "col3",
+                        "components": [
+                            {"id": "col3", "type": "Column", "children": ["title3", "notice3", "timeline3", "btn_quiz"]},
+                            {"id": "title3", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+                            {"id": "notice3", "type": "Notice", "text": {"$bind": "/intro"}, "tone": "good"},
+                            {"id": "timeline3", "type": "Timeline", "title": "Concept Progression", "events": {"$bind": "/timeline"}},
+                            {"id": "btn_quiz", "type": "Button", "label": "Take Neural Networks Quiz", "onPress": {"action": "request_data"}},
+                        ]
+                    }
+                elif "Machine Learning Track" in surface_prompt:
+                    fallback_obj = {
+                        "root": "col2",
+                        "components": [
+                            {"id": "col2", "type": "Column", "children": ["title2", "chart2", "table2", "prog2", "btn_nn"]},
+                            {"id": "title2", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+                            {"id": "chart2", "type": "BarChart", "title": "Topic Weighting (%)", "data": {"$bind": "/series"}, "xKey": "label", "yKey": "value"},
+                            {"id": "table2", "type": "DataTable", "columns": "Module, Topics, Hours", "rows": {"$bind": "/table_rows"}},
+                            {"id": "prog2", "type": "ProgressBar", "value": {"$bind": "/progress_value"}, "max": 100},
+                            {"id": "btn_nn", "type": "Button", "label": "Start Neural Networks Module", "onPress": {"action": "request_data"}},
+                        ]
+                    }
+                else:
+                    fallback_obj = {
+                        "root": "root_col",
+                        "components": [
+                            {"id": "root_col", "type": "Column", "children": ["head_title", "intro_text", "roadmap_kb", "btn_row"]},
+                            {"id": "head_title", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+                            {"id": "intro_text", "type": "Text", "variant": "body", "text": {"$bind": "/intro"}},
+                            {"id": "roadmap_kb", "type": "Kanban", "title": "Learning Roadmap", "columns": {"$bind": "/kanban_columns"}},
+                            {"id": "btn_row", "type": "Row", "children": ["c1", "c2"]},
+                            {"id": "c1", "type": "Button", "label": "Machine Learning Track", "onPress": {"action": "request_data"}},
+                            {"id": "c2", "type": "Button", "label": "System Design Track", "onPress": {"action": "request_data"}}
+                        ]
+                    }
+                return {"text": json.dumps(fallback_obj), "provider": "local-fallback", "model": "offline-composer"}
 
         def _extract_surface(text: str) -> dict[str, Any] | None:
             return _parse_json_object(text)
