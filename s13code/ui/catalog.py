@@ -110,6 +110,11 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "columns": PropSpec("text"), "rows": PropSpec("binding"),
         "sortable": PropSpec("bool"), "filterKey": PropSpec("text"),
     }, source="custom"),
+    "Heatmap": ComponentSpec("Heatmap", {
+        "title": PropSpec("text"),
+        "data": PropSpec("binding"),
+        "columns": PropSpec("number"),
+    }, source="custom"),
     "Notice": ComponentSpec("Notice", {
         "text": PropSpec("binding"), "tone": _TONE,
     }, source="custom"),

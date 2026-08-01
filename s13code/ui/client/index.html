@@ -41,6 +41,14 @@
   .StatTile.good{border-top:3px solid var(--green)}.StatTile.warn{border-top:3px solid var(--amber)}.StatTile.neutral{border-top:3px solid var(--accent)}
   .chart{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
   .chart .ct{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:8px;font-family:var(--font-mono)}
+  .Heatmap{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px}
+  .Heatmap .ct{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:8px;font-family:var(--font-mono)}
+  .Heatmap .grid{display:grid;gap:3px}
+  .Heatmap .cell{width:14px;height:14px;border-radius:3px;background:var(--rule)}
+  .Heatmap .cell.l1{background:rgba(22,163,74,.25)}
+  .Heatmap .cell.l2{background:rgba(22,163,74,.5)}
+  .Heatmap .cell.l3{background:rgba(22,163,74,.75)}
+  .Heatmap .cell.l4{background:var(--green)}
   table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
   th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);font-size:13px}
   th{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);cursor:pointer;user-select:none;background:var(--surface-alt)}
@@ -133,6 +141,8 @@ const RENDERERS = {
   BarChart:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"bar chart"));e.append(t);
     e.append(barSvg(resolve(c.data,ctx.dm)||[],c.xKey,c.yKey));return e;},
   DataTable:(c,ctx)=>renderTable(c,ctx),
+  Heatmap:(c,ctx)=>{const e=$("div","Heatmap chart");const t=$("div","ct");t.append(text(c.title||"heatmap"));
+  e.append(t,heatmapGrid(resolve(c.data,ctx.dm)||[],c.columns));return e;},
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
 };
@@ -156,6 +166,26 @@ function barSvg(data,xk,yk,unit){const ns="http://www.w3.org/2000/svg";const w=3
     const tv=document.createElementNS(ns,"text");tv.setAttribute("x",x+bw/2);tv.setAttribute("y",h-pad-bh-4);tv.setAttribute("text-anchor","middle");tv.setAttribute("font-size","10");tv.setAttribute("font-family","var(--font-mono)");tv.setAttribute("fill","var(--ink-muted)");tv.textContent=d[yk];svg.append(tv);
     const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","10");tl.setAttribute("font-family","var(--font-mono)");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=d[xk];svg.append(tl);});
   return svg;}
+
+function heatmapGrid(cells,cols){
+  // Accept either a flat [{value,label}] list, or a table of row-objects
+  // where every non-string field is a day's count (e.g. table_rows shaped
+  // {"Week":"...", "Mon":2, "Tue":0, ...}). Flatten the latter into cells.
+  let flat = [];
+  if (Array.isArray(cells) && cells.length && typeof cells[0] === "object" && !("value" in cells[0])) {
+    cells.forEach(row=>{
+      Object.entries(row).forEach(([key,val])=>{
+        if (typeof val === "number") flat.push({label:key, value:val});
+      });
+    });
+  } else {
+    flat = cells;
+  }
+  const wrap=$("div","grid");wrap.style.gridTemplateColumns=`repeat(${cols||7}, 14px)`;
+  flat.forEach(cell=>{const v=+cell.value||0;const lvl=v<=0?0:v<=1?1:v<=3?2:v<=5?3:4;
+    const d=$("div","cell l"+lvl);if(cell.label)d.title=cell.label+": "+v;wrap.append(d);});
+  return wrap;
+}
 
 function renderTable(c,ctx){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());let rows=(resolve(c.rows,ctx.dm)||[]).slice();
   if(c.filterKey){const f=$("input","filter");f.placeholder="filter "+c.filterKey+"…";f.oninput=()=>draw(f.value);wrap.append(f);}

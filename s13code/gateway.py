@@ -13,11 +13,11 @@ class GatewayClient:
         self._client = client or httpx.AsyncClient(timeout=120)
         self._owns_client = client is None
 
-    async def complete(self, prompt: str, system: str, *, session: str | None = None) -> dict[str, Any]:
+    async def complete(self, prompt: str, system: str, *, session: str | None = None, max_tokens: int = 700) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "messages": [{"role": "user", "content": prompt}],
             "system": system,
-            "max_tokens": 700,
+            "max_tokens": max_tokens,
             "temperature": 0,
             "reasoning": "off",
             "agent": "s13_answer",

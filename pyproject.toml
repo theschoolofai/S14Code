@@ -13,6 +13,10 @@ dependencies = [
     "grpcio>=1.70",
     "a2a-sdk[grpc]>=1.0,<2",
     "faiss-cpu>=1.11,<2",
+    "modal>=1.5.3",
+    "jsonschema>=4.21",
+    "pyyaml>=6.0",
+    "websockets>=12.0",
 ]
 
 [dependency-groups]

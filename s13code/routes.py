@@ -9,9 +9,9 @@ from s13code.core.memory import MemoryKind, MemoryScope, Principal
 router = APIRouter(prefix="/v1/agent", tags=["S13 live agent"])
 
 
-async def gateway_text_llm(app, prompt: str, system: str):
+async def gateway_text_llm(app, prompt: str, system: str, max_tokens: int = 700):
     """Patchable test seam; production crosses HTTP through GatewayClient."""
-    return await app.state.gateway.complete(prompt, system)
+    return await app.state.gateway.complete(prompt, system, max_tokens=max_tokens)
 
 
 class ScopeBody(BaseModel):
@@ -59,7 +59,7 @@ async def run(body: RunBody, request: Request):
     runtime = request.app.state.s13_runtime
     try:
         return await runtime.run(prompt=body.prompt, scope=body.scope(),
-                                 llm=lambda prompt, system: gateway_text_llm(request.app, prompt, system),
+                                 llm=lambda prompt, system, max_tokens=700: gateway_text_llm(request.app, prompt, system, max_tokens),
                                  source_uri="api://agent/runs", source_author=body.user_id or "api-user",
                                  respond_as=body.respond_as)
     except RuntimeError as error:
@@ -71,7 +71,7 @@ async def resume(run_id: str, request: Request):
     runtime = request.app.state.s13_runtime
     try:
         return await runtime.run(prompt=None, scope=None,
-                                 llm=lambda prompt, system: gateway_text_llm(request.app, prompt, system),
+                                 llm=lambda prompt, system, max_tokens=700: gateway_text_llm(request.app, prompt, system, max_tokens),
                                  source_uri=None, source_author=None, run_id=run_id, resume=True)
     except KeyError:
         raise HTTPException(404, "run not found") from None

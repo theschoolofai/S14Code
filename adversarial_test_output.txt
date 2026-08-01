@@ -1,0 +1,10 @@
+Proposed components: 4
+Accepted: 2
+Rejected: 2
+
+REJECTED [evil_html] invariant=catalog reason=unknown component type 'RawHtml'
+REJECTED [evil_button] invariant=data-not-code reason=event-handler property is never allowed
+
+Accepted component ids (the safe part still renders): ['root', 'safe_text']
+
+PASS: catalog invariant and data-not-code invariant both held; the safe component still validated.

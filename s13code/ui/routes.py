@@ -233,4 +233,4 @@ async def app_viewer():
     path = Path(__file__).parent / "client" / "app.html"
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
-    return path.read_text()
+    return path.read_text(encoding="utf-8")
