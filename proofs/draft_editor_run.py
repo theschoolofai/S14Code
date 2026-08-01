@@ -200,8 +200,8 @@ async def main() -> int:
     for r in runs:
         v = r.get("validator") or {}
         counts = f"{v.get('proposed')}/{v.get('accepted')}/{v.get('rejected')}" if r["ok"] else "-"
-        print(f"{r['id']:<18}{str(r['ok']):<5}{str(r.get('composed_component','-')):<10}"
-              f"{str(r.get('model','-')):<20}{counts}")
+        print(f"{r['id']:<18}{r['ok']!s:<5}{r.get('composed_component', '-')!s:<10}"
+              f"{r.get('model', '-')!s:<20}{counts}")
     print(f"\ndrafting prompts : {hits}/{len(drafting)} composed {COMPONENT}")
     print(f"control prompts  : {control_hits}/{len(controls)} composed {COMPONENT}  (0 is the good result)")
     print(f"validator        : {rejected} total rejections")
