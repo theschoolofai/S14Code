@@ -595,6 +595,34 @@ def test_route_trip_planner_serves_the_shell(client):
     assert "RouteMap:" in r.text
 
 
+def test_the_adversarial_payloads_are_each_refused_by_their_own_invariant():
+    """The security property the /trip demo rests on, proven without a model.
+
+    proofs/waypoint_adversarial.py sends these three payloads at a live gateway.
+    The refusal itself is deterministic, so it is pinned here: a hostile prompt
+    that gets all three into a surface still cannot reach the DOM, and the safe
+    interface around them survives intact.
+    """
+    from proofs.waypoint_adversarial import PAYLOADS
+
+    safe = [
+        {"id": "root", "type": "Column", "children": ["h", "map"]},
+        {"id": "h", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+        _GOOD_MAP,
+    ]
+    result = validate_surface({
+        "root": "root", "dataModel": {"title": "Lisbon", "places": []},
+        "components": safe + [comp for _, comp in PAYLOADS],
+    })
+    by_id = {r.component_id: r for r in result.rejections}
+    for expected_invariant, comp in PAYLOADS:
+        rejection = by_id.get(comp["id"])
+        assert rejection is not None, f"{comp['id']} was not refused"
+        assert rejection.invariant == expected_invariant, comp["id"]
+    # Every safe component still renders — one poisoned node cannot blank a screen.
+    assert {c["id"] for c in result.accepted} == {"root", "h", "map"}
+
+
 def test_compose_step_never_names_the_contributed_component():
     """The proof that the agent chose RouteMap on its own.
 
