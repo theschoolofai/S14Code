@@ -42,6 +42,13 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
+# Pin the rule set this config was written against: ruff's documented default
+# select (pycodestyle errors + pyflakes). It used to be implicit, but ruff 0.16
+# widened the default to ~400 rules, which turned `uv run ruff check .` -- the
+# command the pull-request template requires -- into hundreds of findings across
+# untouched reference code. Naming the set explicitly makes the check mean the
+# same thing on every ruff version instead of drifting with the toolchain.
+select = ["E4", "E7", "E9", "F"]
 # A few teaching examples intentionally keep tiny state transitions on one
 # line. Generated protobuf modules are excluded above and remain reproducible.
 ignore = ["E701", "E702"]

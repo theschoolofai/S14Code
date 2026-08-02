@@ -127,6 +127,7 @@ const R={
   Sparkline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("trend"));e.append(t,spark(resolve(c.data,x.dm)||[]));return e;},
   BarChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"chart"));e.append(t,bars(resolve(c.data,x.dm)||[],c.xKey,c.yKey));return e;},
   DataTable:(c,x)=>table(c,x),
+  RouteMap:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"map"));e.append(t,routeMap(resolve(c.points,x.dm)||[],c.mode,c.tone));return e;},
   Tabs:(c,x)=>tabs(c,x),
   Button:(c,x)=>{const b=$("button","actbtn");let lab=resolve(c.label,x.dm);if(lab&&typeof lab==="object")lab=lab.label||lab.name||lab.text||lab.id||"Choose";lab=String(lab==null?"Choose":lab);b.append(T(lab));b.onclick=()=>choose(lab);return b;},
   Image:(c,x)=>{const e=$("div","chart");e.append(T("[image]"));return e;},
@@ -142,6 +143,31 @@ function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
 function spark(v){const ns="http://www.w3.org/2000/svg",w=200,h=44,mx=Math.max(...v,1),mn=Math.min(...v,0),rg=(mx-mn)||1;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");s.setAttribute("height",h);const p=document.createElementNS(ns,"polyline");p.setAttribute("points",v.map((y,i)=>`${i/(v.length-1||1)*w},${h-5-(y-mn)/rg*(h-10)}`).join(" "));p.setAttribute("fill","none");p.setAttribute("stroke","var(--green)");p.setAttribute("stroke-width","2.5");s.append(p);return s;}
 function bars(d,xk,yk){const ns="http://www.w3.org/2000/svg",w=300,h=150,pad=24,mx=Math.max(...d.map(r=>+r[yk]),1),bw=(w-pad*2)/(d.length||1)*.6;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");d.forEach((r,i)=>{const x=pad+i*((w-pad*2)/d.length)+((w-pad*2)/d.length-bw)/2,bh=(+r[yk])/mx*(h-pad*2);const rc=document.createElementNS(ns,"rect");rc.setAttribute("x",x);rc.setAttribute("y",h-pad-bh);rc.setAttribute("width",bw);rc.setAttribute("height",bh);rc.setAttribute("rx",3);rc.setAttribute("fill","var(--accent)");s.append(rc);const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","9");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=r[xk];s.append(tl);});return s;}
+// RouteMap: {label,lat,lon} points drawn into a local SVG viewBox. No tile server,
+// no <img>, no fetch; labels go through textContent so markup stays literal text.
+function routeMap(points,mode,tone){
+  const ns="http://www.w3.org/2000/svg",W=320,H=200,PAD=34;
+  const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.setAttribute("width","100%");svg.setAttribute("height","auto");
+  const mk=(tag,a,txt)=>{const n=document.createElementNS(ns,tag);for(const k in a)n.setAttribute(k,a[k]);
+    if(txt!=null)n.textContent=String(txt);svg.append(n);return n;};
+  const pts=(Array.isArray(points)?points:[]).filter(p=>p&&isFinite(+p.lat)&&isFinite(+p.lon))
+    .map(p=>({label:p.label==null?"":String(p.label),lat:+p.lat,lon:+p.lon}));
+  if(!pts.length){mk("text",{x:W/2,y:H/2,"text-anchor":"middle","font-size":11,fill:"var(--ink-muted)"},"no located points");return svg;}
+  const kx=Math.cos(pts.reduce((s,p)=>s+p.lat,0)/pts.length*Math.PI/180)||1;
+  const xs=pts.map(p=>p.lon*kx),ys=pts.map(p=>-p.lat);
+  const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const sc=(Math.min(W,H)-PAD*2)/(Math.max(x1-x0,y1-y0)||1);
+  const ox=(W-(x1-x0)*sc)/2-x0*sc,oy=(H-(y1-y0)*sc)/2-y0*sc;
+  const px=pts.map((p,i)=>({label:p.label,x:xs[i]*sc+ox,y:ys[i]*sc+oy}));
+  const col=({good:"var(--green)",warn:"var(--amber)",bad:"var(--red)"}[tone]||"var(--accent)");
+  if(mode!=="scatter"&&px.length>1)
+    mk("polyline",{points:px.map(p=>p.x+","+p.y).join(" "),fill:"none",stroke:col,"stroke-width":2,"stroke-dasharray":"5 4",opacity:.65});
+  px.forEach((p,i)=>{mk("circle",{cx:p.x,cy:p.y,r:9,fill:col});
+    if(mode!=="scatter")mk("text",{x:p.x,y:p.y+3.5,"text-anchor":"middle","font-size":10,"font-weight":700,fill:"#fff"},i+1);
+    mk("text",{x:p.x,y:p.y-14,"text-anchor":"middle","font-size":10,fill:"var(--ink-body)"},p.label);});
+  return svg;
+}
 function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());const rows=resolve(c.rows,x.dm)||[];const t=$("table");const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(T(col));tr.append(th);});t.append(tr);rows.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(r[col]));rr.append(td);});t.append(rr);});wrap.append(t);return wrap;}
 function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);const tabIds=c.children||[];function show(i){body.textContent="";const cc=x.byId[tabIds[i]];if(cc)body.append(node(cc,x));[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}
   (String(c.labels||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});

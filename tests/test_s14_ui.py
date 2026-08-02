@@ -390,8 +390,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +402,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "RouteMap",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -411,6 +411,140 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     m = catalog_manifest()
     assert m["components"]["Text"]["source"] == "a2ui-basic"
     assert m["components"]["BarChart"]["source"] == "custom"
+
+
+# --------------------------------------------------------------------------- #
+# RouteMap — the contributed component, held to the same three invariants
+# --------------------------------------------------------------------------- #
+
+_GOOD_MAP = {
+    "id": "map", "type": "RouteMap", "title": "Day 1",
+    "points": {"$bind": "/places"}, "mode": "route", "tone": "good",
+}
+
+
+def test_routemap_is_a_custom_catalog_component_with_typed_props():
+    spec = COMPONENTS["RouteMap"]
+    assert spec.source == "custom"
+    assert {p: s.kind for p, s in spec.props.items()} == {
+        "title": "text", "points": "binding", "mode": "enum", "tone": "enum",
+    }
+    # It offers no way to reach the network: no src, no url, no image property.
+    assert not {"src", "url", "tileUrl", "href"} & set(spec.props)
+    # And no way to act: a map cannot emit an action at all.
+    assert not any(s.kind == "action" for s in spec.props.values())
+
+
+def test_routemap_clean_surface_validates_with_zero_rejections():
+    result = validate_surface({"root": "map", "components": [_GOOD_MAP]})
+    assert result.ok and len(result.accepted) == 1
+
+
+def test_routemap_catalog_invariant_rejects_an_unknown_map_type():
+    """A hostile surface cannot name a map type the catalog never declared."""
+    r = _reject({**_GOOD_MAP, "type": "LeafletMap"})
+    assert r.invariant == Invariant.CATALOG and "LeafletMap" in r.reason
+
+
+def test_routemap_data_not_code_refuses_markup_in_a_shown_value():
+    r = _reject({**_GOOD_MAP, "title": "<script>fetch('//evil')</script>Day 1"})
+    assert r.invariant == Invariant.DATA_NOT_CODE and r.reason == "value carries markup"
+
+
+def test_routemap_data_not_code_refuses_inline_points_instead_of_a_binding():
+    """Points must arrive as {'$bind': '/pointer'}; inline data is how markup sneaks in."""
+    r = _reject({**_GOOD_MAP, "points": [{"label": "<img onerror=x>", "lat": 1, "lon": 2}]})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.reason == "binding must be {'$bind': '/pointer'}"
+
+
+def test_routemap_data_not_code_refuses_a_smuggled_tile_url():
+    r = _reject({**_GOOD_MAP, "tileUrl": "https://tiles.example/{z}/{x}/{y}.png"})
+    assert r.invariant == Invariant.DATA_NOT_CODE and "unknown property 'tileUrl'" in r.reason
+
+
+def test_routemap_data_not_code_refuses_a_javascript_url():
+    r = _reject({**_GOOD_MAP, "title": "javascript:alert(1)"})
+    assert r.invariant == Invariant.DATA_NOT_CODE and r.reason == "value is a script/data URL"
+
+
+def test_routemap_data_not_code_refuses_an_event_handler_property():
+    r = _reject({**_GOOD_MAP, "onclick": "steal()"})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.reason == "event-handler property is never allowed"
+
+
+def test_routemap_enum_invariant_refuses_a_mode_outside_its_set():
+    r = _reject({**_GOOD_MAP, "mode": "satellite"})
+    assert r.invariant == Invariant.DATA_NOT_CODE and "'satellite' not in" in r.reason
+
+
+def test_routemap_event_invariant_unregistered_action_never_crosses_back():
+    """An unregistered action beside a map is dropped; the map still renders."""
+    surface = {"root": "root", "components": [
+        {"id": "root", "type": "Column", "children": ["map", "exfil"]},
+        _GOOD_MAP,
+        {"id": "exfil", "type": "Button", "label": "Export",
+         "onPress": {"action": "post_to_webhook"}},
+    ]}
+    result = validate_surface(surface)
+    assert [r.invariant for r in result.rejections] == [Invariant.EVENT]
+    assert result.rejections[0].reason == "unregistered action 'post_to_webhook'"
+    # The safe part of the interface survives: root and the map still render.
+    assert {c["id"] for c in result.accepted} == {"root", "map"}
+
+
+def test_routemap_survives_a_poisoned_sibling_map():
+    """One poisoned map cannot blank a screen that holds a clean one."""
+    surface = {"root": "root", "components": [
+        {"id": "root", "type": "Column", "children": ["map", "bad"]},
+        _GOOD_MAP,
+        {"id": "bad", "type": "RouteMap", "title": "<b>x</b>", "points": {"$bind": "/places"}},
+    ]}
+    result = validate_surface(surface)
+    assert {c["id"] for c in result.accepted} == {"root", "map"}
+    assert [r.component_id for r in result.rejections] == ["bad"]
+
+
+def _routemap_renderer(filename: str) -> str:
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / filename).read_text()
+    match = re.search(r"function routeMap\w*\(.*?\n\}", html, re.DOTALL)
+    assert match, f"{filename} has no RouteMap renderer"
+    return match.group(0)
+
+
+@pytest.mark.parametrize("filename", ["index.html", "app.html"])
+def test_routemap_renderer_draws_it_and_executes_nothing(filename):
+    body = _routemap_renderer(filename)
+    # It builds SVG nodes and writes every label as text, never as markup.
+    assert "createElementNS" in body and "textContent" in body
+    assert "innerHTML" not in body
+    # No outbound channel: no tile server, no image, no fetch of any kind.
+    for forbidden in ("fetch(", "XMLHttpRequest", "<img", 'createElement("img")', "src"):
+        assert forbidden not in body, f"{filename}: RouteMap must not use {forbidden}"
+    # The one URL in the renderer is the SVG XML namespace, which is a constant
+    # the DOM requires and never a resource the browser retrieves.
+    assert re.findall(r"https?://\S*?[\"'`]", body) == ['http://www.w3.org/2000/svg"']
+    # No string is ever evaluated.
+    for forbidden in ("eval(", "new Function", "setTimeout("):
+        assert forbidden not in body, f"{filename}: RouteMap must not use {forbidden}"
+
+
+@pytest.mark.parametrize("filename", ["index.html", "app.html"])
+def test_routemap_is_wired_into_the_client_renderer_table(filename):
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / filename).read_text()
+    assert re.search(r"\bRouteMap\s*:", html), f"{filename} does not dispatch RouteMap"
+
+
+def test_compose_step_never_names_the_contributed_component():
+    """The proof that the agent chose RouteMap on its own.
+
+    ``compose_surface`` hands the model the catalog manifest and the list of
+    available pointers, and nothing else. If the runtime mentioned the component
+    by name the composition would be instruction-following, not selection.
+    """
+    runtime_src = (_BUILD_ROOT / "s13code" / "runtime.py").read_text()
+    assert "RouteMap" not in runtime_src
 
 
 # --------------------------------------------------------------------------- #

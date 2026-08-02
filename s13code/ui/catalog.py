@@ -9,8 +9,8 @@ named by a hostile agent.
 The catalog is aligned to A2UI's Basic component set: the 15 layout / text /
 input / container types A2UI Basic already defines are adopted under their real
 A2UI names (``source="a2ui-basic"``). Only the components A2UI Basic genuinely
-lacks — charts, tiles, tables, timelines, notices, and the approval card — are
-kept as clearly labelled custom extensions (``source="custom"``). Twenty-three
+lacks — charts, tiles, tables, timelines, notices, maps, and the approval card —
+are kept as clearly labelled custom extensions (``source="custom"``). Twenty-four
 types in all; a student can read every one and the validator can prove coverage.
 
 Property kinds:
@@ -47,8 +47,8 @@ class ComponentSpec:
 _TONE = PropSpec("enum", ("neutral", "good", "warn", "bad"))
 
 
-# The 23 component types the render client knows how to draw. The first 15 are
-# A2UI Basic's own names; the last 8 are custom extensions A2UI Basic lacks.
+# The 24 component types the render client knows how to draw. The first 15 are
+# A2UI Basic's own names; the last 9 are custom extensions A2UI Basic lacks.
 COMPONENTS: dict[str, ComponentSpec] = {
     # --- A2UI Basic: layout / text / media / inputs / containers (15) --------
     "Row": ComponentSpec("Row", {
@@ -105,6 +105,18 @@ COMPONENTS: dict[str, ComponentSpec] = {
     }, source="custom"),
     "Timeline": ComponentSpec("Timeline", {
         "title": PropSpec("text"), "events": PropSpec("binding"),
+    }, source="custom"),
+    # A geographic view: an ordered or unordered set of {label, lat, lon} points.
+    # The renderer projects the bound points into a local SVG viewBox and draws
+    # them itself. There is deliberately no tile-server URL, no ``src`` and no
+    # image property, because a map that fetched a remote URL would hand a
+    # hostile surface an outbound channel the other 23 components do not have.
+    # Every label is a text node; the geometry is arithmetic on two numbers.
+    "RouteMap": ComponentSpec("RouteMap", {
+        "title": PropSpec("text"),
+        "points": PropSpec("binding"),  # [{"label": str, "lat": num, "lon": num}]
+        "mode": PropSpec("enum", ("route", "scatter")),
+        "tone": _TONE,
     }, source="custom"),
     "DataTable": ComponentSpec("DataTable", {
         "columns": PropSpec("text"), "rows": PropSpec("binding"),
