@@ -236,8 +236,11 @@ class A2ADemoServer:
     async def _complete(self, task: Task) -> None:
         try:
             result = await self.task_handler(task.text) if self.task_handler else f"done: {task.text}"
+            # A handler may answer with plain text, or with A2A parts of its own
+            # when it has structured evidence to hand back rather than prose.
+            parts = result if isinstance(result, list) else [{"kind": "text", "text": result}]
             task.state, task.updated_at = TaskState.COMPLETED, datetime.now(UTC).isoformat()
-            task.artifacts = [{"artifactId": f"result-{task.id}", "parts": [{"kind": "text", "text": result}]}]
+            task.artifacts = [{"artifactId": f"result-{task.id}", "parts": parts}]
         except Exception as error:
             task.state, task.updated_at = TaskState.FAILED, datetime.now(UTC).isoformat()
             task.artifacts = [{"artifactId": f"error-{task.id}", "parts": [{"kind": "text", "text": f"{type(error).__name__}: {error}"}]}]

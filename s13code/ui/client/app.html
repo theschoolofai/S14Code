@@ -86,6 +86,7 @@ let convo = [];                     // the running conversation (context for eac
 const $ = (t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
 const T = t=>document.createTextNode(t==null?"":String(t));
 const resolve=(v,dm)=>(v&&typeof v==="object"&&"$bind"in v)?ptr(dm,v["$bind"]):v;
+const arr=v=>Array.isArray(v)?v:[];
 function ptr(dm,p){let c=dm;for(const s of String(p).split("/").slice(1)){if(c==null)return null;c=c[s];}return c;}
 
 // ---- safe markdown: parse the model's text into DOM (createElement + text nodes).
@@ -122,10 +123,11 @@ const R={
     if((c.variant||"body")==="heading"){e.append(T(v));}else{e.append(md(v));}return e;},
   Notice:(c,x)=>{const e=$("div","Notice");e.append(T(resolve(c.text,x.dm)));return e;},
   StatTile:(c,x)=>{const e=$("div","StatTile");const l=$("div","lab");l.append(T(c.label));const v=$("div","val");v.append(T(String(resolve(c.value,x.dm))+(c.unit?" "+c.unit:"")));const d=$("div","dl");d.append(T(resolve(c.delta,x.dm)||""));e.append(l,v,d);return e;},
-  Timeline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"timeline"));const b=$("div");b.style.cssText="display:flex;flex-direction:column;gap:8px;margin-top:4px";(resolve(c.events,x.dm)||[]).forEach(ev=>{const r=$("div");r.style.cssText="display:flex;gap:10px;align-items:flex-start;font-size:14px";const dot=$("span");dot.textContent="●";dot.style.cssText="color:var(--accent);font-size:10px;margin-top:5px";const lab=$("div");lab.style.flex="1";mdInline(String(ev.label!=null?ev.label:(ev.kind!=null?ev.kind:JSON.stringify(ev))),lab);r.append(dot,lab);b.append(r);});e.append(t,b);return e;},
+  Timeline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"timeline"));const b=$("div");b.style.cssText="display:flex;flex-direction:column;gap:8px;margin-top:4px";(arr(resolve(c.events,x.dm))).forEach(ev=>{const r=$("div");r.style.cssText="display:flex;gap:10px;align-items:flex-start;font-size:14px";const dot=$("span");dot.textContent="●";dot.style.cssText="color:var(--accent);font-size:10px;margin-top:5px";const lab=$("div");lab.style.flex="1";mdInline(String(ev.label!=null?ev.label:(ev.kind!=null?ev.kind:JSON.stringify(ev))),lab);r.append(dot,lab);b.append(r);});e.append(t,b);return e;},
   ProgressBar:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("progress"));const p=$("div","prog");const i=$("i");const val=+resolve(c.value,x.dm)||0;i.style.width=Math.min(100,val/(c.max||100)*100)+"%";p.append(i);e.append(t,p);return e;},
-  Sparkline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("trend"));e.append(t,spark(resolve(c.data,x.dm)||[]));return e;},
-  BarChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"chart"));e.append(t,bars(resolve(c.data,x.dm)||[],c.xKey,c.yKey));return e;},
+  Sparkline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("trend"));e.append(t,spark(arr(resolve(c.data,x.dm))));return e;},
+  BarChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"chart"));e.append(t,bars(arr(resolve(c.data,x.dm)),c.xKey,c.yKey));return e;},
+  GaugeCluster:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"gauges"));e.append(t,gauges(arr(resolve(c.gauges,x.dm))));return e;},
   DataTable:(c,x)=>table(c,x),
   Tabs:(c,x)=>tabs(c,x),
   Button:(c,x)=>{const b=$("button","actbtn");let lab=resolve(c.label,x.dm);if(lab&&typeof lab==="object")lab=lab.label||lab.name||lab.text||lab.id||"Choose";lab=String(lab==null?"Choose":lab);b.append(T(lab));b.onclick=()=>choose(lab);return b;},
@@ -133,30 +135,124 @@ const R={
   TextField:(c,x)=>{const w=$("div");if(c.label){const l=$("div","lab");l.append(T(c.label));w.append(l);}const i=$("input","field");i.placeholder=c.placeholder||"";w.append(i);return w;},
   CheckBox:(c,x)=>{const w=$("label");w.style.display="flex";w.style.gap="8px";const i=document.createElement("input");i.type="checkbox";w.append(i,T(c.label||""));return w;},
   Slider:(c,x)=>{const w=$("div");if(c.label){const l=$("div","lab");l.append(T(c.label));w.append(l);}const i=document.createElement("input");i.type="range";i.min=c.min||0;i.max=c.max||100;w.append(i);return w;},
-  InputChoice:(c,x)=>{const s=$("select","field");(resolve(c.options,x.dm)||[]).forEach(o=>{const op=document.createElement("option");op.append(T(typeof o==="object"?(o.name||o.label||o.id):o));s.append(op);});return s;},
+  InputChoice:(c,x)=>{const s=$("select","field");(arr(resolve(c.options,x.dm))).forEach(o=>{const op=document.createElement("option");op.append(T(typeof o==="object"?(o.name||o.label||o.id):o));s.append(op);});return s;},
   DateTime:(c,x)=>{const i=$("input","field");i.type="date";return i;},
   Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
   ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
 };
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
-function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
+function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}
+  try{return f(c,x);}catch(err){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[could not draw "+c.type+"]"));return s;}}
 function spark(v){const ns="http://www.w3.org/2000/svg",w=200,h=44,mx=Math.max(...v,1),mn=Math.min(...v,0),rg=(mx-mn)||1;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");s.setAttribute("height",h);const p=document.createElementNS(ns,"polyline");p.setAttribute("points",v.map((y,i)=>`${i/(v.length-1||1)*w},${h-5-(y-mn)/rg*(h-10)}`).join(" "));p.setAttribute("fill","none");p.setAttribute("stroke","var(--green)");p.setAttribute("stroke-width","2.5");s.append(p);return s;}
 function bars(d,xk,yk){const ns="http://www.w3.org/2000/svg",w=300,h=150,pad=24,mx=Math.max(...d.map(r=>+r[yk]),1),bw=(w-pad*2)/(d.length||1)*.6;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");d.forEach((r,i)=>{const x=pad+i*((w-pad*2)/d.length)+((w-pad*2)/d.length-bw)/2,bh=(+r[yk])/mx*(h-pad*2);const rc=document.createElementNS(ns,"rect");rc.setAttribute("x",x);rc.setAttribute("y",h-pad-bh);rc.setAttribute("width",bw);rc.setAttribute("height",bh);rc.setAttribute("rx",3);rc.setAttribute("fill","var(--accent)");s.append(rc);const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","9");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=r[xk];s.append(tl);});return s;}
-function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());const rows=resolve(c.rows,x.dm)||[];const t=$("table");const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(T(col));tr.append(th);});t.append(tr);rows.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(r[col]));rr.append(td);});t.append(rr);});wrap.append(t);return wrap;}
+// ---- GaugeCluster: a bounded measurement against its limit. Every number is a
+// value from the data model; the sweep is arithmetic on that number. Nothing in
+// a gauge is executed, and the scale comes from the data source, never from
+// the model. ----
+// A gauge's colour comes from the same threshold that raises the real fault,
+// when the caller supplies one. Fraction-of-range is only a fallback, and it is
+// wrong twice: a pump rated to 25 A that normally draws 1.2 A sits at 5% of its
+// scale and is perfectly healthy, while a level past the limit that raises a
+// critical alert can still sit mid-scale and read as fine. A gauge that
+// disagrees with the system it is reporting on is the one thing this component
+// must never do.
+function gaugeTone(g,val,frac){
+  const num=v=>(v!=null&&isFinite(+v))?+v:null;
+  const warn=num(g.warn), alarm=num(g.alarm), inv=!!g.invert;
+  const past=(limit)=>inv?val<=limit:val>=limit;
+  if(alarm!=null&&past(alarm))return "var(--red)";
+  if(warn!=null&&past(warn))return "var(--amber)";
+  if(alarm!=null||warn!=null)return "var(--green)";
+  const sevFrac=inv?1-frac:frac;
+  return sevFrac>=.9?"var(--red)":sevFrac>=.75?"var(--amber)":"var(--green)";
+}
+// A gauge in alarm never sweeps less than this fraction of its arc.
+const ALARM_MIN_SWEEP=0.06;
+function gauge(g){
+  const ns="http://www.w3.org/2000/svg",w=110,h=78,cx=55,cy=58,r=40;
+  const val=+g.value||0, lo=(g.min==null?0:+g.min), hi=(g.max==null?100:+g.max);
+  const frac=Math.max(0,Math.min(1,(val-lo)/((hi-lo)||1)));
+  const arc=(from,to)=>{const a0=Math.PI*(1+from),a1=Math.PI*(1+to);
+    const p=document.createElementNS(ns,"path");
+    p.setAttribute("d",`M ${cx+r*Math.cos(a0)} ${cy+r*Math.sin(a0)} A ${r} ${r} 0 0 1 ${cx+r*Math.cos(a1)} ${cy+r*Math.sin(a1)}`);
+    p.setAttribute("fill","none");p.setAttribute("stroke-width","9");p.setAttribute("stroke-linecap","round");return p;};
+  const s=document.createElementNS(ns,"svg");
+  s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");
+  const track=arc(0,1);track.setAttribute("stroke","var(--rule)");
+  // Severity is drawn as arc length, and length is exactly what a failing
+  // signal has least of: a lamp that has failed completely reads zero, sweeps
+  // nothing, and disappears at the moment it matters most. So a gauge in warn
+  // or alarm gets a floor sweep, and the value readout is toned as well — a
+  // channel whose visibility does not depend on the magnitude of the fault.
+  // A healthy signal sitting low in its range is left alone; the floor is for
+  // severity, not for every small number.
+  const tone=gaugeTone(g,val,frac), severe=tone!=="var(--green)";
+  const fill=arc(0,severe?Math.max(frac,ALARM_MIN_SWEEP):(frac||0.001));
+  fill.setAttribute("stroke",tone);
+  s.append(track,fill);
+  const num=document.createElementNS(ns,"text");
+  num.setAttribute("x",cx);num.setAttribute("y",cy-4);num.setAttribute("text-anchor","middle");
+  num.setAttribute("font-size","17");num.setAttribute("font-weight","700");num.setAttribute("fill",severe?tone:"var(--ink)");
+  num.appendChild(T(String(Math.round(val*10)/10)));
+  const unit=document.createElementNS(ns,"text");
+  unit.setAttribute("x",cx);unit.setAttribute("y",cy+9);unit.setAttribute("text-anchor","middle");
+  unit.setAttribute("font-size","9");unit.setAttribute("fill","var(--ink-muted)");
+  unit.appendChild(T(String(g.unit==null?"":g.unit)));
+  s.append(num,unit);
+  const wrap=$("div");wrap.style.cssText="flex:1;min-width:104px;text-align:center";
+  const lab=$("div","lab");lab.style.cssText="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);font-family:var(--font-mono)";
+  lab.append(T(String(g.label==null?"":g.label)));
+  wrap.append(s,lab);return wrap;
+}
+function gauges(list){const row=$("div");row.style.cssText="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px";
+  (list||[]).forEach(g=>row.append(gauge(g||{})));return row;}
+
+
+// A table may arrive with rows bound and columns never named — valid against
+// the catalog, and empty on screen, because splitting an absent column string
+// yields one blank column. The keys of the rows are the obvious answer and are
+// harness-owned data, not anything the model authored, so fall back to them.
+// Named columns stay authoritative: a table that widened itself to every key
+// would show a column its author chose to leave out.
+function table(c,x){const wrap=$("div");const rows=arr(resolve(c.rows,x.dm));const cols=(c.columns?String(c.columns).split(",").map(s=>s.trim()).filter(Boolean):[]).length?String(c.columns).split(",").map(s=>s.trim()).filter(Boolean):[...new Set(rows.flatMap(r=>Object.keys(r||{})))];const t=$("table");const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(T(col));tr.append(th);});t.append(tr);rows.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(r[col]));rr.append(td);});t.append(rr);});wrap.append(t);return wrap;}
 function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);const tabIds=c.children||[];function show(i){body.textContent="";const cc=x.byId[tabIds[i]];if(cc)body.append(node(cc,x));[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}
   (String(c.labels||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});
   if(tabIds.length)show(0);return wrap;}
 
-function render(surface){const byId={};surface.components.forEach(c=>byId[c.id]=c);const x={byId,dm:surface.dataModel||{}};const m=document.getElementById("mount");m.textContent="";m.append(node(byId[surface.root],x));}
+
+// A model can compose perfectly valid components and forget the container that
+// holds them: every type known, every binding sound, and a declared root id
+// that was never emitted. Reading byId[root] then yields undefined and throws,
+// which blanks an interface whose parts were all fine. The catalog invariant
+// holds the model to known types; it does not make it remember a container. So
+// when the root is absent, draw what did arrive, in the order it arrived,
+// skipping anything another component already claims as a child so nothing is
+// drawn twice.
+function topLevel(surface){
+  const claimed=new Set();
+  surface.components.forEach(c=>(c.children||[]).forEach(id=>claimed.add(id)));
+  return surface.components.filter(c=>!claimed.has(c.id));
+}
+function render(surface){const byId={};surface.components.forEach(c=>byId[c.id]=c);const x={byId,dm:surface.dataModel||{}};const m=document.getElementById("mount");m.textContent="";
+  const root=byId[surface.root];
+  if(root){m.append(node(root,x));return;}
+  topLevel(surface).forEach(c=>m.append(node(c,x)));}
 
 // ---- the app loop: a tap becomes the next turn ----
-function setStatus(html){document.getElementById("status").innerHTML=html;}
+// The status line is built from DOM nodes like everything else. No string in
+// this client is ever parsed as markup, so there is no path an edit could
+// later route model output through.
+function setStatus(text,pill,tone){
+  const bar=document.getElementById("status");bar.textContent="";
+  if(pill){const p=$("span","pill "+(tone||"think"));p.append(T(pill));bar.append(p);}
+  bar.append(T(text||""));
+}
 function crumbs(){document.getElementById("crumbs").textContent = convo.length? "conversation: "+convo.join("  ›  ") : "";}
 
 async function runTurn(userText){
   convo.push(userText);
   crumbs();
-  setStatus('<span class="pill think">composing…</span> the agent is writing an interface for: "'+userText+'"');
+  setStatus(' the agent is writing an interface for: "'+userText+'"',"composing…","think");
   const goal = convo.length===1 ? convo[0]
      : convo[0] + "\nSo far the user then picked: " + convo.slice(1).join(", then ") + ".\nRespond with the next interface for that.";
   const res = await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -165,7 +261,8 @@ async function runTurn(userText){
   const rid = run.run_id;
   const c = await (await fetch(API+"/v1/runs/"+rid+"/composed")).json();
   if(c.surface){ render(c.surface);
-    setStatus('<span class="pill good">'+(c.provider||"gemini")+' · '+c.component_count+' components · 0 executable</span> composed live, validated in-catalog'); }
+    setStatus(" composed live, validated in-catalog",
+      (c.provider||"gemini")+" · "+c.component_count+" components · 0 executable","good"); }
   else { setStatus("no interface composed"); }
 }
 function choose(label){ if(label) runTurn(label); }
