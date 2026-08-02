@@ -234,3 +234,20 @@ async def app_viewer():
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
     return path.read_text()
+
+
+@router.get("/trip", response_class=HTMLResponse)
+@router.get("/trip/", response_class=HTMLResponse)
+async def trip_planner():
+    """Waypoint: a UI-only trip planner built on the same loop as ``/app``.
+
+    Every turn is a composed, catalog-validated interface — never a paragraph of
+    model prose rendered as markup. A tap sends its label back as the next turn,
+    so the conversation is carried by the interfaces themselves. The shell draws
+    every catalog type from DOM nodes it builds, ``RouteMap`` included, and
+    assigns ``innerHTML`` nowhere.
+    """
+    path = Path(__file__).parent / "client" / "trip.html"
+    if not path.exists():
+        raise HTTPException(500, "trip planner missing")
+    return path.read_text()

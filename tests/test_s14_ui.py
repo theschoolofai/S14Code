@@ -536,6 +536,65 @@ def test_routemap_is_wired_into_the_client_renderer_table(filename):
     assert re.search(r"\bRouteMap\s*:", html), f"{filename} does not dispatch RouteMap"
 
 
+# --------------------------------------------------------------------------- #
+# Waypoint — the UI-only trip-planner shell served at /trip
+# --------------------------------------------------------------------------- #
+
+def _trip_html() -> str:
+    return (_BUILD_ROOT / "s13code" / "ui" / "client" / "trip.html").read_text()
+
+
+def test_trip_shell_can_draw_every_type_the_agent_may_compose():
+    """The shell must cover the whole catalog.
+
+    compose_surface offers the model all 24 types, so a shell that implements
+    only some of them would silently degrade a legitimate interface into
+    "skipped unknown type" boxes and blame the agent for it.
+    """
+    html = _trip_html()
+    missing = [name for name in COMPONENTS if not re.search(rf"\n  {name}\s*:", html)]
+    assert not missing, f"/trip cannot draw: {missing}"
+
+
+def test_trip_shell_never_assigns_innerhtml():
+    html = _trip_html()
+    assert not re.search(r"innerHTML\s*=", html)
+    # The word appears once, in the contract comment that explains the rule.
+    assert html.count("innerHTML") == 1
+    assert "NEVER assigns innerHTML" in html
+
+
+def test_trip_shell_evaluates_no_string_and_builds_text_nodes():
+    html = _trip_html()
+    assert "createTextNode" in html
+    for forbidden in ("eval(", "new Function", "document.write", "insertAdjacentHTML", "outerHTML"):
+        assert forbidden not in html, f"/trip must not use {forbidden}"
+
+
+def test_trip_shell_asks_for_a_composed_interface_and_reads_it_back():
+    html = _trip_html()
+    # It requests a UI answer, then reads the interface the agent composed.
+    assert 'respond_as:"ui"' in html
+    assert "/v1/agent/runs" in html and "/composed" in html
+    # A tap becomes the next turn: the label is fed back into the conversation.
+    assert "runTurn(lab)" in html
+
+
+def test_trip_shell_uses_a_synthetic_identity():
+    html = _trip_html()
+    assert 'user_id:"traveller-01"' in html
+    for real in ("@", "bindroo", "tomtom"):
+        assert real not in html.lower(), "the shell must carry no real identity"
+
+
+def test_route_trip_planner_serves_the_shell(client):
+    r = client.get("/trip")
+    assert r.status_code == 200
+    assert "Waypoint" in r.text
+    # It is served whole, with the renderer intact.
+    assert "RouteMap:" in r.text
+
+
 def test_compose_step_never_names_the_contributed_component():
     """The proof that the agent chose RouteMap on its own.
 
