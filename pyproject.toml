@@ -16,7 +16,13 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.6"]
+dev = [
+    "playwright==1.60.0",
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "pytest-playwright>=0.5",
+    "ruff>=0.6",
+]
 
 [project.scripts]
 s13code = "s13code.cli:main"

@@ -121,6 +121,207 @@ def _weak_evidence(result: dict[str, Any] | None) -> bool:
     return not text and not hits
 
 
+
+def merge_gauges(data_model: dict[str, Any], structured: dict[str, Any]) -> None:
+    """Expose bounded readings — a value WITH a scale — under ``/gauges``.
+
+    A number on its own is a metric; a number with a floor and a ceiling is a
+    reading you can be close to the edge of, and that is a different question
+    for an interface to answer. The distinction is the bounds, so a reading
+    without them is left as a metric rather than given an invented axis to be
+    drawn against.
+
+    Thresholds ride along when the caller supplies them: ``warn``/``alarm`` are
+    the limits that raise the real fault, and ``invert`` says the failing end is
+    the bottom of the range. Without those a renderer has only fraction-of-range
+    to judge by, which is wrong for anything that fails low.
+
+    Domain-neutral, like everything else in this data model: a CPU, a battery, a
+    tank and a coolant loop are all the same shape to it.
+    """
+    def _num(value: Any) -> float | None:
+        if isinstance(value, bool):
+            return None
+        try:
+            return float(str(value).replace(",", "").strip())
+        except (TypeError, ValueError):
+            return None
+
+    readings: list[dict[str, Any]] = []
+    candidates = [entry for key in ("gauges", "metrics")
+                  for entry in (structured.get(key) or [])
+                  if isinstance(entry, dict)]
+    for entry in candidates:
+        label = str(entry.get("label") or "").strip()
+        value, low, high = (_num(entry.get(k)) for k in ("value", "min", "max"))
+        if not label or value is None or low is None or high is None or low == high:
+            continue
+        reading: dict[str, Any] = {"label": label, "value": value, "min": low, "max": high,
+                                   "unit": str(entry.get("unit") or "").strip()}
+        for key in ("warn", "alarm"):
+            limit = _num(entry.get(key))
+            if limit is not None:
+                reading[key] = limit
+        if entry.get("invert"):
+            reading["invert"] = True
+        readings.append(reading)
+
+    if readings:
+        data_model["gauges"] = readings
+
+
+def _repair_pointers(comp: dict[str, Any], data_model: dict[str, Any]) -> dict[str, Any]:
+    """Rewrite JavaScript-shaped bindings on one component, where that helps."""
+    from .ui.validator import _resolves
+
+    fixed = comp
+    for field_name, value in comp.items():
+        if not (isinstance(value, dict) and "$bind" in value):
+            continue
+        pointer = str(value["$bind"])
+        if _resolves(pointer, data_model):
+            continue
+        candidate = "/" + re.sub(r"[.\[]", "/", pointer.lstrip("/")).replace("]", "").strip("/")
+        candidate = re.sub(r"/+", "/", candidate)
+        if candidate != pointer and _resolves(candidate, data_model):
+            if fixed is comp:
+                fixed = dict(comp)
+            fixed[field_name] = {"$bind": candidate}
+    return fixed
+
+
+def repair_surface(root: str, components: list[dict[str, Any]],
+                   data_model: dict[str, Any] | None = None) -> tuple[str, list[dict[str, Any]]]:
+    """Make a composed surface renderable without changing what it says.
+
+    A model can return components that are individually perfect and collectively
+    not a tree: every type known, every binding sound, and a declared root id it
+    never emitted. Reading that root yields nothing and the interface is blank —
+    a failure with no bad actor in it, so no invariant catches it.
+
+    Repairing it in the render clients would fix it for browsers alone; the A2A
+    reply, the composed-run route and anything else reading a stored surface
+    would still hold the broken tree. So it is repaired here, once, where the
+    surface is produced. A sound tree is returned untouched — rewriting one
+    would mean the interface that ships is not the interface that was composed.
+    """
+    if not components:
+        return root, components
+
+    # A model asked for a JSON Pointer will often write JavaScript instead:
+    # /gauges[0].label, or /gauges.0.label. Both pass a syntax check, resolve to
+    # nothing, and render as an empty widget that reads like missing data. The
+    # notation is rewritten ONLY when the rewritten pointer actually resolves —
+    # this fixes how the model wrote it down, it does not go hunting for a value
+    # the model might have meant.
+    if isinstance(data_model, dict):
+        components = [_repair_pointers(comp, data_model) for comp in components]
+
+    # The wall drops poisoned components; whatever named one as a child is left
+    # pointing at a hole and draws an empty container. Prune the dead references,
+    # then drop any container that is left holding nothing — an empty Row is a
+    # blank band that says nothing about why it is there. Repeated to a fixpoint,
+    # because dropping a container can empty its parent in turn.
+    while True:
+        ids = {comp.get("id") for comp in components}
+        pruned: list[dict[str, Any]] = []
+        changed = False
+        for comp in components:
+            if "children" not in comp:
+                pruned.append(comp)
+                continue
+            kept = [child for child in (comp.get("children") or []) if child in ids]
+            if not kept:
+                changed = True          # an empty container is dropped entirely
+                continue
+            if kept != list(comp.get("children") or []):
+                comp = {**comp, "children": kept}
+                changed = True
+            pruned.append(comp)
+        components = pruned
+        if not changed or not components:
+            break
+
+    ids = {comp.get("id") for comp in components}
+    if root in ids:
+        return root, components
+
+    claimed = {child for comp in components for child in (comp.get("children") or [])}
+    orphans = [comp["id"] for comp in components if comp.get("id") not in claimed]
+
+    container = root if root not in ids else "surface_root"
+    while container in ids:
+        container += "_"
+    return container, [{"id": container, "type": "Column", "children": orphans}, *components]
+
+
+def compose_system_prompt() -> str:
+    """The shape rules every composed surface is held to.
+
+    Deliberately says nothing about any one component beyond the A2UI-Basic
+    naming traps: which type to reach for is the model's job, and the captured
+    run that proves a new catalog entry gets used is only worth something if the
+    prompt never names it.
+    """
+    return ("You compose declarative A2UI interfaces for a goal, binding every value to a provided "
+              'dataModel. Output ONLY one JSON object {"root":"root","components":[...]}. Each component '
+              'is a FLAT object whose fields sit DIRECTLY on it: {"id":..., "type":..., <prop>:<value>, '
+              '...}. Do NOT wrap fields in a "props" object and do NOT nest a "properties" key. The '
+              'catalog uses A2UI Basic names: use "Text" with "variant":"heading" for titles (there is NO '
+              '"Heading" type), "Row"/"Column"/"List"/"Card" for layout (there is NO "Grid" type), "Tabs" '
+              'whose "children" are the panels directly (there is NO separate "Tab" type), and "Button" '
+              'for tappable choices. Shape examples (fields inline): '
+              '{"id":"h","type":"Text","variant":"heading","text":{"$bind":"/title"}}  '
+              '{"id":"r","type":"Row","align":"stretch","justify":"spaceBetween","children":["a","b"]}  '
+              '{"id":"b1","type":"Button","label":"Choice A","onPress":{"action":"request_data"}}  '
+              '{"id":"body","type":"Text","variant":"body","text":{"$bind":"/summary"}}  '
+              '{"id":"tabs","type":"Tabs","labels":"One,Two","children":["p0","p1"]}. '
+              "Use ONLY the component types and props named in the catalog. Every DATA value a component "
+              'shows MUST be a binding {"$bind":"/pointer"} into the dataModel; a Button/Card/Tabs '
+              "label/title and column names may be literal UI strings. An onPress action MUST be one of the "
+              "registered actions (use \"request_data\" for choices); never invent an action, component "
+              "type, prop, event handler, URL, or markup. children/labels reference component ids. "
+              "Prefer the RICHEST fitting component for each piece of data, NEVER one big Text blob: a "
+              "Timeline or a List/Column of Cards for ordered groups, StatTiles in a Row for key numbers, "
+              "a BarChart or Sparkline for a numeric series, a DataTable for tabular rows, and Buttons for "
+              "tappable choices. Fall back to a single Text only when the data has no structure. Return "
+              "JSON only: no prose, no fences.")
+
+
+def compose_instruction(goal: str, manifest: dict[str, Any], data_model: dict[str, Any]) -> dict[str, Any]:
+    """What the model is actually asked: the goal, the catalog, the data, and the
+    pointers that exist. The catalog is the same object the validator enforces,
+    so the model cannot learn about a type that would then be rejected."""
+    return {
+        "goal": goal,
+        "catalog": manifest,
+        "dataModel": data_model,
+        "available_pointers": sorted("/" + key for key in data_model),
+        "compose": ("Compose the RICHEST interface that serves the goal above, using ONLY catalog types, "
+                    "and choose components from the data that is actually present in available_pointers. "
+                    'Start with a Text (variant "heading") bound to /title, then a Text (variant "body") '
+                    "bound to /intro or /summary if present. Then map the structured data to rich "
+                    "components (skip any pointer that is absent): "
+                    "for /sections (ordered groups) render EITHER a Timeline bound to /section_events OR a "
+                    "List/Column of Cards, one Card per section titled with the literal /section_N_heading "
+                    "and a Text bound to /section_N_points; "
+                    "for /metrics render a Row of StatTiles, each StatTile value bound to /metric_N_value "
+                    "with a literal label; "
+                    "for /gauges (readings that each carry a scale and the limits that raise a fault) "
+        "use the catalog component whose props accept exactly that shape, bound to /gauges, "
+        "and do not flatten them into text; "
+        "for /series render a BarChart (data bound to /series, xKey \"label\", yKey \"value\") "
+                    "or a Sparkline bound to /series_values; "
+                    "for /table_rows render a DataTable (rows bound to /table_rows, columns the literal "
+                    "/table_columns joined by commas); "
+                    "for /choices (the goal asks the user to pick) render one tappable Button per entry, "
+                    "label the literal /choice_N_label, onPress action \"request_data\"; "
+                    "you may also add a ProgressBar bound to /progress_value (max /progress_max) and a "
+                    "Timeline bound to /timeline for the run's own steps. Do NOT dump everything into one "
+                    "Text. Bind every DATA value to a /pointer listed in available_pointers."),
+    }
+
+
 def _work_intent(prompt: str, respond_as: str = "text") -> tuple[str, list[TaskSpec]]:
     """Choose the first useful frontier from the non-browser skill surface.
 
@@ -789,9 +990,15 @@ class S13Runtime:
                     for metric in metrics:
                         if not isinstance(metric, dict) or not str(metric.get("label") or "").strip():
                             continue
-                        clean_metrics.append({"label": str(metric["label"]).strip(),
-                                              "value": metric.get("value"),
-                                              "unit": str(metric.get("unit") or "").strip()})
+                        clean_metric = {"label": str(metric["label"]).strip(),
+                                        "value": metric.get("value"),
+                                        "unit": str(metric.get("unit") or "").strip()}
+                        # A scale, when the answer carried one, so the same
+                        # number can also be read as a bounded reading below.
+                        for key in ("min", "max", "warn", "alarm", "invert"):
+                            if metric.get(key) is not None:
+                                clean_metric[key] = metric[key]
+                        clean_metrics.append(clean_metric)
                     if clean_metrics:
                         data_model["metrics"] = clean_metrics
                         for index, metric in enumerate(clean_metrics):
@@ -838,79 +1045,56 @@ class S13Runtime:
                         for index, choice in enumerate(clean_choices):
                             data_model[f"choice_{index}_label"] = choice["label"]
 
+            # Bounded readings, offered generically. The catalog already has a
+            # component for them; whether the model reaches for it is its own
+            # business, and nothing below tells it to.
+            merge_gauges(data_model, {**content_structured, "metrics": data_model.get("metrics") or []})
+
             manifest = catalog_manifest()
-            pointers = sorted("/" + key for key in data_model)
-            # Domain-agnostic system prompt: compose an A2UI interface for the goal
-            # that binds to the data model, under the A2UI-Basic shape rules. It
-            # says NOTHING about any particular domain, chart, or entity type.
-            system = ("You compose declarative A2UI interfaces for a goal, binding every value to a provided "
-                      'dataModel. Output ONLY one JSON object {"root":"root","components":[...]}. Each component '
-                      'is a FLAT object whose fields sit DIRECTLY on it: {"id":..., "type":..., <prop>:<value>, '
-                      '...}. Do NOT wrap fields in a "props" object and do NOT nest a "properties" key. The '
-                      'catalog uses A2UI Basic names: use "Text" with "variant":"heading" for titles (there is NO '
-                      '"Heading" type), "Row"/"Column"/"List"/"Card" for layout (there is NO "Grid" type), "Tabs" '
-                      'whose "children" are the panels directly (there is NO separate "Tab" type), and "Button" '
-                      'for tappable choices. Shape examples (fields inline): '
-                      '{"id":"h","type":"Text","variant":"heading","text":{"$bind":"/title"}}  '
-                      '{"id":"r","type":"Row","align":"stretch","justify":"spaceBetween","children":["a","b"]}  '
-                      '{"id":"b1","type":"Button","label":"Choice A","onPress":{"action":"request_data"}}  '
-                      '{"id":"body","type":"Text","variant":"body","text":{"$bind":"/summary"}}  '
-                      '{"id":"tabs","type":"Tabs","labels":"One,Two","children":["p0","p1"]}. '
-                      "Use ONLY the component types and props named in the catalog. Every DATA value a component "
-                      'shows MUST be a binding {"$bind":"/pointer"} into the dataModel; a Button/Card/Tabs '
-                      "label/title and column names may be literal UI strings. An onPress action MUST be one of the "
-                      "registered actions (use \"request_data\" for choices); never invent an action, component "
-                      "type, prop, event handler, URL, or markup. children/labels reference component ids. "
-                      "Prefer the RICHEST fitting component for each piece of data, NEVER one big Text blob: a "
-                      "Timeline or a List/Column of Cards for ordered groups, StatTiles in a Row for key numbers, "
-                      "a BarChart or Sparkline for a numeric series, a DataTable for tabular rows, and Buttons for "
-                      "tappable choices. Fall back to a single Text only when the data has no structure. Return "
-                      "JSON only: no prose, no fences.")
-            instruction = {
-                "goal": prompt,
-                "catalog": manifest,
-                "dataModel": data_model,
-                "available_pointers": pointers,
-                "compose": ("Compose the RICHEST interface that serves the goal above, using ONLY catalog types, "
-                            "and choose components from the data that is actually present in available_pointers. "
-                            'Start with a Text (variant "heading") bound to /title, then a Text (variant "body") '
-                            "bound to /intro or /summary if present. Then map the structured data to rich "
-                            "components (skip any pointer that is absent): "
-                            "for /sections (ordered groups) render EITHER a Timeline bound to /section_events OR a "
-                            "List/Column of Cards, one Card per section titled with the literal /section_N_heading "
-                            "and a Text bound to /section_N_points; "
-                            "for /metrics render a Row of StatTiles, each StatTile value bound to /metric_N_value "
-                            "with a literal label; "
-                            "for /series render a BarChart (data bound to /series, xKey \"label\", yKey \"value\") "
-                            "or a Sparkline bound to /series_values; "
-                            "for /table_rows render a DataTable (rows bound to /table_rows, columns the literal "
-                            "/table_columns joined by commas); "
-                            "for /choices (the goal asks the user to pick) render one tappable Button per entry, "
-                            "label the literal /choice_N_label, onPress action \"request_data\"; "
-                            "you may also add a ProgressBar bound to /progress_value (max /progress_max) and a "
-                            "Timeline bound to /timeline for the run's own steps. Do NOT dump everything into one "
-                            "Text. Bind every DATA value to a /pointer listed in available_pointers."),
-            }
+            system = compose_system_prompt()
+            instruction = compose_instruction(prompt, manifest, data_model)
             body = await _gateway_surface_call(json.dumps(instruction), system)
             raw = body.get("text", "")
             surface = _extract_surface(raw)
             proposed = surface.get("components", []) if isinstance(surface, dict) else []
+            # Notation first, then the wall. A model that wrote /gauges[0].label
+            # meant a pointer and typed JavaScript; rewriting it before
+            # validation keeps a good component instead of refusing it for how
+            # it was spelled. Rewriting only ever produces a pointer that
+            # resolves, so nothing reaches the wall in a weaker state than it
+            # arrived — an expression that cannot be rewritten is still refused.
+            if isinstance(surface, dict) and isinstance(surface.get("components"), list):
+                surface = {**surface,
+                           "components": [_repair_pointers(comp, data_model)
+                                          for comp in surface["components"]
+                                          if isinstance(comp, dict)]}
             validation = validate_surface(surface if isinstance(surface, dict) else {"components": []})
             accepted_ids = {comp.get("id") for comp in validation.accepted}
             dangling = sorted({child for comp in validation.accepted
                                for child in comp.get("children", []) if child not in accepted_ids})
             types_used = sorted({comp.get("type") for comp in validation.accepted})
+            # The surface is safe by here; whether it is a tree is a separate
+            # question the wall does not answer. Repair it once, so every
+            # consumer downstream gets something renderable rather than each
+            # renderer inventing its own fallback.
+            declared_root = (surface or {}).get("root", "root") if isinstance(surface, dict) else "root"
+            root_id, components_out = repair_surface(declared_root, validation.accepted, data_model)
             return {
                 "agent": "ui_composer", "provider": body.get("provider"), "model": body.get("model"),
                 "raw_surface": raw,
-                "surface": {"root": (surface or {}).get("root", "root") if isinstance(surface, dict) else "root",
-                            "components": validation.accepted, "dataModel": data_model},
+                "surface": {"root": root_id,
+                            "components": components_out, "dataModel": data_model},
                 "data_model": data_model,
                 "validator": {"proposed": len(proposed), "accepted": len(validation.accepted),
                               "rejected": len(validation.rejections), "ok": validation.ok,
                               "rejections": [rejection.as_dict() for rejection in validation.rejections],
                               "dangling_child_refs": dangling, "component_types": types_used,
-                              "component_count": len(validation.accepted)},
+                              "component_count": len(components_out),
+                              "structure": validation.structure,
+                              # The synthesised container often takes the id the
+                              # model declared, so comparing ids would report no
+                              # repair on exactly the case that needed one.
+                              "root_repaired": len(components_out) != len(validation.accepted)},
                 "upstream_used": [item["label"] for item in outcomes],
                 "parse_ok": surface is not None,
             }

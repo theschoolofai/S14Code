@@ -153,6 +153,209 @@ uv run python proofs/run_surface_proof.py    # writes proof.json, prints the tab
 uv run pytest -q                             # S13 core + regression tests + the S14 invariant tests
 ```
 
+## Evidence — `GaugeCluster`, and the wall that guards it
+
+This branch adds one catalog component, `GaugeCluster` (design notes:
+[`docs/gauge-cluster.md`](docs/gauge-cluster.md)), plus the structural checks and
+repairs that keep a model-composed surface renderable. Everything below is a
+real run, transcribed. The provider is a local `gemma4:latest` served by Ollama
+behind the `glc_v3` HTTP contract — **not** Gemini; see *Honest verdict*.
+
+### The request
+
+```bash
+curl -s http://127.0.0.1:8113/v1/agent/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"tenant_id":"telltale-demo","user_id":"bench-operator",
+       "respond_as":"ui",
+       "prompt":"A technician is standing at a test bench looking at a vehicle. Summarise the state of the vehicle so they can decide what to look at first, using ONLY the readings below.\n\nReadings from the bench bus (JSON):\n{ ...six readings, each with label/value/min/max/unit/warn/alarm/invert... }\n\nReport every reading you use as a metric carrying its own label, value, unit, min, max and the warn/alarm limits given here, so the numbers keep their scale. Do not invent readings that are not listed."}'
+# -> {"run_id": "run-23b9222c1829"}
+```
+
+**The prompt never says `GaugeCluster`.** `tests/test_compose_gauges.py` asserts
+that neither `compose_system_prompt()` nor `compose_instruction()` contains the
+string, because a run whose instruction named the component would measure
+obedience rather than composition.
+
+### The graph, and the ordered event trace
+
+```
+nodes:  content  (skill=content,         agent=content)
+        surface  (skill=compose_surface, agent=ui_composer)
+edges:  content -> surface
+
+205  run_started
+206  graph_patched     add=[content]   "first frontier selected for compose_answer"
+207  task_started      content         skill=content        agent=content
+208  task_succeeded    content          -> structured {title, intro, sections, metrics×6}
+209  graph_patched     add=[surface]   "content produced; compose a validated A2UI surface"
+210  task_started      surface         skill=compose_surface agent=ui_composer
+211  task_succeeded    surface         provider=ollama model=gemma4:latest
+212  graph_patched     "composed a surface the S14 validator accepted"
+```
+
+**Provider and agent assignment, per node:** `content` → agent `content`,
+provider `ollama`, model `gemma4:latest`. `surface` → agent `ui_composer`,
+provider `ollama`, model `gemma4:latest`. No node holds a credential; both reach
+the model through `GLC_BASE_URL` alone.
+
+### The result
+
+The model's raw reply, unedited:
+
+```json
+{"root":"root","components":[
+  {"id":"t1","type":"Text","variant":"heading","text":{"$bind":"/title"}},
+  {"id":"n1","type":"Notice","text":{"$bind":"/summary"},"tone":"bad"},
+  {"id":"card0","type":"Card","title":"Critical Faults & Status","children":["t2"]},
+  {"id":"t2","type":"Text","variant":"body","text":{"$bind":"/section_0_points"}},
+  {"id":"gauge_cluster","type":"GaugeCluster","gauges":{"$bind":"/gauges"}},
+  {"id":"card1","type":"Card","title":"System Readings","children":["t3"]},
+  {"id":"t3","type":"Text","variant":"body","text":{"$bind":"/section_1_points"}}
+]}
+```
+
+Offered a data model containing bounded readings, a series and rows — three
+different shapes, so choosing per shape is a real choice — it reached for
+`GaugeCluster` and bound it to `/gauges`. The validator's verdict:
+
+```json
+{"proposed": 7, "accepted": 7, "rejected": 0, "ok": true,
+ "component_types": ["Card", "GaugeCluster", "Notice", "Text"],
+ "component_count": 8,
+ "structure": ["root 'root' is not among the components"], "root_repaired": true}
+```
+
+Note the last two fields. The model declared `"root":"root"` and then **never
+emitted a component with that id** — the client would have thrown on the first
+lookup. That is not an attack, so refusing it would be the wrong answer; it is
+incoherence, and it is repaired. Hence `ValidationResult` grows a second, separate
+property: `ok` means *safe*, `coherent` means *renderable*. Different questions,
+opposite responses. `repair_surface` synthesises the missing container, and the
+count goes 7 → 8.
+
+### Three turns, each shaped by the tap before it
+
+| turn | tapped | composed | verdict |
+|---|---|---|---|
+| 1 overview | — | `Text · Notice · Card ×2 · GaugeCluster` (8) | clean, coherent, first attempt |
+| 2 domain | `Lighting` | `Column · Text` (2) | clean, coherent — **but prose only, after 3 attempts** |
+| 3 fault | `C0040` | `Text · Card · GaugeCluster` (8) | clean, **not coherent** |
+
+Turn 2 answered in text while bounded readings sat in the data model, twice, and
+the third attempt composed nothing at all. Turn 3 bound a gauge title to
+`/gauges.title`, which resolves to nothing, and the structural check said so
+rather than shipping a blank heading. Both are recorded because a table showing
+only turn 1 would be a different, false claim.
+
+### Adversarial: one attack that used to get through
+
+The rule that admits a binding was `^/[^\s]*$` — it reads like a JSON Pointer
+check and is really a *no whitespace* check. So this passes it:
+
+```json
+{"id":"g0","type":"GaugeCluster","gauges":{"$bind":"/readings[0].value|toFixed(1)"}}
+```
+
+A member access, an index, and a filter call — an expression, in the one place
+the design says only data may travel. **Before** (the validator at `main`, loaded
+out of git and executed, not paraphrased):
+
+```json
+{"accepted": ["root", "g0"], "rejections": [], "clean": true}
+```
+
+It reaches the browser. **After** (this branch, same payload, same catalog):
+
+```json
+{"accepted": ["root"], "clean": false,
+ "rejections": [{"component_id": "g0", "field": "gauges", "invariant": "data-not-code",
+                 "reason": "invalid JSON Pointer '/readings[0].value|toFixed(1)'"}]}
+```
+
+The fix is one line — `_POINTER = re.compile(r"^/[A-Za-z0-9_\-./~]*$")` — an
+allow-list of what a pointer may contain instead of a deny-list of what it may
+not. The container survives; only the hostile node is dropped, because a wall
+that answered an attack by discarding the whole surface would hand the attacker a
+denial of service.
+
+The other three invariants, each given the surface a complying model would emit:
+
+| attack | refused by | verdict |
+|---|---|---|
+| `{"type":"RawHtml","html":"<script>alert(document.cookie)</script>"}` | catalog | `unknown component type 'RawHtml'` |
+| `Button.label = "<img src=x onerror=…>"`, `Image.src = "javascript:alert(1)"` | data-not-code | `value carries markup`, `value is a script/data URL` |
+| `onPress.action = "exfiltrate_memory"` / `"delete_all_runs"` | event | `unregistered action` ×2 |
+
+In each case every hostile component is removed and the safe remainder still
+renders.
+
+### Honest verdict
+
+**The model is not the one the assignment names.** These runs are `gemma4:latest`
+on a local Ollama, reached through the same `glc_v3` contract Gemini uses. The
+mechanism under test is identical; the composition quality is not, and a
+different model would likely choose differently.
+
+**Composition is unreliable, and the fix is upstream of the renderers.** Across
+runs the same prompt produced a rich interface, a prose-only answer, and nothing
+at all. That is why this branch adds structural repair rather than only a
+component: a missing root, a dangling child reference and a misspelled pointer
+each arrived from a real model, and each is repaired once — in `compose_surface`,
+the narrowest point every consumer passes through — instead of in each renderer.
+
+**Sending hostile prompts through the live model proved less than expected.**
+`gemma4` declined all three: it composed an interface *about* the refusal instead
+of the requested payload, and substituted a registered action for the invented
+one. Encouraging, but not evidence about the wall — a model that happens to
+behave says nothing about the next one. So the invariant table above is the
+constructed surface handed straight to the validator, and it is labelled as such.
+One incidental finding from those runs: the attack text travelled into the data
+model and was rendered as characters, which is data-not-code working as intended
+and is pinned by `test_markup_in_a_bound_value_renders_as_literal_text`.
+
+**Also worth stating:** an attack payload containing a URL never reached the
+composer at all. The planner saw the URL, routed the run to `fetch_url`, and the
+run died on DNS. It cost six runs that looked like model flakiness.
+
+### Reproduce from a fresh checkout
+
+No model and no network — this is the whole adversarial claim, checkable in
+seconds:
+
+```bash
+git clone <this-fork> && cd S14Code && git checkout pitlane-generative-ui
+uv sync --dev
+uv run pytest -q                       # 198 passed
+uv run pytest -q tests/test_surface_structure.py tests/test_gauge_cluster.py
+```
+
+The browser tests need one extra download and skip cleanly without it:
+
+```bash
+uv run playwright install chromium
+uv run pytest -q tests/test_client_rendering_playwright.py
+```
+
+The wall, over HTTP, on a running server:
+
+```bash
+uv run s14code serve &
+curl -s http://127.0.0.1:8113/v1/validate -H 'Content-Type: application/json' \
+  -d '{"surface":{"root":"root","components":[
+        {"id":"root","type":"Column","children":["x"]},
+        {"id":"x","type":"RawHtml","html":"<script>alert(document.cookie)</script>"}],
+      "dataModel":{}}}'
+# {"ok":false,"accepted":["root"],
+#  "rejections":[{"component_id":"x","field":"type","invariant":"catalog",
+#                 "reason":"unknown component type 'RawHtml'"}]}
+```
+
+Reproducing the *live* runs needs a gateway speaking `POST {GLC_BASE_URL}/v1/chat`
+and returning `{text, provider, model}`. The one used here is an operational
+shim for a local model; it is not in this repository, because a framework should
+not carry a second gateway for a model the assignment does not name.
+
 ## Architecture
 
 - `s13code/core/live_graph/`: durable graph state, patches, event replay and bounded parallel execution
