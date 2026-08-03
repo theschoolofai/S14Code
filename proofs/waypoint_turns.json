@@ -15,7 +15,7 @@
       "turn": 1,
       "tapped": null,
       "prompt_sent": "Plan a 5-day trip to Japan. Ask me which region to focus on.\nAlways finish by offering 3 to 5 short, concrete choices the user could tap to go one level deeper. Keep each choice label under about eight words.",
-      "run_id": "run-6e9ecda7eb66",
+      "run_id": "run-7184f52cfc13",
       "status": "failed",
       "graph": {
         "nodes": {

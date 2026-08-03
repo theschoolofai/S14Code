@@ -186,7 +186,22 @@ async def main() -> int:
         "routemap_never_named_in_runtime": "RouteMap" not in runtime_source,
         "turns": turns,
     }
-    OUT.write_text(json.dumps(proof, indent=2))
+    # Never let a worse run overwrite a better one. A capture depends on a
+    # rate-limited key, so a retry can easily come back thinner than the run
+    # before it, and writing unconditionally means one quota-starved attempt
+    # silently destroys the evidence a good attempt already produced. A
+    # complete capture claims the canonical path; anything short of that lands
+    # beside it and leaves the good artifact alone.
+    complete = (proof["turns_captured"] == TURNS
+                and proof["every_turn_is_a_composed_interface"]
+                and proof["every_turn_validated_clean"])
+    if complete or os.getenv("WAYPOINT_FORCE") or not OUT.exists():
+        OUT.write_text(json.dumps(proof, indent=2))
+        written = OUT
+    else:
+        written = OUT.with_suffix(".incomplete.json")
+        written.write_text(json.dumps(proof, indent=2))
+        print(f"\n!! incomplete capture — {OUT.name} left untouched")
 
     await gateway.close()
     runtime.close()
@@ -199,7 +214,7 @@ async def main() -> int:
     print(f"component types used    : {all_types}")
     print(f"RouteMap composed       : {proof['routemap_composed']}  "
           f"(runtime.py never names it: {proof['routemap_never_named_in_runtime']})")
-    print(f"\nwrote {OUT}")
+    print(f"\nwrote {written}")
     return exit_code
 
 
