@@ -1,0 +1,73 @@
+{
+  "application": "Waypoint \u2014 a UI-only trip planner",
+  "goal": "Plan a 5-day trip to Japan. Ask me which region to focus on.",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "gateway_provider_env": "gemini",
+  "turns_captured": 1,
+  "every_turn_is_a_composed_interface": false,
+  "every_turn_validated_clean": false,
+  "distinct_component_types_used": [],
+  "each_turn_composed_a_different_interface": true,
+  "routemap_composed": false,
+  "routemap_never_named_in_runtime": true,
+  "turns": [
+    {
+      "turn": 1,
+      "tapped": null,
+      "prompt_sent": "Plan a 5-day trip to Japan. Ask me which region to focus on.\nAlways finish by offering 3 to 5 short, concrete choices the user could tap to go one level deeper. Keep each choice label under about eight words.",
+      "run_id": "run-6e9ecda7eb66",
+      "status": "failed",
+      "graph": {
+        "nodes": {
+          "content": {
+            "skill": "content",
+            "state": "failed",
+            "agent": "content",
+            "provider": null,
+            "model": null
+          }
+        },
+        "edges": []
+      },
+      "event_journal": [
+        {
+          "sequence": 1,
+          "kind": "run_started",
+          "node_id": null
+        },
+        {
+          "sequence": 2,
+          "kind": "graph_patched",
+          "node_id": null
+        },
+        {
+          "sequence": 3,
+          "kind": "task_started",
+          "node_id": "content"
+        },
+        {
+          "sequence": 4,
+          "kind": "task_failed",
+          "node_id": "content"
+        },
+        {
+          "sequence": 5,
+          "kind": "graph_patched",
+          "node_id": null
+        }
+      ],
+      "provider": null,
+      "model": null,
+      "error": null,
+      "compose_attempts": null,
+      "validator": null,
+      "component_types": [],
+      "component_count": 0,
+      "offers_taps": [],
+      "surface": {
+        "components": [],
+        "dataModel": {}
+      }
+    }
+  ]
+}

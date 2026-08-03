@@ -40,16 +40,21 @@ TURNS = 3
 TAP = [int(v) for v in os.getenv("WAYPOINT_TAPS", "0,0").split(",")]
 
 
+ONWARD = ("\nAlways finish by offering 3 to 5 short, concrete choices the user could tap"
+          " to go one level deeper. Keep each choice label under about eight words.")
+
+
 def next_goal(convo: list[str]) -> str:
     """Byte-for-byte the chaining the /trip shell performs in nextGoal()."""
     if len(convo) == 1:
-        return convo[0]
+        return convo[0] + ONWARD
     return (
         convo[0]
         + "\nThe user has since tapped, in order: " + " → ".join(convo[1:]) + "."
         + "\nProduce the content for that next step of the plan. Go one level deeper than the"
         + " previous step rather than repeating it, and include real locations with coordinates"
         + " whenever the step involves places."
+        + ONWARD
     )
 
 
@@ -98,6 +103,12 @@ async def main() -> int:
     exit_code = 0
 
     for index in range(TURNS):
+        if index:
+            # Each turn spends two model calls, and the course gateway runs a
+            # single Gemini key on a per-minute limit. Pacing the turns keeps a
+            # three-turn capture inside the quota instead of spending half of it
+            # on backoff, which is also roughly the rhythm of a person tapping.
+            await asyncio.sleep(float(os.getenv("WAYPOINT_TURN_PAUSE", "8")))
         if index == 0:
             convo.append(GOAL)
         else:
@@ -142,6 +153,8 @@ async def main() -> int:
                               for e in events],
             "provider": node_result.get("provider"),
             "model": node_result.get("model"),
+            "error": node_result.get("error"),
+            "compose_attempts": node_result.get("compose_attempts"),
             "validator": node_result.get("validator"),
             "component_types": types,
             "component_count": len(surface.get("components", [])),

@@ -595,6 +595,55 @@ def test_route_trip_planner_serves_the_shell(client):
     assert "RouteMap:" in r.text
 
 
+def test_the_capture_script_chains_turns_exactly_like_the_shell():
+    """proofs/waypoint_turns.py claims to drive the same loop /trip drives.
+
+    If the two prompts drift the capture stops being evidence about the running
+    application, so the shared sentences are compared rather than trusted.
+    """
+    shell = _trip_html()
+    script = (_BUILD_ROOT / "proofs" / "waypoint_turns.py").read_text()
+    for sentence in (
+        "The user has since tapped, in order: ",
+        "Produce the content for that next step of the plan. Go one level deeper than the",
+        " previous step rather than repeating it, and include real locations with coordinates",
+        " whenever the step involves places.",
+        "\\nAlways finish by offering 3 to 5 short, concrete choices the user could tap",
+        " to go one level deeper. Keep each choice label under about eight words.",
+    ):
+        assert sentence in shell, f"/trip lost: {sentence!r}"
+        assert sentence in script, f"waypoint_turns.py lost: {sentence!r}"
+
+
+def test_a_prose_tap_label_does_not_become_a_web_search_fanout():
+    """A conversational turn is prose, and prose is full of proper nouns.
+
+    The entity-list heuristic exists for "compare London, Berlin and Paris". A
+    tapped choice label like "Kanto (Tokyo, Hakone, Nikko): explore ..." trips
+    it on proper nouns alone, and the resulting three-way research fan-out then
+    stalls the whole turn on its distill node. A UI turn only fans out when the
+    goal also asks for a lookup.
+    """
+    from s13code.runtime import _work_intent
+
+    tap = ("Plan a 5-day trip to Japan.\nThe user has since tapped, in order: "
+           "Kanto (Tokyo, Hakone, Nikko): Explore the vibrant metropolis of Tokyo, "
+           "historical sites like Nikko, and the natural beauty of Hakone.")
+    mode, frontier = _work_intent(tap, respond_as="ui")
+    assert mode == "compose_answer"
+    assert [t.skill for t in frontier] == ["content"]
+
+
+def test_a_ui_goal_that_really_asks_for_a_lookup_still_fans_out():
+    """The guard must not disable the multi-entity research path it narrows."""
+    from s13code.runtime import _work_intent
+
+    mode, frontier = _work_intent(
+        "Compare London, Berlin and Paris, then compose a dashboard.", respond_as="ui")
+    assert mode == "compose_research"
+    assert [t.skill for t in frontier] == ["researcher"] * 3
+
+
 def test_the_adversarial_payloads_are_each_refused_by_their_own_invariant():
     """The security property the /trip demo rests on, proven without a model.
 

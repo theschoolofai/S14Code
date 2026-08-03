@@ -334,13 +334,21 @@ function drawFoot(t){
 }
 
 // ---- the loop: a tap becomes the next turn ---------------------------------
+// A tap-driven app has to keep offering somewhere to tap: a turn that ends
+// without choices is a dead end the user cannot leave. That is a fact about
+// this application, so the app asks for it. Note what it does NOT ask for —
+// nothing here mentions a component, a chart or a layout. The shell shapes the
+// CONTENT of the turn; which components carry it stays the composer's call.
+const ONWARD = "\nAlways finish by offering 3 to 5 short, concrete choices the user could tap"
+             + " to go one level deeper. Keep each choice label under about eight words.";
 function nextGoal(){
-  if(convo.length===1) return convo[0];
+  if(convo.length===1) return convo[0] + ONWARD;
   return convo[0]
     + "\nThe user has since tapped, in order: " + convo.slice(1).join(" → ") + "."
     + "\nProduce the content for that next step of the plan. Go one level deeper than the"
     + " previous step rather than repeating it, and include real locations with coordinates"
-    + " whenever the step involves places.";
+    + " whenever the step involves places."
+    + ONWARD;
 }
 
 async function runTurn(label){
