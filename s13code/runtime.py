@@ -16,7 +16,7 @@ from typing import Any
 
 from s13code.core.live_graph import GraphPatch, GraphStore, LiveGraphExecutor, TaskSpec
 from s13code.core.memory import MemoryKind, MemoryRecord, MemoryScope, MemoryStore, Principal, SourceRef
-from s13code.core.memory.embeddings import OllamaNomicEmbedder
+from s13code.core.memory.embeddings import DeterministicEmbedder, OllamaNomicEmbedder
 from s13code.planner import ConstrainedGraphPatchPlanner
 from s13code.tools import fetch_url, sandbox_files, sandbox_path, web_search
 
@@ -50,6 +50,27 @@ _COMPOSE_UI = re.compile(
     r"\b(dashboard|surface|ui|interface|app|screen|page|view|widget|panel)\b",
     re.IGNORECASE,
 )
+
+
+def _build_embedder():
+    """Pick the embedding backend for this process.
+
+    ``ollama`` (the default) is the real one and keeps every local run and proof
+    byte-identical. ``deterministic`` exists because a deployed container has no
+    Ollama beside it: every run writes an episode to durable memory, so an
+    unreachable embedder does not degrade retrieval quality, it fails the run
+    outright and the user gets no interface at all.
+
+    The two are NOT interchangeable and the store knows it — each embedder
+    reports a ``fingerprint`` and vectors written under one are not read as if
+    they came from the other. What the hosted app loses is retrieval *quality*
+    on a bag-of-words vector; what it keeps is a working graph, which is what the
+    interface is composed from.
+    """
+    choice = os.getenv("S13_EMBEDDER", "ollama").strip().lower()
+    if choice in {"deterministic", "offline", "test"}:
+        return DeterministicEmbedder(256)
+    return OllamaNomicEmbedder()
 
 
 def _slug(text: str) -> str:
@@ -241,7 +262,7 @@ class S13Runtime:
         # between those profiles.
         self.root = root or Path(os.getenv("S13_DATA_DIR", str(Path.home() / ".s13code")))
         self.root.mkdir(parents=True, exist_ok=True)
-        self.memory = MemoryStore(self.root / "memory.sqlite", embedder=OllamaNomicEmbedder())
+        self.memory = MemoryStore(self.root / "memory.sqlite", embedder=_build_embedder())
         self.graph = GraphStore(self.root / "graph.sqlite")
 
     def close(self) -> None:
@@ -626,7 +647,10 @@ class S13Runtime:
         async def _gateway_json_call(prompt_text: str, system: str, *, agent: str,
                                      max_tokens: int) -> dict[str, Any]:
             import asyncio as _asyncio
+
             import httpx as _httpx
+
+            from s13code.gateway import gateway_headers
             base = os.getenv("GLC_BASE_URL", "http://127.0.0.1:8111").rstrip("/")
             payload = {"messages": [{"role": "user", "content": prompt_text}], "system": system,
                        "max_tokens": max_tokens, "temperature": 0, "reasoning": "off",
@@ -635,7 +659,8 @@ class S13Runtime:
             last = ""
             for attempt in range(tries):
                 async with _httpx.AsyncClient(timeout=180) as client:
-                    response = await client.post(f"{base}/v1/chat", json=payload)
+                    response = await client.post(f"{base}/v1/chat", json=payload,
+                                                 headers=gateway_headers())
                 if response.status_code < 400:
                     body = response.json()
                     return {"text": body.get("text", ""), "provider": body.get("provider"),

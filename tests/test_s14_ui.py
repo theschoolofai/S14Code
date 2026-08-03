@@ -27,6 +27,7 @@ from s13code.ui.agui import (
     stream_agui,
     to_agui_event,
 )
+from s13code.core.memory.embeddings import OllamaNomicEmbedder
 from s13code.ui.catalog import COMPONENTS, REGISTERED_ACTIONS, catalog_manifest
 from s13code.ui.fixtures import RecordedS13
 from s13code.ui.hitl import PendingAction, decide_resume
@@ -534,6 +535,63 @@ def test_routemap_renderer_draws_it_and_executes_nothing(filename):
 def test_routemap_is_wired_into_the_client_renderer_table(filename):
     html = (_BUILD_ROOT / "s13code" / "ui" / "client" / filename).read_text()
     assert re.search(r"\bRouteMap\s*:", html), f"{filename} does not dispatch RouteMap"
+
+
+# --------------------------------------------------------------------------- #
+# deployment seams — the gateway bearer and the embedder switch
+# --------------------------------------------------------------------------- #
+
+def test_no_gateway_bearer_on_a_laptop(monkeypatch):
+    from s13code.gateway import gateway_headers
+
+    monkeypatch.delenv("GLC_AUTH_TOKEN", raising=False)
+    assert gateway_headers() == {}
+    monkeypatch.setenv("GLC_AUTH_TOKEN", "   ")
+    assert gateway_headers() == {}, "whitespace must not become a bearer"
+
+
+def test_gateway_bearer_is_sent_when_the_gateway_is_remote(monkeypatch):
+    from s13code.gateway import gateway_headers
+
+    monkeypatch.setenv("GLC_AUTH_TOKEN", "s3cret-token")
+    assert gateway_headers() == {"Authorization": "Bearer s3cret-token"}
+
+
+def test_s14code_never_reads_a_provider_credential():
+    """The graded boundary: glc_v3 owns every provider key.
+
+    A shared bearer between our own two services is fine. A provider key in this
+    package is not, and the difference is worth a test rather than a promise.
+    """
+    banned = ("GEMINI_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GROQ_API_KEY",
+              "NVIDIA_API_KEY", "OPENROUTER_API_KEY", "CEREBRAS_API_KEY")
+    offenders = []
+    for path in (_BUILD_ROOT / "s13code").rglob("*.py"):
+        text = path.read_text()
+        for name in banned:
+            if name in text:
+                offenders.append(f"{path.relative_to(_BUILD_ROOT)}: {name}")
+    assert not offenders, offenders
+
+
+def test_embedder_defaults_to_ollama_so_local_runs_are_unchanged(monkeypatch):
+    from s13code.core.memory.embeddings import OllamaNomicEmbedder
+    from s13code.runtime import _build_embedder
+
+    monkeypatch.delenv("S13_EMBEDDER", raising=False)
+    assert isinstance(_build_embedder(), OllamaNomicEmbedder)
+
+
+def test_embedder_can_be_switched_for_a_container_without_ollama(monkeypatch):
+    from s13code.core.memory.embeddings import DeterministicEmbedder
+    from s13code.runtime import _build_embedder
+
+    monkeypatch.setenv("S13_EMBEDDER", "deterministic")
+    embedder = _build_embedder()
+    assert isinstance(embedder, DeterministicEmbedder)
+    # The store must be able to tell the two apart, so vectors written under one
+    # are never silently compared against the other's.
+    assert embedder.fingerprint != OllamaNomicEmbedder().fingerprint
 
 
 # --------------------------------------------------------------------------- #
