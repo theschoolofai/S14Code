@@ -16,7 +16,9 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.6"]
+# modal is a deploy-time tool for modal_app.py, not a runtime dependency: the
+# container image installs the runtime deps above and never imports modal.
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.6", "modal>=1.5.1"]
 
 [project.scripts]
 s13code = "s13code.cli:main"

@@ -411,7 +411,48 @@ application rather than the whole of one — and that the durable contribution o
 this session is not the generation at all, but the catalog and the validator
 that make a model's output safe to render.
 
-**8. Reproduce from a fresh checkout.**
+**8. The hosted application.** Waypoint runs publicly on Modal as two
+scale-to-zero services, which is the same split the architecture insists on
+locally:
+
+| Service | URL | Holds |
+|---|---|---|
+| `glc_v3` gateway | `…--glc-v1-gateway-fastapi-app.modal.run` | every provider key, in a Modal Secret |
+| **Waypoint** | [`…--s14code-waypoint-fastapi-app.modal.run/trip`](https://ashwanibindroo89--s14code-waypoint-fastapi-app.modal.run/trip) | the gateway URL and a shared bearer — **no provider key** |
+
+Hosting needed three configuration changes and no new behaviour, described in
+[`modal_app.py`](modal_app.py):
+
+- **The gateway seam can authenticate.** `glc_v3`'s `/v1/chat` had no auth, which
+  is fine on loopback and an open proxy to someone's provider quota once it has a
+  public URL. `GLC_AUTH_TOKEN` now sends a bearer from both call sites; unset, no
+  header is added and local runs are byte-identical. The deployed gateway returns
+  **401** without it and keeps `/healthz` open so a platform probe needs no
+  credential. The token is a shared secret between two of our own services, never
+  a provider credential — and
+  `test_s14code_never_reads_a_provider_credential` asserts no provider key name
+  appears anywhere in `s13code/`.
+- **The embedder is selectable.** `S13_EMBEDDER=deterministic` in the container,
+  because there is no Ollama beside it and every run writes an episode to durable
+  memory — an unreachable embedder would fail the run outright, not merely weaken
+  retrieval. The store fingerprints each backend, so vectors written under one are
+  never read as the other's. The hosted app trades embedding quality for a working
+  graph, which is what the interface is composed from.
+- **The gRPC A2A binding is off.** Modal serves one HTTP port per ASGI app, so a
+  second listener would have nowhere to bind. JSON-RPC A2A on the HTTP port is
+  unaffected.
+
+Verified with no cookies and no credentials: `/trip`, `/healthz` and `/v1/catalog`
+all return 200, `/readyz` reports the gateway reachable, and a live turn
+(`run-c27cd58c001e`) composed 12 components on `gemini_1` / `gemini-2.5-flash`
+offering four tappable regions.
+
+> **The hosted link spends real free-tier quota.** Four pooled keys give roughly
+> 80 requests a day and every turn costs two, so the public app supports about 40
+> turns a day in total before it starts returning errors instead of interfaces.
+> That is a property of the free tier, not of the application.
+
+**9. Reproduce from a fresh checkout.**
 
 ```bash
 uv sync
@@ -431,6 +472,26 @@ open http://127.0.0.1:8113/trip                 # the application itself
 `proofs/waypoint_turns.py` spends two model calls per turn. On a free-tier
 Gemini key, pace it with `WAYPOINT_TURN_PAUSE=15` and expect a three-turn
 capture to cost six requests.
+
+To deploy your own copy, gateway first so its URL exists before the app needs it:
+
+```bash
+# 1. the gateway, holding every provider key plus the shared bearer
+cd <your glc_v3>
+printf '\nGLC_AUTH_TOKEN=%s\n' "$(openssl rand -hex 32)" >> .env
+uv run modal secret create glc-llm-keys --from-dotenv .env --force
+uv run modal deploy modal_app.py            # -> https://…glc…modal.run
+
+# 2. the app, holding the gateway URL and the same bearer — and no provider key
+cd <this repo>
+uv run modal secret create s14code-gateway \
+    GLC_BASE_URL=https://…glc…modal.run \
+    GLC_AUTH_TOKEN="$(grep '^GLC_AUTH_TOKEN=' <your glc_v3>/.env | cut -d= -f2)" --force
+uv run modal deploy modal_app.py            # -> https://…s14code…modal.run/trip
+```
+
+`--from-dotenv` is deliberate: the key values go from the file straight to the
+secret without ever appearing on a command line or in shell history.
 
 ## Sharing / security
 

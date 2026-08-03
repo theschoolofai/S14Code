@@ -62,6 +62,9 @@ image = (
             # One HTTP port per Modal ASGI app; gRPC would have nowhere to listen.
             "S13_A2A_GRPC_ENABLED": "0",
             "S13_GATEWAY_PROVIDER": "gemini",
+            # The gateway also scales to zero, so /readyz must be patient enough
+            # to let it cold-start rather than calling a sleeping service dead.
+            "GLC_HEALTH_TIMEOUT": "60",
         }
     )
     .add_local_dir(str(LOCAL_PKG), remote_path="/root/s13code")

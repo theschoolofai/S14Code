@@ -53,7 +53,13 @@ class GatewayClient:
         return {"text": body.get("text", ""), "provider": body.get("provider"), "model": body.get("model")}
 
     async def health(self) -> dict[str, Any]:
-        response = await self._client.get(f"{self.base_url}/healthz", timeout=3)
+        # A 3-second budget is right for a gateway on loopback and wrong for a
+        # deployed one: a scale-to-zero host cold-starts in tens of seconds, so
+        # the old timeout reported "unavailable" for a gateway that was merely
+        # asleep and about to answer. Configurable, so a deployment can be
+        # patient without making a local probe hang on a gateway that is down.
+        timeout = float(os.getenv("GLC_HEALTH_TIMEOUT", "10"))
+        response = await self._client.get(f"{self.base_url}/healthz", timeout=timeout)
         response.raise_for_status()
         return response.json()
 
