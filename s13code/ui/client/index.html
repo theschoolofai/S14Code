@@ -134,6 +134,8 @@ const RENDERERS = {
     e.append(barSvg(resolve(c.data,ctx.dm)||[],c.xKey,c.yKey));return e;},
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
+  RouteMap:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"map"));e.append(t);
+    e.append(routeMapSvg(resolve(c.points,ctx.dm)||[],c.mode,c.tone));return e;},
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
 };
 
@@ -147,6 +149,38 @@ function sparkSvg(vals,tone){const w=180,h=44,max=Math.max(...vals,1),min=Math.m
   const col=({good:"var(--green)",warn:"var(--amber)",bad:"var(--red)"}[tone]||"var(--accent)");
   const ns="http://www.w3.org/2000/svg";const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox",`0 0 ${w} ${h}`);svg.setAttribute("width","100%");svg.setAttribute("height",h);
   const pl=document.createElementNS(ns,"polyline");pl.setAttribute("points",pts);pl.setAttribute("fill","none");pl.setAttribute("stroke",col);pl.setAttribute("stroke-width","2.5");svg.append(pl);return svg;}
+
+// RouteMap: draw {label,lat,lon} points in a local SVG viewBox. There is no tile
+// server, no <img> and no fetch — the geometry is arithmetic on two numbers and
+// every label is written with textContent, so markup in a label stays literal.
+function routeMapSvg(points,mode,tone){
+  const ns="http://www.w3.org/2000/svg",W=320,H=200,PAD=34;
+  const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.setAttribute("width","100%");svg.setAttribute("height","auto");
+  const mk=(tag,attrs,txt)=>{const n=document.createElementNS(ns,tag);
+    for(const k in attrs)n.setAttribute(k,attrs[k]);if(txt!=null)n.textContent=String(txt);svg.append(n);return n;};
+  const pts=(Array.isArray(points)?points:[]).filter(p=>p&&isFinite(+p.lat)&&isFinite(+p.lon))
+    .map(p=>({label:p.label==null?"":String(p.label),lat:+p.lat,lon:+p.lon}));
+  if(!pts.length){mk("text",{x:W/2,y:H/2,"text-anchor":"middle","font-size":11,fill:"var(--ink-muted)"},"no located points");return svg;}
+  // Equirectangular with a cos(lat) correction so east–west distance stays honest.
+  const kx=Math.cos(pts.reduce((s,p)=>s+p.lat,0)/pts.length*Math.PI/180)||1;
+  const xs=pts.map(p=>p.lon*kx),ys=pts.map(p=>-p.lat);          // negate: north is up
+  const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const sc=(Math.min(W,H)-PAD*2)/(Math.max(x1-x0,y1-y0)||1);    // one scale keeps the shape true
+  const ox=(W-(x1-x0)*sc)/2-x0*sc,oy=(H-(y1-y0)*sc)/2-y0*sc;
+  const px=pts.map((p,i)=>({label:p.label,x:xs[i]*sc+ox,y:ys[i]*sc+oy}));
+  const col=({good:"var(--green)",warn:"var(--amber)",bad:"var(--red)"}[tone]||"var(--accent)");
+  if(mode!=="scatter"&&px.length>1)
+    mk("polyline",{points:px.map(p=>p.x+","+p.y).join(" "),fill:"none",stroke:col,
+                   "stroke-width":2,"stroke-dasharray":"5 4",opacity:.65});
+  px.forEach((p,i)=>{
+    mk("circle",{cx:p.x,cy:p.y,r:9,fill:col});
+    if(mode!=="scatter")
+      mk("text",{x:p.x,y:p.y+3.5,"text-anchor":"middle","font-size":10,"font-weight":700,fill:"#fff"},i+1);
+    mk("text",{x:p.x,y:p.y-14,"text-anchor":"middle","font-size":10,fill:"var(--ink-body)"},p.label);
+  });
+  return svg;
+}
 
 function barSvg(data,xk,yk,unit){const ns="http://www.w3.org/2000/svg";const w=300,h=150,pad=24;
   const max=Math.max(...data.map(d=>+d[yk]),1);const bw=(w-pad*2)/data.length*.62;
