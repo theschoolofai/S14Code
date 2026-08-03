@@ -3,31 +3,55 @@
   "goal": "Plan a 5-day trip to Japan. Ask me which region to focus on.",
   "gateway_base_url": "http://127.0.0.1:8111",
   "gateway_provider_env": "gemini",
-  "turns_captured": 1,
-  "every_turn_is_a_composed_interface": false,
+  "turns_captured": 3,
+  "every_turn_is_a_composed_interface": true,
   "every_turn_validated_clean": false,
-  "distinct_component_types_used": [],
+  "distinct_component_types_used": [
+    "Button",
+    "Card",
+    "Column",
+    "Divider",
+    "List",
+    "ProgressBar",
+    "RouteMap",
+    "Row",
+    "StatTile",
+    "Text",
+    "Timeline"
+  ],
   "each_turn_composed_a_different_interface": true,
-  "routemap_composed": false,
+  "routemap_composed": true,
   "routemap_never_named_in_runtime": true,
   "turns": [
     {
       "turn": 1,
       "tapped": null,
       "prompt_sent": "Plan a 5-day trip to Japan. Ask me which region to focus on.\nAlways finish by offering 3 to 5 short, concrete choices the user could tap to go one level deeper. Keep each choice label under about eight words.",
-      "run_id": "run-7184f52cfc13",
-      "status": "failed",
+      "run_id": "run-0bb55b7e7fc1",
+      "status": "completed",
       "graph": {
         "nodes": {
           "content": {
             "skill": "content",
-            "state": "failed",
+            "state": "succeeded",
             "agent": "content",
-            "provider": null,
-            "model": null
+            "provider": "gemini_1",
+            "model": "gemini-2.5-flash"
+          },
+          "surface": {
+            "skill": "compose_surface",
+            "state": "succeeded",
+            "agent": "ui_composer",
+            "provider": "gemini_1",
+            "model": "gemini-2.5-flash"
           }
         },
-        "edges": []
+        "edges": [
+          [
+            "content",
+            "surface"
+          ]
+        ]
       },
       "event_journal": [
         {
@@ -47,26 +71,1359 @@
         },
         {
           "sequence": 4,
-          "kind": "task_failed",
+          "kind": "task_succeeded",
           "node_id": "content"
         },
         {
           "sequence": 5,
           "kind": "graph_patched",
           "node_id": null
+        },
+        {
+          "sequence": 6,
+          "kind": "task_started",
+          "node_id": "surface"
+        },
+        {
+          "sequence": 7,
+          "kind": "task_succeeded",
+          "node_id": "surface"
+        },
+        {
+          "sequence": 8,
+          "kind": "graph_patched",
+          "node_id": null
         }
       ],
-      "provider": null,
-      "model": null,
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
       "error": null,
-      "compose_attempts": null,
-      "validator": null,
-      "component_types": [],
-      "component_count": 0,
-      "offers_taps": [],
+      "compose_attempts": [
+        {
+          "attempt": 1,
+          "max_tokens": 8000,
+          "reply_chars": 2847,
+          "parsed": true
+        }
+      ],
+      "validator": {
+        "proposed": 15,
+        "accepted": 14,
+        "rejected": 1,
+        "ok": false,
+        "rejections": [
+          {
+            "component_id": "choice_prompt_text",
+            "field": "text",
+            "invariant": "data-not-code",
+            "reason": "binding must be {'$bind': '/pointer'}"
+          }
+        ],
+        "dangling_child_refs": [
+          "choice_prompt_text"
+        ],
+        "component_types": [
+          "Button",
+          "Column",
+          "ProgressBar",
+          "Row",
+          "StatTile",
+          "Text",
+          "Timeline"
+        ],
+        "component_count": 14
+      },
+      "component_types": [
+        "Button",
+        "Column",
+        "ProgressBar",
+        "Row",
+        "StatTile",
+        "Text",
+        "Timeline"
+      ],
+      "component_count": 14,
+      "offers_taps": [
+        "Tokyo & Kanto Region",
+        "Kyoto & Kansai Region",
+        "Hokkaido Nature & Winter",
+        "Kyushu Southern Charm",
+        "Chubu Alps & Coast"
+      ],
       "surface": {
-        "components": [],
-        "dataModel": {}
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title_text",
+              "intro_text",
+              "metrics_row",
+              "trip_timeline",
+              "choice_prompt_text",
+              "choices_column",
+              "progress_bar",
+              "run_timeline"
+            ]
+          },
+          {
+            "id": "title_text",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "intro_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/intro"
+            }
+          },
+          {
+            "id": "metrics_row",
+            "type": "Row",
+            "justify": "start",
+            "align": "center",
+            "children": [
+              "trip_duration_stat"
+            ]
+          },
+          {
+            "id": "trip_duration_stat",
+            "type": "StatTile",
+            "label": "Trip Duration",
+            "value": {
+              "$bind": "/metric_0_value"
+            },
+            "unit": "days",
+            "tone": "neutral"
+          },
+          {
+            "id": "trip_timeline",
+            "type": "Timeline",
+            "title": "General Trip Structure",
+            "events": {
+              "$bind": "/section_events"
+            }
+          },
+          {
+            "id": "choices_column",
+            "type": "Column",
+            "children": [
+              "button_tokyo",
+              "button_kyoto",
+              "button_hokkaido",
+              "button_kyushu",
+              "button_chubu"
+            ]
+          },
+          {
+            "id": "button_tokyo",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_0_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "button_kyoto",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_1_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "button_hokkaido",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_2_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "button_kyushu",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_3_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "button_chubu",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_4_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "progress_bar",
+            "type": "ProgressBar",
+            "value": {
+              "$bind": "/progress_value"
+            },
+            "max": {
+              "$bind": "/progress_max"
+            },
+            "tone": "neutral"
+          },
+          {
+            "id": "run_timeline",
+            "type": "Timeline",
+            "title": "Run Progress",
+            "events": {
+              "$bind": "/timeline"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Japan 5-Day Trip Planner",
+          "goal": "Plan a 5-day trip to Japan. Ask me which region to focus on.\nAlways finish by offering 3 to 5 short, concrete choices the user could tap to go one level deeper. Keep each choice label under about eight words.",
+          "summary": "To create your personalized 5-day itinerary for Japan, please select a region to focus on. Below is a general trip structure that will be detailed once you make your choice.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Trip Duration",
+              "value": 5,
+              "unit": "days"
+            }
+          ],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Tokyo & Kanto Region",
+            "Kyoto & Kansai Region",
+            "Hokkaido Nature & Winter",
+            "Kyushu Southern Charm",
+            "Chubu Alps & Coast"
+          ],
+          "timeline": [
+            {
+              "time": "1",
+              "label": "run_started"
+            },
+            {
+              "time": "2",
+              "label": "graph_patched"
+            },
+            {
+              "time": "3",
+              "label": "task_started content"
+            },
+            {
+              "time": "4",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "5",
+              "label": "graph_patched"
+            },
+            {
+              "time": "6",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "To create your personalized 5-day itinerary for Japan, please select a region to focus on. Below is a general trip structure that will be detailed once you make your choice.",
+          "section_0_heading": "Day 1: Arrival & Local Immersion",
+          "section_0_points": "\u2022 Arrive at major international airport (e.g., Narita, Haneda, Kansai).\n\u2022 Transfer to accommodation and check-in.\n\u2022 Explore immediate neighborhood, enjoy first Japanese meal.",
+          "section_1_heading": "Day 2: Core Regional Exploration",
+          "section_1_points": "\u2022 Visit iconic landmarks and popular attractions of the chosen region.\n\u2022 Experience local culture, perhaps a museum or traditional garden.\n\u2022 Enjoy regional cuisine for lunch and dinner.",
+          "section_2_heading": "Day 3: Cultural Deep Dive or Nature Escape",
+          "section_2_points": "\u2022 Engage in a specific cultural activity (e.g., tea ceremony, cooking class) or explore a natural site.\n\u2022 Discover hidden gems or less-crowded spots.\n\u2022 Evening entertainment or local festival if available.",
+          "section_3_heading": "Day 4: Day Trip or Specific Interest Focus",
+          "section_3_points": "\u2022 Take a day trip to a nearby city or scenic area.\n\u2022 Focus on a personal interest like shopping, art, or specific cuisine.\n\u2022 Enjoy a farewell dinner with regional specialties.",
+          "section_4_heading": "Day 5: Last Souvenirs & Departure",
+          "section_4_points": "\u2022 Enjoy a final Japanese breakfast.\n\u2022 Last-minute souvenir shopping or revisit a favorite spot.\n\u2022 Travel to the airport for departure.",
+          "sections": [
+            {
+              "heading": "Day 1: Arrival & Local Immersion",
+              "points": [
+                "Arrive at major international airport (e.g., Narita, Haneda, Kansai).",
+                "Transfer to accommodation and check-in.",
+                "Explore immediate neighborhood, enjoy first Japanese meal."
+              ]
+            },
+            {
+              "heading": "Day 2: Core Regional Exploration",
+              "points": [
+                "Visit iconic landmarks and popular attractions of the chosen region.",
+                "Experience local culture, perhaps a museum or traditional garden.",
+                "Enjoy regional cuisine for lunch and dinner."
+              ]
+            },
+            {
+              "heading": "Day 3: Cultural Deep Dive or Nature Escape",
+              "points": [
+                "Engage in a specific cultural activity (e.g., tea ceremony, cooking class) or explore a natural site.",
+                "Discover hidden gems or less-crowded spots.",
+                "Evening entertainment or local festival if available."
+              ]
+            },
+            {
+              "heading": "Day 4: Day Trip or Specific Interest Focus",
+              "points": [
+                "Take a day trip to a nearby city or scenic area.",
+                "Focus on a personal interest like shopping, art, or specific cuisine.",
+                "Enjoy a farewell dinner with regional specialties."
+              ]
+            },
+            {
+              "heading": "Day 5: Last Souvenirs & Departure",
+              "points": [
+                "Enjoy a final Japanese breakfast.",
+                "Last-minute souvenir shopping or revisit a favorite spot.",
+                "Travel to the airport for departure."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Day 1: Arrival & Local Immersion",
+              "label": "Arrive at major international airport (e.g., Narita, Haneda, Kansai).; Transfer to accommodation and check-in.; Explore immediate neighborhood, enjoy first Japanese meal."
+            },
+            {
+              "time": "Day 2: Core Regional Exploration",
+              "label": "Visit iconic landmarks and popular attractions of the chosen region.; Experience local culture, perhaps a museum or traditional garden.; Enjoy regional cuisine for lunch and dinner."
+            },
+            {
+              "time": "Day 3: Cultural Deep Dive or Nature Escape",
+              "label": "Engage in a specific cultural activity (e.g., tea ceremony, cooking class) or explore a natural site.; Discover hidden gems or less-crowded spots.; Evening entertainment or local festival if available."
+            },
+            {
+              "time": "Day 4: Day Trip or Specific Interest Focus",
+              "label": "Take a day trip to a nearby city or scenic area.; Focus on a personal interest like shopping, art, or specific cuisine.; Enjoy a farewell dinner with regional specialties."
+            },
+            {
+              "time": "Day 5: Last Souvenirs & Departure",
+              "label": "Enjoy a final Japanese breakfast.; Last-minute souvenir shopping or revisit a favorite spot.; Travel to the airport for departure."
+            }
+          ],
+          "metric_0_value": 5,
+          "choices": [
+            {
+              "id": "tokyo",
+              "label": "Tokyo & Kanto Region"
+            },
+            {
+              "id": "kyoto",
+              "label": "Kyoto & Kansai Region"
+            },
+            {
+              "id": "hokkaido",
+              "label": "Hokkaido Nature & Winter"
+            },
+            {
+              "id": "kyushu",
+              "label": "Kyushu Southern Charm"
+            },
+            {
+              "id": "chubu",
+              "label": "Chubu Alps & Coast"
+            }
+          ],
+          "choice_0_label": "Tokyo & Kanto Region",
+          "choice_1_label": "Kyoto & Kansai Region",
+          "choice_2_label": "Hokkaido Nature & Winter",
+          "choice_3_label": "Kyushu Southern Charm",
+          "choice_4_label": "Chubu Alps & Coast"
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "tapped": "Tokyo & Kanto Region",
+      "prompt_sent": "Plan a 5-day trip to Japan. Ask me which region to focus on.\nThe user has since tapped, in order: Tokyo & Kanto Region.\nProduce the content for that next step of the plan. Go one level deeper than the previous step rather than repeating it, and include real locations with coordinates whenever the step involves places.\nAlways finish by offering 3 to 5 short, concrete choices the user could tap to go one level deeper. Keep each choice label under about eight words.",
+      "run_id": "run-26099e0c2625",
+      "status": "completed",
+      "graph": {
+        "nodes": {
+          "content": {
+            "skill": "content",
+            "state": "succeeded",
+            "agent": "content",
+            "provider": "gemini_1",
+            "model": "gemini-2.5-flash"
+          },
+          "surface": {
+            "skill": "compose_surface",
+            "state": "succeeded",
+            "agent": "ui_composer",
+            "provider": "gemini_1",
+            "model": "gemini-2.5-flash"
+          }
+        },
+        "edges": [
+          [
+            "content",
+            "surface"
+          ]
+        ]
+      },
+      "event_journal": [
+        {
+          "sequence": 9,
+          "kind": "run_started",
+          "node_id": null
+        },
+        {
+          "sequence": 10,
+          "kind": "graph_patched",
+          "node_id": null
+        },
+        {
+          "sequence": 11,
+          "kind": "task_started",
+          "node_id": "content"
+        },
+        {
+          "sequence": 12,
+          "kind": "task_succeeded",
+          "node_id": "content"
+        },
+        {
+          "sequence": 13,
+          "kind": "graph_patched",
+          "node_id": null
+        },
+        {
+          "sequence": 14,
+          "kind": "task_started",
+          "node_id": "surface"
+        },
+        {
+          "sequence": 15,
+          "kind": "task_succeeded",
+          "node_id": "surface"
+        },
+        {
+          "sequence": 16,
+          "kind": "graph_patched",
+          "node_id": null
+        }
+      ],
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "error": null,
+      "compose_attempts": [
+        {
+          "attempt": 1,
+          "max_tokens": 8000,
+          "reply_chars": 2413,
+          "parsed": true
+        }
+      ],
+      "validator": {
+        "proposed": 13,
+        "accepted": 11,
+        "rejected": 2,
+        "ok": false,
+        "rejections": [
+          {
+            "component_id": "map_heading",
+            "field": "text",
+            "invariant": "data-not-code",
+            "reason": "binding must be {'$bind': '/pointer'}"
+          },
+          {
+            "component_id": "choices_heading",
+            "field": "text",
+            "invariant": "data-not-code",
+            "reason": "binding must be {'$bind': '/pointer'}"
+          }
+        ],
+        "dangling_child_refs": [
+          "choices_heading",
+          "map_heading"
+        ],
+        "component_types": [
+          "Button",
+          "Column",
+          "ProgressBar",
+          "RouteMap",
+          "Text",
+          "Timeline"
+        ],
+        "component_count": 11
+      },
+      "component_types": [
+        "Button",
+        "Column",
+        "ProgressBar",
+        "RouteMap",
+        "Text",
+        "Timeline"
+      ],
+      "component_count": 11,
+      "offers_taps": [
+        "Focus on Tokyo city",
+        "Prioritize nature & day trips",
+        "Mix city, history, & nature",
+        "Customize my itinerary"
+      ],
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title_text",
+              "summary_text",
+              "progress_bar",
+              "itinerary_timeline",
+              "map_heading",
+              "route_map",
+              "choices_heading",
+              "choices_column"
+            ]
+          },
+          {
+            "id": "title_text",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "progress_bar",
+            "type": "ProgressBar",
+            "value": {
+              "$bind": "/progress_value"
+            },
+            "max": {
+              "$bind": "/progress_max"
+            }
+          },
+          {
+            "id": "itinerary_timeline",
+            "type": "Timeline",
+            "title": "Your 5-Day Tokyo & Kanto Itinerary",
+            "events": {
+              "$bind": "/section_events"
+            }
+          },
+          {
+            "id": "route_map",
+            "type": "RouteMap",
+            "title": "Itinerary Locations",
+            "points": {
+              "$bind": "/places"
+            },
+            "mode": "scatter"
+          },
+          {
+            "id": "choices_column",
+            "type": "Column",
+            "children": [
+              "choice_0_button",
+              "choice_1_button",
+              "choice_2_button",
+              "choice_3_button"
+            ]
+          },
+          {
+            "id": "choice_0_button",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_0_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice_1_button",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_1_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice_2_button",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_2_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice_3_button",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_3_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Plan a 5-day trip to Japan. Ask me which region to focus on.\nThe user has since tapped, in order: Tokyo & Kanto Region.\nProduce the content for that next step of the plan. Go one level deeper than the previous step rather than repeating it, and include real locations with coordinates whenever the step involves places.\nAlways finish by offering 3 to 5 short, concrete choices the user could tap to go one level deeper. Keep each choice label under about eight words.",
+          "goal": "Plan a 5-day trip to Japan. Ask me which region to focus on.\nThe user has since tapped, in order: Tokyo & Kanto Region.\nProduce the content for that next step of the plan. Go one level deeper than the previous step rather than repeating it, and include real locations with coordinates whenever the step involves places.\nAlways finish by offering 3 to 5 short, concrete choices the user could tap to go one level deeper. Keep each choice label under about eight words.",
+          "summary": "Plan a 5-day trip to Japan. Ask me which region to focus on.\nThe user has since tapped, in order: Tokyo & Kanto Region.\nProduce the content for that next step of the plan. Go one level deeper than the previous step rather than repeating it, and include real locations with coordinates whenever the step involves places.\nAlways finish by offering 3 to 5 short, concrete choices the user could tap to go one level deeper. Keep each choice label under about eight words.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Focus on Tokyo city",
+            "Prioritize nature & day trips",
+            "Mix city, history, & nature",
+            "Customize my itinerary"
+          ],
+          "timeline": [
+            {
+              "time": "9",
+              "label": "run_started"
+            },
+            {
+              "time": "10",
+              "label": "graph_patched"
+            },
+            {
+              "time": "11",
+              "label": "task_started content"
+            },
+            {
+              "time": "12",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "13",
+              "label": "graph_patched"
+            },
+            {
+              "time": "14",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "section_0_heading": "Day 1: Central Tokyo Exploration",
+          "section_0_points": "\u2022 Arrive in Tokyo, check into accommodation.\n\u2022 Explore Shibuya Crossing and Hachiko statue.\n\u2022 Visit Shibuya Sky for panoramic city views.\n\u2022 Experience the vibrant nightlife and dining in Shinjuku, including Golden Gai or Omoide Yokocho.",
+          "section_1_heading": "Day 2: Traditional & Pop Culture",
+          "section_1_points": "\u2022 Start the day at Senso-ji Temple in Asakusa, Tokyo's oldest temple.\n\u2022 Wander through Nakamise-dori market.\n\u2022 Visit Ueno Park, home to museums and a zoo.\n\u2022 Immerse yourself in the electronics and anime culture of Akihabara.",
+          "section_2_heading": "Day 3: Hakone Day Trip (Mount Fuji Views)",
+          "section_2_points": "\u2022 Travel to Hakone, a mountainous town known for hot springs and views of Mount Fuji.\n\u2022 Take the Hakone Ropeway for scenic views of Lake Ashi and Mount Fuji.\n\u2022 Enjoy a cruise on Lake Ashi.\n\u2022 Visit the Hakone Open-Air Museum.",
+          "section_3_heading": "Day 4: Modern Art & Upscale Shopping",
+          "section_3_points": "\u2022 Explore the trendy streets of Harajuku, including Takeshita Street and Meiji Jingu Shrine.\n\u2022 Experience the digital art installations at teamLab Planets TOKYO.\n\u2022 Indulge in upscale shopping and dining in Ginza.",
+          "section_4_heading": "Day 5: Kamakura Day Trip (Historical Coastal Town)",
+          "section_4_points": "\u2022 Travel to Kamakura, a coastal town south of Tokyo, known for its temples and shrines.\n\u2022 Visit Kotoku-in Temple to see the Great Buddha (Daibutsu).\n\u2022 Explore Tsurugaoka Hachimangu Shrine.\n\u2022 Stroll along Komachi-dori street for souvenirs and local snacks.",
+          "sections": [
+            {
+              "heading": "Day 1: Central Tokyo Exploration",
+              "points": [
+                "Arrive in Tokyo, check into accommodation.",
+                "Explore Shibuya Crossing and Hachiko statue.",
+                "Visit Shibuya Sky for panoramic city views.",
+                "Experience the vibrant nightlife and dining in Shinjuku, including Golden Gai or Omoide Yokocho."
+              ]
+            },
+            {
+              "heading": "Day 2: Traditional & Pop Culture",
+              "points": [
+                "Start the day at Senso-ji Temple in Asakusa, Tokyo's oldest temple.",
+                "Wander through Nakamise-dori market.",
+                "Visit Ueno Park, home to museums and a zoo.",
+                "Immerse yourself in the electronics and anime culture of Akihabara."
+              ]
+            },
+            {
+              "heading": "Day 3: Hakone Day Trip (Mount Fuji Views)",
+              "points": [
+                "Travel to Hakone, a mountainous town known for hot springs and views of Mount Fuji.",
+                "Take the Hakone Ropeway for scenic views of Lake Ashi and Mount Fuji.",
+                "Enjoy a cruise on Lake Ashi.",
+                "Visit the Hakone Open-Air Museum."
+              ]
+            },
+            {
+              "heading": "Day 4: Modern Art & Upscale Shopping",
+              "points": [
+                "Explore the trendy streets of Harajuku, including Takeshita Street and Meiji Jingu Shrine.",
+                "Experience the digital art installations at teamLab Planets TOKYO.",
+                "Indulge in upscale shopping and dining in Ginza."
+              ]
+            },
+            {
+              "heading": "Day 5: Kamakura Day Trip (Historical Coastal Town)",
+              "points": [
+                "Travel to Kamakura, a coastal town south of Tokyo, known for its temples and shrines.",
+                "Visit Kotoku-in Temple to see the Great Buddha (Daibutsu).",
+                "Explore Tsurugaoka Hachimangu Shrine.",
+                "Stroll along Komachi-dori street for souvenirs and local snacks."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Day 1: Central Tokyo Exploration",
+              "label": "Arrive in Tokyo, check into accommodation.; Explore Shibuya Crossing and Hachiko statue.; Visit Shibuya Sky for panoramic city views.; Experience the vibrant nightlife and dining in Shinjuku, including Golden Gai or Omoide Yokocho."
+            },
+            {
+              "time": "Day 2: Traditional & Pop Culture",
+              "label": "Start the day at Senso-ji Temple in Asakusa, Tokyo's oldest temple.; Wander through Nakamise-dori market.; Visit Ueno Park, home to museums and a zoo.; Immerse yourself in the electronics and anime culture of Akihabara."
+            },
+            {
+              "time": "Day 3: Hakone Day Trip (Mount Fuji Views)",
+              "label": "Travel to Hakone, a mountainous town known for hot springs and views of Mount Fuji.; Take the Hakone Ropeway for scenic views of Lake Ashi and Mount Fuji.; Enjoy a cruise on Lake Ashi.; Visit the Hakone Open-Air Museum."
+            },
+            {
+              "time": "Day 4: Modern Art & Upscale Shopping",
+              "label": "Explore the trendy streets of Harajuku, including Takeshita Street and Meiji Jingu Shrine.; Experience the digital art installations at teamLab Planets TOKYO.; Indulge in upscale shopping and dining in Ginza."
+            },
+            {
+              "time": "Day 5: Kamakura Day Trip (Historical Coastal Town)",
+              "label": "Travel to Kamakura, a coastal town south of Tokyo, known for its temples and shrines.; Visit Kotoku-in Temple to see the Great Buddha (Daibutsu).; Explore Tsurugaoka Hachimangu Shrine.; Stroll along Komachi-dori street for souvenirs and local snacks."
+            }
+          ],
+          "places": [
+            {
+              "label": "Shibuya Crossing",
+              "lat": 35.65906,
+              "lon": 139.70061,
+              "note": "Iconic intersection"
+            },
+            {
+              "label": "Shibuya Sky",
+              "lat": 35.6585,
+              "lon": 139.7035,
+              "note": "Observation deck"
+            },
+            {
+              "label": "Senso-ji Temple",
+              "lat": 35.7147,
+              "lon": 139.7967,
+              "note": "Tokyo's oldest temple"
+            },
+            {
+              "label": "Akihabara Electric Town",
+              "lat": 35.6995,
+              "lon": 139.7739,
+              "note": "Electronics and anime district"
+            },
+            {
+              "label": "Hakone Ropeway",
+              "lat": 35.2425,
+              "lon": 139.0217,
+              "note": "Scenic gondola ride"
+            },
+            {
+              "label": "Lake Ashi",
+              "lat": 35.205,
+              "lon": 139.025,
+              "note": "Volcanic lake in Hakone"
+            },
+            {
+              "label": "Meiji Jingu Shrine",
+              "lat": 35.6763,
+              "lon": 139.6993,
+              "note": "Shinto shrine in Shibuya"
+            },
+            {
+              "label": "teamLab Planets TOKYO",
+              "lat": 35.6696,
+              "lon": 139.7925,
+              "note": "Digital art museum"
+            },
+            {
+              "label": "Kotoku-in (Great Buddha)",
+              "lat": 35.3168,
+              "lon": 139.5356,
+              "note": "Home to the Daibutsu in Kamakura"
+            },
+            {
+              "label": "Tsurugaoka Hachimangu Shrine",
+              "lat": 35.3258,
+              "lon": 139.5528,
+              "note": "Main shrine in Kamakura"
+            }
+          ],
+          "place_count": 10,
+          "place_0_label": "Shibuya Crossing",
+          "place_1_label": "Shibuya Sky",
+          "place_2_label": "Senso-ji Temple",
+          "place_3_label": "Akihabara Electric Town",
+          "place_4_label": "Hakone Ropeway",
+          "place_5_label": "Lake Ashi",
+          "place_6_label": "Meiji Jingu Shrine",
+          "place_7_label": "teamLab Planets TOKYO",
+          "place_8_label": "Kotoku-in (Great Buddha)",
+          "place_9_label": "Tsurugaoka Hachimangu Shrine",
+          "choices": [
+            {
+              "id": "tokyo_city_focus",
+              "label": "Focus on Tokyo city"
+            },
+            {
+              "id": "nature_day_trips",
+              "label": "Prioritize nature & day trips"
+            },
+            {
+              "id": "mix_city_history_nature",
+              "label": "Mix city, history, & nature"
+            },
+            {
+              "id": "customize_itinerary",
+              "label": "Customize my itinerary"
+            }
+          ],
+          "choice_0_label": "Focus on Tokyo city",
+          "choice_1_label": "Prioritize nature & day trips",
+          "choice_2_label": "Mix city, history, & nature",
+          "choice_3_label": "Customize my itinerary"
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "tapped": "Focus on Tokyo city",
+      "prompt_sent": "Plan a 5-day trip to Japan. Ask me which region to focus on.\nThe user has since tapped, in order: Tokyo & Kanto Region \u2192 Focus on Tokyo city.\nProduce the content for that next step of the plan. Go one level deeper than the previous step rather than repeating it, and include real locations with coordinates whenever the step involves places.\nAlways finish by offering 3 to 5 short, concrete choices the user could tap to go one level deeper. Keep each choice label under about eight words.",
+      "run_id": "run-26db8e2a9351",
+      "status": "completed",
+      "graph": {
+        "nodes": {
+          "content": {
+            "skill": "content",
+            "state": "succeeded",
+            "agent": "content",
+            "provider": "gemini_1",
+            "model": "gemini-2.5-flash"
+          },
+          "surface": {
+            "skill": "compose_surface",
+            "state": "succeeded",
+            "agent": "ui_composer",
+            "provider": "gemini_1",
+            "model": "gemini-2.5-flash"
+          }
+        },
+        "edges": [
+          [
+            "content",
+            "surface"
+          ]
+        ]
+      },
+      "event_journal": [
+        {
+          "sequence": 17,
+          "kind": "run_started",
+          "node_id": null
+        },
+        {
+          "sequence": 18,
+          "kind": "graph_patched",
+          "node_id": null
+        },
+        {
+          "sequence": 19,
+          "kind": "task_started",
+          "node_id": "content"
+        },
+        {
+          "sequence": 20,
+          "kind": "task_succeeded",
+          "node_id": "content"
+        },
+        {
+          "sequence": 21,
+          "kind": "graph_patched",
+          "node_id": null
+        },
+        {
+          "sequence": 22,
+          "kind": "task_started",
+          "node_id": "surface"
+        },
+        {
+          "sequence": 23,
+          "kind": "task_succeeded",
+          "node_id": "surface"
+        },
+        {
+          "sequence": 24,
+          "kind": "graph_patched",
+          "node_id": null
+        }
+      ],
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "error": null,
+      "compose_attempts": [
+        {
+          "attempt": 1,
+          "max_tokens": 8000,
+          "reply_chars": 6385,
+          "parsed": false
+        },
+        {
+          "attempt": 2,
+          "max_tokens": 16000,
+          "reply_chars": 6746,
+          "parsed": true
+        }
+      ],
+      "validator": {
+        "proposed": 40,
+        "accepted": 39,
+        "rejected": 1,
+        "ok": false,
+        "rejections": [
+          {
+            "component_id": "choices_prompt",
+            "field": "text",
+            "invariant": "data-not-code",
+            "reason": "binding must be {'$bind': '/pointer'}"
+          }
+        ],
+        "dangling_child_refs": [
+          "choices_prompt"
+        ],
+        "component_types": [
+          "Button",
+          "Card",
+          "Column",
+          "Divider",
+          "List",
+          "Text"
+        ],
+        "component_count": 39
+      },
+      "component_types": [
+        "Button",
+        "Card",
+        "Column",
+        "Divider",
+        "List",
+        "Text"
+      ],
+      "component_count": 39,
+      "offers_taps": [
+        "Shinjuku nightlife",
+        "Meiji Jingu Shrine",
+        "Senso-ji Temple",
+        "Ginza shopping & dining",
+        "Odaiba futuristic attractions"
+      ],
+      "surface": {
+        "root": "root_col",
+        "components": [
+          {
+            "id": "root_col",
+            "type": "Column",
+            "children": [
+              "goal_title",
+              "itinerary_title",
+              "itinerary_intro",
+              "itinerary_list",
+              "choices_divider",
+              "choices_prompt",
+              "choices_col"
+            ]
+          },
+          {
+            "id": "goal_title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "itinerary_title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/summary.title"
+            }
+          },
+          {
+            "id": "itinerary_intro",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.intro"
+            }
+          },
+          {
+            "id": "itinerary_list",
+            "type": "List",
+            "children": [
+              "day1_card",
+              "day2_card",
+              "day3_card",
+              "day4_card",
+              "day5_card"
+            ]
+          },
+          {
+            "id": "day1_card",
+            "type": "Card",
+            "title": {
+              "$bind": "/summary.sections[0].heading"
+            },
+            "children": [
+              "day1_points_col"
+            ]
+          },
+          {
+            "id": "day1_points_col",
+            "type": "Column",
+            "children": [
+              "day1_point1",
+              "day1_point2",
+              "day1_point3",
+              "day1_point4"
+            ]
+          },
+          {
+            "id": "day1_point1",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[0].points[0]"
+            }
+          },
+          {
+            "id": "day1_point2",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[0].points[1]"
+            }
+          },
+          {
+            "id": "day1_point3",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[0].points[2]"
+            }
+          },
+          {
+            "id": "day1_point4",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[0].points[3]"
+            }
+          },
+          {
+            "id": "day2_card",
+            "type": "Card",
+            "title": {
+              "$bind": "/summary.sections[1].heading"
+            },
+            "children": [
+              "day2_points_col"
+            ]
+          },
+          {
+            "id": "day2_points_col",
+            "type": "Column",
+            "children": [
+              "day2_point1",
+              "day2_point2",
+              "day2_point3",
+              "day2_point4",
+              "day2_point5"
+            ]
+          },
+          {
+            "id": "day2_point1",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[1].points[0]"
+            }
+          },
+          {
+            "id": "day2_point2",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[1].points[1]"
+            }
+          },
+          {
+            "id": "day2_point3",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[1].points[2]"
+            }
+          },
+          {
+            "id": "day2_point4",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[1].points[3]"
+            }
+          },
+          {
+            "id": "day2_point5",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[1].points[4]"
+            }
+          },
+          {
+            "id": "day3_card",
+            "type": "Card",
+            "title": {
+              "$bind": "/summary.sections[2].heading"
+            },
+            "children": [
+              "day3_points_col"
+            ]
+          },
+          {
+            "id": "day3_points_col",
+            "type": "Column",
+            "children": [
+              "day3_point1",
+              "day3_point2",
+              "day3_point3"
+            ]
+          },
+          {
+            "id": "day3_point1",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[2].points[0]"
+            }
+          },
+          {
+            "id": "day3_point2",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[2].points[1]"
+            }
+          },
+          {
+            "id": "day3_point3",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[2].points[2]"
+            }
+          },
+          {
+            "id": "day4_card",
+            "type": "Card",
+            "title": {
+              "$bind": "/summary.sections[3].heading"
+            },
+            "children": [
+              "day4_points_col"
+            ]
+          },
+          {
+            "id": "day4_points_col",
+            "type": "Column",
+            "children": [
+              "day4_point1",
+              "day4_point2",
+              "day4_point3"
+            ]
+          },
+          {
+            "id": "day4_point1",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[3].points[0]"
+            }
+          },
+          {
+            "id": "day4_point2",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[3].points[1]"
+            }
+          },
+          {
+            "id": "day4_point3",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[3].points[2]"
+            }
+          },
+          {
+            "id": "day5_card",
+            "type": "Card",
+            "title": {
+              "$bind": "/summary.sections[4].heading"
+            },
+            "children": [
+              "day5_points_col"
+            ]
+          },
+          {
+            "id": "day5_points_col",
+            "type": "Column",
+            "children": [
+              "day5_point1",
+              "day5_point2"
+            ]
+          },
+          {
+            "id": "day5_point1",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[4].points[0]"
+            }
+          },
+          {
+            "id": "day5_point2",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary.sections[4].points[1]"
+            }
+          },
+          {
+            "id": "choices_divider",
+            "type": "Divider"
+          },
+          {
+            "id": "choices_col",
+            "type": "Column",
+            "children": [
+              "choice1_btn",
+              "choice2_btn",
+              "choice3_btn",
+              "choice4_btn",
+              "choice5_btn"
+            ]
+          },
+          {
+            "id": "choice1_btn",
+            "type": "Button",
+            "label": "Shinjuku nightlife",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice2_btn",
+            "type": "Button",
+            "label": "Meiji Jingu Shrine",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice3_btn",
+            "type": "Button",
+            "label": "Senso-ji Temple",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice4_btn",
+            "type": "Button",
+            "label": "Ginza shopping & dining",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "choice5_btn",
+            "type": "Button",
+            "label": "Odaiba futuristic attractions",
+            "onPress": {
+              "action": "request_data"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Plan a 5-day trip to Japan. Ask me which region to focus on.\nThe user has since tapped, in order: Tokyo & Kanto Region \u2192 Focus on Tokyo city.\nProduce the content for that next step of the plan. Go one level deeper than the previous step rather than repeating it, and include real locations with coordinates whenever the step involves places.\nAlways finish by offering 3 to 5 short, concrete choices the user could tap to go one level deeper. Keep each choice label under about eight words.",
+          "goal": "Plan a 5-day trip to Japan. Ask me which region to focus on.\nThe user has since tapped, in order: Tokyo & Kanto Region \u2192 Focus on Tokyo city.\nProduce the content for that next step of the plan. Go one level deeper than the previous step rather than repeating it, and include real locations with coordinates whenever the step involves places.\nAlways finish by offering 3 to 5 short, concrete choices the user could tap to go one level deeper. Keep each choice label under about eight words.",
+          "summary": "{\"title\": \"5-Day Tokyo City Itinerary\", \"intro\": \"Here's a suggested 5-day itinerary focusing on Tokyo city, blending iconic landmarks, cultural experiences, and modern attractions.\", \"sections\": [{\"heading\": \"Day 1: Shinjuku's Modern Marvels & Green Oasis\", \"points\": [\"Arrive in Tokyo and check into your accommodation.\", \"Ascend to the observation decks of the Tokyo Metropolitan Government Building for panoramic city views.\", \"Relax and stroll through the beautiful Shinjuku Gyoen National Garden.\", \"Experience the vibrant nightlife and unique atmosphere of Shinjuku's Golden Gai or Kabukicho.\"]}, {\"heading\": \"Day 2: Trendy Shibuya & Traditional Harajuku\", \"points\": [\"Witness the famous Shibuya Crossing, one of the busiest intersections in the world.\", \"Visit the Hachiko Memorial Statue.\", \"Explore the quirky fashion and youth culture of Takeshita Street in Harajuku.\", \"Find serenity at the majestic Meiji Jingu Shrine, nestled within a forest.\", \"Wander through Yoyogi Park, adjacent to Meiji Jingu.\"]}, {\"heading\": \"Day 3: Historic Asakusa & Cultural Ueno\", \"points\": [\"Immerse yourself in ancient Tokyo at Senso-ji Temple, the city's oldest temple.\", \"Browse the traditional shops and street food stalls along Nakamise-dori Market leading to Senso-ji.\", \"Spend the afternoon in Ueno Park, home to several museums (e.g., Tokyo National Museum) and Ueno Zoo.\"]}, {\"heading\": \"Day 4: Imperial Grandeur & Upscale Ginza\", \"points\": [\"Explore the serene Imperial Palace East Garden, part of the former Edo Castle grounds.\", \"Experience the upscale shopping, dining, and modern architecture of Ginza.\", \"Savor fresh seafood and local delicacies at the bustling Tsukiji Outer Market.\"]}, {\"heading\": \"Day 5: Futuristic Odaiba or Specific Interest\", \"points\": [\"Visit Odaiba, a futuristic entertainment hub on a man-made island, offering views of Rainbow Bridge and Tokyo Bay.\", \"Explore attractions like DiverCity Tokyo Plaza (with its giant Gundam statue) or teamLab Borderless (check booking",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [],
+          "timeline": [
+            {
+              "time": "17",
+              "label": "run_started"
+            },
+            {
+              "time": "18",
+              "label": "graph_patched"
+            },
+            {
+              "time": "19",
+              "label": "task_started content"
+            },
+            {
+              "time": "20",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "21",
+              "label": "graph_patched"
+            },
+            {
+              "time": "22",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2
+        }
       }
     }
   ]

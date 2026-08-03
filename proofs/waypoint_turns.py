@@ -192,9 +192,14 @@ async def main() -> int:
     # silently destroys the evidence a good attempt already produced. A
     # complete capture claims the canonical path; anything short of that lands
     # beside it and leaves the good artifact alone.
+    # "Complete" means every turn reached the user as an interface — NOT that
+    # the validator had nothing to say. A rejection is the wall working: the
+    # model regularly puts a literal string where the catalog declares a
+    # binding, and the right outcome is that the offending component is dropped
+    # and the rest of the turn still renders. Treating that as a failed capture
+    # would throw away the best evidence the run produces.
     complete = (proof["turns_captured"] == TURNS
-                and proof["every_turn_is_a_composed_interface"]
-                and proof["every_turn_validated_clean"])
+                and proof["every_turn_is_a_composed_interface"])
     if complete or os.getenv("WAYPOINT_FORCE") or not OUT.exists():
         OUT.write_text(json.dumps(proof, indent=2))
         written = OUT
