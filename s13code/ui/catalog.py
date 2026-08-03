@@ -10,7 +10,7 @@ The catalog is aligned to A2UI's Basic component set: the 15 layout / text /
 input / container types A2UI Basic already defines are adopted under their real
 A2UI names (``source="a2ui-basic"``). Only the components A2UI Basic genuinely
 lacks — charts, tiles, tables, timelines, notices, and the approval card — are
-kept as clearly labelled custom extensions (``source="custom"``). Twenty-three
+kept as clearly labelled custom extensions (``source="custom"``). Twenty-four
 types in all; a student can read every one and the validator can prove coverage.
 
 Property kinds:
@@ -47,8 +47,8 @@ class ComponentSpec:
 _TONE = PropSpec("enum", ("neutral", "good", "warn", "bad"))
 
 
-# The 23 component types the render client knows how to draw. The first 15 are
-# A2UI Basic's own names; the last 8 are custom extensions A2UI Basic lacks.
+# The 24 component types the render client knows how to draw. The first 15 are
+# A2UI Basic's own names; the last 9 are custom extensions A2UI Basic lacks.
 COMPONENTS: dict[str, ComponentSpec] = {
     # --- A2UI Basic: layout / text / media / inputs / containers (15) --------
     "Row": ComponentSpec("Row", {
@@ -88,7 +88,23 @@ COMPONENTS: dict[str, ComponentSpec] = {
     "Modal": ComponentSpec("Modal", {
         "title": PropSpec("text"), "children": PropSpec("ref"), "open": PropSpec("binding"),
     }, source="a2ui-basic"),
-    # --- Custom extensions: what A2UI Basic does not define (8) ---------------
+    # --- Custom extensions: what A2UI Basic does not define (9) ---------------
+    "CodeBlock": ComponentSpec("CodeBlock", {
+        # A syntax-highlighted source snippet. ``code`` binds to a plain string;
+        # the client tokenises with regex-only rules (no eval, no parser that
+        # could execute the source) and renders one text-node span per token.
+        # ``language`` is a plain text label displayed in the header; the
+        # renderer picks a tokeniser if it has one for that language and falls
+        # back to unhighlighted plain-text rendering otherwise. Every value
+        # goes through validator's markup/scheme checks and lands in a text
+        # node, so there is no way to smuggle an execution path through it.
+        # ``onCopy`` is optional; when present it fires a registered action
+        # with the block's id when the user hits the copy button.
+        "title": PropSpec("text"),
+        "code": PropSpec("binding"),
+        "language": PropSpec("text"),
+        "onCopy": PropSpec("action"),
+    }, source="custom"),
     "BarChart": ComponentSpec("BarChart", {
         "title": PropSpec("text"), "data": PropSpec("binding"),
         "xKey": PropSpec("text"), "yKey": PropSpec("text"),

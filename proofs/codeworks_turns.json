@@ -1,0 +1,793 @@
+{
+  "base": "http://127.0.0.1:8123",
+  "turns": [
+    {
+      "n": 1,
+      "note": "Underspecified ask. The model reaches for /choices \u2192 Buttons rather than emitting code immediately.",
+      "driven_by": "typed",
+      "goal_sent": "I'm writing a data-processing script and I need a helper to smooth noisy time-series values. Which approach fits best? Give me a shortlist of options I can pick from.",
+      "run_id": "run-43bfa768bf6b",
+      "latency_s": 20.31,
+      "provider": "gemini_1",
+      "model": "gemini-flash-latest",
+      "clean": true,
+      "types_seen": [
+        "Button",
+        "Column",
+        "ProgressBar",
+        "Text",
+        "Timeline"
+      ],
+      "expect": {
+        "must_include_types": [
+          "Button"
+        ],
+        "must_include_types_any": [],
+        "cb_language": [],
+        "code_min_len": 0
+      },
+      "judged": {
+        "types_seen": [
+          "Button",
+          "Column",
+          "ProgressBar",
+          "Text",
+          "Timeline"
+        ],
+        "cb_language": null,
+        "code_len": 0,
+        "ok_types": true,
+        "ok_lang": true,
+        "ok_code_len": true,
+        "ok": true
+      },
+      "composed": {
+        "run_id": "run-43bfa768bf6b",
+        "finished": true,
+        "surface": {
+          "root": "root",
+          "components": [
+            {
+              "id": "root",
+              "type": "Column",
+              "children": [
+                "title_text",
+                "intro_text",
+                "choices_col",
+                "progress_bar",
+                "timeline_component"
+              ]
+            },
+            {
+              "id": "title_text",
+              "type": "Text",
+              "variant": "heading",
+              "text": {
+                "$bind": "/title"
+              }
+            },
+            {
+              "id": "intro_text",
+              "type": "Text",
+              "variant": "body",
+              "text": {
+                "$bind": "/intro"
+              }
+            },
+            {
+              "id": "choices_col",
+              "type": "Column",
+              "children": [
+                "btn_0",
+                "btn_1",
+                "btn_2",
+                "btn_3",
+                "btn_4"
+              ]
+            },
+            {
+              "id": "btn_0",
+              "type": "Button",
+              "label": "Moving Averages (SMA/EMA) \u2014 Fast, low complexity; ideal for streaming data and simple trend tracking.",
+              "onPress": {
+                "action": "request_data"
+              }
+            },
+            {
+              "id": "btn_1",
+              "type": "Button",
+              "label": "Savitzky-Golay Filter \u2014 Preserves signal shape, peak heights, and widths using local polynomial fits.",
+              "onPress": {
+                "action": "request_data"
+              }
+            },
+            {
+              "id": "btn_2",
+              "type": "Button",
+              "label": "Gaussian Filter \u2014 Smooths out high-frequency noise evenly using a symmetric Gaussian kernel.",
+              "onPress": {
+                "action": "request_data"
+              }
+            },
+            {
+              "id": "btn_3",
+              "type": "Button",
+              "label": "Kalman Filter \u2014 Optimal for real-time state estimation with noisy multi-sensor or dynamic system inputs.",
+              "onPress": {
+                "action": "request_data"
+              }
+            },
+            {
+              "id": "btn_4",
+              "type": "Button",
+              "label": "LOWESS / LOESS \u2014 Non-parametric regression; robust against strong outliers in offline datasets.",
+              "onPress": {
+                "action": "request_data"
+              }
+            },
+            {
+              "id": "progress_bar",
+              "type": "ProgressBar",
+              "value": {
+                "$bind": "/progress_value"
+              },
+              "max": 2,
+              "tone": "neutral"
+            },
+            {
+              "id": "timeline_component",
+              "type": "Timeline",
+              "title": "Execution Steps",
+              "events": {
+                "$bind": "/timeline"
+              }
+            }
+          ],
+          "dataModel": {
+            "title": "Time-Series Smoothing Helper",
+            "goal": "I'm writing a data-processing script and I need a helper to smooth noisy time-series values. Which approach fits best? Give me a shortlist of options I can pick from.",
+            "summary": "Select the smoothing technique that best fits your data characteristics and performance needs:",
+            "results": [],
+            "items": [],
+            "metrics": [],
+            "spark": [],
+            "table_rows": [],
+            "item_count": 0,
+            "source_count": 0,
+            "subjects": [
+              "Moving Averages (SMA/EMA) \u2014 Fast, low complexity; ideal for streaming data and simple trend tracking.",
+              "Savitzky-Golay Filter \u2014 Preserves signal shape, peak heights, and widths using local polynomial fits.",
+              "Gaussian Filter \u2014 Smooths out high-frequency noise evenly using a symmetric Gaussian kernel.",
+              "Kalman Filter \u2014 Optimal for real-time state estimation with noisy multi-sensor or dynamic system inputs.",
+              "LOWESS / LOESS \u2014 Non-parametric regression; robust against strong outliers in offline datasets."
+            ],
+            "timeline": [
+              {
+                "time": "1346",
+                "label": "run_started"
+              },
+              {
+                "time": "1347",
+                "label": "graph_patched"
+              },
+              {
+                "time": "1348",
+                "label": "task_started content"
+              },
+              {
+                "time": "1349",
+                "label": "task_succeeded content"
+              },
+              {
+                "time": "1350",
+                "label": "graph_patched"
+              },
+              {
+                "time": "1351",
+                "label": "task_started surface"
+              }
+            ],
+            "progress_value": 1,
+            "progress_max": 2,
+            "intro": "Select the smoothing technique that best fits your data characteristics and performance needs:",
+            "choices": [
+              {
+                "id": "sma_ema",
+                "label": "Moving Averages (SMA/EMA) \u2014 Fast, low complexity; ideal for streaming data and simple trend tracking."
+              },
+              {
+                "id": "savgol",
+                "label": "Savitzky-Golay Filter \u2014 Preserves signal shape, peak heights, and widths using local polynomial fits."
+              },
+              {
+                "id": "gaussian",
+                "label": "Gaussian Filter \u2014 Smooths out high-frequency noise evenly using a symmetric Gaussian kernel."
+              },
+              {
+                "id": "kalman",
+                "label": "Kalman Filter \u2014 Optimal for real-time state estimation with noisy multi-sensor or dynamic system inputs."
+              },
+              {
+                "id": "lowess",
+                "label": "LOWESS / LOESS \u2014 Non-parametric regression; robust against strong outliers in offline datasets."
+              }
+            ],
+            "choice_0_label": "Moving Averages (SMA/EMA) \u2014 Fast, low complexity; ideal for streaming data and simple trend tracking.",
+            "choice_1_label": "Savitzky-Golay Filter \u2014 Preserves signal shape, peak heights, and widths using local polynomial fits.",
+            "choice_2_label": "Gaussian Filter \u2014 Smooths out high-frequency noise evenly using a symmetric Gaussian kernel.",
+            "choice_3_label": "Kalman Filter \u2014 Optimal for real-time state estimation with noisy multi-sensor or dynamic system inputs.",
+            "choice_4_label": "LOWESS / LOESS \u2014 Non-parametric regression; robust against strong outliers in offline datasets."
+          }
+        },
+        "component_count": 11,
+        "clean": true,
+        "provider": "gemini_1",
+        "model": "gemini-flash-latest",
+        "validator": {
+          "proposed": 11,
+          "accepted": 11,
+          "rejected": 0,
+          "rejections": []
+        }
+      }
+    },
+    {
+      "n": 2,
+      "note": "A TAP on turn 1's Button feeds the next turn verbatim. The model reaches for either a CodeBlock (reference implementation) or a Timeline (step-by-step walk-through) \u2014 either is a valid rich response to 'show me the approach'. No prompt named 'CodeBlock'.",
+      "driven_by": "tap on button 'Moving Averages (SMA/EMA) \u2014 Fast, low complexity; ideal for streaming data and simple trend tracking.'",
+      "goal_sent": "I'm writing a data-processing script and I need a helper to smooth noisy time-series values.\nThe user picked: Moving Averages (SMA/EMA) \u2014 Fast, low complexity; ideal for streaming data and simple trend tracking..\nShow me a compact Python reference implementation of that approach \u2014 a real function I can drop into a script.",
+      "run_id": "run-b6cfda93eab2",
+      "latency_s": 32.55,
+      "provider": "gemini_1",
+      "model": "gemini-flash-latest",
+      "clean": true,
+      "types_seen": [
+        "Card",
+        "CodeBlock",
+        "Column",
+        "ProgressBar",
+        "Text",
+        "Timeline"
+      ],
+      "expect": {
+        "must_include_types": [],
+        "must_include_types_any": [
+          "CodeBlock",
+          "Timeline"
+        ],
+        "cb_language": [],
+        "code_min_len": 0
+      },
+      "judged": {
+        "types_seen": [
+          "Card",
+          "CodeBlock",
+          "Column",
+          "ProgressBar",
+          "Text",
+          "Timeline"
+        ],
+        "cb_language": null,
+        "code_len": 0,
+        "ok_types": true,
+        "ok_lang": true,
+        "ok_code_len": true,
+        "ok": true
+      },
+      "composed": {
+        "run_id": "run-b6cfda93eab2",
+        "finished": true,
+        "surface": {
+          "root": "root",
+          "components": [
+            {
+              "id": "root",
+              "type": "Column",
+              "children": [
+                "heading",
+                "progress",
+                "code_card",
+                "timeline"
+              ]
+            },
+            {
+              "id": "heading",
+              "type": "Text",
+              "variant": "heading",
+              "text": {
+                "$bind": "/title"
+              }
+            },
+            {
+              "id": "progress",
+              "type": "ProgressBar",
+              "value": {
+                "$bind": "/progress_value"
+              },
+              "max": 2,
+              "tone": "good"
+            },
+            {
+              "id": "code_card",
+              "type": "Card",
+              "title": "Python Implementation & Guidance",
+              "children": [
+                "code_block"
+              ]
+            },
+            {
+              "id": "code_block",
+              "type": "CodeBlock",
+              "title": "sma_ema.py",
+              "language": "python",
+              "code": {
+                "$bind": "/summary"
+              },
+              "onCopy": {
+                "action": "request_data"
+              }
+            },
+            {
+              "id": "timeline",
+              "type": "Timeline",
+              "title": "Execution Steps",
+              "events": {
+                "$bind": "/timeline"
+              }
+            }
+          ],
+          "dataModel": {
+            "title": "I'm writing a data-processing script and I need a helper to smooth noisy time-series values.\nThe user picked: Moving Averages (SMA/EMA) \u2014 Fast, low complexity; ideal for streaming data and simple trend tracking..\nShow me a compact Python reference implementation of that approach \u2014 a real function I can drop into a script.",
+            "goal": "I'm writing a data-processing script and I need a helper to smooth noisy time-series values.\nThe user picked: Moving Averages (SMA/EMA) \u2014 Fast, low complexity; ideal for streaming data and simple trend tracking..\nShow me a compact Python reference implementation of that approach \u2014 a real function I can drop into a script.",
+            "summary": "{\n  \"title\": \"Time-Series Moving Averages (SMA & EMA)\",\n  \"intro\": \"Compact Python functions for smoothing noisy time-series data using Simple Moving Average and Exponential Moving Average.\",\n  \"code\": {\n    \"language\": \"python\",\n    \"source\": \"def simple_moving_average(data: list[float], window: int) -> list[float]:\\n    \\\"\\\"\\\"Compute Simple Moving Average (SMA) over a fixed window size.\\\"\\\"\\\"\\n    if window < 1 or len(data) < window:\\n        return []\\n    return [\\n        sum(data[i - window + 1 : i + 1]) / window\\n        for i in range(window - 1, len(data))\\n    ]\\n\\n\\ndef exponential_moving_average(data: list[float], alpha: float) -> list[float]:\\n    \\\"\\\"\\\"Compute Exponential Moving Average (EMA) given a smoothing factor alpha (0 < alpha <= 1).\\\"\\\"\\\"\\n    if not data or not (0 < alpha <= 1):\\n        return []\\n    ema = [data[0]]\\n    for val in data[1:]:\\n        ema.append(alpha * val + (1 - alpha) * ema[-1])\\n    return ema\\n\\n\\n# Quick Example\\nif __name__ == \\\"__main__\\\":\n    raw_signal = [10.0, 12.0, 11.0, 15.0, 14.0, 20.0, 18.0, 22.0]\n    print(\\\"SMA (w=3):\\\", simple_moving_average(raw_signal, window=3))\n    print(\\\"EMA (a=0.5):\\\", exponential_moving_average(raw_signal, alpha=0.5))\",\n    \"caption\": \"Python reference implementation for SMA and EMA\"\n  },\n  \"sections\": [\n    {\n      \"heading\": \"Parameter Guidance\",\n      \"points\": [\n        \"SMA Window: Larger values increase smoothing but introduce lag.\",\n        \"EMA Alpha: Higher alpha gives more weight to recent data (faster response, less smoothing); lower alpha increases smoothing.\",\n        \"Streaming/Online processing: EMA requires keeping only the previous EMA value in memory (O(1) state).\"\n      ]\n    }\n  ]\n}",
+            "results": [],
+            "items": [],
+            "metrics": [],
+            "spark": [],
+            "table_rows": [],
+            "item_count": 0,
+            "source_count": 0,
+            "subjects": [],
+            "timeline": [
+              {
+                "time": "1354",
+                "label": "run_started"
+              },
+              {
+                "time": "1355",
+                "label": "graph_patched"
+              },
+              {
+                "time": "1356",
+                "label": "task_started content"
+              },
+              {
+                "time": "1357",
+                "label": "task_succeeded content"
+              },
+              {
+                "time": "1358",
+                "label": "graph_patched"
+              },
+              {
+                "time": "1359",
+                "label": "task_started surface"
+              }
+            ],
+            "progress_value": 1,
+            "progress_max": 2
+          }
+        },
+        "component_count": 6,
+        "clean": true,
+        "provider": "gemini_1",
+        "model": "gemini-flash-latest",
+        "validator": {
+          "proposed": 6,
+          "accepted": 6,
+          "rejected": 0,
+          "rejections": []
+        }
+      }
+    },
+    {
+      "n": 3,
+      "note": "Translate to TypeScript. CodeBlock's language slot switches.",
+      "driven_by": "typed",
+      "goal_sent": "I asked for a smoothing helper. The user picked: Moving Averages (SMA/EMA) \u2014 Fast, low complexity; ideal for streaming data and simple trend tracking..\nNow translate the current version to TypeScript with proper types.",
+      "run_id": "run-bc8f585f213f",
+      "latency_s": 16.84,
+      "provider": "gemini_1",
+      "model": "gemini-flash-latest",
+      "clean": true,
+      "types_seen": [
+        "Card",
+        "CodeBlock",
+        "Column",
+        "ProgressBar",
+        "Text"
+      ],
+      "expect": {
+        "must_include_types": [
+          "CodeBlock"
+        ],
+        "must_include_types_any": [],
+        "cb_language": [
+          "ts",
+          "tsx",
+          "typescript"
+        ],
+        "code_min_len": 40
+      },
+      "judged": {
+        "types_seen": [
+          "Card",
+          "CodeBlock",
+          "Column",
+          "ProgressBar",
+          "Text"
+        ],
+        "cb_language": "typescript",
+        "code_len": 1767,
+        "ok_types": true,
+        "ok_lang": true,
+        "ok_code_len": true,
+        "ok": true
+      },
+      "composed": {
+        "run_id": "run-bc8f585f213f",
+        "finished": true,
+        "surface": {
+          "root": "root",
+          "components": [
+            {
+              "id": "root",
+              "type": "Column",
+              "children": [
+                "title",
+                "summary",
+                "progress",
+                "features_card",
+                "code_snippet"
+              ]
+            },
+            {
+              "id": "title",
+              "type": "Text",
+              "variant": "heading",
+              "text": {
+                "$bind": "/title"
+              }
+            },
+            {
+              "id": "summary",
+              "type": "Text",
+              "variant": "body",
+              "text": {
+                "$bind": "/summary"
+              }
+            },
+            {
+              "id": "progress",
+              "type": "ProgressBar",
+              "value": {
+                "$bind": "/progress_value"
+              },
+              "max": 2,
+              "tone": "good"
+            },
+            {
+              "id": "features_card",
+              "type": "Card",
+              "title": "Features & Types",
+              "children": [
+                "features_text"
+              ]
+            },
+            {
+              "id": "features_text",
+              "type": "Text",
+              "variant": "body",
+              "text": {
+                "$bind": "/section_0_points"
+              }
+            },
+            {
+              "id": "code_snippet",
+              "type": "CodeBlock",
+              "title": "Streaming and batch SMA/EMA helpers in TypeScript",
+              "code": {
+                "$bind": "/code_source"
+              },
+              "language": "typescript",
+              "onCopy": {
+                "action": "request_data"
+              }
+            }
+          ],
+          "dataModel": {
+            "title": "TypeScript Moving Averages (SMA & EMA)",
+            "goal": "I asked for a smoothing helper. The user picked: Moving Averages (SMA/EMA) \u2014 Fast, low complexity; ideal for streaming data and simple trend tracking..\nNow translate the current version to TypeScript with proper types.",
+            "summary": "Type-safe, stateful classes and batch helper functions for calculating Simple Moving Average (SMA) and Exponential Moving Average (EMA) on streaming or array data.",
+            "results": [],
+            "items": [],
+            "metrics": [],
+            "spark": [],
+            "table_rows": [],
+            "item_count": 0,
+            "source_count": 0,
+            "subjects": [],
+            "timeline": [
+              {
+                "time": "1362",
+                "label": "run_started"
+              },
+              {
+                "time": "1363",
+                "label": "graph_patched"
+              },
+              {
+                "time": "1364",
+                "label": "task_started content"
+              },
+              {
+                "time": "1365",
+                "label": "task_succeeded content"
+              },
+              {
+                "time": "1366",
+                "label": "graph_patched"
+              },
+              {
+                "time": "1367",
+                "label": "task_started surface"
+              }
+            ],
+            "progress_value": 1,
+            "progress_max": 2,
+            "intro": "Type-safe, stateful classes and batch helper functions for calculating Simple Moving Average (SMA) and Exponential Moving Average (EMA) on streaming or array data.",
+            "section_0_heading": "Features & Types",
+            "section_0_points": "\u2022 Stateful classes maintain internal memory for performant stream processing (O(1) update complexity).\n\u2022 Readonly inputs (`readonly number[]`) prevent accidental data mutation in functional utilities.\n\u2022 Strict null safety handles initial empty states gracefully.",
+            "sections": [
+              {
+                "heading": "Features & Types",
+                "points": [
+                  "Stateful classes maintain internal memory for performant stream processing (O(1) update complexity).",
+                  "Readonly inputs (`readonly number[]`) prevent accidental data mutation in functional utilities.",
+                  "Strict null safety handles initial empty states gracefully."
+                ]
+              }
+            ],
+            "section_events": [
+              {
+                "time": "Features & Types",
+                "label": "Stateful classes maintain internal memory for performant stream processing (O(1) update complexity).; Readonly inputs (`readonly number[]`) prevent accidental data mutation in functional utilities.; Strict null safety handles initial empty states gracefully."
+              }
+            ],
+            "code_source": "export interface MovingAverageOptions {\n  period: number;\n}\n\nexport class SimpleMovingAverage {\n  private readonly period: number;\n  private window: number[] = [];\n  private sum: number = 0;\n\n  constructor(period: number) {\n    if (period <= 0) throw new Error(\"Period must be greater than 0\");\n    this.period = period;\n  }\n\n  public update(value: number): number {\n    this.window.push(value);\n    this.sum += value;\n    if (this.window.length > this.period) {\n      const removed = this.window.shift()!;\n      this.sum -= removed;\n    }\n    return this.sum / this.window.length;\n  }\n\n  public get value(): number | null {\n    return this.window.length === 0 ? null : this.sum / this.window.length;\n  }\n\n  public isFull(): boolean {\n    return this.window.length === this.period;\n  }\n}\n\nexport class ExponentialMovingAverage {\n  private readonly period: number;\n  private readonly k: number;\n  private currentEma: number | null = null;\n\n  constructor(period: number) {\n    if (period <= 0) throw new Error(\"Period must be greater than 0\");\n    this.period = period;\n    this.k = 2 / (period + 1);\n  }\n\n  public update(value: number): number {\n    if (this.currentEma === null) {\n      this.currentEma = value;\n    } else {\n      this.currentEma = value * this.k + this.currentEma * (1 - this.k);\n    }\n    return this.currentEma;\n  }\n\n  public get value(): number | null {\n    return this.currentEma;\n  }\n}\n\nexport function calculateSMA(data: readonly number[], period: number): number[] {\n  const sma = new SimpleMovingAverage(period);\n  return data.map((val) => sma.update(val));\n}\n\nexport function calculateEMA(data: readonly number[], period: number): number[] {\n  const ema = new ExponentialMovingAverage(period);\n  return data.map((val) => ema.update(val));\n}",
+            "code_language": "typescript",
+            "code_caption": "Streaming and batch SMA/EMA helpers in TypeScript"
+          }
+        },
+        "component_count": 7,
+        "clean": true,
+        "provider": "gemini_1",
+        "model": "gemini-flash-latest",
+        "validator": {
+          "proposed": 7,
+          "accepted": 7,
+          "rejected": 0,
+          "rejections": []
+        }
+      }
+    },
+    {
+      "n": 4,
+      "note": "Explain-shaped answer. No new CodeBlock \u2014 the previous code is context; the ask is 'describe what each line does'.",
+      "driven_by": "typed",
+      "goal_sent": "I asked for a smoothing helper. The user picked: Moving Averages (SMA/EMA) \u2014 Fast, low complexity; ideal for streaming data and simple trend tracking., then translated to TypeScript.\nExplain what happens inside the for-loop step by step using short bullet points. Do NOT rewrite the code \u2014 describe what each line does.",
+      "run_id": "run-1b415d39f951",
+      "latency_s": 17.07,
+      "provider": "gemini_1",
+      "model": "gemini-flash-latest",
+      "clean": true,
+      "types_seen": [
+        "Card",
+        "Column",
+        "Tabs",
+        "Text"
+      ],
+      "expect": {
+        "must_include_types": [
+          "Text"
+        ],
+        "must_include_types_any": [],
+        "cb_language": [],
+        "code_min_len": 0
+      },
+      "judged": {
+        "types_seen": [
+          "Card",
+          "Column",
+          "Tabs",
+          "Text"
+        ],
+        "cb_language": null,
+        "code_len": 0,
+        "ok_types": true,
+        "ok_lang": true,
+        "ok_code_len": true,
+        "ok": true
+      },
+      "composed": {
+        "run_id": "run-1b415d39f951",
+        "finished": true,
+        "surface": {
+          "root": "root",
+          "components": [
+            {
+              "id": "root",
+              "type": "Column",
+              "children": [
+                "title",
+                "intro",
+                "tabs"
+              ]
+            },
+            {
+              "id": "title",
+              "type": "Text",
+              "variant": "heading",
+              "text": {
+                "$bind": "/title"
+              }
+            },
+            {
+              "id": "intro",
+              "type": "Text",
+              "variant": "body",
+              "text": {
+                "$bind": "/intro"
+              }
+            },
+            {
+              "id": "tabs",
+              "type": "Tabs",
+              "labels": "SMA Loop Operations,EMA Loop Operations",
+              "children": [
+                "card_sma",
+                "card_ema"
+              ]
+            },
+            {
+              "id": "card_sma",
+              "type": "Card",
+              "title": "Simple Moving Average (SMA)",
+              "children": [
+                "text_sma"
+              ]
+            },
+            {
+              "id": "text_sma",
+              "type": "Text",
+              "variant": "body",
+              "text": {
+                "$bind": "/section_0_points"
+              }
+            },
+            {
+              "id": "card_ema",
+              "type": "Card",
+              "title": "Exponential Moving Average (EMA)",
+              "children": [
+                "text_ema"
+              ]
+            },
+            {
+              "id": "text_ema",
+              "type": "Text",
+              "variant": "body",
+              "text": {
+                "$bind": "/section_1_points"
+              }
+            }
+          ],
+          "dataModel": {
+            "title": "Moving Averages (SMA & EMA) Loop Execution Logic",
+            "goal": "I asked for a smoothing helper. The user picked: Moving Averages (SMA/EMA) \u2014 Fast, low complexity; ideal for streaming data and simple trend tracking., then translated to TypeScript.\nExplain what happens inside the for-loop step by step using short bullet points. Do NOT rewrite the code \u2014 describe what each line does.",
+            "summary": "Step-by-step breakdown of the operations performed during each iteration of the calculation loops.",
+            "results": [],
+            "items": [],
+            "metrics": [],
+            "spark": [],
+            "table_rows": [],
+            "item_count": 0,
+            "source_count": 0,
+            "subjects": [],
+            "timeline": [
+              {
+                "time": "1370",
+                "label": "run_started"
+              },
+              {
+                "time": "1371",
+                "label": "graph_patched"
+              },
+              {
+                "time": "1372",
+                "label": "task_started content"
+              },
+              {
+                "time": "1373",
+                "label": "task_succeeded content"
+              },
+              {
+                "time": "1374",
+                "label": "graph_patched"
+              },
+              {
+                "time": "1375",
+                "label": "task_started surface"
+              }
+            ],
+            "progress_value": 1,
+            "progress_max": 2,
+            "intro": "Step-by-step breakdown of the operations performed during each iteration of the calculation loops.",
+            "section_0_heading": "Simple Moving Average (SMA) Loop Operations",
+            "section_0_points": "\u2022 Access current data point: Retrieves value at index `i` from input array.\n\u2022 Accumulate sum: Adds current value to running `windowSum`.\n\u2022 Eject old value: If index `i >= windowSize`, subtracts the value at `i - windowSize` to maintain fixed window size.\n\u2022 Calculate and store: Once `i >= windowSize - 1`, divides `windowSum` by `windowSize` and appends result to output array.",
+            "section_1_heading": "Exponential Moving Average (EMA) Loop Operations",
+            "section_1_points": "\u2022 Access current data point: Retrieves value at index `i` from input array.\n\u2022 Set initial seed: If `i === 0`, pushes the first value directly into result array as baseline.\n\u2022 Fetch previous EMA: Reads `ema[i - 1]` from result array for previous step's value.\n\u2022 Apply smoothing weight: Calculates weighted result using formula `(val - prevEma) * multiplier + prevEma`.\n\u2022 Store result: Appends calculated EMA value to output array for use in next iteration.",
+            "sections": [
+              {
+                "heading": "Simple Moving Average (SMA) Loop Operations",
+                "points": [
+                  "Access current data point: Retrieves value at index `i` from input array.",
+                  "Accumulate sum: Adds current value to running `windowSum`.",
+                  "Eject old value: If index `i >= windowSize`, subtracts the value at `i - windowSize` to maintain fixed window size.",
+                  "Calculate and store: Once `i >= windowSize - 1`, divides `windowSum` by `windowSize` and appends result to output array."
+                ]
+              },
+              {
+                "heading": "Exponential Moving Average (EMA) Loop Operations",
+                "points": [
+                  "Access current data point: Retrieves value at index `i` from input array.",
+                  "Set initial seed: If `i === 0`, pushes the first value directly into result array as baseline.",
+                  "Fetch previous EMA: Reads `ema[i - 1]` from result array for previous step's value.",
+                  "Apply smoothing weight: Calculates weighted result using formula `(val - prevEma) * multiplier + prevEma`.",
+                  "Store result: Appends calculated EMA value to output array for use in next iteration."
+                ]
+              }
+            ],
+            "section_events": [
+              {
+                "time": "Simple Moving Average (SMA) Loop Operations",
+                "label": "Access current data point: Retrieves value at index `i` from input array.; Accumulate sum: Adds current value to running `windowSum`.; Eject old value: If index `i >= windowSize`, subtracts the value at `i - windowSize` to maintain fixed window size.; Calculate and store: Once `i >= windowSize - 1`, divides `windowSum` by `windowSize` and appends result to output array."
+              },
+              {
+                "time": "Exponential Moving Average (EMA) Loop Operations",
+                "label": "Access current data point: Retrieves value at index `i` from input array.; Set initial seed: If `i === 0`, pushes the first value directly into result array as baseline.; Fetch previous EMA: Reads `ema[i - 1]` from result array for previous step's value.; Apply smoothing weight: Calculates weighted result using formula `(val - prevEma) * multiplier + prevEma`.; Store result: Appends calculated EMA value to output array for use in next iteration."
+              }
+            ]
+          }
+        },
+        "component_count": 8,
+        "clean": true,
+        "provider": "gemini_1",
+        "model": "gemini-flash-latest",
+        "validator": {
+          "proposed": 8,
+          "accepted": 8,
+          "rejected": 0,
+          "rejections": []
+        }
+      }
+    }
+  ],
+  "verdict": "PASS",
+  "healthz": {
+    "ok": true,
+    "service": "s13code",
+    "port": 8123,
+    "glc_base_url": "http://127.0.0.1:8111"
+  }
+}

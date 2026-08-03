@@ -9,9 +9,19 @@ from s13code.core.memory import MemoryKind, MemoryScope, Principal
 router = APIRouter(prefix="/v1/agent", tags=["S13 live agent"])
 
 
-async def gateway_text_llm(app, prompt: str, system: str):
-    """Patchable test seam; production crosses HTTP through GatewayClient."""
-    return await app.state.gateway.complete(prompt, system)
+async def gateway_text_llm(app, prompt: str, system: str, *, byok_key: str | None = None):
+    """Patchable test seam; production crosses HTTP through GatewayClient.
+
+    ``byok_key`` — if the browser client shipped its own Gemini key via the
+    ``X-User-Gemini-Key`` request header, we forward it verbatim to GLC so the
+    hosted demo doesn't burn the host's free-tier quota on public visitors.
+    """
+    return await app.state.gateway.complete(prompt, system, byok_key=byok_key)
+
+
+def _byok_from(request: Request) -> str | None:
+    """Extract the BYOK Gemini key from the request headers, if any."""
+    return (request.headers.get("x-user-gemini-key") or "").strip() or None
 
 
 class ScopeBody(BaseModel):
@@ -57,9 +67,11 @@ class SearchBody(ScopeBody):
 @router.post("/runs")
 async def run(body: RunBody, request: Request):
     runtime = request.app.state.s13_runtime
+    byok = _byok_from(request)
     try:
         return await runtime.run(prompt=body.prompt, scope=body.scope(),
-                                 llm=lambda prompt, system: gateway_text_llm(request.app, prompt, system),
+                                 llm=lambda prompt, system: gateway_text_llm(
+                                     request.app, prompt, system, byok_key=byok),
                                  source_uri="api://agent/runs", source_author=body.user_id or "api-user",
                                  respond_as=body.respond_as)
     except RuntimeError as error:
@@ -69,9 +81,11 @@ async def run(body: RunBody, request: Request):
 @router.post("/runs/{run_id}/resume")
 async def resume(run_id: str, request: Request):
     runtime = request.app.state.s13_runtime
+    byok = _byok_from(request)
     try:
         return await runtime.run(prompt=None, scope=None,
-                                 llm=lambda prompt, system: gateway_text_llm(request.app, prompt, system),
+                                 llm=lambda prompt, system: gateway_text_llm(
+                                     request.app, prompt, system, byok_key=byok),
                                  source_uri=None, source_author=None, run_id=run_id, resume=True)
     except KeyError:
         raise HTTPException(404, "run not found") from None

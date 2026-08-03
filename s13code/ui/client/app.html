@@ -54,6 +54,27 @@
   .tabs button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-mono);color:var(--ink-muted)}
   .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .Notice{border-left:4px solid var(--amber);background:var(--amber-soft);border-radius:10px;padding:12px 14px}
+  .cb{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  .cb .cbh{display:flex;align-items:center;padding:6px 12px;background:var(--surface-alt);border-bottom:1px solid var(--rule);font-family:var(--font-mono);font-size:11px;color:var(--ink-muted)}
+  .cb .cbh .lang{text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  .cb .cbh .cbt{flex:1;margin-left:10px;color:var(--ink-body);text-transform:none;letter-spacing:0;font-weight:500}
+  .cb .cbh button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:6px;padding:3px 10px;font-family:var(--font-mono);font-size:11px;cursor:pointer;color:var(--ink-muted)}
+  .cb pre{margin:0;padding:12px 0;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.55}
+  .cb .cbr{display:flex}
+  .cb .cbr .gutter{color:var(--ink-muted);text-align:right;padding:0 10px 0 12px;user-select:none;opacity:.55;border-right:1px solid var(--rule);min-width:28px}
+  .cb .cbr .body{padding:0 12px;flex:1;white-space:pre;color:var(--ink-body)}
+  .cb .tok-keyword{color:#7c3aed;font-weight:600}
+  .cb .tok-builtin{color:#0891b2}
+  .cb .tok-type,.cb .tok-class-name{color:#0e7490;font-weight:500}
+  .cb .tok-function{color:#2563EB}
+  .cb .tok-decorator{color:#B45309;font-style:italic}
+  .cb .tok-string,.cb .tok-regex{color:#15803D}
+  .cb .tok-number{color:#B45309}
+  .cb .tok-boolean,.cb .tok-null-value{color:#7c3aed;font-weight:600}
+  .cb .tok-comment{color:var(--ink-muted);font-style:italic}
+  .cb .tok-operator{color:#334155}
+  .cb .tok-punctuation{color:#64748b}
+  .cb .tok-identifier{color:var(--ink-body)}
   .actbtn{width:100%;text-align:center;border:1px solid var(--rule-strong);background:var(--surface);border-radius:12px;padding:14px;font-weight:600;font-size:15px;cursor:pointer;color:var(--ink);transition:all 120ms}
   .actbtn:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
   .actbtn:active{transform:translateY(1px)}
@@ -121,6 +142,7 @@ const R={
   Text:(c,x)=>{const e=$("div","Text "+(c.variant||"body"));const v=resolve(c.text,x.dm);
     if((c.variant||"body")==="heading"){e.append(T(v));}else{e.append(md(v));}return e;},
   Notice:(c,x)=>{const e=$("div","Notice");e.append(T(resolve(c.text,x.dm)));return e;},
+  CodeBlock:(c,x)=>renderCodeBlock(c,x),
   StatTile:(c,x)=>{const e=$("div","StatTile");const l=$("div","lab");l.append(T(c.label));const v=$("div","val");v.append(T(String(resolve(c.value,x.dm))+(c.unit?" "+c.unit:"")));const d=$("div","dl");d.append(T(resolve(c.delta,x.dm)||""));e.append(l,v,d);return e;},
   Timeline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"timeline"));const b=$("div");b.style.cssText="display:flex;flex-direction:column;gap:8px;margin-top:4px";(resolve(c.events,x.dm)||[]).forEach(ev=>{const r=$("div");r.style.cssText="display:flex;gap:10px;align-items:flex-start;font-size:14px";const dot=$("span");dot.textContent="●";dot.style.cssText="color:var(--accent);font-size:10px;margin-top:5px";const lab=$("div");lab.style.flex="1";mdInline(String(ev.label!=null?ev.label:(ev.kind!=null?ev.kind:JSON.stringify(ev))),lab);r.append(dot,lab);b.append(r);});e.append(t,b);return e;},
   ProgressBar:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("progress"));const p=$("div","prog");const i=$("i");const val=+resolve(c.value,x.dm)||0;i.style.width=Math.min(100,val/(c.max||100)*100)+"%";p.append(i);e.append(t,p);return e;},
@@ -142,6 +164,333 @@ function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
 function spark(v){const ns="http://www.w3.org/2000/svg",w=200,h=44,mx=Math.max(...v,1),mn=Math.min(...v,0),rg=(mx-mn)||1;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");s.setAttribute("height",h);const p=document.createElementNS(ns,"polyline");p.setAttribute("points",v.map((y,i)=>`${i/(v.length-1||1)*w},${h-5-(y-mn)/rg*(h-10)}`).join(" "));p.setAttribute("fill","none");p.setAttribute("stroke","var(--green)");p.setAttribute("stroke-width","2.5");s.append(p);return s;}
 function bars(d,xk,yk){const ns="http://www.w3.org/2000/svg",w=300,h=150,pad=24,mx=Math.max(...d.map(r=>+r[yk]),1),bw=(w-pad*2)/(d.length||1)*.6;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("width","100%");d.forEach((r,i)=>{const x=pad+i*((w-pad*2)/d.length)+((w-pad*2)/d.length-bw)/2,bh=(+r[yk])/mx*(h-pad*2);const rc=document.createElementNS(ns,"rect");rc.setAttribute("x",x);rc.setAttribute("y",h-pad-bh);rc.setAttribute("width",bw);rc.setAttribute("height",bh);rc.setAttribute("rx",3);rc.setAttribute("fill","var(--accent)");s.append(rc);const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","9");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=r[xk];s.append(tl);});return s;}
+// ---- CodeBlock: syntax highlighting via per-language regex grammars.
+// Each grammar is an ordered list of {name, re}. The tokeniser walks the
+// string, tries each rule at the cursor, first-match wins, emits one token,
+// advances. It NEVER parses the source, NEVER evaluates it, NEVER treats any
+// bound value as executable — every span is a text node.
+const CB_WORD=(words,kind)=>new RegExp("^(?:"+words.join("|")+")\\b");
+const CB_NUMBER=/^(?:0[xX][0-9a-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|(?:\d[\d_]*(?:\.\d[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?)[LlnfFdDuU]?/;
+const CB_GRAMMARS={};
+const PY_KEYWORDS=["False","None","True","and","as","assert","async","await","break","class","continue","def","del","elif","else","except","finally","for","from","global","if","import","in","is","lambda","match","case","nonlocal","not","or","pass","raise","return","try","while","with","yield"];
+const PY_BUILTINS=["abs","all","any","ascii","bin","bool","bytearray","bytes","callable","chr","classmethod","compile","complex","delattr","dict","dir","divmod","enumerate","eval","exec","filter","float","format","frozenset","getattr","globals","hasattr","hash","help","hex","id","input","int","isinstance","issubclass","iter","len","list","locals","map","max","memoryview","min","next","object","oct","open","ord","pow","print","property","range","repr","reversed","round","set","setattr","slice","sorted","staticmethod","str","sum","super","tuple","type","vars","zip","self","cls"];
+CB_GRAMMARS.python=[
+  {name:"comment",re:/^#[^\n]*/},
+  {name:"string",re:/^(?:[rRbBuU]|[rR][bB]|[bB][rR])?"""[\s\S]*?"""/},
+  {name:"string",re:/^(?:[rRbBuU]|[rR][bB]|[bB][rR])?'''[\s\S]*?'''/},
+  {name:"string",re:/^(?:[fF][rR]?|[rR][fF])"(?:\\.|[^"\\\n])*"/},
+  {name:"string",re:/^(?:[fF][rR]?|[rR][fF])'(?:\\.|[^'\\\n])*'/},
+  {name:"string",re:/^(?:[rRbBuU]|[rR][bB]|[bB][rR])?"(?:\\.|[^"\\\n])*"/},
+  {name:"string",re:/^(?:[rRbBuU]|[rR][bB]|[bB][rR])?'(?:\\.|[^'\\\n])*'/},
+  {name:"decorator",re:/^@[A-Za-z_][\w.]*/},
+  {capture:["keyword","whitespace","class-name"],re:/^(class)(\s+)([A-Za-z_]\w*)/},
+  {capture:["keyword","whitespace","function"],re:/^(def)(\s+)([A-Za-z_]\w*)/},
+  {name:"keyword",re:CB_WORD(PY_KEYWORDS,"keyword")},
+  {name:"boolean",re:/^(?:True|False)\b/},
+  {name:"null-value",re:/^None\b/},
+  {name:"builtin",re:CB_WORD(PY_BUILTINS,"builtin")},
+  {name:"function",re:/^[A-Za-z_]\w*(?=\s*\()/},
+  {name:"identifier",re:/^[A-Za-z_]\w*/},
+  {name:"number",re:CB_NUMBER},
+  {name:"operator",re:/^(?:\*\*=?|\/\/=?|<<=?|>>=?|[!=<>]=|:=|->|[-+*/%&|^~=<>!])/},
+  {name:"punctuation",re:/^[(){}\[\],.;:@]/},
+];
+const JS_KEYWORDS=["async","await","break","case","catch","class","const","continue","debugger","default","delete","do","else","enum","export","extends","finally","for","from","function","get","if","import","in","instanceof","let","new","of","return","set","static","super","switch","this","throw","try","typeof","var","void","while","with","yield"];
+const JS_BUILTINS=["Array","Boolean","Date","Error","Function","JSON","Map","Math","Number","Object","Promise","RegExp","Set","String","Symbol","WeakMap","WeakSet","console","document","window","globalThis","process","require","module","exports"];
+CB_GRAMMARS.javascript=[
+  {name:"comment",re:/^\/\/[^\n]*/},{name:"comment",re:/^\/\*[\s\S]*?\*\//},
+  {name:"string",re:/^`(?:\\.|[^`\\])*`/},
+  {name:"string",re:/^"(?:\\.|[^"\\\n])*"/},{name:"string",re:/^'(?:\\.|[^'\\\n])*'/},
+  {name:"regex",re:/^\/(?![*+?])(?:[^\r\n\[\/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])+\/[gimsuy]*/},
+  {capture:["keyword","whitespace","class-name"],re:/^(class)(\s+)([A-Za-z_$][\w$]*)/},
+  {capture:["keyword","whitespace","function"],re:/^(function)(\s+)([A-Za-z_$][\w$]*)/},
+  {name:"keyword",re:CB_WORD(JS_KEYWORDS,"keyword")},
+  {name:"boolean",re:/^(?:true|false)\b/},
+  {name:"null-value",re:/^(?:null|undefined)\b/},
+  {name:"builtin",re:CB_WORD(JS_BUILTINS,"builtin")},
+  {name:"type",re:/^[A-Z][A-Za-z0-9_$]*/},
+  {name:"function",re:/^[A-Za-z_$][\w$]*(?=\s*\()/},
+  {name:"identifier",re:/^[A-Za-z_$][\w$]*/},
+  {name:"number",re:CB_NUMBER},
+  {name:"operator",re:/^(?:={1,3}|!={0,2}|<={1,2}|>={1,2}|\|\|=?|&&=?|\?\?=?|\?\.|\.\.\.|\+\+|--|\*\*=?|<<=?|>>>?=?|[-+*/%&|^~<>!?]=?)/},
+  {name:"punctuation",re:/^[(){}\[\],.;:@]/},
+];
+const TS_EXTRA=["abstract","any","asserts","bigint","boolean","declare","enum","implements","interface","is","keyof","namespace","never","number","package","private","protected","public","readonly","string","type","undefined","unknown"];
+CB_GRAMMARS.typescript=[
+  {name:"comment",re:/^\/\/[^\n]*/},{name:"comment",re:/^\/\*[\s\S]*?\*\//},
+  {name:"string",re:/^`(?:\\.|[^`\\])*`/},
+  {name:"string",re:/^"(?:\\.|[^"\\\n])*"/},{name:"string",re:/^'(?:\\.|[^'\\\n])*'/},
+  {capture:["keyword","whitespace","class-name"],re:/^(class|interface|enum|type)(\s+)([A-Za-z_$][\w$]*)/},
+  {capture:["keyword","whitespace","function"],re:/^(function)(\s+)([A-Za-z_$][\w$]*)/},
+  {name:"keyword",re:CB_WORD(JS_KEYWORDS.concat(TS_EXTRA),"keyword")},
+  {name:"boolean",re:/^(?:true|false)\b/},
+  {name:"null-value",re:/^(?:null|undefined)\b/},
+  {name:"builtin",re:CB_WORD(JS_BUILTINS,"builtin")},
+  {name:"type",re:/^[A-Z][A-Za-z0-9_$]*/},
+  {name:"function",re:/^[A-Za-z_$][\w$]*(?=\s*\()/},
+  {name:"identifier",re:/^[A-Za-z_$][\w$]*/},
+  {name:"number",re:CB_NUMBER},
+  {name:"operator",re:/^(?:={1,3}|!={0,2}|<={1,2}|>={1,2}|\|\|=?|&&=?|\?\?=?|\?\.|\.\.\.|\+\+|--|\*\*=?|<<=?|>>>?=?|[-+*/%&|^~<>!?]=?)/},
+  {name:"punctuation",re:/^[(){}\[\],.;:@]/},
+];
+const JAVA_KEYWORDS=["abstract","assert","break","case","catch","class","const","continue","default","do","else","enum","extends","final","finally","for","goto","if","implements","import","instanceof","interface","native","new","package","permits","private","protected","public","record","return","sealed","static","strictfp","super","switch","synchronized","this","throw","throws","transient","try","var","volatile","while","yield"];
+const JAVA_TYPES=["boolean","byte","char","double","float","int","long","short","void","String","Integer","Boolean","Double","Float","Long","Short","Byte","Character","Object","List","Map","Set","ArrayList","HashMap","HashSet"];
+CB_GRAMMARS.java=[
+  {name:"comment",re:/^\/\/[^\n]*/},{name:"comment",re:/^\/\*[\s\S]*?\*\//},
+  {name:"string",re:/^"""[\s\S]*?"""/},
+  {name:"string",re:/^"(?:\\.|[^"\\\n])*"/},{name:"string",re:/^'(?:\\.|[^'\\\n])*'/},
+  {name:"decorator",re:/^@[A-Za-z_][\w.]*/},
+  {capture:["keyword","whitespace","class-name"],re:/^(class|interface|enum|record)(\s+)([A-Za-z_]\w*)/},
+  {capture:["type","whitespace","function"],re:/^(void|int|long|short|byte|char|boolean|double|float|String|[A-Z]\w*)(\s+)([a-z_]\w*)(?=\s*\()/},
+  {name:"keyword",re:CB_WORD(JAVA_KEYWORDS,"keyword")},
+  {name:"boolean",re:/^(?:true|false)\b/},
+  {name:"null-value",re:/^null\b/},
+  {name:"type",re:CB_WORD(JAVA_TYPES,"type")},
+  {name:"type",re:/^[A-Z]\w*/},
+  {name:"function",re:/^[A-Za-z_]\w*(?=\s*\()/},
+  {name:"identifier",re:/^[A-Za-z_]\w*/},
+  {name:"number",re:CB_NUMBER},
+  {name:"operator",re:/^(?:={1,2}|!=|<=|>=|<<=?|>>>?=?|&&|\|\||\+\+|--|->|::|[-+*/%&|^~<>!?]=?)/},
+  {name:"punctuation",re:/^[(){}\[\],.;:@]/},
+];
+const GO_KEYWORDS=["break","case","chan","const","continue","default","defer","else","fallthrough","for","func","go","goto","if","import","interface","map","package","range","return","select","struct","switch","type","var"];
+const GO_TYPES=["any","bool","byte","comparable","complex64","complex128","error","float32","float64","int","int8","int16","int32","int64","rune","string","uint","uint8","uint16","uint32","uint64","uintptr"];
+const GO_BUILTINS=["append","cap","close","complex","copy","delete","imag","len","make","new","panic","print","println","real","recover"];
+CB_GRAMMARS.go=[
+  {name:"comment",re:/^\/\/[^\n]*/},{name:"comment",re:/^\/\*[\s\S]*?\*\//},
+  {name:"string",re:/^`[^`]*`/},
+  {name:"string",re:/^"(?:\\.|[^"\\\n])*"/},{name:"string",re:/^'(?:\\.|[^'\\\n])*'/},
+  {capture:["keyword","whitespace","class-name"],re:/^(type)(\s+)([A-Za-z_]\w*)/},
+  {capture:["keyword","whitespace","function"],re:/^(func)(\s+)([A-Za-z_]\w*)(?=\s*\()/},
+  {capture:["keyword","whitespace","text","whitespace","function"],re:/^(func)(\s+)(\([^)]*\))(\s+)([A-Za-z_]\w*)/},
+  {name:"keyword",re:CB_WORD(GO_KEYWORDS,"keyword")},
+  {name:"boolean",re:/^(?:true|false)\b/},
+  {name:"null-value",re:/^nil\b/},
+  {name:"type",re:CB_WORD(GO_TYPES,"type")},
+  {name:"builtin",re:CB_WORD(GO_BUILTINS,"builtin")},
+  {name:"type",re:/^[A-Z]\w*/},
+  {name:"function",re:/^[A-Za-z_]\w*(?=\s*\()/},
+  {name:"identifier",re:/^[A-Za-z_]\w*/},
+  {name:"number",re:CB_NUMBER},
+  {name:"operator",re:/^(?:={1,2}|!=|<=|>=|<-|\+\+|--|&&|\|\||[-+*/%&|^~<>!]=?|:=)/},
+  {name:"punctuation",re:/^[(){}\[\],.;:]/},
+];
+const RUST_KEYWORDS=["as","async","await","break","const","continue","crate","dyn","else","enum","extern","fn","for","if","impl","in","let","loop","match","mod","move","mut","pub","ref","return","self","Self","static","struct","super","trait","type","unsafe","use","where","while"];
+const RUST_TYPES=["bool","char","f32","f64","i8","i16","i32","i64","i128","isize","str","u8","u16","u32","u64","u128","usize","String","Vec","Option","Result","Box","Rc","Arc","HashMap","HashSet","BTreeMap"];
+const RUST_MACROS=["println","print","eprintln","eprint","format","vec","panic","assert","assert_eq","assert_ne","debug_assert","todo","unimplemented","unreachable","write","writeln","dbg","include_str"];
+CB_GRAMMARS.rust=[
+  {name:"comment",re:/^\/\/[^\n]*/},{name:"comment",re:/^\/\*[\s\S]*?\*\//},
+  {name:"string",re:/^r#*"[\s\S]*?"#*/},
+  {name:"string",re:/^"(?:\\.|[^"\\\n])*"/},
+  {name:"string",re:/^b?'(?:\\.|[^'\\])'/},
+  {name:"decorator",re:/^#!?\[[^\]]*\]/},
+  {capture:["keyword","whitespace","function"],re:/^(fn)(\s+)([a-z_]\w*)/},
+  {capture:["keyword","whitespace","class-name"],re:/^(struct|enum|trait|type|impl)(\s+)([A-Za-z_]\w*)/},
+  {name:"keyword",re:CB_WORD(RUST_KEYWORDS,"keyword")},
+  {name:"boolean",re:/^(?:true|false)\b/},
+  {name:"type",re:CB_WORD(RUST_TYPES,"type")},
+  {name:"function",re:new RegExp("^(?:"+RUST_MACROS.join("|")+")!")},
+  {name:"type",re:/^[A-Z]\w*/},
+  {name:"function",re:/^[A-Za-z_]\w*(?=\s*(?:::)?\s*\()/},
+  {name:"identifier",re:/^[A-Za-z_]\w*/},
+  {name:"number",re:CB_NUMBER},
+  {name:"operator",re:/^(?:={1,2}|!=|<=|>=|->|=>|::|\.\.=?|&&|\|\||[-+*/%&|^~<>!?]=?)/},
+  {name:"punctuation",re:/^[(){}\[\],.;:]/},
+];
+const SQL_KEYWORDS=["select","from","where","group","by","order","having","limit","offset","insert","into","values","update","set","delete","create","table","view","index","drop","alter","add","column","primary","key","foreign","references","on","join","left","right","inner","outer","full","cross","using","as","and","or","not","null","is","like","ilike","in","between","distinct","union","intersect","except","all","case","when","then","else","end","with","asc","desc","begin","commit","rollback","transaction","if","exists","default","unique","check","constraint","returning"];
+const SQL_TYPES=["int","integer","bigint","smallint","tinyint","serial","bigserial","varchar","char","text","boolean","bool","date","time","timestamp","timestamptz","decimal","numeric","float","double","real","json","jsonb","uuid","bytea"];
+const SQL_FUNCTIONS=["count","sum","avg","min","max","coalesce","nullif","cast","convert","substring","upper","lower","length","trim","concat","now","current_date","current_timestamp","date_trunc","extract","to_char","to_date","json_agg","array_agg","string_agg","row_number","rank","dense_rank","lead","lag","over","partition"];
+CB_GRAMMARS.sql=[
+  {name:"comment",re:/^--[^\n]*/},{name:"comment",re:/^\/\*[\s\S]*?\*\//},
+  {name:"string",re:/^'(?:''|\\.|[^'\\\n])*'/},
+  {name:"string",re:/^"(?:""|\\.|[^"\\\n])*"/},
+  {name:"keyword",re:new RegExp("^(?:"+SQL_KEYWORDS.join("|")+")\\b","i")},
+  {name:"boolean",re:/^(?:true|false)\b/i},
+  {name:"null-value",re:/^null\b/i},
+  {name:"type",re:new RegExp("^(?:"+SQL_TYPES.join("|")+")\\b","i")},
+  {name:"function",re:new RegExp("^(?:"+SQL_FUNCTIONS.join("|")+")\\b","i")},
+  {name:"function",re:/^[A-Za-z_]\w*(?=\s*\()/},
+  {name:"identifier",re:/^[A-Za-z_]\w*/},
+  {name:"number",re:CB_NUMBER},
+  {name:"operator",re:/^(?:<>|!=|<=|>=|\|\||[-+*/%=<>!])/},
+  {name:"punctuation",re:/^[(){}\[\],.;]/},
+];
+const SHELL_KEYWORDS=["if","then","else","elif","fi","for","do","done","while","until","case","esac","in","function","return","break","continue","local","export","unset","alias","source","exit","trap","shift","set"];
+const SHELL_BUILTINS=["echo","printf","cd","pwd","ls","mkdir","rmdir","rm","cp","mv","cat","grep","sed","awk","find","test","true","false","read","exec","kill","ps","tar","curl","wget","git","docker","kubectl","ssh","scp","chmod","chown","sudo","which","who","whoami","date","sleep","touch","head","tail","sort","uniq","wc","tr","cut","paste","xargs"];
+CB_GRAMMARS.shell=[
+  {name:"comment",re:/^#[^\n]*/},
+  {name:"string",re:/^"(?:\\.|[^"\\])*"/},
+  {name:"string",re:/^'[^']*'/},
+  {name:"string",re:/^\$\([^)]*\)/},
+  {name:"identifier",re:/^\$[A-Za-z_]\w*/},
+  {name:"identifier",re:/^\$\{[^}]*\}/},
+  {name:"keyword",re:CB_WORD(SHELL_KEYWORDS,"keyword")},
+  {name:"builtin",re:CB_WORD(SHELL_BUILTINS,"builtin")},
+  {name:"operator",re:/^(?:&&|\|\||>>|<<|>&|<&|[|&<>])/},
+  {name:"number",re:CB_NUMBER},
+  {name:"identifier",re:/^[A-Za-z_][\w-]*/},
+  {name:"punctuation",re:/^[(){}\[\];]/},
+];
+CB_GRAMMARS.cpp=[
+  {name:"comment",re:/^\/\/[^\n]*/},{name:"comment",re:/^\/\*[\s\S]*?\*\//},
+  {name:"string",re:/^R"([^(]*)\([\s\S]*?\)\1"/},
+  {name:"string",re:/^L?"(?:\\.|[^"\\\n])*"/},
+  {name:"string",re:/^'(?:\\.|[^'\\])'/},
+  {name:"decorator",re:/^#\s*[a-z_]+/},
+  {name:"keyword",re:CB_WORD(["alignas","alignof","auto","break","case","catch","class","concept","const","consteval","constexpr","constinit","continue","co_await","co_return","co_yield","decltype","default","delete","do","else","enum","explicit","export","extern","final","for","friend","goto","if","inline","mutable","namespace","new","noexcept","operator","override","private","protected","public","register","requires","return","sizeof","static","static_assert","static_cast","struct","switch","template","this","thread_local","throw","try","typedef","typeid","typename","union","using","virtual","volatile","while"],"keyword")},
+  {name:"type",re:CB_WORD(["bool","char","char16_t","char32_t","double","float","int","long","short","signed","unsigned","void","wchar_t","string","vector","map","set","pair","tuple","unique_ptr","shared_ptr","weak_ptr"],"type")},
+  {name:"boolean",re:/^(?:true|false)\b/},
+  {name:"null-value",re:/^nullptr\b/},
+  {name:"type",re:/^[A-Z]\w*/},
+  {name:"function",re:/^[A-Za-z_]\w*(?=\s*[<(])/},
+  {name:"identifier",re:/^[A-Za-z_]\w*/},
+  {name:"number",re:CB_NUMBER},
+  {name:"operator",re:/^(?:->|<=>|<<=?|>>=?|::|[-+*/%&|^~<>=!]=?|\+\+|--|&&|\|\|)/},
+  {name:"punctuation",re:/^[(){}\[\],.;:@]/},
+];
+CB_GRAMMARS.csharp=[
+  {name:"comment",re:/^\/\/[^\n]*/},{name:"comment",re:/^\/\*[\s\S]*?\*\//},
+  {name:"string",re:/^\$?@?"(?:""|\\.|[^"\\\n])*"/},
+  {name:"string",re:/^'(?:\\.|[^'\\])'/},
+  {name:"decorator",re:/^\[[A-Za-z_]\w*(?:\([^\)]*\))?\]/},
+  {name:"keyword",re:CB_WORD(["abstract","as","async","await","base","break","case","catch","checked","class","const","continue","default","delegate","do","else","enum","event","explicit","extern","finally","fixed","for","foreach","goto","if","implicit","in","interface","internal","is","lock","namespace","new","operator","out","override","params","partial","private","protected","public","readonly","record","ref","return","sealed","sizeof","stackalloc","static","struct","switch","this","throw","try","typeof","unchecked","unsafe","using","virtual","void","volatile","while","yield"],"keyword")},
+  {name:"type",re:CB_WORD(["bool","byte","char","decimal","double","float","int","long","object","sbyte","short","string","uint","ulong","ushort","var"],"type")},
+  {name:"boolean",re:/^(?:true|false)\b/},
+  {name:"null-value",re:/^null\b/},
+  {name:"type",re:/^[A-Z]\w*/},
+  {name:"function",re:/^[A-Za-z_]\w*(?=\s*[<(])/},
+  {name:"identifier",re:/^[A-Za-z_]\w*/},
+  {name:"number",re:CB_NUMBER},
+  {name:"operator",re:/^(?:=>|->|\?\?=?|\?\.|<=|>=|==|!=|&&|\|\||\+\+|--|<<=?|>>=?|[-+*/%&|^~<>!?=]=?)/},
+  {name:"punctuation",re:/^[(){}\[\],.;:@]/},
+];
+CB_GRAMMARS.json=[
+  {name:"string",re:/^"(?:\\.|[^"\\\n])*"/},
+  {name:"boolean",re:/^(?:true|false)\b/},
+  {name:"null-value",re:/^null\b/},
+  {name:"number",re:CB_NUMBER},
+  {name:"punctuation",re:/^[{}\[\],:]/},
+];
+CB_GRAMMARS.yaml=[
+  {name:"comment",re:/^#[^\n]*/},
+  {name:"string",re:/^"(?:\\.|[^"\\])*"/},{name:"string",re:/^'(?:''|[^'])*'/},
+  {name:"boolean",re:/^(?:true|false|yes|no|on|off)\b/i},
+  {name:"null-value",re:/^(?:null|~)\b/i},
+  {name:"number",re:CB_NUMBER},
+  {name:"keyword",re:/^[A-Za-z_][\w-]*(?=\s*:)/},
+  {name:"identifier",re:/^[A-Za-z_][\w-]*/},
+  {name:"punctuation",re:/^[-{}\[\],:|>&*]/},
+];
+CB_GRAMMARS.html=[
+  {name:"comment",re:/^<!--[\s\S]*?-->/},
+  {name:"keyword",re:/^<\/?[a-zA-Z][\w-]*/},
+  {name:"punctuation",re:/^\/?>/},
+  {name:"function",re:/^[a-zA-Z-]+(?==)/},
+  {name:"operator",re:/^=/},
+  {name:"string",re:/^"(?:[^"\n])*"/},{name:"string",re:/^'(?:[^'\n])*'/},
+  {name:"identifier",re:/^[a-zA-Z][\w-]*/},
+  {name:"punctuation",re:/^[<>]/},
+];
+CB_GRAMMARS.css=[
+  {name:"comment",re:/^\/\*[\s\S]*?\*\//},
+  {name:"string",re:/^"(?:\\.|[^"\\])*"/},{name:"string",re:/^'(?:\\.|[^'\\])*'/},
+  {name:"decorator",re:/^@[a-zA-Z-]+/},
+  {name:"class-name",re:/^\.[a-zA-Z_][\w-]*/},
+  {name:"type",re:/^#[a-zA-Z_][\w-]*/},
+  {name:"keyword",re:/^[a-zA-Z-]+(?=\s*:)/},
+  {name:"number",re:/^-?\d[\d.]*(?:%|px|em|rem|vh|vw|deg|s|ms|fr|ch|ex|pt|pc|in|cm|mm)?/},
+  {name:"identifier",re:/^[a-zA-Z_][\w-]*/},
+  {name:"punctuation",re:/^[(){}\[\],.;:]/},
+];
+CB_GRAMMARS.markdown=[
+  {name:"keyword",re:/^#{1,6}\s.*$/m},
+  {name:"string",re:/^```[\s\S]*?```/},
+  {name:"string",re:/^`[^`\n]+`/},
+  {name:"decorator",re:/^\*\*[^*\n]+\*\*/},
+  {name:"decorator",re:/^\*[^*\n]+\*/},
+  {name:"function",re:/^\[[^\]\n]+\]\([^\)\n]+\)/},
+  {name:"punctuation",re:/^[>*\-+]/},
+];
+CB_GRAMMARS.text=[
+  {name:"comment",re:/^\/\/[^\n]*/},{name:"comment",re:/^#[^\n]*/},{name:"comment",re:/^\/\*[\s\S]*?\*\//},
+  {name:"string",re:/^"(?:\\.|[^"\\\n])*"/},{name:"string",re:/^'(?:\\.|[^'\\\n])*'/},{name:"string",re:/^`(?:\\.|[^`\\])*`/},
+  {name:"number",re:CB_NUMBER},
+  {name:"identifier",re:/^[A-Za-z_$][\w$]*/},
+  {name:"operator",re:/^[-+*/%=<>!&|^~?]+/},
+  {name:"punctuation",re:/^[(){}\[\],.;:@]/},
+];
+const CB_ALIASES={
+  js:"javascript",node:"javascript",jsx:"javascript",mjs:"javascript",cjs:"javascript",
+  ts:"typescript",tsx:"typescript",py:"python",py3:"python",rb:"ruby",
+  "c++":"cpp",cxx:"cpp",cc:"cpp",hpp:"cpp","h++":"cpp","c#":"csharp",cs:"csharp",
+  bash:"shell",sh:"shell",zsh:"shell",fish:"shell",yml:"yaml",md:"markdown",
+  golang:"go",rs:"rust",htm:"html",scss:"css",sass:"css",less:"css",
+};
+function resolveLang(language){
+  const raw=String(language==null?"":language).trim().toLowerCase();
+  const canonical=CB_ALIASES[raw]||raw;
+  return CB_GRAMMARS[canonical]?canonical:"text";
+}
+function tokenizeCode(code,language){
+  const grammar=CB_GRAMMARS[resolveLang(language)]||CB_GRAMMARS.text;
+  const out=[];let s=String(code==null?"":code);let guard=s.length*4+16;
+  while(s.length&&guard-->0){
+    const ws=/^\s+/.exec(s);
+    if(ws){out.push({kind:"whitespace",text:ws[0]});s=s.slice(ws[0].length);continue;}
+    let matched=false;
+    for(const rule of grammar){
+      const m=rule.re.exec(s);if(!m)continue;
+      if(rule.capture){
+        // See index.html for the rationale.
+        for(let i=0;i<rule.capture.length;i++){
+          const seg=m[i+1];if(!seg)continue;
+          out.push({kind:rule.capture[i],text:seg});
+        }
+      } else {
+        out.push({kind:rule.name,text:m[0]});
+      }
+      s=s.slice(m[0].length);matched=true;break;
+    }
+    if(!matched){out.push({kind:"text",text:s[0]});s=s.slice(1);}
+  }
+  return out;
+}
+function renderCodeBlock(c,x){
+  const wrap=$("div","cb");
+  const raw=String(resolve(c.code,x.dm)??"");
+  const displayLang=String(c.language==null?"text":c.language).trim()||"text";
+  const head=$("div","cbh");
+  const langLabel=$("span","lang");langLabel.append(T(displayLang));head.append(langLabel);
+  if(c.title){const tt=$("span","cbt");tt.append(T(c.title));head.append(tt);}
+  if(c.onCopy&&c.onCopy.action){
+    const btn=document.createElement("button");btn.append(T("copy"));
+    btn.onclick=()=>{
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(raw).catch(()=>{});}
+      btn.textContent="copied";setTimeout(()=>{btn.textContent="copy";},1200);
+    };
+    head.append(btn);
+  }
+  wrap.append(head);
+  const pre=document.createElement("pre");
+  const row=$("div","cbr");
+  const gutter=$("div","gutter");const body=$("div","body");
+  const tokens=tokenizeCode(raw,displayLang);
+  let line=1;
+  const gf=document.createDocumentFragment();
+  const gl=()=>{const l=document.createElement("div");l.textContent=String(line);gf.append(l);};
+  gl();
+  for(const tok of tokens){
+    const parts=tok.text.split("\n");
+    for(let i=0;i<parts.length;i++){
+      if(i>0){body.append(document.createTextNode("\n"));line++;gl();}
+      if(!parts[i])continue;
+      if(tok.kind==="whitespace"||tok.kind==="text"){body.append(document.createTextNode(parts[i]));}
+      else{const sp=document.createElement("span");sp.className="tok-"+tok.kind;sp.textContent=parts[i];body.append(sp);}
+    }
+  }
+  gutter.append(gf);row.append(gutter,body);pre.append(row);wrap.append(pre);
+  return wrap;
+}
 function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());const rows=resolve(c.rows,x.dm)||[];const t=$("table");const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(T(col));tr.append(th);});t.append(tr);rows.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(r[col]));rr.append(td);});t.append(rr);});wrap.append(t);return wrap;}
 function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);const tabIds=c.children||[];function show(i){body.textContent="";const cc=x.byId[tabIds[i]];if(cc)body.append(node(cc,x));[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}
   (String(c.labels||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});

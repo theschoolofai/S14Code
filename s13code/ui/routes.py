@@ -198,7 +198,14 @@ async def action(body: ActionBody):
 async def composed(run_id: str, request: Request):
     """The interface the agent COMPOSED for this run (the compose_surface node's
     output), re-validated. Distinct from /surface, which is the run's progress
-    view. This is what a UI-only app renders."""
+    view. This is what a UI-only app renders.
+
+    The response also carries the ORIGINAL validator report from the
+    compose_surface node — the model's proposed surface can contain nodes the
+    wall refused, and that report names each refused component + the invariant
+    it broke. Clients render this as a "validator refused N nodes" panel so a
+    hostile turn is visible rather than silent.
+    """
     run = _read_run(request, run_id)
     node = run["nodes"].get("surface") or {}
     res = node.get("result") or {}
@@ -206,6 +213,11 @@ async def composed(run_id: str, request: Request):
     if not surf.get("components"):
         raise HTTPException(404, "run has no composed interface (no compose_surface node)")
     result = validate_surface(surf)
+    # The compose_surface skill's own validator report — what the model
+    # proposed vs what the wall accepted. This is what surfaces refusals to
+    # the client, because ``surf["components"]`` above already holds only the
+    # accepted subset (rejections would look empty on a re-validate here).
+    orig_validator = res.get("validator") or {}
     return {
         "run_id": run_id,
         "finished": run["finished"],
@@ -215,6 +227,15 @@ async def composed(run_id: str, request: Request):
         "clean": result.ok,
         "provider": res.get("provider"),
         "model": res.get("model"),
+        # New: expose the model's original proposal shape + the wall's
+        # verdict on each of its components. Empty rejections list means
+        # nothing was refused.
+        "validator": {
+            "proposed": orig_validator.get("proposed", len(result.accepted)),
+            "accepted": orig_validator.get("accepted", len(result.accepted)),
+            "rejected": orig_validator.get("rejected", 0),
+            "rejections": orig_validator.get("rejections", []),
+        },
     }
 
 
@@ -233,4 +254,17 @@ async def app_viewer():
     path = Path(__file__).parent / "client" / "app.html"
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
-    return path.read_text()
+    return path.read_text(encoding="utf-8")
+
+
+@router.get("/codeworks", response_class=HTMLResponse)
+@router.get("/codeworks/", response_class=HTMLResponse)
+async def codeworks_app():
+    """CodeWorks — a UI-only coding assistant. Every reply is a validated
+    A2UI surface centred on CodeBlock: write the snippet, refine it, explain
+    a line, translate it to another language. The validator's refusals are
+    shown inline so a hostile turn is visible rather than silent."""
+    path = Path(__file__).parent / "client" / "codeworks.html"
+    if not path.exists():
+        raise HTTPException(500, "codeworks app missing")
+    return path.read_text(encoding="utf-8")

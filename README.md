@@ -147,11 +147,184 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
+| `codeworks_turns.json` | `codeworks_turns.py` | 4 live turns of the CodeBlock app: underspecified ask → **tap** → translate → explain. Every turn records `goal_sent`, `driven_by`, `run_id`, `latency_s`, and the composed types. |
+| `codeworks_attack.json` | `codeworks_attack.py` | Injection wall against a poisoned CodeBlock surface (inline source / handler prop / markup language) |
+| `browser_demo.json` + `screens/turn[1-4].png`, `turn5_refused.png` | `browser_demo.py` | Headless-Chromium (Playwright) drives `/codeworks`, taps a Button on turn 2, screenshots each rendered surface. |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
 uv run pytest -q                             # S13 core + regression tests + the S14 invariant tests
 ```
+
+## Session 14 assignment — `CodeBlock` and the CodeWorks app
+
+**Live hosted demo:** **<https://shwetha-sd78--s14code-codeworks-web.modal.run/codeworks>**
+
+Deployed on Modal — one container serves both the model gateway (`glc_v3`, bound
+to `127.0.0.1:8111` inside the container) and this runtime (public ASGI URL).
+The Gemini key lives as a Modal secret; no key ever touches the image or git.
+
+**BYOK.** The `/codeworks` page has a "Your Gemini key" input. Paste your own
+free-tier key and every request in that browser session ships it as
+`X-User-Gemini-Key`, which the gateway swaps in for that single request
+(contextvar-scoped, never persisted). Blank input → falls back to the host
+key. This keeps the demo alive if the host's free-tier quota runs out on
+submission day, and lets reviewers verify the security path end to end. Get
+a free key at <https://aistudio.google.com/app/apikey>.
+
+Deploy script:
+[`deploy/modal_app.py`](deploy/modal_app.py). Reproduce the deploy:
+
+```bash
+modal secret create s14-gemini-key GEMINI_API_KEY_1=<your-key>
+modal deploy deploy/modal_app.py
+```
+
+**Part 1 — the `CodeBlock` component.** Added to the trusted catalog in
+[`s13code/ui/catalog.py`](s13code/ui/catalog.py) with the schema
+`{title: text, code: binding, language: text, onCopy: action}`. The renderer
+in [`s13code/ui/client/index.html`](s13code/ui/client/index.html) is a
+regex-grammar tokeniser (Prism-style — per-language rules with named token
+classes, lookbehind for function/class names, greedy strings, hex/binary/
+scientific/underscore numbers, decorators/annotations) that emits one
+text-node `<span>` per token. It NEVER assigns `innerHTML`, NEVER evaluates
+any bound value. Grammars for python, javascript, typescript, java, go,
+rust, sql, shell, cpp, csharp, json, yaml, html, css, markdown ship; unknown
+languages fall back to a text grammar that still highlights strings,
+numbers, and comments. Aliases (`js`, `bash`, `c++`, `py`, `rs`, …) resolve
+to their canonical grammar. The three invariants hold on the new type — see
+the tests under `test_codeblock_*` in [`tests/test_s14_ui.py`](tests/test_s14_ui.py)
+and the three new adversarial cases in
+[`s13code/ui/fixtures/injections.json`](s13code/ui/fixtures/injections.json).
+
+**Part 2 — the CodeWorks app.** A dedicated UI-only application at
+[`s13code/ui/client/codeworks.html`](s13code/ui/client/codeworks.html)
+(served on `GET /codeworks`). Dark IDE-inspired theme, starter prompts, a
+resizable prompt textarea, a status pill for provider/component counts, a
+crumb trail for the conversation, and an inline "validator refused N nodes"
+panel so a hostile turn is visible instead of silent. Every reply is a
+composed A2UI surface — never raw text.
+
+The 4-turn arc — captured live in
+[`proofs/codeworks_turns.json`](proofs/codeworks_turns.json) against
+Google Gemini `gemini-flash-latest`, with each turn's exact prompt
+(`goal_sent`), components rendered, latency and `run_id` committed to
+the file:
+
+| # | Driven by | What the user did | Composed types | CB language | Latency |
+|---|---|---|---|---|---|
+| 1 | typed | *"I'm writing a data-processing script and I need a helper to smooth noisy time-series values. Which approach fits best?"* | `Button`, `Column`, `ProgressBar`, `Text`, `Timeline` | — | 20.3 s |
+| 2 | **tap** on a rendered Button | Clicked *"Moving Averages (SMA/EMA) — Fast, low complexity, good baseline"* | `CodeBlock`, `Card`, `Column`, `ProgressBar`, `Text`, `Timeline` | python | 32.6 s |
+| 3 | typed | *"Now translate the current version to TypeScript with proper types."* | `CodeBlock`, `Card`, `Column`, `ProgressBar`, `Text` | typescript · 1 767 chars | 16.8 s |
+| 4 | typed | *"Explain what happens inside the for-loop step by step using short bullet points. Do NOT rewrite the code."* | `Card`, `Column`, `Tabs`, `Text` | — (no new CodeBlock) | 17.1 s |
+
+Turn 2 is the assignment's *"a tap in one interface shapes the next"*
+property, executed literally: the button label from turn 1's composed
+surface is fed back as turn 2's user input by `runTurn(label)` in
+`codeworks.html`. No prompt engineering, no server-side state — the tap is
+the input.
+
+**`CodeBlock` was chosen unprompted.** The word never appears in any user
+prompt in the captured conversation; the model picked it out of the catalog
+by shape. Verify straight from the committed proof:
+
+```bash
+python3 -c "import json; \
+  p = json.load(open('proofs/codeworks_turns.json'))['turns'][0]['goal_sent']; \
+  print('turn 1 prompt mentions CodeBlock:', 'codeblock' in p.lower() or 'code block' in p.lower())"
+# → turn 1 prompt mentions CodeBlock: False
+```
+
+Every turn is a distinct type signature — 4 turns, 4 different component
+sets, and the variety check (`Button`-only → `CodeBlock`-python →
+`CodeBlock`-typescript → prose) verifies the app doesn't reach for
+`CodeBlock` reflexively.
+
+**Screenshots per turn — tap-driven arc on the hosted Modal deploy** —
+[`proofs/screens/turn1.png`](proofs/screens/turn1.png) (typed ask →
+DataTable + 5 Buttons + BYOK panel), [`turn2.png`](proofs/screens/turn2.png)
+(tapped *"Moving Average (SMA / EMA)"* → Python CodeBlock with SMA + EMA
+implementations, 3 stat tiles, method-comparison card),
+[`turn3.png`](proofs/screens/turn3.png) (tapped *"Explore Other Options"*
+→ 5 alternative-technique cards + 5 follow-up Buttons, 3-entry crumb trail),
+and [`turn4_refused.png`](proofs/screens/turn4_refused.png) (adversarial
+prompt asking for an onload handler + markup-in-language → model refused
+at generation time; wall reports 0 rejections because the surface arrived
+clean). All four captured by a headless Chromium in
+[`proofs/browser_demo.py`](proofs/browser_demo.py) against the live Modal
+URL, all pills say `gemini_1 · N components · 0 executable`.
+
+Every turn in the browser is driven by either typing (Ask button, which
+by the shared-code convention resets the crumb trail — see
+`app.html:522`) or **tapping a Button in the composed surface** (which
+calls `choose(label)` → `runTurn(label)`, extending the crumb trail).
+The three-turn arc above uses one typed + two taps; the crumb trail at
+the bottom of turn 3's screenshot proves the state persisted:
+*"I'm writing... › Simple / Exponential Moving Average (SMA / EMA) ›
+Explore Other Options"*.
+
+Reproduce hermetically (no live gateway required):
+
+```bash
+uv run pytest tests/test_codeworks_app.py -v    # 6 end-to-end tests
+```
+
+Reproduce against a live gateway (`glc_v3` on 8111):
+
+```bash
+uv run s14code serve &
+S14CODE_BASE=http://127.0.0.1:8113 \
+  uv run python proofs/codeworks_turns.py   # 4 live turns → proofs/codeworks_turns.json
+S14CODE_BASE=http://127.0.0.1:8113 \
+  uv run python proofs/codeworks_attack.py  # wall vs poisoned CodeBlock surface
+
+# Re-capture screenshots (needs Playwright — optional dep)
+uv sync --group demo && uv run playwright install chromium
+S14CODE_BASE=http://127.0.0.1:8113 \
+  uv run python proofs/browser_demo.py      # → proofs/screens/turn[1-5].png
+```
+
+**Adversarial coverage.** Three attacks are proven refused:
+
+1. `CodeBlock` with an inline `code` literal (not a `$bind`) → refused with
+   *data-not-code: binding must be `{"$bind": "/pointer"}`*.
+2. `CodeBlock` with an `onload` handler property → refused with
+   *data-not-code: event-handler property is never allowed*.
+3. `CodeBlock` whose `language` label carries `<script>...</script>` →
+   refused with *data-not-code: value carries markup*.
+
+The safe siblings in the same surface still render. Additionally, the
+adversarial proof script runs a live prompt-injection turn against the
+actual model; the model refused to comply and composed a clean surface. Two
+independent defences: the model AND the wall.
+
+**Honest verdict — where it succeeds and where it falls short:**
+
+- The 4-turn arc works. The model chose `CodeBlock` unprompted for every
+  code-shaped ask, correctly switched languages when asked to translate,
+  and correctly avoided a CodeBlock for the explanation turn. Every
+  composed surface re-validated clean.
+- The tokeniser handles the top ~12 languages at roughly the quality of
+  Prism.js — function-name recognition via lookbehind (`def foo`, `class
+  Foo`, `fn bar`), distinct classes for builtins vs keywords, proper
+  numeric literal shapes (hex `0xff`, binary `0b101`, scientific `1e10`,
+  underscore separators `1_000_000`), decorators/annotations, greedy
+  strings, template literals, Java text blocks, Python f-strings and
+  triple-quoted docstrings.
+- Falls short on: f-string interpolation isn't recursively tokenised (the
+  entire f-string renders as one string token, including the `{expr}`);
+  HTML/CSS grammars are the simplest of the set and lose semantic
+  distinctions like tag-name vs attribute-name; the fallback grammar for
+  exotic languages (Kotlin, Elixir, Zig, Haskell) only recognises
+  strings/numbers/comments, not language-specific keywords — those
+  snippets render as monospace with subtle color hints rather than full
+  highlighting. This is the deliberate cost of not shipping a JavaScript
+  parsing library.
+
+Nothing is invisible to the user: the language they typed shows in the
+header exactly as the model chose it, regardless of whether we have a
+grammar for it. The safety story is identical for every language —
+`textContent` per span, no `innerHTML` anywhere in the CodeBlock code path.
 
 ## Architecture
 

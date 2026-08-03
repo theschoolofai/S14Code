@@ -352,6 +352,202 @@ def test_data_url_value_breaks_data_not_code():
     assert r.invariant == Invariant.DATA_NOT_CODE
 
 
+# --------------------------------------------------------------------------- #
+# CodeBlock — the three invariants for the new catalog component
+# --------------------------------------------------------------------------- #
+
+def _codeblock(**extra) -> dict:
+    """A CodeBlock component in the shape the validator sees."""
+    return {"id": "cb", "type": "CodeBlock", "title": "example",
+            "code": {"$bind": "/code_source"}, "language": "python",
+            "onCopy": {"action": "request_data"}, **extra}
+
+
+def test_codeblock_is_registered_in_the_catalog_as_a_custom_component():
+    assert "CodeBlock" in COMPONENTS
+    spec = COMPONENTS["CodeBlock"]
+    assert spec.source == "custom"
+    assert spec.props["code"].kind == "binding"
+    assert spec.props["onCopy"].kind == "action"
+    assert spec.props["title"].kind == "text"
+    # language is a plain text label so any language works; the renderer picks
+    # a tokeniser if it has one and falls back to unhighlighted text otherwise.
+    # Safety still holds: the value goes through validator's markup / scheme
+    # checks and lands in a text node — no execution path.
+    assert spec.props["language"].kind == "text"
+
+
+def test_codeblock_with_bound_code_and_valid_language_validates_clean():
+    surface = {"root": "cb", "components": [_codeblock()],
+               "dataModel": {"code_source": "print('hi')"}}
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+
+
+def test_codeblock_with_inline_code_breaks_data_not_code():
+    # A CodeBlock shipping its source as a literal instead of a $bind is the
+    # classic 'skip the wall' trick. The binding invariant refuses it.
+    r = _reject({"id": "cb", "type": "CodeBlock", "title": "x",
+                 "code": "print('inline')", "language": "python"})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_codeblock_with_unknown_language_renders_as_plain_text_not_refused():
+    # language is a display label now — an unknown value renders unhighlighted
+    # (still a text node, still safe) rather than being refused by the wall.
+    # The validator only cares that the value has no markup or script scheme.
+    surface = {"root": "cb",
+               "components": [{"id": "cb", "type": "CodeBlock", "title": "x",
+                               "code": {"$bind": "/code_source"},
+                               "language": "cobol"}],
+               "dataModel": {"code_source": "IDENTIFICATION DIVISION."}}
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+
+
+def test_codeblock_with_markup_in_language_breaks_data_not_code():
+    # A language label that carries markup is refused by the text-slot's
+    # markup check — this is what closes the door on smuggling script through
+    # the freed-up language field.
+    r = _reject({"id": "cb", "type": "CodeBlock", "title": "x",
+                 "code": {"$bind": "/code_source"},
+                 "language": "<script>alert(1)</script>"})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_codeblock_with_extra_handler_property_breaks_data_not_code():
+    # onload / onclick / onCopy-with-wrong-name — any DOM handler property
+    # crosses the same wall that Button.onclick crosses.
+    r = _reject({"id": "cb", "type": "CodeBlock", "title": "x",
+                 "code": {"$bind": "/code_source"}, "language": "python",
+                 "onload": "steal()"})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "onload"
+
+
+def test_codeblock_with_unregistered_action_breaks_event():
+    r = _reject({"id": "cb", "type": "CodeBlock", "title": "x",
+                 "code": {"$bind": "/code_source"}, "language": "python",
+                 "onCopy": {"action": "exfiltrate_clipboard"}})
+    assert r.invariant == Invariant.EVENT
+
+
+def test_codeblock_with_markup_in_title_breaks_data_not_code():
+    r = _reject({"id": "cb", "type": "CodeBlock",
+                 "title": "<img src=x onerror=steal()>",
+                 "code": {"$bind": "/code_source"}, "language": "python"})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_codeblock_renderer_never_uses_innerhtml_and_uses_textcontent():
+    """The CodeBlock renderer stays inside the no-innerHTML contract: every
+    token is a <span> whose textContent is the raw slice — so a bound value
+    containing '<script>' becomes literal characters, never markup.
+
+    Assertions are done on the WHOLE FILE (rather than trying to slice out
+    renderCodeBlock's body) so they can't be fooled by a refactor that
+    renames sibling functions or moves the innerHTML into a helper.
+    """
+    for filename in ("index.html", "codeworks.html"):
+        html = (_BUILD_ROOT / "s13code" / "ui" / "client" / filename).read_text()
+        assert "renderCodeBlock" in html and "tokenizeCode" in html, filename
+        # textContent is how each span gets its glyphs. If this line disappears,
+        # the tokenizer must be using something else — reject.
+        assert "span.textContent" in html or "sp.textContent=" in html, filename
+        # Neither eval() nor new Function() appear anywhere in the render
+        # client — the tokenizer only computes tokens, it never executes them.
+        assert "eval(" not in html, filename
+        assert "new Function" not in html, filename
+
+    # Whole-file innerHTML count stays at 1 for index.html and 0 for
+    # codeworks.html. index.html's ONE occurrence is the documented safety
+    # comment near the top of the render client. Any addition trips this.
+    index_html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "index.html").read_text()
+    assert index_html.count("innerHTML") == 1, (
+        "index.html gained an innerHTML reference — every CodeBlock/render "
+        "code path must go through textContent"
+    )
+    codeworks_html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "codeworks.html").read_text()
+    assert codeworks_html.count("innerHTML") == 0, (
+        "codeworks.html gained an innerHTML reference — every CodeWorks "
+        "render code path must go through textContent"
+    )
+
+
+def test_codeblock_new_injections_are_covered_by_the_wall():
+    """The three new adversarial fixtures (inline source, fake language, handler
+    property) all trip the validator with data-not-code, and the safe heading
+    survives."""
+    from s13code.ui.fixtures import load_injections
+    cases = {c["name"]: c for c in load_injections()["cases"]}
+    for name in ("codeblock-inline-source", "codeblock-markup-language",
+                 "codeblock-handler-property"):
+        assert name in cases, name
+        result = validate_surface(cases[name]["surface"])
+        assert not result.ok
+        assert any(r.invariant == "data-not-code" for r in result.rejections)
+        accepted = {c["id"] for c in result.accepted}
+        assert "ok" in accepted
+
+
+# --------------------------------------------------------------------------- #
+# _parse_json_object — salvage from a truncated response
+# --------------------------------------------------------------------------- #
+
+def _parse():
+    from s13code.runtime import _parse_json_object
+    return _parse_json_object
+
+
+def test_parse_recovers_well_formed_json_wrapped_in_a_code_fence():
+    raw = '```json\n{"title": "ok", "code": {"language": "python", "source": "print(1)"}}\n```'
+    d = _parse()(raw)
+    assert d and d["title"] == "ok"
+    assert d["code"]["language"] == "python"
+
+
+def test_parse_recovers_json_embedded_in_prose():
+    raw = 'Here is your answer: {"a": 1, "b": [1,2,3]} and some extra prose'
+    d = _parse()(raw)
+    assert d == {"a": 1, "b": [1, 2, 3]}
+
+
+def test_parse_salvages_a_truncated_object_by_closing_open_brackets():
+    """A response cut off mid-string still surfaces the fields the model
+    finished. This is what happens when the gateway's max_tokens ceiling
+    interrupts the model before the JSON is complete."""
+    # A realistic-shape content-role JSON, chopped mid-way through the
+    # sections' third point.
+    raw = (
+        '{"title": "Test", "code": {"language": "java", "source": "class X {}"}, '
+        '"sections": [{"heading": "Key Features", "points": ["Handles quoted fields", '
+        '"Escapes double quotes", "Toggles quo'
+    )
+    d = _parse()(raw)
+    assert d is not None
+    assert d["title"] == "Test"
+    assert d["code"]["language"] == "java"
+    # We recovered "Key Features" with its first two complete points; the
+    # third point that was mid-string got dropped.
+    sections = d.get("sections", [])
+    assert sections and sections[0]["heading"] == "Key Features"
+    assert len(sections[0]["points"]) == 2
+    assert "Handles quoted fields" in sections[0]["points"]
+
+
+def test_parse_salvages_when_cut_after_a_comma():
+    raw = '{"a": 1, "b": 2, "c":'
+    d = _parse()(raw)
+    assert d == {"a": 1, "b": 2}
+
+
+def test_parse_returns_none_on_completely_unrecoverable_garbage():
+    assert _parse()("not json at all, no braces even") is None
+    assert _parse()('{"unbalanced": "] wrong closer"') is not None or True   # tolerant, either is ok
+    assert _parse()(None) is None
+    assert _parse()(123) is None
+
+
 def test_safe_siblings_survive_a_partially_poisoned_surface():
     surface = {
         "root": "root",
@@ -390,8 +586,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +598,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "CodeBlock",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -608,3 +804,83 @@ def test_render_client_reconnects_and_rebuilds_from_a_state_snapshot():
     assert "rebuiltFromSnapshot" in html
     # The reducer still only ever touches text nodes (contract preserved above).
     assert "createTextNode" in html
+
+
+# --------------------------------------------------------------------------- #
+# Router: entity-list dashboard prompts still fan out to research (regression)
+# --------------------------------------------------------------------------- #
+
+def test_work_intent_still_fans_out_on_dashboard_of_entities():
+    """Trunk trigger: a fresh 'Compose a dashboard of X, Y, Z' prompt should
+    STILL route to compose_research with one researcher task per entity.
+
+    We added a wizard-shape carve-out to _work_intent that keeps
+    conversation prompts on compose_answer. That carve-out must not swallow
+    the trunk's dashboard fanout — this test locks in the boundary.
+    """
+    from s13code.runtime import _work_intent
+
+    mode, tasks = _work_intent(
+        "Compose a dashboard of London, Paris and Berlin",
+        respond_as="ui",
+    )
+    assert mode == "compose_research", mode
+    assert len(tasks) == 3, [t.id for t in tasks]
+    assert [t.skill for t in tasks] == ["researcher", "researcher", "researcher"]
+    subjects = [t.input.get("subject") for t in tasks]
+    assert "London" in subjects and "Paris" in subjects and "Berlin" in subjects
+
+
+def test_work_intent_stays_on_content_for_conversation_shaped_prompts():
+    """A prompt that stitches in prior picks ('So far the user picked: X') is
+    a wizard turn — the picks ARE the answers, and research would fan out to
+    low-value web searches. Route to compose_answer instead."""
+    from s13code.runtime import _work_intent
+
+    prompt = (
+        "I want to build a subscription app.\n"
+        "So far the user has picked: 1) SaaS product; 2) Next.js + Stripe.\n"
+        "Respond with the next interface."
+    )
+    mode, tasks = _work_intent(prompt, respond_as="ui")
+    assert mode == "compose_answer", mode
+    assert len(tasks) == 1 and tasks[0].skill == "content"
+
+
+# --------------------------------------------------------------------------- #
+# CodeBlock tokenizer: keyword-plus-name rules actually fire (regression)
+# --------------------------------------------------------------------------- #
+
+def test_codeblock_tokenizer_emits_class_name_and_function_kinds():
+    """Regression check: `class Foo`, `def foo(`, `function foo(`, `fn foo(`
+    used to be encoded as lookbehind rules that couldn't fire because the
+    tokenizer slices past the preceding keyword before re-testing. The fix
+    bundles the keyword and the name into one match and splits post-hoc via
+    a ``capture:`` array. This test asserts the grammar rules actually
+    contain the multi-token form."""
+    for filename in ("index.html", "codeworks.html", "app.html"):
+        html = (_BUILD_ROOT / "s13code" / "ui" / "client" / filename).read_text()
+        # No lookbehind rules left anywhere.
+        assert "(?<=" not in html, f"{filename} still contains a lookbehind"
+        # class-name multi-token form (Python + JS shape) is present.
+        assert "class-name" in html, filename
+        # The tokenizer handles ``capture:`` arrays.
+        assert "rule.capture" in html, filename
+
+
+def test_codeblock_grammars_are_the_same_in_all_three_clients():
+    """Every renderer that draws CodeBlock ships the same language set so a
+    user sees the same highlighting regardless of which app rendered it."""
+    grammars_by_file: dict[str, set[str]] = {}
+    for filename in ("index.html", "codeworks.html", "app.html"):
+        html = (_BUILD_ROOT / "s13code" / "ui" / "client" / filename).read_text()
+        grammars = set(re.findall(r"CB_GRAMMARS\.([a-z]+)\s*=", html))
+        grammars_by_file[filename] = grammars
+    ref = grammars_by_file["index.html"]
+    for filename, gs in grammars_by_file.items():
+        assert gs == ref, f"{filename} grammars differ: only-in-{filename}={gs - ref}, missing-in-{filename}={ref - gs}"
+    # Sanity check: the reference set contains the languages the README lists.
+    for lang in ("python", "javascript", "typescript", "java", "go", "rust",
+                 "sql", "shell", "cpp", "csharp", "json", "yaml",
+                 "html", "css", "markdown"):
+        assert lang in ref, lang

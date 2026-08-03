@@ -58,6 +58,43 @@
   .Approval button.ok{background:var(--green);color:#fff;border-color:var(--green)}
   .prog{height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}
   .prog>i{display:block;height:100%;background:var(--green)}
+  .cb{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  .cb .cbh{display:flex;align-items:center;padding:6px 12px;background:var(--surface-alt);border-bottom:1px solid var(--rule);font-family:var(--font-mono);font-size:11px;color:var(--ink-muted)}
+  .cb .cbh .lang{text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  .cb .cbh .cbt{flex:1;margin-left:10px;color:var(--ink-body);text-transform:none;letter-spacing:0;font-weight:500}
+  .cb .cbh button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:6px;padding:3px 10px;font-family:var(--font-mono);font-size:11px;cursor:pointer;color:var(--ink-muted)}
+  .cb .cbh button:hover{color:var(--ink);border-color:var(--ink-muted)}
+  .cb pre{margin:0;padding:12px 0;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.55}
+  .cb .cbr{display:flex}
+  .cb .cbr .gutter{color:var(--ink-muted);text-align:right;padding:0 10px 0 12px;user-select:none;opacity:.55;border-right:1px solid var(--rule);min-width:28px}
+  .cb .cbr .body{padding:0 12px;flex:1;white-space:pre;color:var(--ink-body)}
+  .cb .tok-keyword{color:#7c3aed;font-weight:600}
+  .cb .tok-builtin{color:#0891b2}
+  .cb .tok-type{color:#0e7490;font-weight:500}
+  .cb .tok-class-name{color:#0e7490;font-weight:500}
+  .cb .tok-function{color:#2563EB}
+  .cb .tok-decorator{color:#B45309;font-style:italic}
+  .cb .tok-string{color:#15803D}
+  .cb .tok-regex{color:#15803D}
+  .cb .tok-number{color:#B45309}
+  .cb .tok-boolean{color:#7c3aed;font-weight:600}
+  .cb .tok-null-value{color:#7c3aed;font-weight:600}
+  .cb .tok-comment{color:var(--ink-muted);font-style:italic}
+  .cb .tok-operator{color:#334155}
+  .cb .tok-punctuation{color:#64748b}
+  .cb .tok-identifier{color:var(--ink-body)}
+  @media (prefers-color-scheme:dark){
+    .cb .tok-keyword{color:#c084fc}
+    .cb .tok-builtin{color:#22d3ee}
+    .cb .tok-type,.cb .tok-class-name{color:#67e8f9}
+    .cb .tok-function{color:#60a5fa}
+    .cb .tok-decorator{color:#fdba74}
+    .cb .tok-string,.cb .tok-regex{color:#4ade80}
+    .cb .tok-number{color:#fbbf24}
+    .cb .tok-boolean,.cb .tok-null-value{color:#c084fc}
+    .cb .tok-operator{color:#cbd5e1}
+    .cb .tok-punctuation{color:#94a3b8}
+  }
   @media (prefers-color-scheme:dark){:root{--bg:#0d0f14;--surface:#161922;--surface-alt:#11131a;--ink:#f3f5f9;--ink-body:#e4e8f0;--ink-muted:#9aa4b8;--rule:#252a36;--rule-strong:#333a49}body{background:var(--surface-alt)}}
 
   .Text .md-h{font-weight:700;color:var(--ink);margin:12px 0 4px}.Text .md-p{margin:6px 0;line-height:1.6}.Text .md-ul{margin:6px 0 6px 4px;padding-left:18px}.Text .md-ul li{margin:3px 0}
@@ -122,6 +159,7 @@ const RENDERERS = {
     const h=$("div","mt");h.append(text(c.title||""));e.append(tag,h);kids(c,ctx,e);return e;},
   // --- Custom extensions -----------------------------------------------------
   Notice:(c,ctx)=>{const e=$("div","Card");e.style.borderLeft="4px solid var(--"+({good:"green",warn:"amber",bad:"red"}[c.tone]||"accent")+")";e.append(text(resolve(c.text,ctx.dm)));return e;},
+  CodeBlock:(c,ctx)=>renderCodeBlock(c,ctx),
   StatTile:(c,ctx)=>{const e=$("div","StatTile "+(c.tone||"neutral"));
     const l=$("div","lab");l.append(text(c.label));const v=$("div","val");v.append(text(resolve(c.value,ctx.dm)+(c.unit||"")));
     const d=$("div","dl");d.append(text(resolve(c.delta,ctx.dm)||""));e.append(l,v,d);return e;},
@@ -156,6 +194,478 @@ function barSvg(data,xk,yk,unit){const ns="http://www.w3.org/2000/svg";const w=3
     const tv=document.createElementNS(ns,"text");tv.setAttribute("x",x+bw/2);tv.setAttribute("y",h-pad-bh-4);tv.setAttribute("text-anchor","middle");tv.setAttribute("font-size","10");tv.setAttribute("font-family","var(--font-mono)");tv.setAttribute("fill","var(--ink-muted)");tv.textContent=d[yk];svg.append(tv);
     const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","10");tl.setAttribute("font-family","var(--font-mono)");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=d[xk];svg.append(tl);});
   return svg;}
+
+// ---- CodeBlock -----------------------------------------------------------
+// A syntax-highlighted view of a source string. The tokeniser is regex-only:
+// it takes a string, returns [{kind, text}], and NEVER treats any part of the
+// source as executable. Each token becomes a <span> whose textContent is the
+// raw slice — so a bound value containing "<script>" renders as the literal
+// characters, never as markup, never as a script.
+// -----------------------------------------------------------------------------
+// Syntax highlighting: grammars are ordered lists of rules. The tokeniser walks
+// the source string, tries each rule at the cursor, first match wins, emits one
+// token, advances. Rules produce a token kind; the renderer maps kind -> CSS
+// class. There is NO parser: the tokeniser cannot execute, cannot evaluate,
+// cannot follow references. Every span the renderer produces is textContent, so
+// even a source that contains "<script>" renders as those literal characters.
+//
+// Kinds: keyword | builtin | type | function | class-name | decorator |
+//        string | interpolation | escape | regex | number | boolean |
+//        null-value | comment | operator | punctuation | identifier | text
+// -----------------------------------------------------------------------------
+
+// A word-boundary keyword rule builder.
+const CB_WORD = (words, kind) => new RegExp("^(?:" + words.join("|") + ")\\b");
+
+// Punctuation rules per language use the same shape; break out for reuse.
+const CB_NUMBER = /^(?:0[xX][0-9a-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|(?:\d[\d_]*(?:\.\d[\d_]*)?|\.\d[\d_]*)(?:[eE][+-]?\d[\d_]*)?)[LlnfFdDuU]?/;
+const CB_HTML_NUMERIC_LIKE = /^\d[\d_]*/;
+
+// ---- Grammars -----------------------------------------------------------
+// Each grammar is a list of {name, re}. The tokeniser tries them in order; the
+// first match wins. Order matters: comments before strings, strings before
+// identifiers/numbers, keywords before identifiers, so the greedy-string trick
+// falls out naturally.
+
+const CB_GRAMMARS = {};
+
+const PY_KEYWORDS = ["False","None","True","and","as","assert","async","await","break","class","continue","def","del","elif","else","except","finally","for","from","global","if","import","in","is","lambda","match","case","nonlocal","not","or","pass","raise","return","try","while","with","yield"];
+const PY_BUILTINS = ["abs","all","any","ascii","bin","bool","bytearray","bytes","callable","chr","classmethod","compile","complex","delattr","dict","dir","divmod","enumerate","eval","exec","filter","float","format","frozenset","getattr","globals","hasattr","hash","help","hex","id","input","int","isinstance","issubclass","iter","len","list","locals","map","max","memoryview","min","next","object","oct","open","ord","pow","print","property","range","repr","reversed","round","set","setattr","slice","sorted","staticmethod","str","sum","super","tuple","type","vars","zip","__init__","__name__","self","cls"];
+CB_GRAMMARS.python = [
+  { name: "comment",     re: /^#[^\n]*/ },
+  // Triple-quoted strings — greedy so they win over single-quote.
+  { name: "string",      re: /^(?:[rRbBuU]|[rR][bB]|[bB][rR])?"""[\s\S]*?"""/ },
+  { name: "string",      re: /^(?:[rRbBuU]|[rR][bB]|[bB][rR])?'''[\s\S]*?'''/ },
+  // f-strings: whole thing goes as string; interpolation NOT recursively
+  // tokenised in this pass — future work.
+  { name: "string",      re: /^(?:[fF][rR]?|[rR][fF])"(?:\\.|[^"\\\n])*"/ },
+  { name: "string",      re: /^(?:[fF][rR]?|[rR][fF])'(?:\\.|[^'\\\n])*'/ },
+  { name: "string",      re: /^(?:[rRbBuU]|[rR][bB]|[bB][rR])?"(?:\\.|[^"\\\n])*"/ },
+  { name: "string",      re: /^(?:[rRbBuU]|[rR][bB]|[bB][rR])?'(?:\\.|[^'\\\n])*'/ },
+  { name: "decorator",   re: /^@[A-Za-z_][\w.]*/ },
+  { capture: ["keyword", "whitespace", "class-name"], re: /^(class)(\s+)([A-Za-z_]\w*)/ },
+  { capture: ["keyword", "whitespace", "function"],   re: /^(def)(\s+)([A-Za-z_]\w*)/ },
+  { name: "keyword",     re: CB_WORD(PY_KEYWORDS, "keyword") },
+  { name: "boolean",     re: /^(?:True|False)\b/ },
+  { name: "null-value",  re: /^None\b/ },
+  { name: "builtin",     re: CB_WORD(PY_BUILTINS, "builtin") },
+  { name: "function",    re: /^[A-Za-z_]\w*(?=\s*\()/ },
+  { name: "identifier",  re: /^[A-Za-z_]\w*/ },
+  { name: "number",      re: CB_NUMBER },
+  { name: "operator",    re: /^(?:\*\*=?|\/\/=?|<<=?|>>=?|[!=<>]=|:=|->|[-+*/%&|^~=<>!])/ },
+  { name: "punctuation", re: /^[(){}\[\],.;:@]/ },
+];
+
+const JS_KEYWORDS = ["async","await","break","case","catch","class","const","continue","debugger","default","delete","do","else","enum","export","extends","finally","for","from","function","get","if","import","in","instanceof","let","new","of","return","set","static","super","switch","this","throw","try","typeof","var","void","while","with","yield"];
+const JS_BUILTINS = ["Array","Boolean","Date","Error","Function","JSON","Map","Math","Number","Object","Promise","RegExp","Set","String","Symbol","WeakMap","WeakSet","console","document","window","globalThis","process","require","module","exports"];
+CB_GRAMMARS.javascript = [
+  { name: "comment",     re: /^\/\/[^\n]*/ },
+  { name: "comment",     re: /^\/\*[\s\S]*?\*\// },
+  { name: "string",      re: /^`(?:\\.|[^`\\])*`/ },   // template literal
+  { name: "string",      re: /^"(?:\\.|[^"\\\n])*"/ },
+  { name: "string",      re: /^'(?:\\.|[^'\\\n])*'/ },
+  { name: "regex",       re: /^\/(?![*+?])(?:[^\r\n\[\/\\]|\\.|\[(?:[^\r\n\]\\]|\\.)*\])+\/[gimsuy]*/ },
+  { capture: ["keyword", "whitespace", "class-name"], re: /^(class)(\s+)([A-Za-z_$][\w$]*)/ },
+  { capture: ["keyword", "whitespace", "function"],   re: /^(function)(\s+)([A-Za-z_$][\w$]*)/ },
+  { name: "keyword",     re: CB_WORD(JS_KEYWORDS, "keyword") },
+  { name: "boolean",     re: /^(?:true|false)\b/ },
+  { name: "null-value",  re: /^(?:null|undefined)\b/ },
+  { name: "builtin",     re: CB_WORD(JS_BUILTINS, "builtin") },
+  { name: "type",        re: /^[A-Z][A-Za-z0-9_$]*/ },        // heuristic: PascalCase = type
+  { name: "function",    re: /^[A-Za-z_$][\w$]*(?=\s*\()/ },
+  { name: "identifier",  re: /^[A-Za-z_$][\w$]*/ },
+  { name: "number",      re: CB_NUMBER },
+  { name: "operator",    re: /^(?:={1,3}|!={0,2}|<={1,2}|>={1,2}|\|\|=?|&&=?|\?\?=?|\?\.|\.\.\.|\+\+|--|\*\*=?|<<=?|>>>?=?|[-+*/%&|^~<>!?]=?)/ },
+  { name: "punctuation", re: /^[(){}\[\],.;:@]/ },
+];
+
+const TS_EXTRA = ["abstract","any","asserts","bigint","boolean","declare","enum","implements","interface","is","keyof","namespace","never","number","package","private","protected","public","readonly","string","type","undefined","unknown"];
+CB_GRAMMARS.typescript = [
+  { name: "comment",     re: /^\/\/[^\n]*/ },
+  { name: "comment",     re: /^\/\*[\s\S]*?\*\// },
+  { name: "string",      re: /^`(?:\\.|[^`\\])*`/ },
+  { name: "string",      re: /^"(?:\\.|[^"\\\n])*"/ },
+  { name: "string",      re: /^'(?:\\.|[^'\\\n])*'/ },
+  { capture: ["keyword", "whitespace", "class-name"], re: /^(class|interface|enum|type)(\s+)([A-Za-z_$][\w$]*)/ },
+  { capture: ["keyword", "whitespace", "function"],   re: /^(function)(\s+)([A-Za-z_$][\w$]*)/ },
+  { name: "keyword",     re: CB_WORD(JS_KEYWORDS.concat(TS_EXTRA), "keyword") },
+  { name: "boolean",     re: /^(?:true|false)\b/ },
+  { name: "null-value",  re: /^(?:null|undefined)\b/ },
+  { name: "builtin",     re: CB_WORD(JS_BUILTINS, "builtin") },
+  { name: "type",        re: /^[A-Z][A-Za-z0-9_$]*/ },
+  { name: "function",    re: /^[A-Za-z_$][\w$]*(?=\s*\()/ },
+  { name: "identifier",  re: /^[A-Za-z_$][\w$]*/ },
+  { name: "number",      re: CB_NUMBER },
+  { name: "operator",    re: /^(?:={1,3}|!={0,2}|<={1,2}|>={1,2}|\|\|=?|&&=?|\?\?=?|\?\.|\.\.\.|\+\+|--|\*\*=?|<<=?|>>>?=?|[-+*/%&|^~<>!?]=?)/ },
+  { name: "punctuation", re: /^[(){}\[\],.;:@]/ },
+];
+
+const JAVA_KEYWORDS = ["abstract","assert","break","case","catch","class","const","continue","default","do","else","enum","extends","final","finally","for","goto","if","implements","import","instanceof","interface","native","new","package","permits","private","protected","public","record","return","sealed","static","strictfp","super","switch","synchronized","this","throw","throws","transient","try","var","volatile","while","yield"];
+const JAVA_TYPES = ["boolean","byte","char","double","float","int","long","short","void","String","Integer","Boolean","Double","Float","Long","Short","Byte","Character","Object","List","Map","Set","ArrayList","HashMap","HashSet"];
+CB_GRAMMARS.java = [
+  { name: "comment",     re: /^\/\/[^\n]*/ },
+  { name: "comment",     re: /^\/\*[\s\S]*?\*\// },
+  { name: "string",      re: /^"""[\s\S]*?"""/ },              // text block (Java 15+)
+  { name: "string",      re: /^"(?:\\.|[^"\\\n])*"/ },
+  { name: "string",      re: /^'(?:\\.|[^'\\\n])*'/ },          // char literal
+  { name: "decorator",   re: /^@[A-Za-z_][\w.]*/ },              // annotation
+  { capture: ["keyword", "whitespace", "class-name"], re: /^(class|interface|enum|record)(\s+)([A-Za-z_]\w*)/ },
+  // Java method decl: return-type NAME( ... ). We match "type NAME(" with a
+  // trailing (?= to keep the paren for the operator rule to pick up.
+  { capture: ["type", "whitespace", "function"], re: /^(void|int|long|short|byte|char|boolean|double|float|String|[A-Z]\w*)(\s+)([a-z_]\w*)(?=\s*\()/ },
+  { name: "keyword",     re: CB_WORD(JAVA_KEYWORDS, "keyword") },
+  { name: "boolean",     re: /^(?:true|false)\b/ },
+  { name: "null-value",  re: /^null\b/ },
+  { name: "type",        re: CB_WORD(JAVA_TYPES, "type") },
+  { name: "type",        re: /^[A-Z]\w*/ },
+  { name: "function",    re: /^[A-Za-z_]\w*(?=\s*\()/ },
+  { name: "identifier",  re: /^[A-Za-z_]\w*/ },
+  { name: "number",      re: CB_NUMBER },
+  { name: "operator",    re: /^(?:={1,2}|!=|<=|>=|<<=?|>>>?=?|&&|\|\||\+\+|--|->|::|[-+*/%&|^~<>!?]=?)/ },
+  { name: "punctuation", re: /^[(){}\[\],.;:@]/ },
+];
+
+const GO_KEYWORDS = ["break","case","chan","const","continue","default","defer","else","fallthrough","for","func","go","goto","if","import","interface","map","package","range","return","select","struct","switch","type","var"];
+const GO_TYPES = ["any","bool","byte","comparable","complex64","complex128","error","float32","float64","int","int8","int16","int32","int64","rune","string","uint","uint8","uint16","uint32","uint64","uintptr"];
+const GO_BUILTINS = ["append","cap","close","complex","copy","delete","imag","len","make","new","panic","print","println","real","recover"];
+CB_GRAMMARS.go = [
+  { name: "comment",     re: /^\/\/[^\n]*/ },
+  { name: "comment",     re: /^\/\*[\s\S]*?\*\// },
+  { name: "string",      re: /^`[^`]*`/ },                       // raw string
+  { name: "string",      re: /^"(?:\\.|[^"\\\n])*"/ },
+  { name: "string",      re: /^'(?:\\.|[^'\\\n])*'/ },            // rune literal
+  { capture: ["keyword", "whitespace", "class-name"], re: /^(type)(\s+)([A-Za-z_]\w*)/ },
+  // Go func decl: `func Name` or `func (receiver) Name`. Handle both.
+  { capture: ["keyword", "whitespace", "function"], re: /^(func)(\s+)([A-Za-z_]\w*)(?=\s*\()/ },
+  { capture: ["keyword", "whitespace", "text", "whitespace", "function"], re: /^(func)(\s+)(\([^)]*\))(\s+)([A-Za-z_]\w*)/ },
+  { name: "keyword",     re: CB_WORD(GO_KEYWORDS, "keyword") },
+  { name: "boolean",     re: /^(?:true|false)\b/ },
+  { name: "null-value",  re: /^nil\b/ },
+  { name: "type",        re: CB_WORD(GO_TYPES, "type") },
+  { name: "builtin",     re: CB_WORD(GO_BUILTINS, "builtin") },
+  { name: "type",        re: /^[A-Z]\w*/ },
+  { name: "function",    re: /^[A-Za-z_]\w*(?=\s*\()/ },
+  { name: "identifier",  re: /^[A-Za-z_]\w*/ },
+  { name: "number",      re: CB_NUMBER },
+  { name: "operator",    re: /^(?:={1,2}|!=|<=|>=|<-|\+\+|--|&&|\|\||[-+*/%&|^~<>!]=?|:=)/ },
+  { name: "punctuation", re: /^[(){}\[\],.;:]/ },
+];
+
+const RUST_KEYWORDS = ["as","async","await","break","const","continue","crate","dyn","else","enum","extern","fn","for","if","impl","in","let","loop","match","mod","move","mut","pub","ref","return","self","Self","static","struct","super","trait","type","unsafe","use","where","while"];
+const RUST_TYPES = ["bool","char","f32","f64","i8","i16","i32","i64","i128","isize","str","u8","u16","u32","u64","u128","usize","String","Vec","Option","Result","Box","Rc","Arc","HashMap","HashSet","BTreeMap"];
+const RUST_MACROS = ["println","print","eprintln","eprint","format","vec","panic","assert","assert_eq","assert_ne","debug_assert","todo","unimplemented","unreachable","write","writeln","dbg","include_str"];
+CB_GRAMMARS.rust = [
+  { name: "comment",     re: /^\/\/[^\n]*/ },
+  { name: "comment",     re: /^\/\*[\s\S]*?\*\// },
+  { name: "string",      re: /^r#*"[\s\S]*?"#*/ },              // raw string
+  { name: "string",      re: /^"(?:\\.|[^"\\\n])*"/ },
+  { name: "string",      re: /^b?'(?:\\.|[^'\\])'/ },            // char / byte
+  { name: "decorator",   re: /^#!?\[[^\]]*\]/ },                  // attribute
+  { capture: ["keyword", "whitespace", "function"],   re: /^(fn)(\s+)([a-z_]\w*)/ },
+  { capture: ["keyword", "whitespace", "class-name"], re: /^(struct|enum|trait|type|impl)(\s+)([A-Za-z_]\w*)/ },
+  { name: "keyword",     re: CB_WORD(RUST_KEYWORDS, "keyword") },
+  { name: "boolean",     re: /^(?:true|false)\b/ },
+  { name: "type",        re: CB_WORD(RUST_TYPES, "type") },
+  { name: "function",    re: new RegExp("^(?:" + RUST_MACROS.join("|") + ")!") },   // macros e.g. println!
+  { name: "type",        re: /^[A-Z]\w*/ },
+  { name: "function",    re: /^[A-Za-z_]\w*(?=\s*(?:::)?\s*\()/ },
+  { name: "identifier",  re: /^[A-Za-z_]\w*/ },
+  { name: "number",      re: CB_NUMBER },
+  { name: "operator",    re: /^(?:={1,2}|!=|<=|>=|->|=>|::|\.\.=?|&&|\|\||[-+*/%&|^~<>!?]=?)/ },
+  { name: "punctuation", re: /^[(){}\[\],.;:]/ },
+];
+
+const SQL_KEYWORDS = ["select","from","where","group","by","order","having","limit","offset","insert","into","values","update","set","delete","create","table","view","index","drop","alter","add","column","primary","key","foreign","references","on","join","left","right","inner","outer","full","cross","using","as","and","or","not","null","is","like","ilike","in","between","distinct","union","intersect","except","all","case","when","then","else","end","with","asc","desc","begin","commit","rollback","transaction","if","exists","default","unique","check","constraint","returning"];
+const SQL_TYPES = ["int","integer","bigint","smallint","tinyint","serial","bigserial","varchar","char","text","boolean","bool","date","time","timestamp","timestamptz","decimal","numeric","float","double","real","json","jsonb","uuid","bytea"];
+const SQL_FUNCTIONS = ["count","sum","avg","min","max","coalesce","nullif","cast","convert","substring","upper","lower","length","trim","concat","now","current_date","current_timestamp","date_trunc","extract","to_char","to_date","json_agg","array_agg","string_agg","row_number","rank","dense_rank","lead","lag","over","partition"];
+CB_GRAMMARS.sql = [
+  { name: "comment",     re: /^--[^\n]*/ },
+  { name: "comment",     re: /^\/\*[\s\S]*?\*\// },
+  { name: "string",      re: /^'(?:''|\\.|[^'\\\n])*'/ },
+  { name: "string",      re: /^"(?:""|\\.|[^"\\\n])*"/ },        // quoted identifier
+  { name: "keyword",     re: new RegExp("^(?:" + SQL_KEYWORDS.join("|") + ")\\b", "i") },
+  { name: "boolean",     re: /^(?:true|false)\b/i },
+  { name: "null-value",  re: /^null\b/i },
+  { name: "type",        re: new RegExp("^(?:" + SQL_TYPES.join("|") + ")\\b", "i") },
+  { name: "function",    re: new RegExp("^(?:" + SQL_FUNCTIONS.join("|") + ")\\b", "i") },
+  { name: "function",    re: /^[A-Za-z_]\w*(?=\s*\()/ },
+  { name: "identifier",  re: /^[A-Za-z_]\w*/ },
+  { name: "number",      re: CB_NUMBER },
+  { name: "operator",    re: /^(?:<>|!=|<=|>=|\|\||[-+*/%=<>!])/ },
+  { name: "punctuation", re: /^[(){}\[\],.;]/ },
+];
+
+const SHELL_KEYWORDS = ["if","then","else","elif","fi","for","do","done","while","until","case","esac","in","function","return","break","continue","local","export","unset","alias","source","exit","trap","shift","set"];
+const SHELL_BUILTINS = ["echo","printf","cd","pwd","ls","mkdir","rmdir","rm","cp","mv","cat","grep","sed","awk","find","test","true","false","read","exec","kill","pkill","ps","tar","curl","wget","git","docker","kubectl","ssh","scp","chmod","chown","sudo","which","who","whoami","date","sleep","touch","head","tail","sort","uniq","wc","tr","cut","paste","xargs"];
+CB_GRAMMARS.shell = [
+  { name: "comment",     re: /^#[^\n]*/ },
+  { name: "string",      re: /^"(?:\\.|[^"\\])*"/ },
+  { name: "string",      re: /^'[^']*'/ },
+  { name: "string",      re: /^\$\([^)]*\)/ },                    // command substitution
+  { name: "identifier",  re: /^\$[A-Za-z_]\w*/ },                  // variable
+  { name: "identifier",  re: /^\$\{[^}]*\}/ },                     // ${var}
+  { name: "keyword",     re: CB_WORD(SHELL_KEYWORDS, "keyword") },
+  { name: "builtin",     re: CB_WORD(SHELL_BUILTINS, "builtin") },
+  { name: "operator",    re: /^(?:&&|\|\||>>|<<|>&|<&|[|&<>])/ },
+  { name: "number",      re: CB_NUMBER },
+  { name: "identifier",  re: /^[A-Za-z_][\w-]*/ },
+  { name: "punctuation", re: /^[(){}\[\];]/ },
+];
+
+CB_GRAMMARS.json = [
+  { name: "string",      re: /^"(?:\\.|[^"\\\n])*"/ },
+  { name: "boolean",     re: /^(?:true|false)\b/ },
+  { name: "null-value",  re: /^null\b/ },
+  { name: "number",      re: CB_NUMBER },
+  { name: "punctuation", re: /^[{}\[\],:]/ },
+];
+
+CB_GRAMMARS.yaml = [
+  { name: "comment",     re: /^#[^\n]*/ },
+  { name: "string",      re: /^"(?:\\.|[^"\\])*"/ },
+  { name: "string",      re: /^'(?:''|[^'])*'/ },
+  { name: "boolean",     re: /^(?:true|false|yes|no|on|off)\b/i },
+  { name: "null-value",  re: /^(?:null|~)\b/i },
+  { name: "number",      re: CB_NUMBER },
+  { name: "keyword",     re: /^[A-Za-z_][\w-]*(?=\s*:)/ },        // keys as keywords
+  { name: "identifier",  re: /^[A-Za-z_][\w-]*/ },
+  { name: "punctuation", re: /^[-{}\[\],:|>&*]/ },
+];
+
+CB_GRAMMARS.html = [
+  { name: "comment",     re: /^<!--[\s\S]*?-->/ },
+  { name: "keyword",     re: /^<\/?[a-zA-Z][\w-]*/ },              // tag name (with </ prefix)
+  { name: "punctuation", re: /^\/?>/ },                             // closing >
+  { name: "function",    re: /^[a-zA-Z-]+(?==)/ },                  // attribute name before =
+  { name: "operator",    re: /^=/ },
+  { name: "string",      re: /^"(?:[^"\n])*"/ },
+  { name: "string",      re: /^'(?:[^'\n])*'/ },
+  { name: "identifier",  re: /^[a-zA-Z][\w-]*/ },
+  { name: "punctuation", re: /^[<>]/ },
+];
+
+CB_GRAMMARS.css = [
+  { name: "comment",     re: /^\/\*[\s\S]*?\*\// },
+  { name: "string",      re: /^"(?:\\.|[^"\\])*"/ },
+  { name: "string",      re: /^'(?:\\.|[^'\\])*'/ },
+  { name: "decorator",   re: /^@[a-zA-Z-]+/ },                     // @media, @import
+  { name: "class-name",  re: /^\.[a-zA-Z_][\w-]*/ },
+  { name: "type",        re: /^#[a-zA-Z_][\w-]*/ },                // id selector
+  { name: "keyword",     re: /^[a-zA-Z-]+(?=\s*:)/ },              // property
+  { name: "number",      re: /^-?\d[\d.]*(?:%|px|em|rem|vh|vw|deg|s|ms|fr|ch|ex|pt|pc|in|cm|mm)?/ },
+  { name: "identifier",  re: /^[a-zA-Z_][\w-]*/ },
+  { name: "punctuation", re: /^[(){}\[\],.;:]/ },
+];
+
+CB_GRAMMARS.markdown = [
+  { name: "keyword",     re: /^#{1,6}\s.*$/m },                    // headings
+  { name: "string",      re: /^`[^`\n]+`/ },                        // inline code
+  { name: "string",      re: /^```[\s\S]*?```/ },                   // fenced code
+  { name: "decorator",   re: /^\*\*[^*\n]+\*\*/ },                  // bold
+  { name: "decorator",   re: /^\*[^*\n]+\*/ },                      // italic
+  { name: "function",    re: /^\[[^\]\n]+\]\([^\)\n]+\)/ },          // links
+  { name: "punctuation", re: /^[>*\-+]/ },
+];
+
+CB_GRAMMARS.cpp = [
+  { name: "comment",     re: /^\/\/[^\n]*/ },
+  { name: "comment",     re: /^\/\*[\s\S]*?\*\// },
+  { name: "string",      re: /^R"([^(]*)\([\s\S]*?\)\1"/ },        // raw string
+  { name: "string",      re: /^L?"(?:\\.|[^"\\\n])*"/ },
+  { name: "string",      re: /^'(?:\\.|[^'\\])'/ },
+  { name: "decorator",   re: /^#\s*[a-z_]+/ },                     // preprocessor
+  { name: "keyword",     re: CB_WORD(["alignas","alignof","auto","break","case","catch","class","concept","const","consteval","constexpr","constinit","continue","co_await","co_return","co_yield","decltype","default","delete","do","else","enum","explicit","export","extern","final","for","friend","goto","if","inline","mutable","namespace","new","noexcept","operator","override","private","protected","public","register","requires","return","sizeof","static","static_assert","static_cast","struct","switch","template","this","thread_local","throw","try","typedef","typeid","typename","union","using","virtual","volatile","while"], "keyword") },
+  { name: "type",        re: CB_WORD(["bool","char","char16_t","char32_t","double","float","int","long","short","signed","unsigned","void","wchar_t","string","vector","map","set","pair","tuple","unique_ptr","shared_ptr","weak_ptr"], "type") },
+  { name: "boolean",     re: /^(?:true|false)\b/ },
+  { name: "null-value",  re: /^nullptr\b/ },
+  { name: "type",        re: /^[A-Z]\w*/ },
+  { name: "function",    re: /^[A-Za-z_]\w*(?=\s*[<(])/ },
+  { name: "identifier",  re: /^[A-Za-z_]\w*/ },
+  { name: "number",      re: CB_NUMBER },
+  { name: "operator",    re: /^(?:->|<=>|<<=?|>>=?|::|[-+*/%&|^~<>=!]=?|\+\+|--|&&|\|\|)/ },
+  { name: "punctuation", re: /^[(){}\[\],.;:@]/ },
+];
+
+CB_GRAMMARS.csharp = [
+  { name: "comment",     re: /^\/\/[^\n]*/ },
+  { name: "comment",     re: /^\/\*[\s\S]*?\*\// },
+  { name: "string",      re: /^\$?@?"(?:""|\\.|[^"\\\n])*"/ },
+  { name: "string",      re: /^'(?:\\.|[^'\\])'/ },
+  { name: "decorator",   re: /^\[[A-Za-z_]\w*(?:\([^\)]*\))?\]/ },
+  { name: "keyword",     re: CB_WORD(["abstract","as","async","await","base","break","case","catch","checked","class","const","continue","default","delegate","do","else","enum","event","explicit","extern","finally","fixed","for","foreach","goto","if","implicit","in","interface","internal","is","lock","namespace","new","operator","out","override","params","partial","private","protected","public","readonly","record","ref","return","sealed","sizeof","stackalloc","static","struct","switch","this","throw","try","typeof","unchecked","unsafe","using","virtual","void","volatile","while","yield"], "keyword") },
+  { name: "type",        re: CB_WORD(["bool","byte","char","decimal","double","float","int","long","object","sbyte","short","string","uint","ulong","ushort","var"], "type") },
+  { name: "boolean",     re: /^(?:true|false)\b/ },
+  { name: "null-value",  re: /^null\b/ },
+  { name: "type",        re: /^[A-Z]\w*/ },
+  { name: "function",    re: /^[A-Za-z_]\w*(?=\s*[<(])/ },
+  { name: "identifier",  re: /^[A-Za-z_]\w*/ },
+  { name: "number",      re: CB_NUMBER },
+  { name: "operator",    re: /^(?:=>|->|\?\?=?|\?\.|<=|>=|==|!=|&&|\|\||\+\+|--|<<=?|>>=?|[-+*/%&|^~<>!?=]=?)/ },
+  { name: "punctuation", re: /^[(){}\[\],.;:@]/ },
+];
+
+// A minimal fallback grammar for languages we don't have a specific one for.
+// It still recognises comments, strings, numbers, identifiers, punctuation —
+// so an unknown-language snippet reads as monospace with subtle color hints.
+CB_GRAMMARS.text = [
+  { name: "comment",     re: /^\/\/[^\n]*/ },
+  { name: "comment",     re: /^#[^\n]*/ },
+  { name: "comment",     re: /^\/\*[\s\S]*?\*\// },
+  { name: "string",      re: /^"(?:\\.|[^"\\\n])*"/ },
+  { name: "string",      re: /^'(?:\\.|[^'\\\n])*'/ },
+  { name: "string",      re: /^`(?:\\.|[^`\\])*`/ },
+  { name: "number",      re: CB_NUMBER },
+  { name: "identifier",  re: /^[A-Za-z_$][\w$]*/ },
+  { name: "operator",    re: /^[-+*/%=<>!&|^~?]+/ },
+  { name: "punctuation", re: /^[(){}\[\],.;:@]/ },
+];
+
+// Aliases. Anything unresolved after aliasing falls to "text".
+const CB_ALIASES = {
+  js: "javascript", node: "javascript", jsx: "javascript", mjs: "javascript", cjs: "javascript",
+  ts: "typescript", tsx: "typescript",
+  py: "python", py3: "python",
+  rb: "ruby",
+  "c++": "cpp", cxx: "cpp", cc: "cpp", hpp: "cpp", "h++": "cpp",
+  "c#": "csharp", cs: "csharp",
+  bash: "shell", sh: "shell", zsh: "shell", fish: "shell",
+  yml: "yaml",
+  md: "markdown",
+  golang: "go",
+  rs: "rust",
+  htm: "html",
+  scss: "css", sass: "css", less: "css",
+};
+
+function resolveLang(language){
+  const raw = String(language == null ? "" : language).trim().toLowerCase();
+  const canonical = CB_ALIASES[raw] || raw;
+  return CB_GRAMMARS[canonical] ? canonical : "text";
+}
+
+// Walk the source string, apply the grammar's rules first-match-wins, emit
+// tokens. Whitespace and unmatched-single-char fall to a "text" token so
+// nothing is ever lost and no rule can loop forever.
+function tokenizeCode(code, language){
+  const grammar = CB_GRAMMARS[resolveLang(language)] || CB_GRAMMARS.text;
+  const out = [];
+  let s = String(code == null ? "" : code);
+  let guard = s.length * 4 + 16;
+  while (s.length && guard-- > 0){
+    // Fast path: whitespace tokens (never syntax-relevant).
+    const ws = /^\s+/.exec(s);
+    if (ws){ out.push({kind: "whitespace", text: ws[0]}); s = s.slice(ws[0].length); continue; }
+    let matched = false;
+    for (const rule of grammar){
+      const m = rule.re.exec(s);
+      if (!m) continue;
+      // ``capture`` splits one whole-match into multiple typed tokens. Used
+      // for combined keyword-plus-name patterns like `class Foo` where the
+      // tokenizer emits `keyword`, `whitespace`, and `class-name` in one go.
+      // A regex-only tokenizer that has already sliced past `class` cannot
+      // use JavaScript lookbehind (there's nothing behind position 0), so
+      // rules bundle the discriminator with the name and split here.
+      if (rule.capture){
+        for (let i = 0; i < rule.capture.length; i++){
+          const seg = m[i + 1];
+          if (!seg) continue;
+          const kind = rule.capture[i];
+          if (kind === "whitespace" || kind === "text"){
+            out.push({kind, text: seg});
+          } else {
+            out.push({kind, text: seg});
+          }
+        }
+      } else {
+        out.push({kind: rule.name, text: m[0]});
+      }
+      s = s.slice(m[0].length);
+      matched = true;
+      break;
+    }
+    if (!matched){
+      // Fallback: consume one character as plain text. Keeps the loop finite.
+      out.push({kind: "text", text: s[0]});
+      s = s.slice(1);
+    }
+  }
+  return out;
+}
+function renderCodeBlock(c, ctx){
+  const wrap = $("div", "cb");
+  const raw = String(resolve(c.code, ctx.dm) ?? "");
+  // Show the language exactly as the model chose it; the tokeniser resolves
+  // aliases separately (and falls back to plain-text tokens if it can't).
+  const displayLang = String(c.language == null ? "text" : c.language).trim() || "text";
+  const tokLang = resolveLang(displayLang);
+  // header
+  const head = $("div", "cbh");
+  const langLabel = $("span", "lang");
+  langLabel.append(text(displayLang));
+  head.append(langLabel);
+  if (c.title){
+    const t = $("span", "cbt");
+    t.append(text(c.title));
+    head.append(t);
+  }
+  if (c.onCopy && c.onCopy.action){
+    const btn = document.createElement("button");
+    btn.append(text("copy"));
+    btn.onclick = () => {
+      // clipboard write is string-only; no serialization surface
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(raw).catch(() => {});
+      }
+      btn.textContent = "copied";
+      setTimeout(() => { btn.textContent = "copy"; }, 1200);
+      emitAction(c.onCopy.action, {node_id: c.id});
+    };
+    head.append(btn);
+  }
+  wrap.append(head);
+  // body: line-numbered <pre> with per-token spans
+  const pre = document.createElement("pre");
+  const row = $("div", "cbr");
+  const gutter = $("div", "gutter");
+  const body = $("div", "body");
+  // tokenise once, then split output into lines so line numbers stay aligned
+  const tokens = tokenizeCode(raw, tokLang);
+  let line = 1;
+  const lineStart = $("span");
+  body.append(lineStart);
+  const gutterFrag = document.createDocumentFragment();
+  const gutterLine = () => {
+    const l = document.createElement("div");
+    l.textContent = String(line);
+    gutterFrag.append(l);
+  };
+  gutterLine();
+  for (const tok of tokens){
+    // split on newlines to keep gutter aligned with the pre content
+    const parts = tok.text.split("\n");
+    for (let i = 0; i < parts.length; i++){
+      if (i > 0){
+        body.append(document.createTextNode("\n"));
+        line++;
+        gutterLine();
+      }
+      if (!parts[i]) continue;
+      if (tok.kind === "whitespace" || tok.kind === "text"){
+        body.append(document.createTextNode(parts[i]));
+      } else {
+        const span = document.createElement("span");
+        span.className = "tok-" + tok.kind;
+        span.textContent = parts[i];    // safe: textContent, not a markup sink
+        body.append(span);
+      }
+    }
+  }
+  gutter.append(gutterFrag);
+  row.append(gutter, body);
+  pre.append(row);
+  wrap.append(pre);
+  return wrap;
+}
 
 function renderTable(c,ctx){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());let rows=(resolve(c.rows,ctx.dm)||[]).slice();
   if(c.filterKey){const f=$("input","filter");f.placeholder="filter "+c.filterKey+"…";f.oninput=()=>draw(f.value);wrap.append(f);}
