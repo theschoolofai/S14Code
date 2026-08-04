@@ -4,7 +4,9 @@ Runs four proofs against the actual S14Code code and a recorded S13 journal:
 
   1. surface build   the three-city run becomes a validated component tree
   2. agui stream     the S13 journal maps to AG-UI events
-  3. injection wall  four hostile surfaces are each rejected by name
+  3. injection wall  every hostile surface in the fixture is rejected by name
+                     (four against the base catalog, three against the
+                     Map/Calendar/Rating student extensions)
   4. hitl approval   a matching approval resumes; a widened one is refused
 
 Writes proof.json and prints a human table. This is the source the widgets

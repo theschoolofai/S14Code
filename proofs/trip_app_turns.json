@@ -1,0 +1,807 @@
+{
+  "goal": "Plan a five-day trip through Japan from 21 September 2026: what to do on each date, roughly where those places sit geographically, how well reviewed each place I would stay is, and what each day costs. Then let me choose which day to open in detail.",
+  "base_url": "http://127.0.0.1:8113",
+  "registered_actions": [
+    "approve",
+    "rate",
+    "reject",
+    "request_data",
+    "rerun",
+    "select_day"
+  ],
+  "turns": [
+    {
+      "prompt": "Plan a five-day trip through Japan from 21 September 2026: what to do on each date, roughly where those places sit geographically, how well reviewed each place I would stay is, and what each day costs. Then let me choose which day to open in detail.",
+      "run_id": "run-fa8b89ce91e4",
+      "composed": true,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite-preview",
+      "component_count": 11,
+      "clean": true,
+      "component_types": [
+        "Button",
+        "Column",
+        "DataTable",
+        "Map",
+        "Row",
+        "Text"
+      ],
+      "is_only_text": false,
+      "data_pointers": [
+        "goal",
+        "item_count",
+        "items",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "tap_offered": {
+        "action": "request_data",
+        "args": {
+          "choice": "Day 1"
+        },
+        "phrase": "Day 1",
+        "from": "b1"
+      },
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title",
+              "summary",
+              "map",
+              "table",
+              "day_choices"
+            ]
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "map",
+            "type": "Map",
+            "title": "Geographic Overview",
+            "points": {
+              "$bind": "/summary/places"
+            },
+            "labelKey": "label",
+            "latKey": "lat",
+            "lonKey": "lon",
+            "zoom": 6
+          },
+          {
+            "id": "table",
+            "type": "DataTable",
+            "columns": "Date,Estimated Cost (USD),Accommodation Rating",
+            "rows": {
+              "$bind": "/summary/table/rows"
+            },
+            "sortable": true
+          },
+          {
+            "id": "day_choices",
+            "type": "Row",
+            "align": "center",
+            "justify": "spaceAround",
+            "children": [
+              "b1",
+              "b2",
+              "b3",
+              "b4",
+              "b5"
+            ]
+          },
+          {
+            "id": "b1",
+            "type": "Button",
+            "label": "Day 1",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b2",
+            "type": "Button",
+            "label": "Day 2",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b3",
+            "type": "Button",
+            "label": "Day 3",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b4",
+            "type": "Button",
+            "label": "Day 4",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b5",
+            "type": "Button",
+            "label": "Day 5",
+            "onPress": {
+              "action": "request_data"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Plan a five-day trip through Japan from 21 September 2026: what to do on each date, roughly where those places sit geographically, how well reviewed each place I would stay is, and what each day costs. Then let me choose which day to open in detail.",
+          "goal": "Plan a five-day trip through Japan from 21 September 2026: what to do on each date, roughly where those places sit geographically, how well reviewed each place I would stay is, and what each day costs. Then let me choose which day to open in detail.",
+          "summary": "{\n  \"title\": \"Five-Day Japan Itinerary: Tokyo to Kyoto\",\n  \"intro\": \"A balanced journey through Japan's modern capital and its cultural heart, starting September 21, 2026.\",\n  \"schedule\": [\n    {\n      \"date\": \"2026-09-21\",\n      \"label\": \"Arrival in Tokyo: Shinjuku and Omoide Yokocho\"\n    },\n    {\n      \"date\": \"2026-09-22\",\n      \"label\": \"Tokyo Culture: Meiji Jingu and Shibuya Crossing\"\n    },\n    {\n      \"date\": \"2026-09-23\",\n      \"label\": \"Bullet Train to Kyoto: Fushimi Inari Shrine\"\n    },\n    {\n      \"date\": \"2026-09-24\",\n      \"label\": \"Kyoto Heritage: Kinkaku-ji and Arashiyama Bamboo Grove\"\n    },\n    {\n      \"date\": \"2026-09-25\",\n      \"label\": \"Departure: Gion District and return to Tokyo\"\n    }\n  ],\n  \"places\": [\n    {\n      \"label\": \"Shinjuku, Tokyo\",\n      \"lat\": 35.6938,\n      \"lon\": 139.7034\n    },\n    {\n      \"label\": \"Shibuya, Tokyo\",\n      \"lat\": 35.6618,\n      \"lon\": 139.704\n    },\n    {\n      \"label\": \"Fushimi Inari, Kyoto\",\n      \"lat\": 34.9671,\n      \"lon\": 135.7727\n    },\n    {\n      \"label\": \"Arashiyama, Kyoto\",\n      \"lat\": 35.0116,\n      \"lon\": 135.6776\n    },\n    {\n      \"label\": \"Gion, Kyoto\",\n      \"lat\": 35.0038,\n      \"lon\": 135.7785\n    }\n  ],\n  \"table\": {\n    \"columns\": [\n      \"Date\",\n      \"Estimated Cost (USD)\",\n      \"Accommodation Rating\"\n    ],\n    \"rows\": [\n      {\n        \"Date\": \"2026-09-21\",\n        \"Estimated Cost (USD)\": 250,\n        \"Accommodation Rating\": \"4.7/5\"\n      },\n      {\n        \"Date\": \"2026-09-22\",\n        \"Estimated Cost (USD)\": 200,\n        \"Accommodation Rating\": \"4.7/5\"\n      },\n      {\n        \"Date\": \"2026-09-23\",\n        \"Estimated Cost (USD)\": 350,\n        \"Accommodation Rating\": \"4.8/5\"\n      },",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [],
+          "timeline": [
+            {
+              "time": "823",
+              "label": "run_started"
+            },
+            {
+              "time": "824",
+              "label": "graph_patched"
+            },
+            {
+              "time": "825",
+              "label": "task_started content"
+            },
+            {
+              "time": "826",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "827",
+              "label": "graph_patched"
+            },
+            {
+              "time": "828",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2
+        }
+      }
+    },
+    {
+      "prompt": "Plan a five-day trip through Japan from 21 September 2026: what to do on each date, roughly where those places sit geographically, how well reviewed each place I would stay is, and what each day costs. Then let me choose which day to open in detail.\nThe traveller has since tapped: Day 1.\nCompose the next interface for exactly that, going one level deeper than the last one.",
+      "run_id": "run-26fe17dbd7f3",
+      "composed": true,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite-preview",
+      "component_count": 14,
+      "clean": true,
+      "component_types": [
+        "Button",
+        "Card",
+        "Column",
+        "List",
+        "Row",
+        "StatTile",
+        "Text"
+      ],
+      "is_only_text": false,
+      "data_pointers": [
+        "choice_0_label",
+        "choice_1_label",
+        "choice_2_label",
+        "choices",
+        "goal",
+        "intro",
+        "item_count",
+        "items",
+        "metric_0_value",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "section_0_heading",
+        "section_0_points",
+        "section_1_heading",
+        "section_1_points",
+        "section_events",
+        "sections",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "tap_offered": {
+        "action": "request_data",
+        "args": {
+          "choice": "View Shinjuku Gyoen Garden details"
+        },
+        "phrase": "View Shinjuku Gyoen Garden details",
+        "from": "b0"
+      },
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title",
+              "summary",
+              "metrics",
+              "sections",
+              "choices"
+            ]
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "metrics",
+            "type": "Row",
+            "children": [
+              "stat1"
+            ]
+          },
+          {
+            "id": "stat1",
+            "type": "StatTile",
+            "label": "Estimated Daily Budget",
+            "value": {
+              "$bind": "/metric_0_value"
+            },
+            "unit": "JPY"
+          },
+          {
+            "id": "sections",
+            "type": "List",
+            "children": [
+              "sec0",
+              "sec1"
+            ]
+          },
+          {
+            "id": "sec0",
+            "type": "Card",
+            "title": "Itinerary Highlights",
+            "children": [
+              "sec0_text"
+            ]
+          },
+          {
+            "id": "sec0_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/section_0_points"
+            }
+          },
+          {
+            "id": "sec1",
+            "type": "Card",
+            "title": "Travel Tips",
+            "children": [
+              "sec1_text"
+            ]
+          },
+          {
+            "id": "sec1_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/section_1_points"
+            }
+          },
+          {
+            "id": "choices",
+            "type": "Column",
+            "children": [
+              "b0",
+              "b1",
+              "b2"
+            ]
+          },
+          {
+            "id": "b0",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_0_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b1",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_1_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b2",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_2_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Day 1: Tokyo Arrival & Shinjuku Exploration",
+          "goal": "Plan a five-day trip through Japan from 21 September 2026: what to do on each date, roughly where those places sit geographically, how well reviewed each place I would stay is, and what each day costs. Then let me choose which day to open in detail.\nThe traveller has since tapped: Day 1.\nCompose the next interface for exactly that, going one level deeper than the last one.",
+          "summary": "Your first day focuses on settling into the vibrant Shinjuku district, offering a mix of modern cityscapes and traditional park serenity.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Estimated Daily Budget",
+              "value": 35000,
+              "unit": "JPY"
+            }
+          ],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "View Shinjuku Gyoen Garden details",
+            "View Omoide Yokocho dining guide",
+            "Return to 5-day overview"
+          ],
+          "timeline": [
+            {
+              "time": "831",
+              "label": "run_started"
+            },
+            {
+              "time": "832",
+              "label": "graph_patched"
+            },
+            {
+              "time": "833",
+              "label": "task_started content"
+            },
+            {
+              "time": "834",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "835",
+              "label": "graph_patched"
+            },
+            {
+              "time": "836",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Your first day focuses on settling into the vibrant Shinjuku district, offering a mix of modern cityscapes and traditional park serenity.",
+          "section_0_heading": "Itinerary Highlights",
+          "section_0_points": "\u2022 Check-in at Park Hyatt Tokyo\n\u2022 Afternoon stroll through Shinjuku Gyoen National Garden\n\u2022 Sunset views from the Tokyo Metropolitan Government Building\n\u2022 Dinner and drinks in Omoide Yokocho (Memory Lane)",
+          "section_1_heading": "Travel Tips",
+          "section_1_points": "\u2022 Purchase a Suica or Pasmo card at the airport for seamless transit\n\u2022 Use the Limousine Bus for direct transport from Narita/Haneda to Shinjuku\n\u2022 Wear comfortable walking shoes for the park and station navigation",
+          "sections": [
+            {
+              "heading": "Itinerary Highlights",
+              "points": [
+                "Check-in at Park Hyatt Tokyo",
+                "Afternoon stroll through Shinjuku Gyoen National Garden",
+                "Sunset views from the Tokyo Metropolitan Government Building",
+                "Dinner and drinks in Omoide Yokocho (Memory Lane)"
+              ]
+            },
+            {
+              "heading": "Travel Tips",
+              "points": [
+                "Purchase a Suica or Pasmo card at the airport for seamless transit",
+                "Use the Limousine Bus for direct transport from Narita/Haneda to Shinjuku",
+                "Wear comfortable walking shoes for the park and station navigation"
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Itinerary Highlights",
+              "label": "Check-in at Park Hyatt Tokyo; Afternoon stroll through Shinjuku Gyoen National Garden; Sunset views from the Tokyo Metropolitan Government Building; Dinner and drinks in Omoide Yokocho (Memory Lane)"
+            },
+            {
+              "time": "Travel Tips",
+              "label": "Purchase a Suica or Pasmo card at the airport for seamless transit; Use the Limousine Bus for direct transport from Narita/Haneda to Shinjuku; Wear comfortable walking shoes for the park and station navigation"
+            }
+          ],
+          "metric_0_value": 35000,
+          "choices": [
+            {
+              "id": "shinjuku_gyoen",
+              "label": "View Shinjuku Gyoen Garden details"
+            },
+            {
+              "id": "omoide_yokocho",
+              "label": "View Omoide Yokocho dining guide"
+            },
+            {
+              "id": "back_to_main",
+              "label": "Return to 5-day overview"
+            }
+          ],
+          "choice_0_label": "View Shinjuku Gyoen Garden details",
+          "choice_1_label": "View Omoide Yokocho dining guide",
+          "choice_2_label": "Return to 5-day overview"
+        }
+      }
+    },
+    {
+      "prompt": "Plan a five-day trip through Japan from 21 September 2026: what to do on each date, roughly where those places sit geographically, how well reviewed each place I would stay is, and what each day costs. Then let me choose which day to open in detail.\nThe traveller has since tapped: Day 1, then View Shinjuku Gyoen Garden details.\nCompose the next interface for exactly that, going one level deeper than the last one.",
+      "run_id": "run-214639076bdf",
+      "composed": true,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite-preview",
+      "component_count": 14,
+      "clean": true,
+      "component_types": [
+        "Button",
+        "Card",
+        "Column",
+        "List",
+        "Row",
+        "StatTile",
+        "Text"
+      ],
+      "is_only_text": false,
+      "data_pointers": [
+        "choice_0_label",
+        "choice_1_label",
+        "choices",
+        "goal",
+        "intro",
+        "item_count",
+        "items",
+        "metric_0_value",
+        "metric_1_value",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "section_0_heading",
+        "section_0_points",
+        "section_1_heading",
+        "section_1_points",
+        "section_events",
+        "sections",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "tap_offered": {
+        "action": "request_data",
+        "args": {
+          "choice": "Back to Day 1 Overview"
+        },
+        "phrase": "Back to Day 1 Overview",
+        "from": "c0"
+      },
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title",
+              "intro",
+              "metrics",
+              "sections",
+              "choices"
+            ]
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "intro",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "metrics",
+            "type": "Row",
+            "align": "center",
+            "justify": "spaceBetween",
+            "children": [
+              "m0",
+              "m1"
+            ]
+          },
+          {
+            "id": "m0",
+            "type": "StatTile",
+            "label": "Walking Distance",
+            "value": {
+              "$bind": "/metric_0_value"
+            },
+            "unit": "km"
+          },
+          {
+            "id": "m1",
+            "type": "StatTile",
+            "label": "Estimated Time",
+            "value": {
+              "$bind": "/metric_1_value"
+            },
+            "unit": "hours"
+          },
+          {
+            "id": "sections",
+            "type": "List",
+            "children": [
+              "s0",
+              "s1"
+            ]
+          },
+          {
+            "id": "s0",
+            "type": "Card",
+            "title": "Visitor Highlights",
+            "children": [
+              "s0_text"
+            ]
+          },
+          {
+            "id": "s0_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/section_0_points"
+            }
+          },
+          {
+            "id": "s1",
+            "type": "Card",
+            "title": "Practical Information",
+            "children": [
+              "s1_text"
+            ]
+          },
+          {
+            "id": "s1_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/section_1_points"
+            }
+          },
+          {
+            "id": "choices",
+            "type": "Row",
+            "align": "center",
+            "justify": "spaceBetween",
+            "children": [
+              "c0",
+              "c1"
+            ]
+          },
+          {
+            "id": "c0",
+            "type": "Button",
+            "label": "Back to Day 1 Overview",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "c1",
+            "type": "Button",
+            "label": "View Next Stop: Omoide Yokocho",
+            "onPress": {
+              "action": "request_data"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Shinjuku Gyoen National Garden",
+          "goal": "Plan a five-day trip through Japan from 21 September 2026: what to do on each date, roughly where those places sit geographically, how well reviewed each place I would stay is, and what each day costs. Then let me choose which day to open in detail.\nThe traveller has since tapped: Day 1, then View Shinjuku Gyoen Garden details.\nCompose the next interface for exactly that, going one level deeper than the last one.",
+          "summary": "A sprawling 144-acre park blending French Formal, English Landscape, and Japanese Traditional garden styles in the heart of Tokyo.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Walking Distance",
+              "value": 3.5,
+              "unit": "km"
+            },
+            {
+              "label": "Estimated Time",
+              "value": 2.5,
+              "unit": "hours"
+            }
+          ],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Back to Day 1 Overview",
+            "View Next Stop: Omoide Yokocho"
+          ],
+          "timeline": [
+            {
+              "time": "839",
+              "label": "run_started"
+            },
+            {
+              "time": "840",
+              "label": "graph_patched"
+            },
+            {
+              "time": "841",
+              "label": "task_started content"
+            },
+            {
+              "time": "842",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "843",
+              "label": "graph_patched"
+            },
+            {
+              "time": "844",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "A sprawling 144-acre park blending French Formal, English Landscape, and Japanese Traditional garden styles in the heart of Tokyo.",
+          "section_0_heading": "Visitor Highlights",
+          "section_0_points": "\u2022 Stroll through the traditional Japanese landscape garden with its iconic arched bridges.\n\u2022 Visit the Greenhouse to see over 1,700 tropical and subtropical plant species.\n\u2022 Relax in the expansive lawn areas of the English Landscape Garden.\n\u2022 Experience the historic Taiwan Pavilion overlooking the pond.",
+          "section_1_heading": "Practical Information",
+          "section_1_points": "\u2022 Entry fee: 500 JPY for adults.\n\u2022 Opening hours: 9:00 AM to 4:30 PM (last entry 4:00 PM).\n\u2022 Closed on Mondays.\n\u2022 Alcohol and play equipment are prohibited to maintain a tranquil environment.",
+          "sections": [
+            {
+              "heading": "Visitor Highlights",
+              "points": [
+                "Stroll through the traditional Japanese landscape garden with its iconic arched bridges.",
+                "Visit the Greenhouse to see over 1,700 tropical and subtropical plant species.",
+                "Relax in the expansive lawn areas of the English Landscape Garden.",
+                "Experience the historic Taiwan Pavilion overlooking the pond."
+              ]
+            },
+            {
+              "heading": "Practical Information",
+              "points": [
+                "Entry fee: 500 JPY for adults.",
+                "Opening hours: 9:00 AM to 4:30 PM (last entry 4:00 PM).",
+                "Closed on Mondays.",
+                "Alcohol and play equipment are prohibited to maintain a tranquil environment."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Visitor Highlights",
+              "label": "Stroll through the traditional Japanese landscape garden with its iconic arched bridges.; Visit the Greenhouse to see over 1,700 tropical and subtropical plant species.; Relax in the expansive lawn areas of the English Landscape Garden.; Experience the historic Taiwan Pavilion overlooking the pond."
+            },
+            {
+              "time": "Practical Information",
+              "label": "Entry fee: 500 JPY for adults.; Opening hours: 9:00 AM to 4:30 PM (last entry 4:00 PM).; Closed on Mondays.; Alcohol and play equipment are prohibited to maintain a tranquil environment."
+            }
+          ],
+          "metric_0_value": 3.5,
+          "metric_1_value": 2.5,
+          "choices": [
+            {
+              "id": "back_to_day_1",
+              "label": "Back to Day 1 Overview"
+            },
+            {
+              "id": "next_stop_shinjuku",
+              "label": "View Next Stop: Omoide Yokocho"
+            }
+          ],
+          "choice_0_label": "Back to Day 1 Overview",
+          "choice_1_label": "View Next Stop: Omoide Yokocho"
+        }
+      }
+    }
+  ],
+  "summary": {
+    "turns_composed": 3,
+    "all_composed_non_empty": true,
+    "no_turn_is_only_text": true,
+    "distinct_interfaces": 2,
+    "types_per_turn": [
+      [
+        "Button",
+        "Column",
+        "DataTable",
+        "Map",
+        "Row",
+        "Text"
+      ],
+      [
+        "Button",
+        "Card",
+        "Column",
+        "List",
+        "Row",
+        "StatTile",
+        "Text"
+      ],
+      [
+        "Button",
+        "Card",
+        "Column",
+        "List",
+        "Row",
+        "StatTile",
+        "Text"
+      ]
+    ]
+  }
+}

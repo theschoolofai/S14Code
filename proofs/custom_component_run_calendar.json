@@ -1,0 +1,772 @@
+{
+  "task": "I land in Osaka on 21 September 2026 and fly home on 30 September 2026. Tell me what I should be doing on each individual date in that window, and how well reviewed each place I would stay is.",
+  "claim": "the prompt, the compose system prompt and the compose instruction name no component type; the model chose these from the catalog manifest alone",
+  "run_id": "run-12a47152f6ff",
+  "status": "completed",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "gateway_provider_env": "gemini",
+  "prompt_names_no_component": {
+    "Calendar": false,
+    "Map": false,
+    "Rating": false
+  },
+  "graph": {
+    "finished": true,
+    "nodes": {
+      "content": {
+        "skill": "content",
+        "state": "succeeded",
+        "provider": "gemini_1",
+        "model": "gemini-3.1-flash-lite-preview"
+      },
+      "surface": {
+        "skill": "compose_surface",
+        "state": "succeeded",
+        "provider": "gemini_1",
+        "model": "gemini-3.1-flash-lite-preview"
+      }
+    },
+    "edges": [
+      [
+        "content",
+        "surface"
+      ]
+    ]
+  },
+  "event_journal": [
+    {
+      "sequence": 1,
+      "kind": "run_started",
+      "node_id": null
+    },
+    {
+      "sequence": 2,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 3,
+      "kind": "task_started",
+      "node_id": "content"
+    },
+    {
+      "sequence": 4,
+      "kind": "task_succeeded",
+      "node_id": "content"
+    },
+    {
+      "sequence": 5,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 6,
+      "kind": "task_started",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 7,
+      "kind": "task_succeeded",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 8,
+      "kind": "graph_patched",
+      "node_id": null
+    }
+  ],
+  "structured_shapes_offered": {
+    "map_points": [
+      {
+        "label": "Osaka Castle",
+        "lat": 34.6873,
+        "lon": 135.5262
+      },
+      {
+        "label": "Nara Park",
+        "lat": 34.6851,
+        "lon": 135.8435
+      },
+      {
+        "label": "Fushimi Inari Shrine",
+        "lat": 34.9671,
+        "lon": 135.7727
+      },
+      {
+        "label": "Kobe Harborland",
+        "lat": 34.6797,
+        "lon": 135.1815
+      }
+    ],
+    "calendar_events": [
+      {
+        "date": "2026-09-21",
+        "label": "Arrival in Osaka, check-in, and Dotonbori evening walk"
+      },
+      {
+        "date": "2026-09-22",
+        "label": "Osaka Castle and Umeda Sky Building"
+      },
+      {
+        "date": "2026-09-23",
+        "label": "Day trip to Nara Park and Todai-ji Temple"
+      },
+      {
+        "date": "2026-09-24",
+        "label": "Kyoto: Fushimi Inari Shrine and Kiyomizu-dera"
+      },
+      {
+        "date": "2026-09-25",
+        "label": "Kyoto: Arashiyama Bamboo Grove and Kinkaku-ji"
+      },
+      {
+        "date": "2026-09-26",
+        "label": "Universal Studios Japan"
+      },
+      {
+        "date": "2026-09-27",
+        "label": "Day trip to Kobe: Harborland and Nunobiki Herb Gardens"
+      },
+      {
+        "date": "2026-09-28",
+        "label": "Shinsekai district and Spa World"
+      },
+      {
+        "date": "2026-09-29",
+        "label": "Kuromon Ichiba Market and final shopping in Shinsaibashi"
+      },
+      {
+        "date": "2026-09-30",
+        "label": "Departure from Kansai International Airport"
+      }
+    ],
+    "calendar_month": "2026-09",
+    "ratings": [
+      {
+        "label": "Hotel Nikko Osaka (Shinsaibashi)",
+        "value": 4.5,
+        "max": 5.0,
+        "count": "4,200+ reviews"
+      },
+      {
+        "label": "Cross Hotel Osaka (Dotonbori)",
+        "value": 4.6,
+        "max": 5.0,
+        "count": "3,800+ reviews"
+      },
+      {
+        "label": "Hotel Granvia Osaka (Umeda)",
+        "value": 4.4,
+        "max": 5.0,
+        "count": "5,100+ reviews"
+      }
+    ]
+  },
+  "content_structured": {
+    "title": "10-Day Osaka and Kansai Itinerary",
+    "intro": "A balanced itinerary exploring the cultural and culinary highlights of the Kansai region, centered in Osaka.",
+    "schedule": [
+      {
+        "date": "2026-09-21",
+        "label": "Arrival in Osaka, check-in, and Dotonbori evening walk"
+      },
+      {
+        "date": "2026-09-22",
+        "label": "Osaka Castle and Umeda Sky Building"
+      },
+      {
+        "date": "2026-09-23",
+        "label": "Day trip to Nara Park and Todai-ji Temple"
+      },
+      {
+        "date": "2026-09-24",
+        "label": "Kyoto: Fushimi Inari Shrine and Kiyomizu-dera"
+      },
+      {
+        "date": "2026-09-25",
+        "label": "Kyoto: Arashiyama Bamboo Grove and Kinkaku-ji"
+      },
+      {
+        "date": "2026-09-26",
+        "label": "Universal Studios Japan"
+      },
+      {
+        "date": "2026-09-27",
+        "label": "Day trip to Kobe: Harborland and Nunobiki Herb Gardens"
+      },
+      {
+        "date": "2026-09-28",
+        "label": "Shinsekai district and Spa World"
+      },
+      {
+        "date": "2026-09-29",
+        "label": "Kuromon Ichiba Market and final shopping in Shinsaibashi"
+      },
+      {
+        "date": "2026-09-30",
+        "label": "Departure from Kansai International Airport"
+      }
+    ],
+    "ratings": [
+      {
+        "label": "Hotel Nikko Osaka (Shinsaibashi)",
+        "value": 4.5,
+        "max": 5,
+        "count": "4,200+ reviews"
+      },
+      {
+        "label": "Cross Hotel Osaka (Dotonbori)",
+        "value": 4.6,
+        "max": 5,
+        "count": "3,800+ reviews"
+      },
+      {
+        "label": "Hotel Granvia Osaka (Umeda)",
+        "value": 4.4,
+        "max": 5,
+        "count": "5,100+ reviews"
+      }
+    ],
+    "places": [
+      {
+        "label": "Osaka Castle",
+        "lat": 34.6873,
+        "lon": 135.5262
+      },
+      {
+        "label": "Nara Park",
+        "lat": 34.6851,
+        "lon": 135.8435
+      },
+      {
+        "label": "Fushimi Inari Shrine",
+        "lat": 34.9671,
+        "lon": 135.7727
+      },
+      {
+        "label": "Kobe Harborland",
+        "lat": 34.6797,
+        "lon": 135.1815
+      }
+    ]
+  },
+  "compose_surface_node": {
+    "id": "surface",
+    "state": "succeeded",
+    "provider": "gemini_1",
+    "model": "gemini-3.1-flash-lite-preview",
+    "parse_ok": true,
+    "raw_surface": "{\n  \"root\": \"root\",\n  \"components\": [\n    {\n      \"id\": \"root\",\n      \"type\": \"Column\",\n      \"children\": [\n        \"title\",\n        \"summary\",\n        \"calendar\",\n        \"ratings_heading\",\n        \"ratings_list\",\n        \"actions_heading\",\n        \"action_buttons\"\n      ]\n    },\n    {\n      \"id\": \"title\",\n      \"type\": \"Text\",\n      \"variant\": \"heading\",\n      \"text\": {\n        \"$bind\": \"/title\"\n      }\n    },\n    {\n      \"id\": \"summary\",\n      \"type\": \"Text\",\n      \"variant\": \"body\",\n      \"text\": {\n        \"$bind\": \"/summary\"\n      }\n    },\n    {\n      \"id\": \"calendar\",\n      \"type\": \"Calendar\",\n      \"title\": \"Trip Itinerary\",\n      \"events\": {\n        \"$bind\": \"/calendar_events\"\n      },\n      \"month\": {\n        \"$bind\": \"/calendar_month\"\n      }\n    },\n    {\n      \"id\": \"ratings_heading\",\n      \"type\": \"Text\",\n      \"variant\": \"heading\",\n      \"text\": \"Accommodation Reviews\"\n    },\n    {\n      \"id\": \"ratings_list\",\n      \"type\": \"List\",\n      \"children\": [\n        \"r0\",\n        \"r1\",\n        \"r2\"\n      ]\n    },\n    {\n      \"id\": \"r0\",\n      \"type\": \"Rating\",\n      \"label\": \"Hotel Nikko Osaka (Shinsaibashi)\",\n      \"value\": {\n        \"$bind\": \"/rating_0_value\"\n      },\n      \"max\": 5,\n      \"count\": {\n        \"$bind\": \"/rating_0_count\"\n      }\n    },\n    {\n      \"id\": \"r1\",\n      \"type\": \"Rating\",\n      \"label\": \"Cross Hotel Osaka (Dotonbori)\",\n      \"value\": {\n        \"$bind\": \"/rating_1_value\"\n      },\n      \"max\": 5,\n      \"count\": {\n        \"$bind\": \"/rating_1_count\"\n      }\n    },\n    {\n      \"id\": \"r2\",\n      \"type\": \"Rating\",\n      \"label\": \"Hotel Granvia Osaka (Umeda)\",\n      \"value\": {\n        \"$bind\": \"/rating_2_value\"\n      },\n      \"max\": 5,\n      \"count\": {\n        \"$bind\": \"/rating_2_count\"\n      }\n    },\n    {\n      \"id\": \"actions_heading\",\n      \"type\": \"Text\",\n      \"variant\": \"heading\",\n      \"text\": \"Explore Details\"\n    },\n    {\n      \"id\": \"action_buttons\",\n      \"type\": \"Row\",\n      \"children\": [\n        \"b0\",\n        \"b1\"\n      ]\n    },\n    {\n      \"id\": \"b0\",\n      \"type\": \"Button\",\n      \"label\": \"View Osaka Castle Details\",\n      \"onPress\": {\n        \"action\": \"request_data\"\n      }\n    },\n    {\n      \"id\": \"b1\",\n      \"type\": \"Button\",\n      \"label\": \"View Kyoto Itinerary\",\n      \"onPress\": {\n        \"action\": \"request_data\"\n      }\n    }\n  ]\n}",
+    "validator": {
+      "proposed": 13,
+      "accepted": 11,
+      "rejected": 2,
+      "ok": false,
+      "rejections": [
+        {
+          "component_id": "ratings_heading",
+          "field": "text",
+          "invariant": "data-not-code",
+          "reason": "binding must be {'$bind': '/pointer'}"
+        },
+        {
+          "component_id": "actions_heading",
+          "field": "text",
+          "invariant": "data-not-code",
+          "reason": "binding must be {'$bind': '/pointer'}"
+        }
+      ],
+      "dangling_child_refs": [
+        "actions_heading",
+        "ratings_heading"
+      ],
+      "component_types": [
+        "Button",
+        "Calendar",
+        "Column",
+        "List",
+        "Rating",
+        "Row",
+        "Text"
+      ],
+      "component_count": 11
+    },
+    "data_model": {
+      "title": "10-Day Osaka and Kansai Itinerary",
+      "goal": "I land in Osaka on 21 September 2026 and fly home on 30 September 2026. Tell me what I should be doing on each individual date in that window, and how well reviewed each place I would stay is.",
+      "summary": "A balanced itinerary exploring the cultural and culinary highlights of the Kansai region, centered in Osaka.",
+      "results": [],
+      "items": [],
+      "metrics": [],
+      "spark": [],
+      "table_rows": [],
+      "item_count": 0,
+      "source_count": 0,
+      "subjects": [],
+      "timeline": [
+        {
+          "time": "1",
+          "label": "run_started"
+        },
+        {
+          "time": "2",
+          "label": "graph_patched"
+        },
+        {
+          "time": "3",
+          "label": "task_started content"
+        },
+        {
+          "time": "4",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "5",
+          "label": "graph_patched"
+        },
+        {
+          "time": "6",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "intro": "A balanced itinerary exploring the cultural and culinary highlights of the Kansai region, centered in Osaka.",
+      "map_points": [
+        {
+          "label": "Osaka Castle",
+          "lat": 34.6873,
+          "lon": 135.5262
+        },
+        {
+          "label": "Nara Park",
+          "lat": 34.6851,
+          "lon": 135.8435
+        },
+        {
+          "label": "Fushimi Inari Shrine",
+          "lat": 34.9671,
+          "lon": 135.7727
+        },
+        {
+          "label": "Kobe Harborland",
+          "lat": 34.6797,
+          "lon": 135.1815
+        }
+      ],
+      "calendar_events": [
+        {
+          "date": "2026-09-21",
+          "label": "Arrival in Osaka, check-in, and Dotonbori evening walk"
+        },
+        {
+          "date": "2026-09-22",
+          "label": "Osaka Castle and Umeda Sky Building"
+        },
+        {
+          "date": "2026-09-23",
+          "label": "Day trip to Nara Park and Todai-ji Temple"
+        },
+        {
+          "date": "2026-09-24",
+          "label": "Kyoto: Fushimi Inari Shrine and Kiyomizu-dera"
+        },
+        {
+          "date": "2026-09-25",
+          "label": "Kyoto: Arashiyama Bamboo Grove and Kinkaku-ji"
+        },
+        {
+          "date": "2026-09-26",
+          "label": "Universal Studios Japan"
+        },
+        {
+          "date": "2026-09-27",
+          "label": "Day trip to Kobe: Harborland and Nunobiki Herb Gardens"
+        },
+        {
+          "date": "2026-09-28",
+          "label": "Shinsekai district and Spa World"
+        },
+        {
+          "date": "2026-09-29",
+          "label": "Kuromon Ichiba Market and final shopping in Shinsaibashi"
+        },
+        {
+          "date": "2026-09-30",
+          "label": "Departure from Kansai International Airport"
+        }
+      ],
+      "calendar_month": "2026-09",
+      "ratings": [
+        {
+          "label": "Hotel Nikko Osaka (Shinsaibashi)",
+          "value": 4.5,
+          "max": 5.0,
+          "count": "4,200+ reviews"
+        },
+        {
+          "label": "Cross Hotel Osaka (Dotonbori)",
+          "value": 4.6,
+          "max": 5.0,
+          "count": "3,800+ reviews"
+        },
+        {
+          "label": "Hotel Granvia Osaka (Umeda)",
+          "value": 4.4,
+          "max": 5.0,
+          "count": "5,100+ reviews"
+        }
+      ],
+      "rating_0_value": 4.5,
+      "rating_0_count": "4,200+ reviews",
+      "rating_1_value": 4.6,
+      "rating_1_count": "3,800+ reviews",
+      "rating_2_value": 4.4,
+      "rating_2_count": "5,100+ reviews",
+      "choices": [
+        {
+          "id": "arrival_in_osaka_check_in_and_dotonbori_evening_walk",
+          "label": "Arrival in Osaka, check-in, and Dotonbori evening walk"
+        },
+        {
+          "id": "osaka_castle_and_umeda_sky_building",
+          "label": "Osaka Castle and Umeda Sky Building"
+        },
+        {
+          "id": "day_trip_to_nara_park_and_todai_ji_temple",
+          "label": "Day trip to Nara Park and Todai-ji Temple"
+        },
+        {
+          "id": "kyoto_fushimi_inari_shrine_and_kiyomizu_dera",
+          "label": "Kyoto: Fushimi Inari Shrine and Kiyomizu-dera"
+        },
+        {
+          "id": "kyoto_arashiyama_bamboo_grove_and_kinkaku_ji",
+          "label": "Kyoto: Arashiyama Bamboo Grove and Kinkaku-ji"
+        },
+        {
+          "id": "universal_studios_japan",
+          "label": "Universal Studios Japan"
+        },
+        {
+          "id": "day_trip_to_kobe_harborland_and_nunobiki_herb_gardens",
+          "label": "Day trip to Kobe: Harborland and Nunobiki Herb Gardens"
+        },
+        {
+          "id": "shinsekai_district_and_spa_world",
+          "label": "Shinsekai district and Spa World"
+        }
+      ],
+      "choice_0_label": "Arrival in Osaka, check-in, and Dotonbori evening walk",
+      "choice_1_label": "Osaka Castle and Umeda Sky Building",
+      "choice_2_label": "Day trip to Nara Park and Todai-ji Temple",
+      "choice_3_label": "Kyoto: Fushimi Inari Shrine and Kiyomizu-dera",
+      "choice_4_label": "Kyoto: Arashiyama Bamboo Grove and Kinkaku-ji",
+      "choice_5_label": "Universal Studios Japan",
+      "choice_6_label": "Day trip to Kobe: Harborland and Nunobiki Herb Gardens",
+      "choice_7_label": "Shinsekai district and Spa World"
+    },
+    "surface_accepted": {
+      "root": "root",
+      "components": [
+        {
+          "id": "root",
+          "type": "Column",
+          "children": [
+            "title",
+            "summary",
+            "calendar",
+            "ratings_heading",
+            "ratings_list",
+            "actions_heading",
+            "action_buttons"
+          ]
+        },
+        {
+          "id": "title",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "summary",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/summary"
+          }
+        },
+        {
+          "id": "calendar",
+          "type": "Calendar",
+          "title": "Trip Itinerary",
+          "events": {
+            "$bind": "/calendar_events"
+          },
+          "month": {
+            "$bind": "/calendar_month"
+          }
+        },
+        {
+          "id": "ratings_list",
+          "type": "List",
+          "children": [
+            "r0",
+            "r1",
+            "r2"
+          ]
+        },
+        {
+          "id": "r0",
+          "type": "Rating",
+          "label": "Hotel Nikko Osaka (Shinsaibashi)",
+          "value": {
+            "$bind": "/rating_0_value"
+          },
+          "max": 5,
+          "count": {
+            "$bind": "/rating_0_count"
+          }
+        },
+        {
+          "id": "r1",
+          "type": "Rating",
+          "label": "Cross Hotel Osaka (Dotonbori)",
+          "value": {
+            "$bind": "/rating_1_value"
+          },
+          "max": 5,
+          "count": {
+            "$bind": "/rating_1_count"
+          }
+        },
+        {
+          "id": "r2",
+          "type": "Rating",
+          "label": "Hotel Granvia Osaka (Umeda)",
+          "value": {
+            "$bind": "/rating_2_value"
+          },
+          "max": 5,
+          "count": {
+            "$bind": "/rating_2_count"
+          }
+        },
+        {
+          "id": "action_buttons",
+          "type": "Row",
+          "children": [
+            "b0",
+            "b1"
+          ]
+        },
+        {
+          "id": "b0",
+          "type": "Button",
+          "label": "View Osaka Castle Details",
+          "onPress": {
+            "action": "request_data"
+          }
+        },
+        {
+          "id": "b1",
+          "type": "Button",
+          "label": "View Kyoto Itinerary",
+          "onPress": {
+            "action": "request_data"
+          }
+        }
+      ],
+      "dataModel": {
+        "title": "10-Day Osaka and Kansai Itinerary",
+        "goal": "I land in Osaka on 21 September 2026 and fly home on 30 September 2026. Tell me what I should be doing on each individual date in that window, and how well reviewed each place I would stay is.",
+        "summary": "A balanced itinerary exploring the cultural and culinary highlights of the Kansai region, centered in Osaka.",
+        "results": [],
+        "items": [],
+        "metrics": [],
+        "spark": [],
+        "table_rows": [],
+        "item_count": 0,
+        "source_count": 0,
+        "subjects": [],
+        "timeline": [
+          {
+            "time": "1",
+            "label": "run_started"
+          },
+          {
+            "time": "2",
+            "label": "graph_patched"
+          },
+          {
+            "time": "3",
+            "label": "task_started content"
+          },
+          {
+            "time": "4",
+            "label": "task_succeeded content"
+          },
+          {
+            "time": "5",
+            "label": "graph_patched"
+          },
+          {
+            "time": "6",
+            "label": "task_started surface"
+          }
+        ],
+        "progress_value": 1,
+        "progress_max": 2,
+        "intro": "A balanced itinerary exploring the cultural and culinary highlights of the Kansai region, centered in Osaka.",
+        "map_points": [
+          {
+            "label": "Osaka Castle",
+            "lat": 34.6873,
+            "lon": 135.5262
+          },
+          {
+            "label": "Nara Park",
+            "lat": 34.6851,
+            "lon": 135.8435
+          },
+          {
+            "label": "Fushimi Inari Shrine",
+            "lat": 34.9671,
+            "lon": 135.7727
+          },
+          {
+            "label": "Kobe Harborland",
+            "lat": 34.6797,
+            "lon": 135.1815
+          }
+        ],
+        "calendar_events": [
+          {
+            "date": "2026-09-21",
+            "label": "Arrival in Osaka, check-in, and Dotonbori evening walk"
+          },
+          {
+            "date": "2026-09-22",
+            "label": "Osaka Castle and Umeda Sky Building"
+          },
+          {
+            "date": "2026-09-23",
+            "label": "Day trip to Nara Park and Todai-ji Temple"
+          },
+          {
+            "date": "2026-09-24",
+            "label": "Kyoto: Fushimi Inari Shrine and Kiyomizu-dera"
+          },
+          {
+            "date": "2026-09-25",
+            "label": "Kyoto: Arashiyama Bamboo Grove and Kinkaku-ji"
+          },
+          {
+            "date": "2026-09-26",
+            "label": "Universal Studios Japan"
+          },
+          {
+            "date": "2026-09-27",
+            "label": "Day trip to Kobe: Harborland and Nunobiki Herb Gardens"
+          },
+          {
+            "date": "2026-09-28",
+            "label": "Shinsekai district and Spa World"
+          },
+          {
+            "date": "2026-09-29",
+            "label": "Kuromon Ichiba Market and final shopping in Shinsaibashi"
+          },
+          {
+            "date": "2026-09-30",
+            "label": "Departure from Kansai International Airport"
+          }
+        ],
+        "calendar_month": "2026-09",
+        "ratings": [
+          {
+            "label": "Hotel Nikko Osaka (Shinsaibashi)",
+            "value": 4.5,
+            "max": 5.0,
+            "count": "4,200+ reviews"
+          },
+          {
+            "label": "Cross Hotel Osaka (Dotonbori)",
+            "value": 4.6,
+            "max": 5.0,
+            "count": "3,800+ reviews"
+          },
+          {
+            "label": "Hotel Granvia Osaka (Umeda)",
+            "value": 4.4,
+            "max": 5.0,
+            "count": "5,100+ reviews"
+          }
+        ],
+        "rating_0_value": 4.5,
+        "rating_0_count": "4,200+ reviews",
+        "rating_1_value": 4.6,
+        "rating_1_count": "3,800+ reviews",
+        "rating_2_value": 4.4,
+        "rating_2_count": "5,100+ reviews",
+        "choices": [
+          {
+            "id": "arrival_in_osaka_check_in_and_dotonbori_evening_walk",
+            "label": "Arrival in Osaka, check-in, and Dotonbori evening walk"
+          },
+          {
+            "id": "osaka_castle_and_umeda_sky_building",
+            "label": "Osaka Castle and Umeda Sky Building"
+          },
+          {
+            "id": "day_trip_to_nara_park_and_todai_ji_temple",
+            "label": "Day trip to Nara Park and Todai-ji Temple"
+          },
+          {
+            "id": "kyoto_fushimi_inari_shrine_and_kiyomizu_dera",
+            "label": "Kyoto: Fushimi Inari Shrine and Kiyomizu-dera"
+          },
+          {
+            "id": "kyoto_arashiyama_bamboo_grove_and_kinkaku_ji",
+            "label": "Kyoto: Arashiyama Bamboo Grove and Kinkaku-ji"
+          },
+          {
+            "id": "universal_studios_japan",
+            "label": "Universal Studios Japan"
+          },
+          {
+            "id": "day_trip_to_kobe_harborland_and_nunobiki_herb_gardens",
+            "label": "Day trip to Kobe: Harborland and Nunobiki Herb Gardens"
+          },
+          {
+            "id": "shinsekai_district_and_spa_world",
+            "label": "Shinsekai district and Spa World"
+          }
+        ],
+        "choice_0_label": "Arrival in Osaka, check-in, and Dotonbori evening walk",
+        "choice_1_label": "Osaka Castle and Umeda Sky Building",
+        "choice_2_label": "Day trip to Nara Park and Todai-ji Temple",
+        "choice_3_label": "Kyoto: Fushimi Inari Shrine and Kiyomizu-dera",
+        "choice_4_label": "Kyoto: Arashiyama Bamboo Grove and Kinkaku-ji",
+        "choice_5_label": "Universal Studios Japan",
+        "choice_6_label": "Day trip to Kobe: Harborland and Nunobiki Herb Gardens",
+        "choice_7_label": "Shinsekai district and Spa World"
+      }
+    }
+  },
+  "component_types": [
+    "Button",
+    "Calendar",
+    "Column",
+    "List",
+    "Rating",
+    "Row",
+    "Text"
+  ],
+  "new_component_types": [
+    "Calendar",
+    "Rating"
+  ]
+}

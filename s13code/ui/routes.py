@@ -8,6 +8,8 @@
   POST /v1/validate                 validate an arbitrary surface (injection wall)
   POST /v1/action                   a validated user action (approve/reject/rerun)
   GET  /s/{id}                      the render client, pointed at a run
+  GET  /app                         the bare-minimal UI-only app shell
+  GET  /trip                        Wayfare, the UI-only trip planner (S14 assignment)
 
 The data source is the runtime's own graph, read in-process off
 ``request.app.state.s13_runtime`` — the same attribute S13's ``GET
@@ -222,7 +224,9 @@ async def composed(run_id: str, request: Request):
 async def client(run_id: str):
     if not _CLIENT.exists():
         raise HTTPException(500, "render client missing")
-    return _CLIENT.read_text().replace("__RUN_ID__", run_id)
+    # The clients are UTF-8 (they draw ★ / ● glyphs); never inherit the platform
+    # default encoding, which is cp1252 on Windows and cannot decode them.
+    return _CLIENT.read_text(encoding="utf-8").replace("__RUN_ID__", run_id)
 
 
 @router.get("/app", response_class=HTMLResponse)
@@ -233,4 +237,18 @@ async def app_viewer():
     path = Path(__file__).parent / "client" / "app.html"
     if not path.exists():
         raise HTTPException(500, "app viewer missing")
-    return path.read_text()
+    return path.read_text(encoding="utf-8")
+
+
+@router.get("/trip", response_class=HTMLResponse)
+@router.get("/trip/", response_class=HTMLResponse)
+async def trip_app():
+    """Wayfare: the UI-only trip planner. Every turn is a composed, validated
+    interface — never a paragraph — and a tap (a Button, a Calendar day, a Rating
+    star) earns the next turn. It holds the registered action list from
+    ``/v1/catalog`` and drops any action name outside it before it can become a
+    turn, so the event invariant is enforced on the client too."""
+    path = Path(__file__).parent / "client" / "trip.html"
+    if not path.exists():
+        raise HTTPException(500, "trip app missing")
+    return path.read_text(encoding="utf-8")

@@ -10,8 +10,10 @@ The catalog is aligned to A2UI's Basic component set: the 15 layout / text /
 input / container types A2UI Basic already defines are adopted under their real
 A2UI names (``source="a2ui-basic"``). Only the components A2UI Basic genuinely
 lacks — charts, tiles, tables, timelines, notices, and the approval card — are
-kept as clearly labelled custom extensions (``source="custom"``). Twenty-three
-types in all; a student can read every one and the validator can prove coverage.
+kept as clearly labelled custom extensions (``source="custom"``). Three further
+types — Map, Calendar and Rating — are the Session 14 assignment's contribution
+and carry their own ``source="student-extension"`` tag. Twenty-six types in all;
+a student can read every one and the validator can prove coverage.
 
 Property kinds:
   - ``text``   a string shown to the user as literal text, never as markup
@@ -41,14 +43,15 @@ class PropSpec:
 class ComponentSpec:
     type: str
     props: dict[str, PropSpec] = field(default_factory=dict)
-    source: str = "a2ui-basic"  # "a2ui-basic" | "custom"
+    source: str = "a2ui-basic"  # "a2ui-basic" | "custom" | "student-extension"
 
 
 _TONE = PropSpec("enum", ("neutral", "good", "warn", "bad"))
 
 
-# The 23 component types the render client knows how to draw. The first 15 are
-# A2UI Basic's own names; the last 8 are custom extensions A2UI Basic lacks.
+# The 26 component types the render client knows how to draw. The first 15 are
+# A2UI Basic's own names; the next 8 are custom extensions A2UI Basic lacks; the
+# last 3 are the student contribution (Map, Calendar, Rating).
 COMPONENTS: dict[str, ComponentSpec] = {
     # --- A2UI Basic: layout / text / media / inputs / containers (15) --------
     "Row": ComponentSpec("Row", {
@@ -117,11 +120,45 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "summary": PropSpec("binding"), "params": PropSpec("binding"),
         "confirm": PropSpec("action"), "reject": PropSpec("action"),
     }, source="custom"),
+    # --- Student extensions: three shapes neither A2UI Basic nor the eight
+    # custom components above can carry (3) -------------------------------------
+    # These are the Session 14 assignment's contribution to the shared vocabulary.
+    # They are tagged with their own ``source`` so the batch can see exactly which
+    # types came from a student, and they add no new PropSpec *kind*: the closed
+    # property vocabulary the validator already understands is enough. Nothing
+    # here is executable — a Map has coordinates, not a tile URL; a Calendar has
+    # dated entries, not a script; a Rating has a number, not a handler.
+    "Map": ComponentSpec("Map", {
+        "title": PropSpec("text"),
+        # [{label, lat, lon}] — geographic points. The renderer projects them
+        # itself and fetches no tiles, so no URL the catalog never approved is
+        # ever followed.
+        "points": PropSpec("binding"),
+        "labelKey": PropSpec("text"), "latKey": PropSpec("text"), "lonKey": PropSpec("text"),
+        "zoom": PropSpec("number"),
+    }, source="student-extension"),
+    "Calendar": ComponentSpec("Calendar", {
+        "title": PropSpec("text"),
+        "events": PropSpec("binding"),  # [{date: "2026-09-21", label}]
+        "month": PropSpec("binding"),   # "2026-09" — which month to draw
+        "onSelect": PropSpec("action"),  # tapping a day earns the next turn
+    }, source="student-extension"),
+    "Rating": ComponentSpec("Rating", {
+        "label": PropSpec("text"),
+        "value": PropSpec("binding"),   # 4.5
+        "max": PropSpec("number"),      # out of how many
+        "count": PropSpec("binding"),   # "1,204 reviews"
+        "tone": _TONE,
+        "onRate": PropSpec("action"),
+    }, source="student-extension"),
 }
 
 # The closed set of action names a surface may emit. An action the agent did
-# not register cannot cross back into the graph.
-REGISTERED_ACTIONS: frozenset[str] = frozenset({"approve", "reject", "rerun", "request_data"})
+# not register cannot cross back into the graph. ``select_day`` and ``rate`` are
+# the two the student extensions need; the set stays closed around them.
+REGISTERED_ACTIONS: frozenset[str] = frozenset(
+    {"approve", "reject", "rerun", "request_data", "select_day", "rate"}
+)
 
 
 def catalog_manifest() -> dict:

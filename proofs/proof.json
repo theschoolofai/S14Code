@@ -844,6 +844,69 @@
           }
         ],
         "correct": true
+      },
+      {
+        "name": "map-near-miss-type",
+        "expected_invariant": "catalog",
+        "rejected": true,
+        "invariants_broken": [
+          "catalog"
+        ],
+        "accepted_ids": [
+          "root",
+          "ok"
+        ],
+        "rejections": [
+          {
+            "component_id": "evil",
+            "field": "type",
+            "invariant": "catalog",
+            "reason": "unknown component type 'MapView'"
+          }
+        ],
+        "correct": true
+      },
+      {
+        "name": "markup-in-calendar-binding",
+        "expected_invariant": "data-not-code",
+        "rejected": true,
+        "invariants_broken": [
+          "data-not-code"
+        ],
+        "accepted_ids": [
+          "root",
+          "ok"
+        ],
+        "rejections": [
+          {
+            "component_id": "evil",
+            "field": "events",
+            "invariant": "data-not-code",
+            "reason": "value carries markup"
+          }
+        ],
+        "correct": true
+      },
+      {
+        "name": "rating-unregistered-action",
+        "expected_invariant": "event",
+        "rejected": true,
+        "invariants_broken": [
+          "event"
+        ],
+        "accepted_ids": [
+          "root",
+          "ok"
+        ],
+        "rejections": [
+          {
+            "component_id": "evil",
+            "field": "onRate",
+            "invariant": "event",
+            "reason": "unregistered action 'charge_card'"
+          }
+        ],
+        "correct": true
       }
     ]
   },

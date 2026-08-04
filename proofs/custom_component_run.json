@@ -1,0 +1,785 @@
+{
+  "task": "I am spending three days in Kyoto from 21 September 2026. Give me where to go on each of those days, roughly where those places sit geographically, and how well reviewed each place I would stay is.",
+  "claim": "the prompt, the compose system prompt and the compose instruction name no component type; the model chose these from the catalog manifest alone",
+  "run_id": "run-54c87a2fb21e",
+  "status": "completed",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "gateway_provider_env": "gemini",
+  "prompt_names_no_component": {
+    "Calendar": false,
+    "Map": false,
+    "Rating": false
+  },
+  "graph": {
+    "finished": true,
+    "nodes": {
+      "content": {
+        "skill": "content",
+        "state": "succeeded",
+        "provider": "gemini_1",
+        "model": "gemini-3.1-flash-lite-preview"
+      },
+      "surface": {
+        "skill": "compose_surface",
+        "state": "succeeded",
+        "provider": "gemini_1",
+        "model": "gemini-3.1-flash-lite-preview"
+      }
+    },
+    "edges": [
+      [
+        "content",
+        "surface"
+      ]
+    ]
+  },
+  "event_journal": [
+    {
+      "sequence": 1,
+      "kind": "run_started",
+      "node_id": null
+    },
+    {
+      "sequence": 2,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 3,
+      "kind": "task_started",
+      "node_id": "content"
+    },
+    {
+      "sequence": 4,
+      "kind": "task_succeeded",
+      "node_id": "content"
+    },
+    {
+      "sequence": 5,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 6,
+      "kind": "task_started",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 7,
+      "kind": "task_succeeded",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 8,
+      "kind": "graph_patched",
+      "node_id": null
+    }
+  ],
+  "structured_shapes_offered": {
+    "map_points": [
+      {
+        "label": "Kiyomizu-dera",
+        "lat": 34.9948,
+        "lon": 135.785
+      },
+      {
+        "label": "Kinkaku-ji",
+        "lat": 35.0394,
+        "lon": 135.7292
+      },
+      {
+        "label": "Fushimi Inari Shrine",
+        "lat": 34.9671,
+        "lon": 135.7727
+      }
+    ],
+    "calendar_events": [
+      {
+        "date": "2026-09-21",
+        "label": "Eastern Kyoto Exploration"
+      },
+      {
+        "date": "2026-09-22",
+        "label": "Northern and Western Kyoto Exploration"
+      },
+      {
+        "date": "2026-09-23",
+        "label": "Southern Kyoto and City Center"
+      }
+    ],
+    "calendar_month": "2026-09",
+    "ratings": [
+      {
+        "label": "Kiyomizu-dera",
+        "value": 4.7,
+        "max": 5.0,
+        "count": "100,000+"
+      },
+      {
+        "label": "Kinkaku-ji",
+        "value": 4.6,
+        "max": 5.0,
+        "count": "85,000+"
+      },
+      {
+        "label": "Fushimi Inari Shrine",
+        "value": 4.8,
+        "max": 5.0,
+        "count": "120,000+"
+      }
+    ]
+  },
+  "content_structured": {
+    "title": "Three-Day Kyoto Itinerary",
+    "intro": "A curated exploration of Kyoto's historic districts, temples, and scenic landscapes.",
+    "sections": [
+      {
+        "heading": "Day 1: Eastern Kyoto (Higashiyama)",
+        "points": [
+          "Morning: Kiyomizu-dera Temple",
+          "Afternoon: Sannenzaka and Ninenzaka preserved streets",
+          "Evening: Gion District"
+        ]
+      },
+      {
+        "heading": "Day 2: Northern and Western Kyoto",
+        "points": [
+          "Morning: Kinkaku-ji (Golden Pavilion)",
+          "Afternoon: Arashiyama Bamboo Grove",
+          "Evening: Tenryu-ji Temple gardens"
+        ]
+      },
+      {
+        "heading": "Day 3: Southern Kyoto and City Center",
+        "points": [
+          "Morning: Fushimi Inari Shrine",
+          "Afternoon: Nishiki Market",
+          "Evening: Pontocho Alley"
+        ]
+      }
+    ],
+    "places": [
+      {
+        "label": "Kiyomizu-dera",
+        "lat": 34.9948,
+        "lon": 135.785
+      },
+      {
+        "label": "Kinkaku-ji",
+        "lat": 35.0394,
+        "lon": 135.7292
+      },
+      {
+        "label": "Fushimi Inari Shrine",
+        "lat": 34.9671,
+        "lon": 135.7727
+      }
+    ],
+    "schedule": [
+      {
+        "date": "2026-09-21",
+        "label": "Eastern Kyoto Exploration"
+      },
+      {
+        "date": "2026-09-22",
+        "label": "Northern and Western Kyoto Exploration"
+      },
+      {
+        "date": "2026-09-23",
+        "label": "Southern Kyoto and City Center"
+      }
+    ],
+    "ratings": [
+      {
+        "label": "Kiyomizu-dera",
+        "value": 4.7,
+        "max": 5,
+        "count": "100,000+"
+      },
+      {
+        "label": "Kinkaku-ji",
+        "value": 4.6,
+        "max": 5,
+        "count": "85,000+"
+      },
+      {
+        "label": "Fushimi Inari Shrine",
+        "value": 4.8,
+        "max": 5,
+        "count": "120,000+"
+      }
+    ]
+  },
+  "compose_surface_node": {
+    "id": "surface",
+    "state": "succeeded",
+    "provider": "gemini_1",
+    "model": "gemini-3.1-flash-lite-preview",
+    "parse_ok": true,
+    "raw_surface": "{\"root\":\"root\",\"components\":[{\"id\":\"root\",\"type\":\"Column\",\"children\":[\"title\",\"intro\",\"tabs\",\"map\",\"ratings_list\",\"actions_row\"]},{\"id\":\"title\",\"type\":\"Text\",\"variant\":\"heading\",\"text\":{\"$bind\":\"/title\"}},{\"id\":\"intro\",\"type\":\"Text\",\"variant\":\"body\",\"text\":{\"$bind\":\"/summary\"}},{\"id\":\"tabs\",\"type\":\"Tabs\",\"labels\":\"Itinerary,Calendar\",\"children\":[\"itinerary_list\",\"calendar_view\"]},{\"id\":\"itinerary_list\",\"type\":\"List\",\"children\":[\"day1\",\"day2\",\"day3\"]},{\"id\":\"day1\",\"type\":\"Card\",\"title\":\"Day 1: Eastern Kyoto (Higashiyama)\",\"children\":[\"day1_text\"]},{\"id\":\"day1_text\",\"type\":\"Text\",\"variant\":\"body\",\"text\":{\"$bind\":\"/section_0_points\"}},{\"id\":\"day2\",\"type\":\"Card\",\"title\":\"Day 2: Northern and Western Kyoto\",\"children\":[\"day2_text\"]},{\"id\":\"day2_text\",\"type\":\"Text\",\"variant\":\"body\",\"text\":{\"$bind\":\"/section_1_points\"}},{\"id\":\"day3\",\"type\":\"Card\",\"title\":\"Day 3: Southern Kyoto and City Center\",\"children\":[\"day3_text\"]},{\"id\":\"day3_text\",\"type\":\"Text\",\"variant\":\"body\",\"text\":{\"$bind\":\"/section_2_points\"}},{\"id\":\"calendar_view\",\"type\":\"Calendar\",\"title\":\"Trip Dates\",\"events\":{\"$bind\":\"/calendar_events\"},\"month\":{\"$bind\":\"/calendar_month\"}},{\"id\":\"map\",\"type\":\"Map\",\"title\":\"Geographic Overview\",\"points\":{\"$bind\":\"/map_points\"},\"labelKey\":\"label\",\"latKey\":\"lat\",\"lonKey\":\"lon\",\"zoom\":12},{\"id\":\"ratings_list\",\"type\":\"List\",\"children\":[\"r0\",\"r1\",\"r2\"]},{\"id\":\"r0\",\"type\":\"Rating\",\"label\":\"Kiyomizu-dera\",\"value\":{\"$bind\":\"/rating_0_value\"},\"max\":5.0,\"count\":{\"$bind\":\"/rating_0_count\"}},{\"id\":\"r1\",\"type\":\"Rating\",\"label\":\"Kinkaku-ji\",\"value\":{\"$bind\":\"/rating_1_value\"},\"max\":5.0,\"count\":{\"$bind\":\"/rating_1_count\"}},{\"id\":\"r2\",\"type\":\"Rating\",\"label\":\"Fushimi Inari Shrine\",\"value\":{\"$bind\":\"/rating_2_value\"},\"max\":5.0,\"count\":{\"$bind\":\"/rating_2_count\"}},{\"id\":\"actions_row\",\"type\":\"Row\",\"children\":[\"btn1\",\"btn2\",\"btn3\"]},{\"id\":\"btn1\",\"type\":\"Button\",\"label\":\"Explore Day 1\",\"onPress\":{\"action\":\"request_data\"}},{\"id\":\"btn2\",\"type\":\"Button\",\"label\":\"Explore Day 2\",\"onPress\":{\"action\":\"request_data\"}},{\"id\":\"btn3\",\"type\":\"Button\",\"label\":\"Explore Day 3\",\"onPress\":{\"action\":\"request_data\"}}]}",
+    "validator": {
+      "proposed": 21,
+      "accepted": 21,
+      "rejected": 0,
+      "ok": true,
+      "rejections": [],
+      "dangling_child_refs": [],
+      "component_types": [
+        "Button",
+        "Calendar",
+        "Card",
+        "Column",
+        "List",
+        "Map",
+        "Rating",
+        "Row",
+        "Tabs",
+        "Text"
+      ],
+      "component_count": 21
+    },
+    "data_model": {
+      "title": "Three-Day Kyoto Itinerary",
+      "goal": "I am spending three days in Kyoto from 21 September 2026. Give me where to go on each of those days, roughly where those places sit geographically, and how well reviewed each place I would stay is.",
+      "summary": "A curated exploration of Kyoto's historic districts, temples, and scenic landscapes.",
+      "results": [],
+      "items": [],
+      "metrics": [],
+      "spark": [],
+      "table_rows": [],
+      "item_count": 0,
+      "source_count": 0,
+      "subjects": [],
+      "timeline": [
+        {
+          "time": "1",
+          "label": "run_started"
+        },
+        {
+          "time": "2",
+          "label": "graph_patched"
+        },
+        {
+          "time": "3",
+          "label": "task_started content"
+        },
+        {
+          "time": "4",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "5",
+          "label": "graph_patched"
+        },
+        {
+          "time": "6",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "intro": "A curated exploration of Kyoto's historic districts, temples, and scenic landscapes.",
+      "section_0_heading": "Day 1: Eastern Kyoto (Higashiyama)",
+      "section_0_points": "\u2022 Morning: Kiyomizu-dera Temple\n\u2022 Afternoon: Sannenzaka and Ninenzaka preserved streets\n\u2022 Evening: Gion District",
+      "section_1_heading": "Day 2: Northern and Western Kyoto",
+      "section_1_points": "\u2022 Morning: Kinkaku-ji (Golden Pavilion)\n\u2022 Afternoon: Arashiyama Bamboo Grove\n\u2022 Evening: Tenryu-ji Temple gardens",
+      "section_2_heading": "Day 3: Southern Kyoto and City Center",
+      "section_2_points": "\u2022 Morning: Fushimi Inari Shrine\n\u2022 Afternoon: Nishiki Market\n\u2022 Evening: Pontocho Alley",
+      "sections": [
+        {
+          "heading": "Day 1: Eastern Kyoto (Higashiyama)",
+          "points": [
+            "Morning: Kiyomizu-dera Temple",
+            "Afternoon: Sannenzaka and Ninenzaka preserved streets",
+            "Evening: Gion District"
+          ]
+        },
+        {
+          "heading": "Day 2: Northern and Western Kyoto",
+          "points": [
+            "Morning: Kinkaku-ji (Golden Pavilion)",
+            "Afternoon: Arashiyama Bamboo Grove",
+            "Evening: Tenryu-ji Temple gardens"
+          ]
+        },
+        {
+          "heading": "Day 3: Southern Kyoto and City Center",
+          "points": [
+            "Morning: Fushimi Inari Shrine",
+            "Afternoon: Nishiki Market",
+            "Evening: Pontocho Alley"
+          ]
+        }
+      ],
+      "section_events": [
+        {
+          "time": "Day 1: Eastern Kyoto (Higashiyama)",
+          "label": "Morning: Kiyomizu-dera Temple; Afternoon: Sannenzaka and Ninenzaka preserved streets; Evening: Gion District"
+        },
+        {
+          "time": "Day 2: Northern and Western Kyoto",
+          "label": "Morning: Kinkaku-ji (Golden Pavilion); Afternoon: Arashiyama Bamboo Grove; Evening: Tenryu-ji Temple gardens"
+        },
+        {
+          "time": "Day 3: Southern Kyoto and City Center",
+          "label": "Morning: Fushimi Inari Shrine; Afternoon: Nishiki Market; Evening: Pontocho Alley"
+        }
+      ],
+      "map_points": [
+        {
+          "label": "Kiyomizu-dera",
+          "lat": 34.9948,
+          "lon": 135.785
+        },
+        {
+          "label": "Kinkaku-ji",
+          "lat": 35.0394,
+          "lon": 135.7292
+        },
+        {
+          "label": "Fushimi Inari Shrine",
+          "lat": 34.9671,
+          "lon": 135.7727
+        }
+      ],
+      "calendar_events": [
+        {
+          "date": "2026-09-21",
+          "label": "Eastern Kyoto Exploration"
+        },
+        {
+          "date": "2026-09-22",
+          "label": "Northern and Western Kyoto Exploration"
+        },
+        {
+          "date": "2026-09-23",
+          "label": "Southern Kyoto and City Center"
+        }
+      ],
+      "calendar_month": "2026-09",
+      "ratings": [
+        {
+          "label": "Kiyomizu-dera",
+          "value": 4.7,
+          "max": 5.0,
+          "count": "100,000+"
+        },
+        {
+          "label": "Kinkaku-ji",
+          "value": 4.6,
+          "max": 5.0,
+          "count": "85,000+"
+        },
+        {
+          "label": "Fushimi Inari Shrine",
+          "value": 4.8,
+          "max": 5.0,
+          "count": "120,000+"
+        }
+      ],
+      "rating_0_value": 4.7,
+      "rating_0_count": "100,000+",
+      "rating_1_value": 4.6,
+      "rating_1_count": "85,000+",
+      "rating_2_value": 4.8,
+      "rating_2_count": "120,000+",
+      "choices": [
+        {
+          "id": "day_1_eastern_kyoto_higashiyama",
+          "label": "Day 1: Eastern Kyoto (Higashiyama)"
+        },
+        {
+          "id": "day_2_northern_and_western_kyoto",
+          "label": "Day 2: Northern and Western Kyoto"
+        },
+        {
+          "id": "day_3_southern_kyoto_and_city_center",
+          "label": "Day 3: Southern Kyoto and City Center"
+        }
+      ],
+      "choice_0_label": "Day 1: Eastern Kyoto (Higashiyama)",
+      "choice_1_label": "Day 2: Northern and Western Kyoto",
+      "choice_2_label": "Day 3: Southern Kyoto and City Center"
+    },
+    "surface_accepted": {
+      "root": "root",
+      "components": [
+        {
+          "id": "root",
+          "type": "Column",
+          "children": [
+            "title",
+            "intro",
+            "tabs",
+            "map",
+            "ratings_list",
+            "actions_row"
+          ]
+        },
+        {
+          "id": "title",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "intro",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/summary"
+          }
+        },
+        {
+          "id": "tabs",
+          "type": "Tabs",
+          "labels": "Itinerary,Calendar",
+          "children": [
+            "itinerary_list",
+            "calendar_view"
+          ]
+        },
+        {
+          "id": "itinerary_list",
+          "type": "List",
+          "children": [
+            "day1",
+            "day2",
+            "day3"
+          ]
+        },
+        {
+          "id": "day1",
+          "type": "Card",
+          "title": "Day 1: Eastern Kyoto (Higashiyama)",
+          "children": [
+            "day1_text"
+          ]
+        },
+        {
+          "id": "day1_text",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/section_0_points"
+          }
+        },
+        {
+          "id": "day2",
+          "type": "Card",
+          "title": "Day 2: Northern and Western Kyoto",
+          "children": [
+            "day2_text"
+          ]
+        },
+        {
+          "id": "day2_text",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/section_1_points"
+          }
+        },
+        {
+          "id": "day3",
+          "type": "Card",
+          "title": "Day 3: Southern Kyoto and City Center",
+          "children": [
+            "day3_text"
+          ]
+        },
+        {
+          "id": "day3_text",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/section_2_points"
+          }
+        },
+        {
+          "id": "calendar_view",
+          "type": "Calendar",
+          "title": "Trip Dates",
+          "events": {
+            "$bind": "/calendar_events"
+          },
+          "month": {
+            "$bind": "/calendar_month"
+          }
+        },
+        {
+          "id": "map",
+          "type": "Map",
+          "title": "Geographic Overview",
+          "points": {
+            "$bind": "/map_points"
+          },
+          "labelKey": "label",
+          "latKey": "lat",
+          "lonKey": "lon",
+          "zoom": 12
+        },
+        {
+          "id": "ratings_list",
+          "type": "List",
+          "children": [
+            "r0",
+            "r1",
+            "r2"
+          ]
+        },
+        {
+          "id": "r0",
+          "type": "Rating",
+          "label": "Kiyomizu-dera",
+          "value": {
+            "$bind": "/rating_0_value"
+          },
+          "max": 5.0,
+          "count": {
+            "$bind": "/rating_0_count"
+          }
+        },
+        {
+          "id": "r1",
+          "type": "Rating",
+          "label": "Kinkaku-ji",
+          "value": {
+            "$bind": "/rating_1_value"
+          },
+          "max": 5.0,
+          "count": {
+            "$bind": "/rating_1_count"
+          }
+        },
+        {
+          "id": "r2",
+          "type": "Rating",
+          "label": "Fushimi Inari Shrine",
+          "value": {
+            "$bind": "/rating_2_value"
+          },
+          "max": 5.0,
+          "count": {
+            "$bind": "/rating_2_count"
+          }
+        },
+        {
+          "id": "actions_row",
+          "type": "Row",
+          "children": [
+            "btn1",
+            "btn2",
+            "btn3"
+          ]
+        },
+        {
+          "id": "btn1",
+          "type": "Button",
+          "label": "Explore Day 1",
+          "onPress": {
+            "action": "request_data"
+          }
+        },
+        {
+          "id": "btn2",
+          "type": "Button",
+          "label": "Explore Day 2",
+          "onPress": {
+            "action": "request_data"
+          }
+        },
+        {
+          "id": "btn3",
+          "type": "Button",
+          "label": "Explore Day 3",
+          "onPress": {
+            "action": "request_data"
+          }
+        }
+      ],
+      "dataModel": {
+        "title": "Three-Day Kyoto Itinerary",
+        "goal": "I am spending three days in Kyoto from 21 September 2026. Give me where to go on each of those days, roughly where those places sit geographically, and how well reviewed each place I would stay is.",
+        "summary": "A curated exploration of Kyoto's historic districts, temples, and scenic landscapes.",
+        "results": [],
+        "items": [],
+        "metrics": [],
+        "spark": [],
+        "table_rows": [],
+        "item_count": 0,
+        "source_count": 0,
+        "subjects": [],
+        "timeline": [
+          {
+            "time": "1",
+            "label": "run_started"
+          },
+          {
+            "time": "2",
+            "label": "graph_patched"
+          },
+          {
+            "time": "3",
+            "label": "task_started content"
+          },
+          {
+            "time": "4",
+            "label": "task_succeeded content"
+          },
+          {
+            "time": "5",
+            "label": "graph_patched"
+          },
+          {
+            "time": "6",
+            "label": "task_started surface"
+          }
+        ],
+        "progress_value": 1,
+        "progress_max": 2,
+        "intro": "A curated exploration of Kyoto's historic districts, temples, and scenic landscapes.",
+        "section_0_heading": "Day 1: Eastern Kyoto (Higashiyama)",
+        "section_0_points": "\u2022 Morning: Kiyomizu-dera Temple\n\u2022 Afternoon: Sannenzaka and Ninenzaka preserved streets\n\u2022 Evening: Gion District",
+        "section_1_heading": "Day 2: Northern and Western Kyoto",
+        "section_1_points": "\u2022 Morning: Kinkaku-ji (Golden Pavilion)\n\u2022 Afternoon: Arashiyama Bamboo Grove\n\u2022 Evening: Tenryu-ji Temple gardens",
+        "section_2_heading": "Day 3: Southern Kyoto and City Center",
+        "section_2_points": "\u2022 Morning: Fushimi Inari Shrine\n\u2022 Afternoon: Nishiki Market\n\u2022 Evening: Pontocho Alley",
+        "sections": [
+          {
+            "heading": "Day 1: Eastern Kyoto (Higashiyama)",
+            "points": [
+              "Morning: Kiyomizu-dera Temple",
+              "Afternoon: Sannenzaka and Ninenzaka preserved streets",
+              "Evening: Gion District"
+            ]
+          },
+          {
+            "heading": "Day 2: Northern and Western Kyoto",
+            "points": [
+              "Morning: Kinkaku-ji (Golden Pavilion)",
+              "Afternoon: Arashiyama Bamboo Grove",
+              "Evening: Tenryu-ji Temple gardens"
+            ]
+          },
+          {
+            "heading": "Day 3: Southern Kyoto and City Center",
+            "points": [
+              "Morning: Fushimi Inari Shrine",
+              "Afternoon: Nishiki Market",
+              "Evening: Pontocho Alley"
+            ]
+          }
+        ],
+        "section_events": [
+          {
+            "time": "Day 1: Eastern Kyoto (Higashiyama)",
+            "label": "Morning: Kiyomizu-dera Temple; Afternoon: Sannenzaka and Ninenzaka preserved streets; Evening: Gion District"
+          },
+          {
+            "time": "Day 2: Northern and Western Kyoto",
+            "label": "Morning: Kinkaku-ji (Golden Pavilion); Afternoon: Arashiyama Bamboo Grove; Evening: Tenryu-ji Temple gardens"
+          },
+          {
+            "time": "Day 3: Southern Kyoto and City Center",
+            "label": "Morning: Fushimi Inari Shrine; Afternoon: Nishiki Market; Evening: Pontocho Alley"
+          }
+        ],
+        "map_points": [
+          {
+            "label": "Kiyomizu-dera",
+            "lat": 34.9948,
+            "lon": 135.785
+          },
+          {
+            "label": "Kinkaku-ji",
+            "lat": 35.0394,
+            "lon": 135.7292
+          },
+          {
+            "label": "Fushimi Inari Shrine",
+            "lat": 34.9671,
+            "lon": 135.7727
+          }
+        ],
+        "calendar_events": [
+          {
+            "date": "2026-09-21",
+            "label": "Eastern Kyoto Exploration"
+          },
+          {
+            "date": "2026-09-22",
+            "label": "Northern and Western Kyoto Exploration"
+          },
+          {
+            "date": "2026-09-23",
+            "label": "Southern Kyoto and City Center"
+          }
+        ],
+        "calendar_month": "2026-09",
+        "ratings": [
+          {
+            "label": "Kiyomizu-dera",
+            "value": 4.7,
+            "max": 5.0,
+            "count": "100,000+"
+          },
+          {
+            "label": "Kinkaku-ji",
+            "value": 4.6,
+            "max": 5.0,
+            "count": "85,000+"
+          },
+          {
+            "label": "Fushimi Inari Shrine",
+            "value": 4.8,
+            "max": 5.0,
+            "count": "120,000+"
+          }
+        ],
+        "rating_0_value": 4.7,
+        "rating_0_count": "100,000+",
+        "rating_1_value": 4.6,
+        "rating_1_count": "85,000+",
+        "rating_2_value": 4.8,
+        "rating_2_count": "120,000+",
+        "choices": [
+          {
+            "id": "day_1_eastern_kyoto_higashiyama",
+            "label": "Day 1: Eastern Kyoto (Higashiyama)"
+          },
+          {
+            "id": "day_2_northern_and_western_kyoto",
+            "label": "Day 2: Northern and Western Kyoto"
+          },
+          {
+            "id": "day_3_southern_kyoto_and_city_center",
+            "label": "Day 3: Southern Kyoto and City Center"
+          }
+        ],
+        "choice_0_label": "Day 1: Eastern Kyoto (Higashiyama)",
+        "choice_1_label": "Day 2: Northern and Western Kyoto",
+        "choice_2_label": "Day 3: Southern Kyoto and City Center"
+      }
+    }
+  },
+  "component_types": [
+    "Button",
+    "Calendar",
+    "Card",
+    "Column",
+    "List",
+    "Map",
+    "Rating",
+    "Row",
+    "Tabs",
+    "Text"
+  ],
+  "new_component_types": [
+    "Calendar",
+    "Map",
+    "Rating"
+  ]
+}

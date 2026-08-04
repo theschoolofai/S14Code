@@ -1,0 +1,831 @@
+{
+  "claim": "three different questions in one domain produce three different interfaces; no prompt names a component type",
+  "base_url": "http://127.0.0.1:8113",
+  "prompts": [
+    {
+      "name": "dated-itinerary",
+      "prompt": "Plan a five-day trip through Japan from 21 September 2026: what to do on each date, roughly where those places sit geographically, how well reviewed each place I would stay is, and what each day costs. Then let me choose which day to open in detail.",
+      "run_id": "run-c5fca2c87e6c",
+      "composed": true,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite-preview",
+      "component_count": 11,
+      "clean": true,
+      "component_types": [
+        "Button",
+        "Column",
+        "DataTable",
+        "Map",
+        "Row",
+        "Text"
+      ],
+      "is_only_text": false,
+      "data_pointers": [
+        "goal",
+        "item_count",
+        "items",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title",
+              "intro",
+              "map",
+              "table",
+              "day_choices"
+            ]
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/summary/title"
+            }
+          },
+          {
+            "id": "intro",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary/intro"
+            }
+          },
+          {
+            "id": "map",
+            "type": "Map",
+            "title": "Geographic Overview",
+            "points": {
+              "$bind": "/summary/places"
+            },
+            "labelKey": "label",
+            "latKey": "lat",
+            "lonKey": "lon",
+            "zoom": 6
+          },
+          {
+            "id": "table",
+            "type": "DataTable",
+            "columns": "Date,Estimated Cost (USD),Accommodation Rating",
+            "rows": {
+              "$bind": "/summary/table/rows"
+            },
+            "sortable": true
+          },
+          {
+            "id": "day_choices",
+            "type": "Row",
+            "justify": "spaceAround",
+            "children": [
+              "b1",
+              "b2",
+              "b3",
+              "b4",
+              "b5"
+            ]
+          },
+          {
+            "id": "b1",
+            "type": "Button",
+            "label": "Day 1",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b2",
+            "type": "Button",
+            "label": "Day 2",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b3",
+            "type": "Button",
+            "label": "Day 3",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b4",
+            "type": "Button",
+            "label": "Day 4",
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b5",
+            "type": "Button",
+            "label": "Day 5",
+            "onPress": {
+              "action": "request_data"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Plan a five-day trip through Japan from 21 September 2026: what to do on each date, roughly where those places sit geographically, how well reviewed each place I would stay is, and what each day costs. Then let me choose which day to open in detail.",
+          "goal": "Plan a five-day trip through Japan from 21 September 2026: what to do on each date, roughly where those places sit geographically, how well reviewed each place I would stay is, and what each day costs. Then let me choose which day to open in detail.",
+          "summary": "{\n  \"title\": \"Five-Day Japan Itinerary: Tokyo to Kyoto\",\n  \"intro\": \"A balanced journey through Japan's modern capital and its cultural heart, starting September 21, 2026.\",\n  \"schedule\": [\n    {\n      \"date\": \"2026-09-21\",\n      \"label\": \"Arrival in Tokyo: Shinjuku and Omoide Yokocho\"\n    },\n    {\n      \"date\": \"2026-09-22\",\n      \"label\": \"Tokyo Culture: Meiji Jingu and Shibuya Crossing\"\n    },\n    {\n      \"date\": \"2026-09-23\",\n      \"label\": \"Bullet Train to Kyoto: Fushimi Inari Shrine\"\n    },\n    {\n      \"date\": \"2026-09-24\",\n      \"label\": \"Kyoto Heritage: Kinkaku-ji and Arashiyama Bamboo Grove\"\n    },\n    {\n      \"date\": \"2026-09-25\",\n      \"label\": \"Departure: Gion District and return to Tokyo\"\n    }\n  ],\n  \"places\": [\n    {\n      \"label\": \"Shinjuku, Tokyo\",\n      \"lat\": 35.6938,\n      \"lon\": 139.7034\n    },\n    {\n      \"label\": \"Shibuya, Tokyo\",\n      \"lat\": 35.6618,\n      \"lon\": 139.704\n    },\n    {\n      \"label\": \"Fushimi Inari, Kyoto\",\n      \"lat\": 34.9671,\n      \"lon\": 135.7727\n    },\n    {\n      \"label\": \"Arashiyama, Kyoto\",\n      \"lat\": 35.0116,\n      \"lon\": 135.6776\n    },\n    {\n      \"label\": \"Gion, Kyoto\",\n      \"lat\": 35.0038,\n      \"lon\": 135.7785\n    }\n  ],\n  \"table\": {\n    \"columns\": [\n      \"Date\",\n      \"Estimated Cost (USD)\",\n      \"Accommodation Rating\"\n    ],\n    \"rows\": [\n      {\n        \"Date\": \"2026-09-21\",\n        \"Estimated Cost (USD)\": 250,\n        \"Accommodation Rating\": \"4.7/5\"\n      },\n      {\n        \"Date\": \"2026-09-22\",\n        \"Estimated Cost (USD)\": 200,\n        \"Accommodation Rating\": \"4.7/5\"\n      },\n      {\n        \"Date\": \"2026-09-23\",\n        \"Estimated Cost (USD)\": 350,\n        \"Accommodation Rating\": \"4.8/5\"\n      },",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [],
+          "timeline": [
+            {
+              "time": "847",
+              "label": "run_started"
+            },
+            {
+              "time": "848",
+              "label": "graph_patched"
+            },
+            {
+              "time": "849",
+              "label": "task_started content"
+            },
+            {
+              "time": "850",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "851",
+              "label": "graph_patched"
+            },
+            {
+              "time": "852",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2
+        }
+      }
+    },
+    {
+      "name": "city-comparison",
+      "prompt": "I have one week in November and I am deciding between Lisbon, Porto and Madrid. Compare them on cost, weather and how walkable each one is.",
+      "run_id": "run-9ca032f7f05b",
+      "composed": true,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite-preview",
+      "component_count": 13,
+      "clean": true,
+      "component_types": [
+        "Button",
+        "Card",
+        "Row",
+        "Tabs",
+        "Text"
+      ],
+      "is_only_text": false,
+      "data_pointers": [
+        "choice_0_label",
+        "choice_1_label",
+        "choice_2_label",
+        "choices",
+        "goal",
+        "item_0_detail",
+        "item_0_label",
+        "item_1_detail",
+        "item_1_label",
+        "item_2_detail",
+        "item_2_label",
+        "item_count",
+        "items",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "details",
+            "type": "Tabs",
+            "labels": "Lisbon,Porto,Madrid",
+            "children": [
+              "card0",
+              "card1",
+              "card2"
+            ]
+          },
+          {
+            "id": "card0",
+            "type": "Card",
+            "title": "Lisbon",
+            "children": [
+              "text0"
+            ]
+          },
+          {
+            "id": "text0",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/item_0_detail"
+            }
+          },
+          {
+            "id": "card1",
+            "type": "Card",
+            "title": "Porto",
+            "children": [
+              "text1"
+            ]
+          },
+          {
+            "id": "text1",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/item_1_detail"
+            }
+          },
+          {
+            "id": "card2",
+            "type": "Card",
+            "title": "Madrid",
+            "children": [
+              "text2"
+            ]
+          },
+          {
+            "id": "text2",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/item_2_detail"
+            }
+          },
+          {
+            "id": "choices",
+            "type": "Row",
+            "justify": "spaceAround",
+            "children": [
+              "b0",
+              "b1",
+              "b2"
+            ]
+          },
+          {
+            "id": "b0",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_0_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b1",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_1_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "b2",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_2_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "I have one week in November and I am deciding between Lisbon, Porto and Madrid. Compare them on cost, weather and how walkable each one is.",
+          "goal": "I have one week in November and I am deciding between Lisbon, Porto and Madrid. Compare them on cost, weather and how walkable each one is.",
+          "summary": "For a one-week trip in November, all three cities\u2014Lisbon, Porto, and Madrid\u2014are in their \"shoulder\" or low season, offering excellent value for money and fewer crowds. Here is a comparison to help you decide:\n\n### **Comparison Table**\n\n| Feature | Lisbon | Porto | Madrid |\n| :--- | :--- | :--- | :--- |\n| **Weather** | Mild (11\u00b0C\u201317\u00b0C); rainy. | Mild (10\u00b0C\u201316\u00b0C); very rainy. | Cool (5\u00b0C\u201315\u00b0C); crisp/sunny. |\n| **Cost** | Low (Off-peak rates). | Low (Off-peak rates). | Low (Off-peak rates). |\n| **Walkability** | High, but physically demanding (steep hills). | High, but physically demanding (steep hills). | Very high (flat, wide boulevards). |\n\n---\n\n### **Detailed Breakdown**\n\n#### **1. Weather**\n*   **Lisbon & Porto:** Both cities experience their rainy season in November. You should expect overcast skies and intermittent showers. Lisbon is slightly warmer, while Porto is generally one of the wettest cities in the region during this month.\n*   **Madrid:** While also prone to some rain, Madrid is generally drier and sunnier than the Portuguese cities. However, it is significantly colder, especially in the mornings and evenings. You will need a warm coat and layers.\n\n#### **2. Cost**\n*   All three cities are highly affordable in November compared to their peak summer months. You will find lower rates for accommodation and shorter queues at major attractions (such as the Prado in Madrid or the historic sites in Lisbon/Porto).\n\n#### **3. Walkability**\n*   **Lisbon & Porto:** Both are famously hilly. While they are compact and best explored on foot, the steep, cobblestone streets can be physically exhausting. In November, these streets become slippery when wet, requiring sturdy, non-slip footwear.\n*   **Madrid:** Madrid is the most \"walkable\" in terms of terrain. It features wide, flat boulevards and many pedestrianized zones. It is the most comfortable city for long walks, provided you are dressed for the cooler temperatures.\n\n### **Summary Verdict**\n*   **Choose Lisbon**",
+          "results": [
+            {
+              "label": "Lisbon",
+              "detail": "Since you did not provide specific search results to summarize, I have synthesized the general consensus regarding **Lisbon in November** based on typical travel data for that period.\n\n### **1. Weather**\n*   **Conditions:** November is the start of the rainy season in Lisbon. You can expect mild temperatures (highs around 17\u00b0C/63\u00b0F and lows around 11\u00b0C/52\u00b0F).\n*   **Experience:** While it is not \"beach weather,\" it is generally pleasant for sightseeing. However, you should expect intermittent rain showers and overcast skies. It is significantly warmer than most of Northern or Central Europe dur"
+            },
+            {
+              "label": "Porto",
+              "detail": "Since you did not provide specific search results to summarize, I have synthesized the general travel consensus regarding **Porto in November** based on standard travel data.\n\n### **1. Weather**\n*   **Conditions:** November is one of the wettest months in Porto. You should expect frequent rain showers and overcast skies.\n*   **Temperatures:** It is mild but cool, typically ranging from **10\u00b0C to 16\u00b0C (50\u00b0F\u201361\u00b0F)**. \n*   **Verdict:** It is not a \"beach\" or \"sunshine\" destination at this time. You will need a waterproof jacket and layers.\n\n### **2. Cost**\n*   **Low Season Advantage:** November i"
+            },
+            {
+              "label": "Madrid. Compare",
+              "detail": "Since you did not provide specific search results, I have summarized the general travel consensus for **Madrid in November** based on standard travel data.\n\n### **Madrid in November: A Summary**\n\n#### **1. Weather**\n*   **Conditions:** November is the start of late autumn/early winter in Madrid. You can expect crisp, cool air with temperatures typically ranging from **5\u00b0C to 15\u00b0C (41\u00b0F to 59\u00b0F)**.\n*   **Precipitation:** It is one of the wetter months, though rain is usually intermittent rather than constant.\n*   **Experience:** It is generally sunny during the day but gets quite chilly once th"
+            }
+          ],
+          "items": [
+            {
+              "label": "Lisbon"
+            },
+            {
+              "label": "Porto"
+            },
+            {
+              "label": "Madrid. Compare"
+            }
+          ],
+          "metrics": [
+            {
+              "label": "Lisbon",
+              "value": 0
+            },
+            {
+              "label": "Porto",
+              "value": 0
+            },
+            {
+              "label": "Madrid. Compare",
+              "value": 0
+            }
+          ],
+          "spark": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "table_rows": [
+            {
+              "Item": "Lisbon",
+              "Sources": 0
+            },
+            {
+              "Item": "Porto",
+              "Sources": 0
+            },
+            {
+              "Item": "Madrid. Compare",
+              "Sources": 0
+            }
+          ],
+          "item_count": 3,
+          "source_count": 0,
+          "item_0_label": "Lisbon",
+          "item_0_detail": "Since you did not provide specific search results to summarize, I have synthesized the general consensus regarding **Lisbon in November** based on typical travel data for that period.\n\n### **1. Weather**\n*   **Conditions:** November is the start of the rainy season in Lisbon. You can expect mild temperatures (highs around 17\u00b0C/63\u00b0F and lows around 11\u00b0C/52\u00b0F).\n*   **Experience:** While it is not \"beach weather,\" it is generally pleasant for sightseeing. However, you should expect intermittent rain showers and overcast skies. It is significantly warmer than most of Northern or Central Europe dur",
+          "item_1_label": "Porto",
+          "item_1_detail": "Since you did not provide specific search results to summarize, I have synthesized the general travel consensus regarding **Porto in November** based on standard travel data.\n\n### **1. Weather**\n*   **Conditions:** November is one of the wettest months in Porto. You should expect frequent rain showers and overcast skies.\n*   **Temperatures:** It is mild but cool, typically ranging from **10\u00b0C to 16\u00b0C (50\u00b0F\u201361\u00b0F)**. \n*   **Verdict:** It is not a \"beach\" or \"sunshine\" destination at this time. You will need a waterproof jacket and layers.\n\n### **2. Cost**\n*   **Low Season Advantage:** November i",
+          "item_2_label": "Madrid. Compare",
+          "item_2_detail": "Since you did not provide specific search results, I have summarized the general travel consensus for **Madrid in November** based on standard travel data.\n\n### **Madrid in November: A Summary**\n\n#### **1. Weather**\n*   **Conditions:** November is the start of late autumn/early winter in Madrid. You can expect crisp, cool air with temperatures typically ranging from **5\u00b0C to 15\u00b0C (41\u00b0F to 59\u00b0F)**.\n*   **Precipitation:** It is one of the wetter months, though rain is usually intermittent rather than constant.\n*   **Experience:** It is generally sunny during the day but gets quite chilly once th",
+          "subjects": [
+            "Lisbon",
+            "Porto",
+            "Madrid. Compare"
+          ],
+          "timeline": [
+            {
+              "time": "855",
+              "label": "run_started"
+            },
+            {
+              "time": "856",
+              "label": "graph_patched"
+            },
+            {
+              "time": "857",
+              "label": "task_started search_1"
+            },
+            {
+              "time": "858",
+              "label": "task_started search_2"
+            },
+            {
+              "time": "859",
+              "label": "task_started search_3"
+            },
+            {
+              "time": "860",
+              "label": "task_succeeded search_2"
+            },
+            {
+              "time": "861",
+              "label": "graph_patched"
+            },
+            {
+              "time": "862",
+              "label": "task_succeeded search_3"
+            },
+            {
+              "time": "863",
+              "label": "graph_patched"
+            },
+            {
+              "time": "864",
+              "label": "task_succeeded search_1"
+            },
+            {
+              "time": "865",
+              "label": "graph_patched"
+            },
+            {
+              "time": "866",
+              "label": "task_started distill"
+            },
+            {
+              "time": "867",
+              "label": "task_succeeded distill"
+            },
+            {
+              "time": "868",
+              "label": "graph_patched"
+            },
+            {
+              "time": "869",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 4,
+          "progress_max": 5,
+          "choices": [
+            {
+              "id": "lisbon",
+              "label": "Lisbon"
+            },
+            {
+              "id": "porto",
+              "label": "Porto"
+            },
+            {
+              "id": "madrid_compare",
+              "label": "Madrid. Compare"
+            }
+          ],
+          "choice_0_label": "Lisbon",
+          "choice_1_label": "Porto",
+          "choice_2_label": "Madrid. Compare"
+        }
+      }
+    },
+    {
+      "name": "budget-breakdown",
+      "prompt": "What will two weeks in Peru cost me, broken down by category, and how does each category compare against the others?",
+      "run_id": "run-7cbfcbf2f101",
+      "composed": true,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite-preview",
+      "component_count": 11,
+      "clean": true,
+      "component_types": [
+        "BarChart",
+        "Button",
+        "Card",
+        "Column",
+        "DataTable",
+        "Row",
+        "StatTile",
+        "Text"
+      ],
+      "is_only_text": false,
+      "data_pointers": [
+        "goal",
+        "intro",
+        "item_count",
+        "items",
+        "metric_0_value",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "section_0_heading",
+        "section_0_points",
+        "section_events",
+        "sections",
+        "series",
+        "series_values",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_columns",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title",
+              "summary",
+              "metricsRow",
+              "chart",
+              "table",
+              "details",
+              "actions"
+            ]
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "metricsRow",
+            "type": "Row",
+            "align": "center",
+            "justify": "center",
+            "children": [
+              "stat1"
+            ]
+          },
+          {
+            "id": "stat1",
+            "type": "StatTile",
+            "label": "Total Estimated Cost",
+            "value": {
+              "$bind": "/metric_0_value"
+            },
+            "unit": "USD"
+          },
+          {
+            "id": "chart",
+            "type": "BarChart",
+            "title": "Cost Breakdown",
+            "data": {
+              "$bind": "/series"
+            },
+            "xKey": "label",
+            "yKey": "value"
+          },
+          {
+            "id": "table",
+            "type": "DataTable",
+            "columns": "Category, Estimated Cost (USD), Percentage of Total",
+            "rows": {
+              "$bind": "/table_rows"
+            }
+          },
+          {
+            "id": "details",
+            "type": "Card",
+            "title": "Budget Categories",
+            "children": [
+              "detailsText"
+            ]
+          },
+          {
+            "id": "detailsText",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/section_0_points"
+            }
+          },
+          {
+            "id": "actions",
+            "type": "Row",
+            "align": "center",
+            "justify": "center",
+            "children": [
+              "refresh"
+            ]
+          },
+          {
+            "id": "refresh",
+            "type": "Button",
+            "label": "Refresh Estimates",
+            "onPress": {
+              "action": "request_data"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Estimated 14-Day Peru Travel Budget (Mid-Range)",
+          "goal": "What will two weeks in Peru cost me, broken down by category, and how does each category compare against the others?",
+          "summary": "A breakdown of estimated costs for a two-week trip to Peru, excluding international flights. Costs are per person based on a mid-range travel style.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Total Estimated Cost",
+              "value": 2100,
+              "unit": "USD"
+            }
+          ],
+          "spark": [
+            700.0,
+            500.0,
+            450.0,
+            300.0,
+            150.0
+          ],
+          "table_rows": [
+            {
+              "Category": "Accommodation",
+              "Estimated Cost (USD)": 700,
+              "Percentage of Total": "33%"
+            },
+            {
+              "Category": "Food & Drink",
+              "Estimated Cost (USD)": 500,
+              "Percentage of Total": "24%"
+            },
+            {
+              "Category": "Activities",
+              "Estimated Cost (USD)": 450,
+              "Percentage of Total": "21%"
+            },
+            {
+              "Category": "Transportation",
+              "Estimated Cost (USD)": 300,
+              "Percentage of Total": "14%"
+            },
+            {
+              "Category": "Miscellaneous",
+              "Estimated Cost (USD)": 150,
+              "Percentage of Total": "8%"
+            }
+          ],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [],
+          "timeline": [
+            {
+              "time": "872",
+              "label": "run_started"
+            },
+            {
+              "time": "873",
+              "label": "graph_patched"
+            },
+            {
+              "time": "874",
+              "label": "task_started content"
+            },
+            {
+              "time": "875",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "876",
+              "label": "graph_patched"
+            },
+            {
+              "time": "877",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "A breakdown of estimated costs for a two-week trip to Peru, excluding international flights. Costs are per person based on a mid-range travel style.",
+          "section_0_heading": "Budget Categories",
+          "section_0_points": "\u2022 Accommodation: Mix of boutique hotels and guesthouses.\n\u2022 Food & Drink: Combination of local markets, mid-range restaurants, and coffee shops.\n\u2022 Transportation: Domestic flights, tourist buses (Cruz del Sur), and local taxis.\n\u2022 Activities: Machu Picchu entry, Sacred Valley tours, and museum fees.\n\u2022 Miscellaneous: Travel insurance, SIM cards, and souvenirs.",
+          "sections": [
+            {
+              "heading": "Budget Categories",
+              "points": [
+                "Accommodation: Mix of boutique hotels and guesthouses.",
+                "Food & Drink: Combination of local markets, mid-range restaurants, and coffee shops.",
+                "Transportation: Domestic flights, tourist buses (Cruz del Sur), and local taxis.",
+                "Activities: Machu Picchu entry, Sacred Valley tours, and museum fees.",
+                "Miscellaneous: Travel insurance, SIM cards, and souvenirs."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Budget Categories",
+              "label": "Accommodation: Mix of boutique hotels and guesthouses.; Food & Drink: Combination of local markets, mid-range restaurants, and coffee shops.; Transportation: Domestic flights, tourist buses (Cruz del Sur), and local taxis.; Activities: Machu Picchu entry, Sacred Valley tours, and museum fees.; Miscellaneous: Travel insurance, SIM cards, and souvenirs."
+            }
+          ],
+          "metric_0_value": 2100,
+          "series": [
+            {
+              "label": "Accommodation",
+              "value": 700.0
+            },
+            {
+              "label": "Food & Drink",
+              "value": 500.0
+            },
+            {
+              "label": "Activities",
+              "value": 450.0
+            },
+            {
+              "label": "Transportation",
+              "value": 300.0
+            },
+            {
+              "label": "Miscellaneous",
+              "value": 150.0
+            }
+          ],
+          "series_values": [
+            700.0,
+            500.0,
+            450.0,
+            300.0,
+            150.0
+          ],
+          "table_columns": [
+            "Category",
+            "Estimated Cost (USD)",
+            "Percentage of Total"
+          ]
+        }
+      }
+    }
+  ],
+  "summary": {
+    "prompts_sent": 3,
+    "all_composed": true,
+    "distinct_interfaces": 3,
+    "no_prompt_produced_only_text": true,
+    "all_clean": true,
+    "types_per_prompt": {
+      "dated-itinerary": [
+        "Button",
+        "Column",
+        "DataTable",
+        "Map",
+        "Row",
+        "Text"
+      ],
+      "city-comparison": [
+        "Button",
+        "Card",
+        "Row",
+        "Tabs",
+        "Text"
+      ],
+      "budget-breakdown": [
+        "BarChart",
+        "Button",
+        "Card",
+        "Column",
+        "DataTable",
+        "Row",
+        "StatTile",
+        "Text"
+      ]
+    },
+    "types_unique_to_one_interface": [
+      "BarChart",
+      "Map",
+      "StatTile",
+      "Tabs"
+    ]
+  }
+}
