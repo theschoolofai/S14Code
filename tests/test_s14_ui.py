@@ -390,11 +390,11 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """26 types: 15 A2UI-Basic + 8 custom + 3 student, each tagged with its source."""
+    assert len(COMPONENTS) == 26
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
-        assert spec.source in ("a2ui-basic", "custom"), name
+        assert spec.source in ("a2ui-basic", "custom", "student-extension"), name
         by_source.setdefault(spec.source, set()).add(name)
     assert by_source["a2ui-basic"] == {
         "Row", "Column", "List", "Card", "Divider", "Text", "Image", "TextField",
@@ -404,6 +404,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
         "Notice", "ApprovalCard",
     }
+    assert by_source["student-extension"] == {"Map", "Calendar", "Rating"}
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
         assert gone not in COMPONENTS
@@ -411,6 +412,114 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     m = catalog_manifest()
     assert m["components"]["Text"]["source"] == "a2ui-basic"
     assert m["components"]["BarChart"]["source"] == "custom"
+    assert m["components"]["Map"]["source"] == "student-extension"
+
+
+# --------------------------------------------------------------------------- #
+# The student extensions: Map, Calendar, Rating. Adding a component must not
+# soften the wall, so each new type gets the same three invariants proven
+# against it. validator.py is untouched: the new types inherit the wall.
+# --------------------------------------------------------------------------- #
+
+def test_student_extensions_declare_only_known_prop_kinds():
+    """A new component may not invent a property KIND — the closed vocabulary the
+    validator understands is what makes an unknown property refusable."""
+    known = {"text", "binding", "enum", "ref", "action", "number", "bool"}
+    for name in ("Map", "Calendar", "Rating"):
+        for prop, spec in COMPONENTS[name].props.items():
+            assert spec.kind in known, (name, prop, spec.kind)
+
+
+def test_student_extensions_expose_no_url_or_handler_property():
+    """The point of Map carrying coordinates instead of a tile URL: there is no
+    property on any new type that the client could ever fetch or execute."""
+    for name in ("Map", "Calendar", "Rating"):
+        for prop in COMPONENTS[name].props:
+            assert not re.match(r"^on[a-z]", prop), (name, prop)  # onPress/onSelect are camelCase actions
+            assert prop not in ("src", "href", "url", "html", "style", "script"), (name, prop)
+
+
+def test_the_two_new_actions_are_registered_and_the_set_stays_closed():
+    assert {"select_day", "rate"}.issubset(REGISTERED_ACTIONS)
+    assert REGISTERED_ACTIONS == {"approve", "reject", "rerun", "request_data", "select_day", "rate"}
+
+
+@pytest.mark.parametrize("near_miss", ["MapView", "GoogleMap", "Calendar3D", "StarRating", "Leaflet"])
+def test_catalog_invariant_rejects_plausible_neighbours_of_the_new_types(near_miss):
+    """A new type widens the vocabulary by exactly one name, not by a family."""
+    assert _reject({"id": "x", "type": near_miss}).invariant == Invariant.CATALOG
+
+
+def test_map_accepts_a_bound_point_list_and_literal_key_names():
+    surface = {
+        "root": "m",
+        "components": [{"id": "m", "type": "Map", "title": "Route", "points": {"$bind": "/map_points"},
+                        "labelKey": "label", "latKey": "lat", "lonKey": "lon", "zoom": 6}],
+        "dataModel": {"map_points": [{"label": "Kyoto", "lat": 35.01, "lon": 135.77}]},
+    }
+    assert validate_surface(surface).ok
+
+
+@pytest.mark.parametrize("comp", [
+    # A tile URL is the obvious way to smuggle a fetch into a Map. `src` is not a
+    # property Map declares, so it never reaches the DOM.
+    {"id": "m", "type": "Map", "points": {"$bind": "/p"}, "src": "https://attacker.example/{z}/{x}.png"},
+    # Markup where a binding belongs, on each new type.
+    {"id": "m", "type": "Map", "points": "<script>steal()</script>"},
+    {"id": "k", "type": "Calendar", "events": "<img src=x onerror=steal()>"},
+    {"id": "r", "type": "Rating", "label": "Ryokan", "value": {"$bind": "/v"}, "count": "<b>1,204</b> reviews"},
+    # A javascript: URL anywhere on a new component.
+    {"id": "k", "type": "Calendar", "title": "javascript:steal()", "events": {"$bind": "/e"}},
+    # A literal where the schema demands an explicit {"$bind": "/pointer"}.
+    {"id": "r", "type": "Rating", "label": "Ryokan", "value": 4.6},
+    # An enum outside its set, reusing the shared tone enum.
+    {"id": "r", "type": "Rating", "value": {"$bind": "/v"}, "tone": "chartreuse"},
+    # A smuggled DOM handler beside a legitimate action.
+    {"id": "k", "type": "Calendar", "events": {"$bind": "/e"}, "onSelect": {"action": "select_day"},
+     "onclick": "steal()"},
+])
+def test_data_not_code_holds_for_the_new_types(comp):
+    assert _reject(comp).invariant == Invariant.DATA_NOT_CODE
+
+
+@pytest.mark.parametrize("comp", [
+    {"id": "k", "type": "Calendar", "events": {"$bind": "/e"}, "onSelect": {"action": "exfiltrate"}},
+    {"id": "r", "type": "Rating", "value": {"$bind": "/v"}, "onRate": {"action": "drop_tables"}},
+    {"id": "r", "type": "Rating", "value": {"$bind": "/v"}, "onRate": {"action": "charge_card"}},
+])
+def test_event_invariant_holds_for_the_new_types(comp):
+    assert _reject(comp).invariant == Invariant.EVENT
+
+
+@pytest.mark.parametrize("comp", [
+    {"id": "k", "type": "Calendar", "events": {"$bind": "/e"}, "month": {"$bind": "/m"},
+     "onSelect": {"action": "select_day"}},
+    {"id": "r", "type": "Rating", "label": "Ryokan", "value": {"$bind": "/v"}, "max": 5,
+     "count": {"$bind": "/c"}, "tone": "good", "onRate": {"action": "rate"}},
+])
+def test_the_registered_new_actions_do_cross_back(comp):
+    """The wall refuses invented actions without refusing the real ones — a tap on
+    a Calendar day or a Rating star has to be able to earn the next turn."""
+    assert validate_surface({"root": comp["id"], "components": [comp]}).ok
+
+
+def test_a_poisoned_new_component_does_not_take_the_interface_down_with_it():
+    """The safe part still renders: a hostile Map is dropped, the Calendar beside
+    it survives, and the heading is untouched."""
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["h", "bad_map", "cal"]},
+            {"id": "h", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+            {"id": "bad_map", "type": "Map", "points": {"$bind": "/p"}, "onclick": "steal()"},
+            {"id": "cal", "type": "Calendar", "events": {"$bind": "/e"}, "onSelect": {"action": "select_day"}},
+        ],
+        "dataModel": {"title": "Kyoto", "p": [], "e": []},
+    }
+    result = validate_surface(surface)
+    accepted = {c["id"] for c in result.accepted}
+    assert accepted == {"root", "h", "cal"}
+    assert [r.invariant for r in result.rejections] == [Invariant.DATA_NOT_CODE]
 
 
 # --------------------------------------------------------------------------- #
@@ -588,7 +697,7 @@ def test_route_reconnect_snapshot_rebuild_equals_full_replay(live_client):
 # --------------------------------------------------------------------------- #
 
 def test_render_client_never_uses_innerhtml_and_documents_the_contract():
-    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "index.html").read_text()
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "index.html").read_text(encoding="utf-8")
     # The client draws every value through text nodes, never as markup.
     assert "createTextNode" in html
     # innerHTML is never assigned anywhere — no data path can reach it.
@@ -598,8 +707,53 @@ def test_render_client_never_uses_innerhtml_and_documents_the_contract():
     assert "NEVER sets" in html and "innerHTML from a bound value" in html
 
 
+def test_render_client_draws_the_student_extensions_without_innerhtml():
+    """The three new types have real renderers in the render client, and they draw
+    through text nodes and SVG primitives — no tile URL, no iframe, no markup."""
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "index.html").read_text(encoding="utf-8")
+    for renderer in ("renderMap", "renderCalendar", "renderRating"):
+        assert renderer in html, renderer
+    for kind in ("Map:", "Calendar:", "Rating:"):
+        assert kind in html, kind
+    assert "createElementNS" in html  # SVG primitives, not markup
+    assert "<iframe" not in html
+    # A Map is coordinates the client projects itself: its renderer contains no
+    # URL, no src attribute and no fetch, so there is no tile channel to abuse.
+    render_map = html[html.index("function renderMap("):html.index("const MONTH_NAMES")]
+    for forbidden in ("src", "fetch(", "iframe"):
+        assert forbidden not in render_map, forbidden
+    # The only URL anywhere in it is the SVG namespace.
+    assert render_map.count("http") == render_map.count("http://www.w3.org/2000/svg") == 1
+
+
+def test_trip_app_shell_holds_the_same_no_innerhtml_contract():
+    """The UI-only application is a client like any other: it may not assign
+    innerHTML anywhere, and it must enforce the registered-action set itself."""
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "trip.html").read_text(encoding="utf-8")
+    assert "createTextNode" in html
+    assert not re.search(r"innerHTML\s*=", html)
+    # innerHTML appears only where the contract is documented, never in code.
+    for line in html.splitlines():
+        if "innerHTML" in line:
+            assert line.strip().startswith("//"), line
+    # It reads the registered actions from the catalog and refuses anything else
+    # before a tap can become a turn.
+    assert "/v1/catalog" in html and "ACTIONS.has(action)" in html
+    # Every turn is a composed interface read from the composed route.
+    assert "respond_as" in html and "/composed" in html
+
+
+def test_trip_app_shell_renders_every_catalog_type():
+    """A shell that silently skips catalog types would quietly narrow the
+    vocabulary the agent composes with."""
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "trip.html").read_text(encoding="utf-8")
+    renderer_block = html[html.index("const R={"):html.index("function kids(")]
+    for name in COMPONENTS:
+        assert re.search(rf"\b{name}:", renderer_block), name
+
+
 def test_render_client_reconnects_and_rebuilds_from_a_state_snapshot():
-    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "index.html").read_text()
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "index.html").read_text(encoding="utf-8")
     # It opens the AG-UI event stream and knows how to recover a dropped one.
     assert "EventSource" in html
     assert "?reconnect=1" in html

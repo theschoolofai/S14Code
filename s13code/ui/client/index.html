@@ -57,6 +57,24 @@
   .Approval button{border-radius:8px;padding:7px 16px;font-weight:600;font-size:13px;cursor:pointer;border:1px solid var(--rule-strong);background:#fff}
   .Approval button.ok{background:var(--green);color:#fff;border-color:var(--green)}
   .prog{height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}
+  /* student extensions: Map / Calendar / Rating */
+  .mapnote{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);margin-top:8px;line-height:1.5}
+  .calhead{font-weight:700;color:var(--ink);margin-bottom:8px}
+  table.cal td{vertical-align:top;height:46px;width:14.28%;border-right:1px solid var(--rule)}
+  table.cal td:last-child,table.cal th:last-child{border-right:none}
+  table.cal th{text-align:center;cursor:default}
+  table.cal td.pad{background:var(--surface-alt)}
+  table.cal td.has{background:var(--accent-soft)}
+  table.cal td.tap{cursor:pointer}table.cal td.tap:hover{outline:2px solid var(--accent);outline-offset:-2px}
+  table.cal .dnum{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted)}
+  table.cal .dlab{font-size:11px;color:var(--ink-body);line-height:1.35;margin-top:2px}
+  .Rating{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:12px 14px}
+  .Rating .lab{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);font-weight:600;font-family:var(--font-mono)}
+  .Rating .stars{display:flex;align-items:center;gap:2px;margin-top:5px;font-size:19px;color:var(--accent)}
+  .Rating .stars.good{color:var(--green)}.Rating .stars.warn{color:var(--amber)}.Rating .stars.bad{color:var(--red)}
+  .Rating .star.tap{cursor:pointer}
+  .Rating .rnum{margin-left:8px;font-size:13px;font-weight:600;color:var(--ink);font-family:var(--font-mono)}
+  .Rating .rcount{font-size:11px;color:var(--ink-muted);margin-top:3px;font-family:var(--font-mono)}
   .prog>i{display:block;height:100%;background:var(--green)}
   @media (prefers-color-scheme:dark){:root{--bg:#0d0f14;--surface:#161922;--surface-alt:#11131a;--ink:#f3f5f9;--ink-body:#e4e8f0;--ink-muted:#9aa4b8;--rule:#252a36;--rule-strong:#333a49}body{background:var(--surface-alt)}}
 
@@ -135,6 +153,10 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  // --- Student extensions ----------------------------------------------------
+  Map:(c,ctx)=>renderMap(c,ctx),
+  Calendar:(c,ctx)=>renderCalendar(c,ctx),
+  Rating:(c,ctx)=>renderRating(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -185,6 +207,81 @@ function renderApproval(c,ctx){const e=$("div","Approval");const sm=$("div","sm"
   const pre=$("pre");pre.append(text(JSON.stringify(resolve(c.params,ctx.dm),null,2)));const btns=$("div","btns");
   const ok=$("button","ok");ok.append(text("Approve"));ok.onclick=()=>emitAction("approve",resolve(c.params,ctx.dm));
   const no=$("button");no.append(text("Reject"));no.onclick=()=>emitAction("reject",{});btns.append(ok,no);e.append(sm,pre,btns);return e;}
+
+// --- Student extensions: Map, Calendar, Rating -------------------------------
+// All three draw with createElement / createElementNS and text nodes only. A Map
+// carries COORDINATES, not a tile URL: the client projects the points itself, so
+// there is no fetch, no iframe and no URL the catalog never approved. A Calendar
+// carries dated entries; a Rating carries a number. Taps go through emitAction,
+// the same single door a Button uses.
+function mapPoints(c,ctx){const raw=resolve(c.points,ctx.dm);
+  const kLat=c.latKey||"lat",kLon=c.lonKey||"lon",kLab=c.labelKey||"label";
+  return (Array.isArray(raw)?raw:[]).map(p=>({label:(p&&p[kLab]!=null)?String(p[kLab]):"",
+    la:+((p||{})[kLat]),lo:+((p||{})[kLon])})).filter(p=>isFinite(p.la)&&isFinite(p.lo));}
+
+function renderMap(c,ctx){const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"map"));e.append(t);
+  const pts=mapPoints(c,ctx);
+  if(!pts.length){const n=$("div","mapnote");n.append(text("no coordinates available — nothing drawn"));e.append(n);return e;}
+  // Equirectangular projection, framed on the points themselves so three cities
+  // fill the box instead of vanishing into a world map.
+  const ns="http://www.w3.org/2000/svg",w=320,h=190,pad=28;
+  const las=pts.map(p=>p.la),los=pts.map(p=>p.lo);
+  const la0=Math.min(...las),la1=Math.max(...las),lo0=Math.min(...los),lo1=Math.max(...los);
+  const spanLa=(la1-la0)||1,spanLo=(lo1-lo0)||1;
+  const X=lo=>pad+((lo-lo0)/spanLo)*(w-pad*2),Y=la=>h-pad-((la-la0)/spanLa)*(h-pad*2);
+  const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox",`0 0 ${w} ${h}`);svg.setAttribute("width","100%");svg.setAttribute("height","auto");
+  const frame=document.createElementNS(ns,"rect");frame.setAttribute("x",5);frame.setAttribute("y",5);frame.setAttribute("width",w-10);frame.setAttribute("height",h-10);frame.setAttribute("rx",8);frame.setAttribute("fill","var(--surface-alt)");frame.setAttribute("stroke","var(--rule)");svg.append(frame);
+  if(pts.length>1){const pl=document.createElementNS(ns,"polyline");pl.setAttribute("points",pts.map(p=>X(p.lo)+","+Y(p.la)).join(" "));
+    pl.setAttribute("fill","none");pl.setAttribute("stroke","var(--accent)");pl.setAttribute("stroke-width","1.5");pl.setAttribute("stroke-dasharray","4 3");svg.append(pl);}
+  pts.forEach(p=>{const cx=X(p.lo),cy=Y(p.la);
+    const dot=document.createElementNS(ns,"circle");dot.setAttribute("cx",cx);dot.setAttribute("cy",cy);dot.setAttribute("r",5);dot.setAttribute("fill","var(--accent)");dot.setAttribute("fill-opacity",".85");svg.append(dot);
+    const lb=document.createElementNS(ns,"text");lb.setAttribute("x",cx);lb.setAttribute("y",cy-9);lb.setAttribute("text-anchor","middle");lb.setAttribute("font-size","10");lb.setAttribute("font-family","var(--font-mono)");lb.setAttribute("fill","var(--ink-muted)");
+    lb.textContent=p.label;svg.append(lb);});  // textContent: a label is text, never markup
+  e.append(svg);
+  const cap=$("div","mapnote");cap.append(text(pts.map(p=>p.label+" ("+p.la.toFixed(2)+", "+p.lo.toFixed(2)+")").join(" · ")));e.append(cap);
+  return e;}
+
+const MONTH_NAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
+function calMonth(c,ctx){ // "YYYY-MM": the month binding, else the earliest event
+  const m=resolve(c.month,ctx.dm);if(typeof m==="string"&&/^\d{4}-\d{2}/.test(m))return m.slice(0,7);
+  const evs=resolve(c.events,ctx.dm)||[];
+  const first=(Array.isArray(evs)?evs:[]).map(x=>String((x||{}).date||"")).filter(d=>/^\d{4}-\d{2}/.test(d)).sort()[0];
+  return first?first.slice(0,7):"";}
+
+function renderCalendar(c,ctx){const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"calendar"));e.append(t);
+  const ym=calMonth(c,ctx);
+  if(!ym){const n=$("div","mapnote");n.append(text("no dated entries available — nothing drawn"));e.append(n);return e;}
+  const byDay={};(resolve(c.events,ctx.dm)||[]).forEach(x=>{if(!x||typeof x!=="object")return;
+    const d=String(x.date||"");if(d.slice(0,7)!==ym)return;const k=+d.slice(8,10);
+    if(k>=1&&k<=31)(byDay[k]=byDay[k]||[]).push(String(x.label==null?"":x.label));});
+  const y=+ym.slice(0,4),mo=+ym.slice(5,7);
+  const head=$("div","calhead");head.append(text((MONTH_NAMES[mo-1]||ym)+" "+y));e.append(head);
+  const tab=$("table","cal");const hr=$("tr");["Mo","Tu","We","Th","Fr","Sa","Su"].forEach(d=>{const th=$("th");th.append(text(d));hr.append(th);});tab.append(hr);
+  const lead=(new Date(Date.UTC(y,mo-1,1)).getUTCDay()+6)%7;  // Monday-first grid
+  const days=new Date(Date.UTC(y,mo,0)).getUTCDate();
+  let row=$("tr");for(let i=0;i<lead;i++)row.append($("td","pad"));
+  for(let d=1;d<=days;d++){
+    const td=$("td",byDay[d]?"has":"");const n=$("div","dnum");n.append(text(String(d)));td.append(n);
+    if(byDay[d]){const l=$("div","dlab");l.append(text(byDay[d].join(", ")));td.append(l);
+      if(c.onSelect&&c.onSelect.action){const iso=ym+"-"+String(d).padStart(2,"0");
+        td.classList.add("tap");td.onclick=()=>emitAction(c.onSelect.action,{date:iso});}}
+    row.append(td);
+    if((lead+d)%7===0){tab.append(row);row=$("tr");}}
+  if(row.children.length){while(row.children.length<7)row.append($("td","pad"));tab.append(row);}
+  e.append(tab);return e;}
+
+function renderRating(c,ctx){const e=$("div","Rating");
+  const max=Math.max(1,Math.min(10,Math.round(+c.max||5)));
+  let v=+resolve(c.value,ctx.dm);if(!isFinite(v))v=0;v=Math.max(0,Math.min(max,v));
+  if(c.label){const l=$("div","lab");l.append(text(c.label));e.append(l);}
+  const row=$("div","stars "+(c.tone||"neutral"));
+  for(let i=1;i<=max;i++){const s=$("span","star");s.append(text(i<=Math.round(v)?"★":"☆"));
+    if(c.onRate&&c.onRate.action){s.classList.add("tap");s.onclick=()=>emitAction(c.onRate.action,{value:i});}
+    row.append(s);}
+  const num=$("span","rnum");num.append(text(v.toFixed(1)+" / "+max));row.append(num);e.append(row);
+  const cnt=resolve(c.count,ctx.dm);
+  if(cnt!=null&&String(cnt)!==""){const k=$("div","rcount");k.append(text(String(cnt)));e.append(k);}
+  return e;}
 
 function emitAction(name,args){ // the only way the surface changes the world: a named, validated event
   document.getElementById("meta").textContent = "action emitted → "+name+" "+JSON.stringify(args);

