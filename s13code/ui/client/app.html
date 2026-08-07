@@ -58,6 +58,10 @@
   .actbtn:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
   .actbtn:active{transform:translateY(1px)}
   input.field,select.field{padding:9px 11px;border:1px solid var(--rule-strong);border-radius:9px;font-size:14px;font-family:var(--font-sans)}
+  .CodeDiff{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  .CodeDiff .cd-title{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);padding:10px 14px;border-bottom:1px solid var(--rule);font-weight:600}
+  .CodeDiff pre{margin:0;padding:12px 14px;font-family:var(--font-mono);font-size:12px;line-height:1.6;overflow-x:auto;white-space:pre-wrap;color:var(--ink-body)}
+  .CodeDiff .cd-add{background:var(--green-soft);color:var(--green-ink)}.CodeDiff .cd-del{background:var(--red-soft);color:var(--red-ink)}
   /* safe markdown (built as DOM, never innerHTML) */
   .Text .md-h{font-weight:700;color:var(--ink);margin:12px 0 4px}
   .Text .md-p{margin:6px 0;line-height:1.6}
@@ -137,6 +141,12 @@ const R={
   DateTime:(c,x)=>{const i=$("input","field");i.type="date";return i;},
   Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
   ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
+  CodeDiff:(c,x)=>{const e=$("div","CodeDiff");if(c.title){const t=$("div","cd-title");t.append(T(c.title+(c.language?" · "+c.language:"")));e.append(t);}
+    const unified=resolve(c.unified,x.dm),before=resolve(c.before,x.dm),after=resolve(c.after,x.dm);
+    if(unified){const pre=document.createElement("pre");String(unified).split(/\r?\n/).forEach(line=>{const d=$("div");if(line.startsWith("+"))d.className="cd-add";else if(line.startsWith("-"))d.className="cd-del";d.append(T(line));pre.append(d);});e.append(pre);}
+    else{if(before!=null){const h=$("div","cd-title");h.style.borderTop="1px solid var(--rule)";h.append(T("before"));const pre=document.createElement("pre");pre.append(T(String(before)));e.append(h,pre);}
+    if(after!=null){const h=$("div","cd-title");h.style.borderTop="1px solid var(--rule)";h.append(T("after"));const pre=document.createElement("pre");pre.append(T(String(after)));e.append(h,pre);}}
+    return e;},
 };
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}

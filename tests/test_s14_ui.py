@@ -391,7 +391,7 @@ def test_manifest_surfaces_every_registered_action():
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +402,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "CodeDiff",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -596,6 +596,65 @@ def test_render_client_never_uses_innerhtml_and_documents_the_contract():
     # The one place the word appears is the documented safety contract itself.
     assert html.count("innerHTML") == 1
     assert "NEVER sets" in html and "innerHTML from a bound value" in html
+
+
+# --------------------------------------------------------------------------- #
+# CodeDiff component — catalog, validator, and invariants
+# --------------------------------------------------------------------------- #
+
+def test_codediff_in_catalog_with_correct_props():
+    spec = COMPONENTS["CodeDiff"]
+    assert spec.source == "custom"
+    assert set(spec.props) == {"title", "language", "before", "after", "unified"}
+    assert spec.props["before"].kind == "binding"
+    assert spec.props["after"].kind == "binding"
+    assert spec.props["unified"].kind == "binding"
+    assert spec.props["title"].kind == "text"
+    assert spec.props["language"].kind == "text"
+
+
+def test_codediff_clean_surface_validates():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["diff"]},
+            {"id": "diff", "type": "CodeDiff", "title": "Example", "language": "python",
+             "before": {"$bind": "/before"}, "after": {"$bind": "/after"},
+             "unified": {"$bind": "/unified"}},
+        ],
+        "dataModel": {"before": "x = 1", "after": "x = 2", "unified": "-x = 1\n+x = 2"},
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+
+
+def test_codediff_rejects_markup_in_title():
+    r = _reject({"id": "d", "type": "CodeDiff", "title": "<script>alert(1)</script>",
+                 "language": "js", "before": {"$bind": "/b"}, "after": {"$bind": "/a"},
+                 "unified": {"$bind": "/u"}})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_codediff_rejects_smuggled_onclick():
+    surface = {
+        "root": "r",
+        "components": [{"id": "r", "type": "CodeDiff", "title": "x", "language": "py",
+                        "before": {"$bind": "/b"}, "after": {"$bind": "/a"},
+                        "unified": {"$bind": "/u"}, "onclick": "steal()"}],
+    }
+    result = validate_surface(surface)
+    assert not result.ok
+    assert result.rejections[0].invariant == Invariant.DATA_NOT_CODE
+
+
+def test_codediff_rejects_inline_text_where_binding_expected():
+    r = _reject({"id": "d", "type": "CodeDiff", "title": "x", "language": "py",
+                 "before": "not a binding", "after": {"$bind": "/a"}, "unified": {"$bind": "/u"}})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_select_item_is_a_registered_action():
+    assert "select_item" in REGISTERED_ACTIONS
 
 
 def test_render_client_reconnects_and_rebuilds_from_a_state_snapshot():
