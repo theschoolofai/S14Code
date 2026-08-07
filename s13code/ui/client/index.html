@@ -61,6 +61,10 @@
   @media (prefers-color-scheme:dark){:root{--bg:#0d0f14;--surface:#161922;--surface-alt:#11131a;--ink:#f3f5f9;--ink-body:#e4e8f0;--ink-muted:#9aa4b8;--rule:#252a36;--rule-strong:#333a49}body{background:var(--surface-alt)}}
 
   .Text .md-h{font-weight:700;color:var(--ink);margin:12px 0 4px}.Text .md-p{margin:6px 0;line-height:1.6}.Text .md-ul{margin:6px 0 6px 4px;padding-left:18px}.Text .md-ul li{margin:3px 0}
+  .CodeDiff{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  .CodeDiff .cd-title{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);padding:10px 14px;border-bottom:1px solid var(--rule);font-weight:600}
+  .CodeDiff pre{margin:0;padding:12px 14px;font-family:var(--font-mono);font-size:12px;line-height:1.6;overflow-x:auto;white-space:pre-wrap;color:var(--ink-body)}
+  .CodeDiff .cd-add{background:var(--green-soft);color:var(--green-ink)}.CodeDiff .cd-del{background:var(--red-soft);color:var(--red-ink)}
 </style>
 </head>
 <body>
@@ -135,6 +139,7 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  CodeDiff:(c,ctx)=>renderCodeDiff(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -185,6 +190,13 @@ function renderApproval(c,ctx){const e=$("div","Approval");const sm=$("div","sm"
   const pre=$("pre");pre.append(text(JSON.stringify(resolve(c.params,ctx.dm),null,2)));const btns=$("div","btns");
   const ok=$("button","ok");ok.append(text("Approve"));ok.onclick=()=>emitAction("approve",resolve(c.params,ctx.dm));
   const no=$("button");no.append(text("Reject"));no.onclick=()=>emitAction("reject",{});btns.append(ok,no);e.append(sm,pre,btns);return e;}
+
+function renderCodeDiff(c,ctx){const e=$("div","CodeDiff");if(c.title){const t=$("div","cd-title");t.append(text(c.title+(c.language?" · "+c.language:"")));e.append(t);}
+  const unified=resolve(c.unified,ctx.dm);const before=resolve(c.before,ctx.dm);const after=resolve(c.after,ctx.dm);
+  if(unified){const pre=$("pre");String(unified).split(/\r?\n/).forEach(line=>{const d=$("div");if(line.startsWith("+"))d.className="cd-add";else if(line.startsWith("-"))d.className="cd-del";d.append(text(line));pre.append(d);});e.append(pre);}
+  else{if(before!=null){const h=$("div","cd-title");h.style.borderTop="1px solid var(--rule)";h.append(text("before"));const pre=$("pre");pre.append(text(String(before)));e.append(h,pre);}
+  if(after!=null){const h=$("div","cd-title");h.style.borderTop="1px solid var(--rule)";h.append(text("after"));const pre=$("pre");pre.append(text(String(after)));e.append(h,pre);}}
+  return e;}
 
 function emitAction(name,args){ // the only way the surface changes the world: a named, validated event
   document.getElementById("meta").textContent = "action emitted → "+name+" "+JSON.stringify(args);

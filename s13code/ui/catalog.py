@@ -117,11 +117,18 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "summary": PropSpec("binding"), "params": PropSpec("binding"),
         "confirm": PropSpec("action"), "reject": PropSpec("action"),
     }, source="custom"),
+    "CodeDiff": ComponentSpec("CodeDiff", {
+        "title": PropSpec("text"),
+        "language": PropSpec("text"),
+        "before": PropSpec("binding"),
+        "after": PropSpec("binding"),
+        "unified": PropSpec("binding"),
+    }, source="custom"),
 }
 
 # The closed set of action names a surface may emit. An action the agent did
 # not register cannot cross back into the graph.
-REGISTERED_ACTIONS: frozenset[str] = frozenset({"approve", "reject", "rerun", "request_data"})
+REGISTERED_ACTIONS: frozenset[str] = frozenset({"approve", "reject", "rerun", "request_data", "select_item"})
 
 
 def catalog_manifest() -> dict:
