@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sqlite3
-import hashlib
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from .embeddings import DeterministicEmbedder, Embedder, cosine
 from .models import MemoryKind, MemoryRecord, MemoryScope, Principal, SourceRef, utcnow
@@ -134,7 +135,7 @@ class MemoryStore:
         ))
         return "doc_" + hashlib.sha256(owner.encode()).hexdigest()[:24]
 
-    def ingest_document(self, *, source_text: str, prepared_text: str, chunks: list["DocumentChunk"],
+    def ingest_document(self, *, source_text: str, prepared_text: str, chunks: list[DocumentChunk],
                         source_uri: str, scope: MemoryScope, source_author: str,
                         preprocessing: str) -> dict[str, object]:
         """Atomically replace a source's active chunks with a new content version."""

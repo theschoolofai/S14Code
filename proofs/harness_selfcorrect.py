@@ -28,9 +28,9 @@ from pathlib import Path
 S13CODE = Path(os.environ.get("S13CODE_PATH") or Path(__file__).resolve().parents[1])
 sys.path.insert(0, str(S13CODE))
 
-from s13code.core.memory import MemoryScope  # noqa: E402
-from s13code.gateway import GatewayClient  # noqa: E402
-from s13code.runtime import S13Runtime, _weak_evidence  # noqa: E402
+from s13code.core.memory import MemoryScope
+from s13code.gateway import GatewayClient
+from s13code.runtime import S13Runtime, _weak_evidence
 
 OUT = Path(__file__).parent / "harness_selfcorrect.json"
 TASK = "Research the profiles of London, Berlin and Paris, then compose a comparison dashboard."

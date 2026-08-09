@@ -1,11 +1,12 @@
 """Official A2A 1.x Agent Card validation and interface negotiation."""
 from __future__ import annotations
 
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
+from a2a.types import AgentCard
 from google.protobuf.json_format import ParseDict, ParseError
 from google.protobuf.message import DecodeError
-from a2a.types import AgentCard
 
 
 class AgentCardError(ValueError):

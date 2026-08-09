@@ -390,8 +390,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +402,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "NetworkGraph",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -411,6 +411,49 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     m = catalog_manifest()
     assert m["components"]["Text"]["source"] == "a2ui-basic"
     assert m["components"]["BarChart"]["source"] == "custom"
+    assert m["components"]["NetworkGraph"]["source"] == "custom"
+
+
+def test_network_graph_accepts_bound_nodes_and_edges():
+    result = validate_surface({
+        "root": "g",
+        "components": [{
+            "id": "g", "type": "NetworkGraph", "title": "Roles",
+            "nodes": {"$bind": "/nodes"}, "edges": {"$bind": "/edges"}, "layout": "circle",
+        }],
+        "dataModel": {
+            "nodes": [{"id": "a", "label": "A"}, {"id": "b", "label": "B"}],
+            "edges": [{"source": "a", "target": "b", "weight": 2}],
+        },
+    })
+    assert result.ok
+    assert result.accepted[0]["type"] == "NetworkGraph"
+
+
+def test_network_graph_rejects_handler_property():
+    r = _reject({
+        "id": "g", "type": "NetworkGraph",
+        "nodes": {"$bind": "/nodes"}, "edges": {"$bind": "/edges"},
+        "onclick": "steal()",
+    })
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "onclick"
+
+
+def test_network_graph_rejects_markup_in_title():
+    r = _reject({
+        "id": "g", "type": "NetworkGraph",
+        "title": "<script>x</script>",
+        "nodes": {"$bind": "/nodes"}, "edges": {"$bind": "/edges"},
+    })
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_render_clients_know_network_graph():
+    for name in ("index.html", "app.html"):
+        html = (_BUILD_ROOT / "s13code" / "ui" / "client" / name).read_text(encoding="utf-8")
+        assert "NetworkGraph" in html
+        assert "networkSvg" in html or "function network(" in html
 
 
 # --------------------------------------------------------------------------- #

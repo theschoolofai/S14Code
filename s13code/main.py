@@ -18,14 +18,14 @@ from fastapi import FastAPI, HTTPException, Request
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
 
-from s13code import a2a_routes, routes  # noqa: E402
-from s13code.core.a2a_adapter.official import OfficialA2AServer  # noqa: E402
-from s13code.core.a2a_adapter.server import A2ADemoServer  # noqa: E402
-from s13code.core.a2a_adapter.trust import sign_card  # noqa: E402
-from s13code.core.memory import MemoryScope  # noqa: E402
-from s13code.gateway import GatewayClient  # noqa: E402
-from s13code.runtime import S13Runtime  # noqa: E402
-from s13code.ui.routes import router as ui_router  # noqa: E402
+from s13code import a2a_routes, routes
+from s13code.core.a2a_adapter.official import OfficialA2AServer
+from s13code.core.a2a_adapter.server import A2ADemoServer
+from s13code.core.a2a_adapter.trust import sign_card
+from s13code.core.memory import MemoryScope
+from s13code.gateway import GatewayClient
+from s13code.runtime import S13Runtime
+from s13code.ui.routes import router as ui_router
 
 PORT = int(os.getenv("S13_PORT", "8113"))
 

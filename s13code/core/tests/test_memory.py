@@ -2,10 +2,17 @@ from __future__ import annotations
 
 import unittest
 
-from s13code.core.memory import MemoryKind, MemoryRecord, MemoryScope, MemoryStore, PermissionDenied, Principal, SourceRef
+from s13code.core.memory import (
+    MemoryKind,
+    MemoryRecord,
+    MemoryScope,
+    MemoryStore,
+    PermissionDenied,
+    Principal,
+    SourceRef,
+)
 from s13code.core.memory.chunking import fixed_word_chunks, semantic_chunks
 from s13code.core.memory.embeddings import DeterministicEmbedder
-
 
 AGENT = Principal("researcher", "agent")
 SOURCE = SourceRef("message://u1/1", "user", excerpt="original user statement")

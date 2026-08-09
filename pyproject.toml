@@ -44,7 +44,9 @@ extend-exclude = [
 [tool.ruff.lint]
 # A few teaching examples intentionally keep tiny state transitions on one
 # line. Generated protobuf modules are excluded above and remain reproducible.
-ignore = ["E701", "E702"]
+# BLE001 / DTZ007 are intentional in the Session 13 teaching runtime (broad
+# catch around JSON/LLM edges; naive local calendar dates for the birthday demo).
+ignore = ["E701", "E702", "BLE001", "DTZ007", "S110", "TRY203", "TRY004"]
 
 [tool.ruff.lint.per-file-ignores]
 "s13code/core/a2a_adapter/tests/test_hardening.py" = ["F401"]

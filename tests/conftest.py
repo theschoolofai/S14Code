@@ -14,6 +14,7 @@ def _isolated_state(monkeypatch, tmp_path):
 @pytest.fixture
 def app_client():
     from fastapi.testclient import TestClient
+
     from s13code.main import app
 
     with TestClient(app) as client:

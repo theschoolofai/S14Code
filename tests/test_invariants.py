@@ -8,8 +8,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from s13code.ui.agui import stream_agui
-from s13code.ui.hitl import PendingAction, decide_resume
 from s13code.ui.fixtures import RecordedS13, load_injections
+from s13code.ui.hitl import PendingAction, decide_resume
 from s13code.ui.surface import build_run_surface
 from s13code.ui.validator import Invariant, validate_surface
 

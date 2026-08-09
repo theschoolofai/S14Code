@@ -9,8 +9,8 @@ from typing import Any
 
 import httpx
 
-from .trust import AgentCardTrustPolicy
 from .schema import negotiate_interface
+from .trust import AgentCardTrustPolicy
 
 
 @dataclass(frozen=True)

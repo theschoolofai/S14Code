@@ -1,0 +1,1629 @@
+{
+  "task": "Compose a UI that shows how these software job roles relate by shared skills as a network of connections: Backend Engineer, Frontend Engineer, Data Engineer, ML Engineer, and DevOps Engineer. Prefer a relationship network of the roles with weighted links for skill overlap.",
+  "prompt_contains_NetworkGraph": false,
+  "run_id": "run-e7c7612e8e1e",
+  "status": "completed",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "gateway_provider_env": "gemini",
+  "graph": {
+    "finished": true,
+    "nodes": {
+      "distill": {
+        "skill": "distiller",
+        "state": "succeeded",
+        "agent": "distiller",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash"
+      },
+      "search_1": {
+        "skill": "researcher",
+        "state": "succeeded",
+        "agent": "researcher",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash"
+      },
+      "search_2": {
+        "skill": "researcher",
+        "state": "succeeded",
+        "agent": "researcher",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash"
+      },
+      "search_3": {
+        "skill": "researcher",
+        "state": "succeeded",
+        "agent": "researcher",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash"
+      },
+      "search_4": {
+        "skill": "researcher",
+        "state": "succeeded",
+        "agent": "researcher",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash"
+      },
+      "search_5": {
+        "skill": "researcher",
+        "state": "succeeded",
+        "agent": "researcher",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash"
+      },
+      "surface": {
+        "skill": "compose_surface",
+        "state": "succeeded",
+        "agent": "ui_composer",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash"
+      }
+    },
+    "edges": [
+      [
+        "distill",
+        "surface"
+      ],
+      [
+        "search_1",
+        "distill"
+      ],
+      [
+        "search_1",
+        "surface"
+      ],
+      [
+        "search_2",
+        "distill"
+      ],
+      [
+        "search_2",
+        "surface"
+      ],
+      [
+        "search_3",
+        "distill"
+      ],
+      [
+        "search_3",
+        "surface"
+      ],
+      [
+        "search_4",
+        "distill"
+      ],
+      [
+        "search_4",
+        "surface"
+      ],
+      [
+        "search_5",
+        "distill"
+      ],
+      [
+        "search_5",
+        "surface"
+      ]
+    ]
+  },
+  "event_journal": [
+    {
+      "sequence": 1,
+      "kind": "run_started",
+      "node_id": null
+    },
+    {
+      "sequence": 2,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 3,
+      "kind": "task_started",
+      "node_id": "search_1"
+    },
+    {
+      "sequence": 4,
+      "kind": "task_started",
+      "node_id": "search_2"
+    },
+    {
+      "sequence": 5,
+      "kind": "task_started",
+      "node_id": "search_3"
+    },
+    {
+      "sequence": 6,
+      "kind": "task_started",
+      "node_id": "search_4"
+    },
+    {
+      "sequence": 7,
+      "kind": "task_succeeded",
+      "node_id": "search_2"
+    },
+    {
+      "sequence": 8,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 9,
+      "kind": "task_started",
+      "node_id": "search_5"
+    },
+    {
+      "sequence": 10,
+      "kind": "task_succeeded",
+      "node_id": "search_1"
+    },
+    {
+      "sequence": 11,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 12,
+      "kind": "task_succeeded",
+      "node_id": "search_4"
+    },
+    {
+      "sequence": 13,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 14,
+      "kind": "task_succeeded",
+      "node_id": "search_3"
+    },
+    {
+      "sequence": 15,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 16,
+      "kind": "task_succeeded",
+      "node_id": "search_5"
+    },
+    {
+      "sequence": 17,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 18,
+      "kind": "task_started",
+      "node_id": "distill"
+    },
+    {
+      "sequence": 19,
+      "kind": "task_succeeded",
+      "node_id": "distill"
+    },
+    {
+      "sequence": 20,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 21,
+      "kind": "task_started",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 22,
+      "kind": "task_succeeded",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 23,
+      "kind": "graph_patched",
+      "node_id": null
+    }
+  ],
+  "compose_surface_node": {
+    "id": "surface",
+    "skill": "compose_surface",
+    "state": "succeeded",
+    "provider": "gemini_1",
+    "model": "gemini-2.5-flash",
+    "validator": {
+      "proposed": 4,
+      "accepted": 4,
+      "rejected": 0,
+      "ok": true,
+      "rejections": [],
+      "dangling_child_refs": [],
+      "component_types": [
+        "Column",
+        "NetworkGraph",
+        "Text"
+      ],
+      "component_count": 4
+    },
+    "component_types": [
+      "Column",
+      "NetworkGraph",
+      "Text"
+    ],
+    "used_NetworkGraph": true,
+    "data_model_keys": [
+      "edges",
+      "goal",
+      "item_0_detail",
+      "item_0_label",
+      "item_1_detail",
+      "item_1_label",
+      "item_2_detail",
+      "item_2_label",
+      "item_3_detail",
+      "item_3_label",
+      "item_4_detail",
+      "item_4_label",
+      "item_count",
+      "items",
+      "metrics",
+      "nodes",
+      "progress_max",
+      "progress_value",
+      "results",
+      "source_count",
+      "spark",
+      "subjects",
+      "summary",
+      "table_rows",
+      "timeline",
+      "title"
+    ],
+    "surface_accepted": {
+      "root": "root",
+      "components": [
+        {
+          "id": "root",
+          "type": "Column",
+          "children": [
+            "title",
+            "summary",
+            "network_graph"
+          ]
+        },
+        {
+          "id": "title",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "summary",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/summary"
+          }
+        },
+        {
+          "id": "network_graph",
+          "type": "NetworkGraph",
+          "title": "Software Job Role Skill Overlap",
+          "nodes": {
+            "$bind": "/nodes"
+          },
+          "edges": {
+            "$bind": "/edges"
+          },
+          "layout": "circle"
+        }
+      ],
+      "dataModel": {
+        "title": "Compose a UI that shows how these software job roles relate by shared skills as a network of connections: Backend Engineer, Frontend Engineer, Data Engineer, ML Engineer, and DevOps Engineer. Prefer a relationship network of the roles with weighted links for skill overlap.",
+        "goal": "Compose a UI that shows how these software job roles relate by shared skills as a network of connections: Backend Engineer, Frontend Engineer, Data Engineer, ML Engineer, and DevOps Engineer. Prefer a relationship network of the roles with weighted links for skill overlap.",
+        "summary": "The UI should present a network graph with the following elements:\n\n**1. Central Canvas:**\n*   A large, interactive canvas displaying",
+        "results": [
+          {
+            "label": "Backend Engineer",
+            "detail": "Backend Engineer roles are available in New Delhi, with job listings found on platforms like LinkedIn and Naukri.com. The field of backend engineering involves fundamentals such as system architecture, APIs, databases, scalability, security, and cloud infrastructure, all of which are essential skills for modern backend engineers."
+          },
+          {
+            "label": "Frontend Engineer",
+            "detail": "A Front-End Engineer plans and creates the \"front end\" or design end of websites, applications, and software. They are responsible for making websites beautiful, functional, and fast, often working closely with designers. Key technologies involved include HTML, CSS, and JavaScript, along with web apps and frameworks like React."
+          },
+          {
+            "label": "Data Engineer",
+            "detail": "Data engineering is the foundation of modern data-driven systems, involving the creation and upkeep of infrastructure for collecting, storing, processing, and analyzing data throughout its entire lifecycle. This ensures that high-quality, reliable data is available for both real-time and batch usage, and involves building efficient systems to move and process large-scale data.\n\nTo become a Data Engineer, one can pursue a degree in computer science, develop skills in coding and automation, obtain a data engineering certification, and build a portfolio of relevant projects. There are also step-b"
+          },
+          {
+            "label": "ML Engineer",
+            "detail": "A Machine Learning (ML) Engineer works with algorithms, data, and artificial intelligence (AI) to design, build, and productionize ML models that solve business challenges. Their workflow typically involves building predictive models for tasks like forecasting, ranking, classification, anomaly detection, and deep learning. They also design end-to-end ML pipelines, which include data preparation, feature engineering, model training, and evaluation."
+          },
+          {
+            "label": "DevOps Engineer. Prefer",
+            "detail": "A DevOps engineer is responsible for optimizing an organization's software, including software maintenance and server administration. They drive collaboration and automation across software teams to improve delivery. Becoming a DevOps engineer involves acquiring the necessary skills and following a practical roadmap."
+          }
+        ],
+        "items": [
+          {
+            "label": "Backend Engineer"
+          },
+          {
+            "label": "Frontend Engineer"
+          },
+          {
+            "label": "Data Engineer"
+          },
+          {
+            "label": "ML Engineer"
+          },
+          {
+            "label": "DevOps Engineer. Prefer"
+          }
+        ],
+        "metrics": [
+          {
+            "label": "Backend Engineer",
+            "value": 3
+          },
+          {
+            "label": "Frontend Engineer",
+            "value": 3
+          },
+          {
+            "label": "Data Engineer",
+            "value": 3
+          },
+          {
+            "label": "ML Engineer",
+            "value": 3
+          },
+          {
+            "label": "DevOps Engineer. Prefer",
+            "value": 3
+          }
+        ],
+        "spark": [
+          3.0,
+          3.0,
+          3.0,
+          3.0,
+          3.0
+        ],
+        "table_rows": [
+          {
+            "Item": "Backend Engineer",
+            "Sources": 3
+          },
+          {
+            "Item": "Frontend Engineer",
+            "Sources": 3
+          },
+          {
+            "Item": "Data Engineer",
+            "Sources": 3
+          },
+          {
+            "Item": "ML Engineer",
+            "Sources": 3
+          },
+          {
+            "Item": "DevOps Engineer. Prefer",
+            "Sources": 3
+          }
+        ],
+        "item_count": 5,
+        "source_count": 15,
+        "item_0_label": "Backend Engineer",
+        "item_0_detail": "Backend Engineer roles are available in New Delhi, with job listings found on platforms like LinkedIn and Naukri.com. The field of backend engineering involves fundamentals such as system architecture, APIs, databases, scalability, security, and cloud infrastructure, all of which are essential skills for modern backend engineers.",
+        "item_1_label": "Frontend Engineer",
+        "item_1_detail": "A Front-End Engineer plans and creates the \"front end\" or design end of websites, applications, and software. They are responsible for making websites beautiful, functional, and fast, often working closely with designers. Key technologies involved include HTML, CSS, and JavaScript, along with web apps and frameworks like React.",
+        "item_2_label": "Data Engineer",
+        "item_2_detail": "Data engineering is the foundation of modern data-driven systems, involving the creation and upkeep of infrastructure for collecting, storing, processing, and analyzing data throughout its entire lifecycle. This ensures that high-quality, reliable data is available for both real-time and batch usage, and involves building efficient systems to move and process large-scale data.\n\nTo become a Data Engineer, one can pursue a degree in computer science, develop skills in coding and automation, obtain a data engineering certification, and build a portfolio of relevant projects. There are also step-b",
+        "item_3_label": "ML Engineer",
+        "item_3_detail": "A Machine Learning (ML) Engineer works with algorithms, data, and artificial intelligence (AI) to design, build, and productionize ML models that solve business challenges. Their workflow typically involves building predictive models for tasks like forecasting, ranking, classification, anomaly detection, and deep learning. They also design end-to-end ML pipelines, which include data preparation, feature engineering, model training, and evaluation.",
+        "item_4_label": "DevOps Engineer. Prefer",
+        "item_4_detail": "A DevOps engineer is responsible for optimizing an organization's software, including software maintenance and server administration. They drive collaboration and automation across software teams to improve delivery. Becoming a DevOps engineer involves acquiring the necessary skills and following a practical roadmap.",
+        "subjects": [
+          "Backend Engineer",
+          "Frontend Engineer",
+          "Data Engineer",
+          "ML Engineer",
+          "DevOps Engineer. Prefer"
+        ],
+        "timeline": [
+          {
+            "time": "1",
+            "label": "run_started"
+          },
+          {
+            "time": "2",
+            "label": "graph_patched"
+          },
+          {
+            "time": "3",
+            "label": "task_started search_1"
+          },
+          {
+            "time": "4",
+            "label": "task_started search_2"
+          },
+          {
+            "time": "5",
+            "label": "task_started search_3"
+          },
+          {
+            "time": "6",
+            "label": "task_started search_4"
+          },
+          {
+            "time": "7",
+            "label": "task_succeeded search_2"
+          },
+          {
+            "time": "8",
+            "label": "graph_patched"
+          },
+          {
+            "time": "9",
+            "label": "task_started search_5"
+          },
+          {
+            "time": "10",
+            "label": "task_succeeded search_1"
+          },
+          {
+            "time": "11",
+            "label": "graph_patched"
+          },
+          {
+            "time": "12",
+            "label": "task_succeeded search_4"
+          },
+          {
+            "time": "13",
+            "label": "graph_patched"
+          },
+          {
+            "time": "14",
+            "label": "task_succeeded search_3"
+          },
+          {
+            "time": "15",
+            "label": "graph_patched"
+          },
+          {
+            "time": "16",
+            "label": "task_succeeded search_5"
+          },
+          {
+            "time": "17",
+            "label": "graph_patched"
+          },
+          {
+            "time": "18",
+            "label": "task_started distill"
+          },
+          {
+            "time": "19",
+            "label": "task_succeeded distill"
+          },
+          {
+            "time": "20",
+            "label": "graph_patched"
+          },
+          {
+            "time": "21",
+            "label": "task_started surface"
+          }
+        ],
+        "progress_value": 6,
+        "progress_max": 7,
+        "nodes": [
+          {
+            "id": "backend_engineer",
+            "label": "Backend Engineer"
+          },
+          {
+            "id": "frontend_engineer",
+            "label": "Frontend Engineer"
+          },
+          {
+            "id": "data_engineer",
+            "label": "Data Engineer"
+          },
+          {
+            "id": "ml_engineer",
+            "label": "ML Engineer"
+          },
+          {
+            "id": "devops_engineer_prefer",
+            "label": "DevOps Engineer. Prefer"
+          }
+        ],
+        "edges": [
+          {
+            "source": "backend_engineer",
+            "target": "frontend_engineer",
+            "weight": 4.0
+          },
+          {
+            "source": "backend_engineer",
+            "target": "data_engineer",
+            "weight": 4.0
+          },
+          {
+            "source": "backend_engineer",
+            "target": "ml_engineer",
+            "weight": 4.0
+          },
+          {
+            "source": "backend_engineer",
+            "target": "devops_engineer_prefer",
+            "weight": 4.0
+          },
+          {
+            "source": "frontend_engineer",
+            "target": "data_engineer",
+            "weight": 4.0
+          },
+          {
+            "source": "frontend_engineer",
+            "target": "ml_engineer",
+            "weight": 4.0
+          },
+          {
+            "source": "frontend_engineer",
+            "target": "devops_engineer_prefer",
+            "weight": 4.0
+          },
+          {
+            "source": "data_engineer",
+            "target": "ml_engineer",
+            "weight": 4.0
+          },
+          {
+            "source": "data_engineer",
+            "target": "devops_engineer_prefer",
+            "weight": 4.0
+          },
+          {
+            "source": "ml_engineer",
+            "target": "devops_engineer_prefer",
+            "weight": 4.0
+          }
+        ]
+      }
+    },
+    "raw_surface": "```json\n{\n  \"root\": \"root\",\n  \"components\": [\n    {\n      \"id\": \"root\",\n      \"type\": \"Column\",\n      \"children\": [\n        \"title\",\n        \"summary\",\n        \"network_graph\"\n      ]\n    },\n    {\n      \"id\": \"title\",\n      \"type\": \"Text\",\n      \"variant\": \"heading\",\n      \"text\": {\n        \"$bind\": \"/title\"\n      }\n    },\n    {\n      \"id\": \"summary\",\n      \"type\": \"Text\",\n      \"variant\": \"body\",\n      \"text\": {\n        \"$bind\": \"/summary\"\n      }\n    },\n    {\n      \"id\": \"network_graph\",\n      \"type\": \"NetworkGraph\",\n      \"title\": \"Software Job Role Skill Overlap\",\n      \"nodes\": {\n        \"$bind\": \"/nodes\"\n      },\n      \"edges\": {\n        \"$bind\": \"/edges\"\n      },\n      \"layout\": \"circle\"\n    }\n  ]\n}\n```"
+  },
+  "full_events": [
+    {
+      "sequence": 1,
+      "kind": "run_started",
+      "node_id": null,
+      "payload": {}
+    },
+    {
+      "sequence": 2,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 1,
+        "reason": "first frontier selected for compose_research",
+        "add": [
+          "search_1",
+          "search_2",
+          "search_3",
+          "search_4",
+          "search_5"
+        ],
+        "connect": [],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": false
+      }
+    },
+    {
+      "sequence": 3,
+      "kind": "task_started",
+      "node_id": "search_1",
+      "payload": {
+        "skill": "researcher",
+        "agent": "researcher"
+      }
+    },
+    {
+      "sequence": 4,
+      "kind": "task_started",
+      "node_id": "search_2",
+      "payload": {
+        "skill": "researcher",
+        "agent": "researcher"
+      }
+    },
+    {
+      "sequence": 5,
+      "kind": "task_started",
+      "node_id": "search_3",
+      "payload": {
+        "skill": "researcher",
+        "agent": "researcher"
+      }
+    },
+    {
+      "sequence": 6,
+      "kind": "task_started",
+      "node_id": "search_4",
+      "payload": {
+        "skill": "researcher",
+        "agent": "researcher"
+      }
+    },
+    {
+      "sequence": 7,
+      "kind": "task_succeeded",
+      "node_id": "search_2",
+      "payload": {
+        "query": "Frontend Engineer",
+        "hits": [
+          {
+            "title": "What is a Front-End Engineer? (And How to Become One)",
+            "url": "https://www.coursera.org/articles/front-end-engineer",
+            "snippet": "www.coursera.org/articles/front-end-engineer A front-end engineer plans and creates the front end, or design end, of websites, applications, and software. Discover the skills you'll need as a front-end engineer and learn about their average salary and education requirements."
+          },
+          {
+            "title": "What Is a Front-End Engineer and What It Takes To Become One",
+            "url": "https://www.indeed.com/career-advice/finding-a-job/front-end-engineer",
+            "snippet": "www.indeed.com/career-advice/finding-a-job/front-end-engineer Learn about the role of a front-end engineer , what they do, their required skills, average salary and the steps to take to become one."
+          },
+          {
+            "title": "Front-End Engineer - Codecademy",
+            "url": "https://www.codecademy.com/learn/paths/front-end-engineer-career-path",
+            "snippet": "www.codecademy.com/learn/paths/front-end-engineer-career-path Front-end engineers work closely with designers to make websites beautiful, functional, and fast. Includes HTML, CSS, JavaScript, Front-End , Web Apps, React, and more."
+          }
+        ],
+        "text": "A Front-End Engineer plans and creates the \"front end\" or design end of websites, applications, and software. They are responsible for making websites beautiful, functional, and fast, often working closely with designers. Key technologies involved include HTML, CSS, and JavaScript, along with web apps and frameworks like React.",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash",
+        "agent": "researcher"
+      }
+    },
+    {
+      "sequence": 8,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 7,
+        "reason": "holding distill until the corrected research evidence lands",
+        "add": [],
+        "connect": [],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": false
+      }
+    },
+    {
+      "sequence": 9,
+      "kind": "task_started",
+      "node_id": "search_5",
+      "payload": {
+        "skill": "researcher",
+        "agent": "researcher"
+      }
+    },
+    {
+      "sequence": 10,
+      "kind": "task_succeeded",
+      "node_id": "search_1",
+      "payload": {
+        "query": "Backend Engineer",
+        "hits": [
+          {
+            "title": "53 Backend jobs in New Delhi - LinkedIn India",
+            "url": "https://in.linkedin.com/jobs/backend-jobs-new-delhi-dl",
+            "snippet": "in.linkedin.com/jobs/backend-jobs-new-delhi-dl Today's top 53 Backend jobs in New Delhi. Leverage your professional network, and get hired. New Backend jobs added daily."
+          },
+          {
+            "title": "Backend Engineer Jobs In New Delhi - Naukri.com",
+            "url": "https://www.naukri.com/backend-engineer-jobs-in-new-delhi",
+            "snippet": "www.naukri.com/backend-engineer-jobs-in-new-delhi Apply To Backend Engineer Jobs In New Delhi On India's No. 1 Job Portal Naukri.com. Explore Latest Backend Engineer Job Vacancies In New Delhi Now!"
+          },
+          {
+            "title": "Backend Engineering: Complete Guide for Modern Backend Engineers",
+            "url": "https://www.systemdesignhandbook.com/guides/backend-engineers/",
+            "snippet": "www.systemdesignhandbook.com/guides/backend-engineers/ Learn backend engineering fundamentals, system architecture, APIs, databases, scalability, security, cloud infrastructure, and the skills every backend engineer needs."
+          }
+        ],
+        "text": "Backend Engineer roles are available in New Delhi, with job listings found on platforms like LinkedIn and Naukri.com. The field of backend engineering involves fundamentals such as system architecture, APIs, databases, scalability, security, and cloud infrastructure, all of which are essential skills for modern backend engineers.",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash",
+        "agent": "researcher"
+      }
+    },
+    {
+      "sequence": 11,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 10,
+        "reason": "holding distill until the corrected research evidence lands",
+        "add": [],
+        "connect": [],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": false
+      }
+    },
+    {
+      "sequence": 12,
+      "kind": "task_succeeded",
+      "node_id": "search_4",
+      "payload": {
+        "query": "ML Engineer",
+        "hits": [
+          {
+            "title": "How to Become a Machine Learning Engineer - GeeksforGeeks",
+            "url": "https://www.geeksforgeeks.org/blogs/how-to-become-a-machine-learning-engineer/",
+            "snippet": "www.geeksforgeeks.org/blogs/how-to-become-a-machine-learning-engineer/ The overall workflow of a machine learning engineer typically includes the following stages: Building predictive models: They create models that learn patterns in data to perform tasks such as forecasting, ranking, classification, anomaly detection and deep learning. Designing ML pipelines: They build end to end pipelines that prepare data, engineer features, train models and evaluate ..."
+          },
+          {
+            "title": "What Is a Machine Learning Engineer? (+ How to Get Started)",
+            "url": "https://www.coursera.org/articles/what-is-machine-learning-engineer",
+            "snippet": "www.coursera.org/articles/what-is-machine-learning-engineer Machine learning ( ML ) engineers work with algorithms, data, and artificial intelligence (AI). Learn about salary potential, job outlook, and steps to becoming a machine learning engineer ."
+          },
+          {
+            "title": "Professional ML Engineer Certification | Learn | Google Cloud",
+            "url": "https://cloud.google.com/learn/certification/machine-learning-engineer",
+            "snippet": "cloud.google.com/learn/certification/machine-learning-engineer Professional Machine Learning Engineers design, build, &amp; productionize ML models to solve business challenges. Find out how to prepare for the exam."
+          }
+        ],
+        "text": "A Machine Learning (ML) Engineer works with algorithms, data, and artificial intelligence (AI) to design, build, and productionize ML models that solve business challenges. Their workflow typically involves building predictive models for tasks like forecasting, ranking, classification, anomaly detection, and deep learning. They also design end-to-end ML pipelines, which include data preparation, feature engineering, model training, and evaluation.",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash",
+        "agent": "researcher"
+      }
+    },
+    {
+      "sequence": 13,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 12,
+        "reason": "holding distill until the corrected research evidence lands",
+        "add": [],
+        "connect": [],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": false
+      }
+    },
+    {
+      "sequence": 14,
+      "kind": "task_succeeded",
+      "node_id": "search_3",
+      "payload": {
+        "query": "Data Engineer",
+        "hits": [
+          {
+            "title": "Data Engineer Roadmap",
+            "url": "https://roadmap.sh/data-engineer",
+            "snippet": "roadmap.sh/data-engineer Step by step guide to becoming a Data Engineer in 2026"
+          },
+          {
+            "title": "What Is a Data Engineer? A Guide to This In-Demand Career",
+            "url": "https://www.coursera.org/articles/what-does-a-data-engineer-do-and-how-do-i-become-one",
+            "snippet": "www.coursera.org/articles/what-does-a-data-engineer-do-and-how-do-i-become-one To become a data engineer , you can start by getting a degree related to computer science, developing skills like coding and automation, earning a data engineering certification, and building a portfolio of your data engineering projects. Learn more about data engineers , including what they do, how much they earn, and how to become one."
+          },
+          {
+            "title": "What is Data Engineering? - GeeksforGeeks",
+            "url": "https://www.geeksforgeeks.org/data-engineering/what-is-data-engineering/",
+            "snippet": "www.geeksforgeeks.org/data-engineering/what-is-data-engineering/ Data engineering forms the backbone of modern data -driven systems, focusing on building and maintaining infrastructure for collecting, storing, processing, and analyzing data throughout its lifecycle. It ensures reliable, high-quality data is available for real-time and batch use. Build systems to move and process large-scale data efficiently."
+          }
+        ],
+        "text": "Data engineering is the foundation of modern data-driven systems, involving the creation and upkeep of infrastructure for collecting, storing, processing, and analyzing data throughout its entire lifecycle. This ensures that high-quality, reliable data is available for both real-time and batch usage, and involves building efficient systems to move and process large-scale data.\n\nTo become a Data Engineer, one can pursue a degree in computer science, develop skills in coding and automation, obtain a data engineering certification, and build a portfolio of relevant projects. There are also step-by-step guides available for this career path.",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash",
+        "agent": "researcher"
+      }
+    },
+    {
+      "sequence": 15,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 14,
+        "reason": "holding distill until the corrected research evidence lands",
+        "add": [],
+        "connect": [],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": false
+      }
+    },
+    {
+      "sequence": 16,
+      "kind": "task_succeeded",
+      "node_id": "search_5",
+      "payload": {
+        "query": "DevOps Engineer. Prefer",
+        "hits": [
+          {
+            "title": "Become A DevOps Engineer in 2026: [A Practical Roadmap]",
+            "url": "https://devopscube.com/become-devops-engineer/",
+            "snippet": "devopscube.com/become-devops-engineer/ This guide contains the practical roadmap for becoming a DevOps Engineer based on my 12+ years of experience working as a DevOps Engineer."
+          },
+          {
+            "title": "What Does a DevOps Engineer Do? And How to Become One",
+            "url": "https://www.coursera.org/articles/devops-engineer",
+            "snippet": "www.coursera.org/articles/devops-engineer A DevOps engineer is responsible for optimizing an organization's software, including software maintenance and server administration. Learn how to get the skills you need to be a DevOps engineer ."
+          },
+          {
+            "title": "What is a DevOps engineer? \u00b7 GitHub",
+            "url": "https://github.com/resources/articles/what-is-a-devops-engineer",
+            "snippet": "github.com/resources/articles/what-is-a-devops-engineer A DevOps engineer drives collaboration and automation across software teams. Learn about their key responsibilities, tools, and skills to improve delivery."
+          }
+        ],
+        "text": "A DevOps engineer is responsible for optimizing an organization's software, including software maintenance and server administration. They drive collaboration and automation across software teams to improve delivery. Becoming a DevOps engineer involves acquiring the necessary skills and following a practical roadmap.",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash",
+        "agent": "researcher"
+      }
+    },
+    {
+      "sequence": 17,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 16,
+        "reason": "all corrected research evidence landed; synthesis can begin",
+        "add": [
+          "distill"
+        ],
+        "connect": [
+          [
+            "search_1",
+            "distill"
+          ],
+          [
+            "search_2",
+            "distill"
+          ],
+          [
+            "search_3",
+            "distill"
+          ],
+          [
+            "search_4",
+            "distill"
+          ],
+          [
+            "search_5",
+            "distill"
+          ]
+        ],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": false
+      }
+    },
+    {
+      "sequence": 18,
+      "kind": "task_started",
+      "node_id": "distill",
+      "payload": {
+        "skill": "distiller",
+        "agent": "distiller"
+      }
+    },
+    {
+      "sequence": 19,
+      "kind": "task_succeeded",
+      "node_id": "distill",
+      "payload": {
+        "text": "The UI should present a network graph with the following elements:\n\n**1. Central Canvas:**\n*   A large, interactive canvas displaying",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash",
+        "agent": "distiller"
+      }
+    },
+    {
+      "sequence": 20,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 19,
+        "reason": "research distilled; compose a validated A2UI surface from the real outcomes",
+        "add": [
+          "surface"
+        ],
+        "connect": [
+          [
+            "search_1",
+            "surface"
+          ],
+          [
+            "search_2",
+            "surface"
+          ],
+          [
+            "search_3",
+            "surface"
+          ],
+          [
+            "search_4",
+            "surface"
+          ],
+          [
+            "search_5",
+            "surface"
+          ],
+          [
+            "distill",
+            "surface"
+          ]
+        ],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": false
+      }
+    },
+    {
+      "sequence": 21,
+      "kind": "task_started",
+      "node_id": "surface",
+      "payload": {
+        "skill": "compose_surface",
+        "agent": "ui_composer"
+      }
+    },
+    {
+      "sequence": 22,
+      "kind": "task_succeeded",
+      "node_id": "surface",
+      "payload": {
+        "agent": "ui_composer",
+        "provider": "gemini_1",
+        "model": "gemini-2.5-flash",
+        "raw_surface": "```json\n{\n  \"root\": \"root\",\n  \"components\": [\n    {\n      \"id\": \"root\",\n      \"type\": \"Column\",\n      \"children\": [\n        \"title\",\n        \"summary\",\n        \"network_graph\"\n      ]\n    },\n    {\n      \"id\": \"title\",\n      \"type\": \"Text\",\n      \"variant\": \"heading\",\n      \"text\": {\n        \"$bind\": \"/title\"\n      }\n    },\n    {\n      \"id\": \"summary\",\n      \"type\": \"Text\",\n      \"variant\": \"body\",\n      \"text\": {\n        \"$bind\": \"/summary\"\n      }\n    },\n    {\n      \"id\": \"network_graph\",\n      \"type\": \"NetworkGraph\",\n      \"title\": \"Software Job Role Skill Overlap\",\n      \"nodes\": {\n        \"$bind\": \"/nodes\"\n      },\n      \"edges\": {\n        \"$bind\": \"/edges\"\n      },\n      \"layout\": \"circle\"\n    }\n  ]\n}\n```",
+        "surface": {
+          "root": "root",
+          "components": [
+            {
+              "id": "root",
+              "type": "Column",
+              "children": [
+                "title",
+                "summary",
+                "network_graph"
+              ]
+            },
+            {
+              "id": "title",
+              "type": "Text",
+              "variant": "heading",
+              "text": {
+                "$bind": "/title"
+              }
+            },
+            {
+              "id": "summary",
+              "type": "Text",
+              "variant": "body",
+              "text": {
+                "$bind": "/summary"
+              }
+            },
+            {
+              "id": "network_graph",
+              "type": "NetworkGraph",
+              "title": "Software Job Role Skill Overlap",
+              "nodes": {
+                "$bind": "/nodes"
+              },
+              "edges": {
+                "$bind": "/edges"
+              },
+              "layout": "circle"
+            }
+          ],
+          "dataModel": {
+            "title": "Compose a UI that shows how these software job roles relate by shared skills as a network of connections: Backend Engineer, Frontend Engineer, Data Engineer, ML Engineer, and DevOps Engineer. Prefer a relationship network of the roles with weighted links for skill overlap.",
+            "goal": "Compose a UI that shows how these software job roles relate by shared skills as a network of connections: Backend Engineer, Frontend Engineer, Data Engineer, ML Engineer, and DevOps Engineer. Prefer a relationship network of the roles with weighted links for skill overlap.",
+            "summary": "The UI should present a network graph with the following elements:\n\n**1. Central Canvas:**\n*   A large, interactive canvas displaying",
+            "results": [
+              {
+                "label": "Backend Engineer",
+                "detail": "Backend Engineer roles are available in New Delhi, with job listings found on platforms like LinkedIn and Naukri.com. The field of backend engineering involves fundamentals such as system architecture, APIs, databases, scalability, security, and cloud infrastructure, all of which are essential skills for modern backend engineers."
+              },
+              {
+                "label": "Frontend Engineer",
+                "detail": "A Front-End Engineer plans and creates the \"front end\" or design end of websites, applications, and software. They are responsible for making websites beautiful, functional, and fast, often working closely with designers. Key technologies involved include HTML, CSS, and JavaScript, along with web apps and frameworks like React."
+              },
+              {
+                "label": "Data Engineer",
+                "detail": "Data engineering is the foundation of modern data-driven systems, involving the creation and upkeep of infrastructure for collecting, storing, processing, and analyzing data throughout its entire lifecycle. This ensures that high-quality, reliable data is available for both real-time and batch usage, and involves building efficient systems to move and process large-scale data.\n\nTo become a Data Engineer, one can pursue a degree in computer science, develop skills in coding and automation, obtain a data engineering certification, and build a portfolio of relevant projects. There are also step-b"
+              },
+              {
+                "label": "ML Engineer",
+                "detail": "A Machine Learning (ML) Engineer works with algorithms, data, and artificial intelligence (AI) to design, build, and productionize ML models that solve business challenges. Their workflow typically involves building predictive models for tasks like forecasting, ranking, classification, anomaly detection, and deep learning. They also design end-to-end ML pipelines, which include data preparation, feature engineering, model training, and evaluation."
+              },
+              {
+                "label": "DevOps Engineer. Prefer",
+                "detail": "A DevOps engineer is responsible for optimizing an organization's software, including software maintenance and server administration. They drive collaboration and automation across software teams to improve delivery. Becoming a DevOps engineer involves acquiring the necessary skills and following a practical roadmap."
+              }
+            ],
+            "items": [
+              {
+                "label": "Backend Engineer"
+              },
+              {
+                "label": "Frontend Engineer"
+              },
+              {
+                "label": "Data Engineer"
+              },
+              {
+                "label": "ML Engineer"
+              },
+              {
+                "label": "DevOps Engineer. Prefer"
+              }
+            ],
+            "metrics": [
+              {
+                "label": "Backend Engineer",
+                "value": 3
+              },
+              {
+                "label": "Frontend Engineer",
+                "value": 3
+              },
+              {
+                "label": "Data Engineer",
+                "value": 3
+              },
+              {
+                "label": "ML Engineer",
+                "value": 3
+              },
+              {
+                "label": "DevOps Engineer. Prefer",
+                "value": 3
+              }
+            ],
+            "spark": [
+              3.0,
+              3.0,
+              3.0,
+              3.0,
+              3.0
+            ],
+            "table_rows": [
+              {
+                "Item": "Backend Engineer",
+                "Sources": 3
+              },
+              {
+                "Item": "Frontend Engineer",
+                "Sources": 3
+              },
+              {
+                "Item": "Data Engineer",
+                "Sources": 3
+              },
+              {
+                "Item": "ML Engineer",
+                "Sources": 3
+              },
+              {
+                "Item": "DevOps Engineer. Prefer",
+                "Sources": 3
+              }
+            ],
+            "item_count": 5,
+            "source_count": 15,
+            "item_0_label": "Backend Engineer",
+            "item_0_detail": "Backend Engineer roles are available in New Delhi, with job listings found on platforms like LinkedIn and Naukri.com. The field of backend engineering involves fundamentals such as system architecture, APIs, databases, scalability, security, and cloud infrastructure, all of which are essential skills for modern backend engineers.",
+            "item_1_label": "Frontend Engineer",
+            "item_1_detail": "A Front-End Engineer plans and creates the \"front end\" or design end of websites, applications, and software. They are responsible for making websites beautiful, functional, and fast, often working closely with designers. Key technologies involved include HTML, CSS, and JavaScript, along with web apps and frameworks like React.",
+            "item_2_label": "Data Engineer",
+            "item_2_detail": "Data engineering is the foundation of modern data-driven systems, involving the creation and upkeep of infrastructure for collecting, storing, processing, and analyzing data throughout its entire lifecycle. This ensures that high-quality, reliable data is available for both real-time and batch usage, and involves building efficient systems to move and process large-scale data.\n\nTo become a Data Engineer, one can pursue a degree in computer science, develop skills in coding and automation, obtain a data engineering certification, and build a portfolio of relevant projects. There are also step-b",
+            "item_3_label": "ML Engineer",
+            "item_3_detail": "A Machine Learning (ML) Engineer works with algorithms, data, and artificial intelligence (AI) to design, build, and productionize ML models that solve business challenges. Their workflow typically involves building predictive models for tasks like forecasting, ranking, classification, anomaly detection, and deep learning. They also design end-to-end ML pipelines, which include data preparation, feature engineering, model training, and evaluation.",
+            "item_4_label": "DevOps Engineer. Prefer",
+            "item_4_detail": "A DevOps engineer is responsible for optimizing an organization's software, including software maintenance and server administration. They drive collaboration and automation across software teams to improve delivery. Becoming a DevOps engineer involves acquiring the necessary skills and following a practical roadmap.",
+            "subjects": [
+              "Backend Engineer",
+              "Frontend Engineer",
+              "Data Engineer",
+              "ML Engineer",
+              "DevOps Engineer. Prefer"
+            ],
+            "timeline": [
+              {
+                "time": "1",
+                "label": "run_started"
+              },
+              {
+                "time": "2",
+                "label": "graph_patched"
+              },
+              {
+                "time": "3",
+                "label": "task_started search_1"
+              },
+              {
+                "time": "4",
+                "label": "task_started search_2"
+              },
+              {
+                "time": "5",
+                "label": "task_started search_3"
+              },
+              {
+                "time": "6",
+                "label": "task_started search_4"
+              },
+              {
+                "time": "7",
+                "label": "task_succeeded search_2"
+              },
+              {
+                "time": "8",
+                "label": "graph_patched"
+              },
+              {
+                "time": "9",
+                "label": "task_started search_5"
+              },
+              {
+                "time": "10",
+                "label": "task_succeeded search_1"
+              },
+              {
+                "time": "11",
+                "label": "graph_patched"
+              },
+              {
+                "time": "12",
+                "label": "task_succeeded search_4"
+              },
+              {
+                "time": "13",
+                "label": "graph_patched"
+              },
+              {
+                "time": "14",
+                "label": "task_succeeded search_3"
+              },
+              {
+                "time": "15",
+                "label": "graph_patched"
+              },
+              {
+                "time": "16",
+                "label": "task_succeeded search_5"
+              },
+              {
+                "time": "17",
+                "label": "graph_patched"
+              },
+              {
+                "time": "18",
+                "label": "task_started distill"
+              },
+              {
+                "time": "19",
+                "label": "task_succeeded distill"
+              },
+              {
+                "time": "20",
+                "label": "graph_patched"
+              },
+              {
+                "time": "21",
+                "label": "task_started surface"
+              }
+            ],
+            "progress_value": 6,
+            "progress_max": 7,
+            "nodes": [
+              {
+                "id": "backend_engineer",
+                "label": "Backend Engineer"
+              },
+              {
+                "id": "frontend_engineer",
+                "label": "Frontend Engineer"
+              },
+              {
+                "id": "data_engineer",
+                "label": "Data Engineer"
+              },
+              {
+                "id": "ml_engineer",
+                "label": "ML Engineer"
+              },
+              {
+                "id": "devops_engineer_prefer",
+                "label": "DevOps Engineer. Prefer"
+              }
+            ],
+            "edges": [
+              {
+                "source": "backend_engineer",
+                "target": "frontend_engineer",
+                "weight": 4.0
+              },
+              {
+                "source": "backend_engineer",
+                "target": "data_engineer",
+                "weight": 4.0
+              },
+              {
+                "source": "backend_engineer",
+                "target": "ml_engineer",
+                "weight": 4.0
+              },
+              {
+                "source": "backend_engineer",
+                "target": "devops_engineer_prefer",
+                "weight": 4.0
+              },
+              {
+                "source": "frontend_engineer",
+                "target": "data_engineer",
+                "weight": 4.0
+              },
+              {
+                "source": "frontend_engineer",
+                "target": "ml_engineer",
+                "weight": 4.0
+              },
+              {
+                "source": "frontend_engineer",
+                "target": "devops_engineer_prefer",
+                "weight": 4.0
+              },
+              {
+                "source": "data_engineer",
+                "target": "ml_engineer",
+                "weight": 4.0
+              },
+              {
+                "source": "data_engineer",
+                "target": "devops_engineer_prefer",
+                "weight": 4.0
+              },
+              {
+                "source": "ml_engineer",
+                "target": "devops_engineer_prefer",
+                "weight": 4.0
+              }
+            ]
+          }
+        },
+        "data_model": {
+          "title": "Compose a UI that shows how these software job roles relate by shared skills as a network of connections: Backend Engineer, Frontend Engineer, Data Engineer, ML Engineer, and DevOps Engineer. Prefer a relationship network of the roles with weighted links for skill overlap.",
+          "goal": "Compose a UI that shows how these software job roles relate by shared skills as a network of connections: Backend Engineer, Frontend Engineer, Data Engineer, ML Engineer, and DevOps Engineer. Prefer a relationship network of the roles with weighted links for skill overlap.",
+          "summary": "The UI should present a network graph with the following elements:\n\n**1. Central Canvas:**\n*   A large, interactive canvas displaying",
+          "results": [
+            {
+              "label": "Backend Engineer",
+              "detail": "Backend Engineer roles are available in New Delhi, with job listings found on platforms like LinkedIn and Naukri.com. The field of backend engineering involves fundamentals such as system architecture, APIs, databases, scalability, security, and cloud infrastructure, all of which are essential skills for modern backend engineers."
+            },
+            {
+              "label": "Frontend Engineer",
+              "detail": "A Front-End Engineer plans and creates the \"front end\" or design end of websites, applications, and software. They are responsible for making websites beautiful, functional, and fast, often working closely with designers. Key technologies involved include HTML, CSS, and JavaScript, along with web apps and frameworks like React."
+            },
+            {
+              "label": "Data Engineer",
+              "detail": "Data engineering is the foundation of modern data-driven systems, involving the creation and upkeep of infrastructure for collecting, storing, processing, and analyzing data throughout its entire lifecycle. This ensures that high-quality, reliable data is available for both real-time and batch usage, and involves building efficient systems to move and process large-scale data.\n\nTo become a Data Engineer, one can pursue a degree in computer science, develop skills in coding and automation, obtain a data engineering certification, and build a portfolio of relevant projects. There are also step-b"
+            },
+            {
+              "label": "ML Engineer",
+              "detail": "A Machine Learning (ML) Engineer works with algorithms, data, and artificial intelligence (AI) to design, build, and productionize ML models that solve business challenges. Their workflow typically involves building predictive models for tasks like forecasting, ranking, classification, anomaly detection, and deep learning. They also design end-to-end ML pipelines, which include data preparation, feature engineering, model training, and evaluation."
+            },
+            {
+              "label": "DevOps Engineer. Prefer",
+              "detail": "A DevOps engineer is responsible for optimizing an organization's software, including software maintenance and server administration. They drive collaboration and automation across software teams to improve delivery. Becoming a DevOps engineer involves acquiring the necessary skills and following a practical roadmap."
+            }
+          ],
+          "items": [
+            {
+              "label": "Backend Engineer"
+            },
+            {
+              "label": "Frontend Engineer"
+            },
+            {
+              "label": "Data Engineer"
+            },
+            {
+              "label": "ML Engineer"
+            },
+            {
+              "label": "DevOps Engineer. Prefer"
+            }
+          ],
+          "metrics": [
+            {
+              "label": "Backend Engineer",
+              "value": 3
+            },
+            {
+              "label": "Frontend Engineer",
+              "value": 3
+            },
+            {
+              "label": "Data Engineer",
+              "value": 3
+            },
+            {
+              "label": "ML Engineer",
+              "value": 3
+            },
+            {
+              "label": "DevOps Engineer. Prefer",
+              "value": 3
+            }
+          ],
+          "spark": [
+            3.0,
+            3.0,
+            3.0,
+            3.0,
+            3.0
+          ],
+          "table_rows": [
+            {
+              "Item": "Backend Engineer",
+              "Sources": 3
+            },
+            {
+              "Item": "Frontend Engineer",
+              "Sources": 3
+            },
+            {
+              "Item": "Data Engineer",
+              "Sources": 3
+            },
+            {
+              "Item": "ML Engineer",
+              "Sources": 3
+            },
+            {
+              "Item": "DevOps Engineer. Prefer",
+              "Sources": 3
+            }
+          ],
+          "item_count": 5,
+          "source_count": 15,
+          "item_0_label": "Backend Engineer",
+          "item_0_detail": "Backend Engineer roles are available in New Delhi, with job listings found on platforms like LinkedIn and Naukri.com. The field of backend engineering involves fundamentals such as system architecture, APIs, databases, scalability, security, and cloud infrastructure, all of which are essential skills for modern backend engineers.",
+          "item_1_label": "Frontend Engineer",
+          "item_1_detail": "A Front-End Engineer plans and creates the \"front end\" or design end of websites, applications, and software. They are responsible for making websites beautiful, functional, and fast, often working closely with designers. Key technologies involved include HTML, CSS, and JavaScript, along with web apps and frameworks like React.",
+          "item_2_label": "Data Engineer",
+          "item_2_detail": "Data engineering is the foundation of modern data-driven systems, involving the creation and upkeep of infrastructure for collecting, storing, processing, and analyzing data throughout its entire lifecycle. This ensures that high-quality, reliable data is available for both real-time and batch usage, and involves building efficient systems to move and process large-scale data.\n\nTo become a Data Engineer, one can pursue a degree in computer science, develop skills in coding and automation, obtain a data engineering certification, and build a portfolio of relevant projects. There are also step-b",
+          "item_3_label": "ML Engineer",
+          "item_3_detail": "A Machine Learning (ML) Engineer works with algorithms, data, and artificial intelligence (AI) to design, build, and productionize ML models that solve business challenges. Their workflow typically involves building predictive models for tasks like forecasting, ranking, classification, anomaly detection, and deep learning. They also design end-to-end ML pipelines, which include data preparation, feature engineering, model training, and evaluation.",
+          "item_4_label": "DevOps Engineer. Prefer",
+          "item_4_detail": "A DevOps engineer is responsible for optimizing an organization's software, including software maintenance and server administration. They drive collaboration and automation across software teams to improve delivery. Becoming a DevOps engineer involves acquiring the necessary skills and following a practical roadmap.",
+          "subjects": [
+            "Backend Engineer",
+            "Frontend Engineer",
+            "Data Engineer",
+            "ML Engineer",
+            "DevOps Engineer. Prefer"
+          ],
+          "timeline": [
+            {
+              "time": "1",
+              "label": "run_started"
+            },
+            {
+              "time": "2",
+              "label": "graph_patched"
+            },
+            {
+              "time": "3",
+              "label": "task_started search_1"
+            },
+            {
+              "time": "4",
+              "label": "task_started search_2"
+            },
+            {
+              "time": "5",
+              "label": "task_started search_3"
+            },
+            {
+              "time": "6",
+              "label": "task_started search_4"
+            },
+            {
+              "time": "7",
+              "label": "task_succeeded search_2"
+            },
+            {
+              "time": "8",
+              "label": "graph_patched"
+            },
+            {
+              "time": "9",
+              "label": "task_started search_5"
+            },
+            {
+              "time": "10",
+              "label": "task_succeeded search_1"
+            },
+            {
+              "time": "11",
+              "label": "graph_patched"
+            },
+            {
+              "time": "12",
+              "label": "task_succeeded search_4"
+            },
+            {
+              "time": "13",
+              "label": "graph_patched"
+            },
+            {
+              "time": "14",
+              "label": "task_succeeded search_3"
+            },
+            {
+              "time": "15",
+              "label": "graph_patched"
+            },
+            {
+              "time": "16",
+              "label": "task_succeeded search_5"
+            },
+            {
+              "time": "17",
+              "label": "graph_patched"
+            },
+            {
+              "time": "18",
+              "label": "task_started distill"
+            },
+            {
+              "time": "19",
+              "label": "task_succeeded distill"
+            },
+            {
+              "time": "20",
+              "label": "graph_patched"
+            },
+            {
+              "time": "21",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 6,
+          "progress_max": 7,
+          "nodes": [
+            {
+              "id": "backend_engineer",
+              "label": "Backend Engineer"
+            },
+            {
+              "id": "frontend_engineer",
+              "label": "Frontend Engineer"
+            },
+            {
+              "id": "data_engineer",
+              "label": "Data Engineer"
+            },
+            {
+              "id": "ml_engineer",
+              "label": "ML Engineer"
+            },
+            {
+              "id": "devops_engineer_prefer",
+              "label": "DevOps Engineer. Prefer"
+            }
+          ],
+          "edges": [
+            {
+              "source": "backend_engineer",
+              "target": "frontend_engineer",
+              "weight": 4.0
+            },
+            {
+              "source": "backend_engineer",
+              "target": "data_engineer",
+              "weight": 4.0
+            },
+            {
+              "source": "backend_engineer",
+              "target": "ml_engineer",
+              "weight": 4.0
+            },
+            {
+              "source": "backend_engineer",
+              "target": "devops_engineer_prefer",
+              "weight": 4.0
+            },
+            {
+              "source": "frontend_engineer",
+              "target": "data_engineer",
+              "weight": 4.0
+            },
+            {
+              "source": "frontend_engineer",
+              "target": "ml_engineer",
+              "weight": 4.0
+            },
+            {
+              "source": "frontend_engineer",
+              "target": "devops_engineer_prefer",
+              "weight": 4.0
+            },
+            {
+              "source": "data_engineer",
+              "target": "ml_engineer",
+              "weight": 4.0
+            },
+            {
+              "source": "data_engineer",
+              "target": "devops_engineer_prefer",
+              "weight": 4.0
+            },
+            {
+              "source": "ml_engineer",
+              "target": "devops_engineer_prefer",
+              "weight": 4.0
+            }
+          ]
+        },
+        "validator": {
+          "proposed": 4,
+          "accepted": 4,
+          "rejected": 0,
+          "ok": true,
+          "rejections": [],
+          "dangling_child_refs": [],
+          "component_types": [
+            "Column",
+            "NetworkGraph",
+            "Text"
+          ],
+          "component_count": 4
+        },
+        "upstream_used": [
+          "Backend Engineer",
+          "Frontend Engineer",
+          "Data Engineer",
+          "ML Engineer",
+          "DevOps Engineer. Prefer"
+        ],
+        "parse_ok": true
+      }
+    },
+    {
+      "sequence": 23,
+      "kind": "graph_patched",
+      "node_id": null,
+      "payload": {
+        "trigger_event": 22,
+        "reason": "Gemini composed a surface the S14 validator accepted",
+        "add": [],
+        "connect": [],
+        "cancel": [],
+        "wait": [],
+        "resume": [],
+        "finish": true
+      }
+    }
+  ]
+}

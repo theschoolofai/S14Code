@@ -136,6 +136,85 @@ S14_SELFCORRECT_CITY=Berlin GLC_BASE_URL=http://127.0.0.1:8111 \
   uv run python proofs/harness_selfcorrect.py  # -> proofs/harness_selfcorrect.json
 ```
 
+## The `NetworkGraph` component
+
+The catalog carries **24** component types: 15 A2UI Basic + 9 custom extensions.
+The ninth custom type is undirected `NetworkGraph`
+([`s13code/ui/catalog.py`](s13code/ui/catalog.py)) — nodes and weighted edges for
+relationship / similarity networks.
+
+```python
+"NetworkGraph": ComponentSpec("NetworkGraph", {
+    "title":  PropSpec("text"),
+    "nodes":  PropSpec("binding"),   # -> [{"id", "label"}]
+    "edges":  PropSpec("binding"),   # -> [{"source", "target", "weight"?}]
+    "layout": PropSpec("enum", ("circle",)),
+}, source="custom"),
+```
+
+The renderers in [`client/index.html`](s13code/ui/client/index.html) and
+[`client/app.html`](s13code/ui/client/app.html) draw SVG lines, circles, and
+labels with `createElementNS` / `createTextNode` only — never `innerHTML`.
+
+Nothing in the user prompt names `NetworkGraph`. Relational multi-entity runs
+expose `/nodes` and `/edges` in the data model; `compose_surface` offers the
+catalog and Gemini picks the type on its own.
+
+### Evidence — unprompted live compose (`run-e7c7612e8e1e`)
+
+Exact prompt (contains no `NetworkGraph` string):
+
+```text
+Compose a UI that shows how these software job roles relate by shared skills
+as a network of connections: Backend Engineer, Frontend Engineer, Data Engineer,
+ML Engineer, and DevOps Engineer. Prefer a relationship network of the roles
+with weighted links for skill overlap.
+```
+
+API shape used by the proof harness (equivalent to `respond_as: "ui"`):
+
+```bash
+GLC_BASE_URL=http://127.0.0.1:8111 S13_GATEWAY_PROVIDER=gemini \
+  S13_EMBEDDER=deterministic S14_SURFACE_MAX_TOKENS=12000 \
+  uv run python proofs/network_graph_compose.py
+# -> proofs/network_graph_compose.json
+```
+
+Graph (skills / agents / providers / models):
+
+| Node | Skill | Agent | Provider | Model | State |
+|---|---|---|---|---|---|
+| `search_1`…`search_5` | `researcher` | `researcher` | `gemini_1` | `gemini-2.5-flash` | succeeded |
+| `distill` | `distiller` | `distiller` | `gemini_1` | `gemini-2.5-flash` | succeeded |
+| `surface` | `compose_surface` | `ui_composer` | `gemini_1` | `gemini-2.5-flash` | succeeded |
+
+Ordered event trace (abbreviated): `run_started` → five `task_started`/`task_succeeded`
+on `search_*` → `distill` → `surface` → finish. Full journal is in
+[`proofs/network_graph_compose.json`](proofs/network_graph_compose.json).
+
+Final composed interface: validator accepted **3** components —
+`Column`, `Text`, **`NetworkGraph`** — with nodes/edges bound into the data model.
+`prompt_contains_NetworkGraph` is `false` in the captured proof.
+
+### Evidence — adversarial wall (before vs after)
+
+Before the declarative wall, the same payloads would have been executable HTML /
+DOM handlers / unregistered actions. After `NetworkGraph` joined the catalog,
+`validate_surface` still refuses every attack
+([`proofs/adversarial_network_graph.json`](proofs/adversarial_network_graph.json)):
+
+| Attack | Before (if unbound) | After (validator) |
+|---|---|---|
+| `RawHtml` + `onerror` image | script runs in the page | **catalog** — unknown type |
+| `NetworkGraph` title with `<script>` | markup executes via `innerHTML` | **data-not-code** — markup refused |
+| `NetworkGraph` + `onclick` | handler reaches the DOM | **data-not-code** — handler refused |
+| Button `transfer_all_funds` beside a graph | action enters the graph | **event** — unregistered; safe `NetworkGraph` still accepted |
+
+```bash
+uv run python proofs/adversarial_network_graph.py
+# -> proofs/adversarial_network_graph.json
+```
+
 ## Proofs and tests
 
 Everything the Session 14 widgets replay is real captured output under `proofs/`:
@@ -147,10 +226,24 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
+| `network_graph_compose.json` | `network_graph_compose.py` | Gemini composes `NetworkGraph` without naming it |
+| `adversarial_network_graph.json` | `adversarial_network_graph.py` | three invariants still hold around `NetworkGraph` |
+
+Reproduce from a fresh checkout (gateway on 8111 with Gemini keys in `glc_v3/.env`,
+never commit that file):
 
 ```bash
+git clone https://github.com/Prerit-112/S14Code.git && cd S14Code
+git checkout feat/network-graph
+uv sync
+uv run ruff check .
+uv run pytest -q
+uv run python proofs/adversarial_network_graph.py
+# with glc_v3 serving on 8111:
+GLC_BASE_URL=http://127.0.0.1:8111 S13_GATEWAY_PROVIDER=gemini \
+  S13_EMBEDDER=deterministic S14_SURFACE_MAX_TOKENS=12000 \
+  uv run python proofs/network_graph_compose.py
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
-uv run pytest -q                             # S13 core + regression tests + the S14 invariant tests
 ```
 
 ## Architecture
