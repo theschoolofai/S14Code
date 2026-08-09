@@ -132,6 +132,8 @@ const RENDERERS = {
     const d=resolve(c.data,ctx.dm)||[];e.append(sparkSvg(d,c.tone));return e;},
   BarChart:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"bar chart"));e.append(t);
     e.append(barSvg(resolve(c.data,ctx.dm)||[],c.xKey,c.yKey));return e;},
+  NetworkGraph:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"network"));e.append(t);
+    e.append(networkSvg(resolve(c.nodes,ctx.dm)||[],resolve(c.edges,ctx.dm)||[]));return e;},
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
@@ -152,9 +154,30 @@ function barSvg(data,xk,yk,unit){const ns="http://www.w3.org/2000/svg";const w=3
   const max=Math.max(...data.map(d=>+d[yk]),1);const bw=(w-pad*2)/data.length*.62;
   const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox",`0 0 ${w} ${h}`);svg.setAttribute("width","100%");svg.setAttribute("height","auto");
   data.forEach((d,i)=>{const x=pad+i*((w-pad*2)/data.length)+((w-pad*2)/data.length-bw)/2;const bh=(+d[yk])/max*(h-pad*2);
-    const r=document.createElementNS(ns,"rect");r.setAttribute("x",x);r.setAttribute("y",h-pad-bh);r.setAttribute("width",bw);r.setAttribute("height",bh);r.setAttribute("rx",3);r.setAttribute("fill","var(--accent)");svg.append(r);
-    const tv=document.createElementNS(ns,"text");tv.setAttribute("x",x+bw/2);tv.setAttribute("y",h-pad-bh-4);tv.setAttribute("text-anchor","middle");tv.setAttribute("font-size","10");tv.setAttribute("font-family","var(--font-mono)");tv.setAttribute("fill","var(--ink-muted)");tv.textContent=d[yk];svg.append(tv);
-    const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","10");tl.setAttribute("font-family","var(--font-mono)");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=d[xk];svg.append(tl);});
+  const r=document.createElementNS(ns,"rect");r.setAttribute("x",x);r.setAttribute("y",h-pad-bh);r.setAttribute("width",bw);r.setAttribute("height",bh);r.setAttribute("rx",3);r.setAttribute("fill","var(--accent)");svg.append(r);
+  const tv=document.createElementNS(ns,"text");tv.setAttribute("x",x+bw/2);tv.setAttribute("y",h-pad-bh-4);tv.setAttribute("text-anchor","middle");tv.setAttribute("font-size","10");tv.setAttribute("font-family","var(--font-mono)");tv.setAttribute("fill","var(--ink-muted)");tv.textContent=d[yk];svg.append(tv);
+  const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x+bw/2);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","10");tl.setAttribute("font-family","var(--font-mono)");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=d[xk];svg.append(tl);});
+  return svg;}
+
+// Undirected NetworkGraph: circle layout, SVG lines + circles + text nodes only.
+function networkSvg(nodes,edges){
+  const ns="http://www.w3.org/2000/svg";const w=420,h=320,cx=w/2,cy=h/2,R=Math.min(w,h)/2-48;
+  const list=Array.isArray(nodes)?nodes:[];const links=Array.isArray(edges)?edges:[];
+  const pos={};const n=Math.max(list.length,1);
+  list.forEach((node,i)=>{const id=String(node.id!=null?node.id:i);const a=-Math.PI/2+i*(2*Math.PI/n);
+    pos[id]={x:cx+R*Math.cos(a),y:cy+R*Math.sin(a),label:String(node.label!=null?node.label:id)};});
+  const weights=links.map(e=>+e.weight||1);const wmax=Math.max(...weights,1);
+  const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox",`0 0 ${w} ${h}`);svg.setAttribute("width","100%");svg.setAttribute("height","auto");
+  links.forEach(e=>{const a=pos[String(e.source)],b=pos[String(e.target)];if(!a||!b)return;
+    const line=document.createElementNS(ns,"line");line.setAttribute("x1",a.x);line.setAttribute("y1",a.y);line.setAttribute("x2",b.x);line.setAttribute("y2",b.y);
+    line.setAttribute("stroke","var(--rule-strong)");line.setAttribute("stroke-width",String(1+3*((+e.weight||1)/wmax)));svg.append(line);});
+  Object.keys(pos).forEach(id=>{const p=pos[id];
+    const c=document.createElementNS(ns,"circle");c.setAttribute("cx",p.x);c.setAttribute("cy",p.y);c.setAttribute("r","16");
+    c.setAttribute("fill","var(--accent-soft)");c.setAttribute("stroke","var(--accent)");c.setAttribute("stroke-width","2");svg.append(c);
+    const t=document.createElementNS(ns,"text");t.setAttribute("x",p.x);t.setAttribute("y",p.y+30);t.setAttribute("text-anchor","middle");
+    t.setAttribute("font-size","11");t.setAttribute("font-family","var(--font-mono)");t.setAttribute("fill","var(--ink)");t.appendChild(document.createTextNode(p.label));svg.append(t);});
+  if(!list.length){const t=document.createElementNS(ns,"text");t.setAttribute("x",cx);t.setAttribute("y",cy);t.setAttribute("text-anchor","middle");
+    t.setAttribute("font-size","12");t.setAttribute("fill","var(--ink-muted)");t.appendChild(document.createTextNode("no nodes"));svg.append(t);}
   return svg;}
 
 function renderTable(c,ctx){const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim());let rows=(resolve(c.rows,ctx.dm)||[]).slice();
