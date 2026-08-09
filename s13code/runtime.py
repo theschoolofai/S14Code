@@ -580,6 +580,7 @@ class S13Runtime:
                 '"metrics": [{"label": string, "value": number or string, "unit": string}], '
                 '"series": [{"label": string, "value": number}], '
                 '"table": {"columns": [string, ...], "rows": [{column: value, ...}]}, '
+                '"code_diff": {"title": string, "old_code": string, "new_code": string}, '
                 '"choices": [{"id": string, "label": string}]}. '
                 "Produce WHICHEVER of these fit the goal; prefer structured fields over long prose; keep points "
                 "short. Use 'sections' for ordered groups (days, steps, stages, phases, topics). Use 'metrics' "
@@ -823,6 +824,16 @@ class S13Runtime:
                     if rows:
                         data_model["table_rows"] = rows
 
+                code_diff = content_structured.get("code_diff")
+                if isinstance(code_diff, dict):
+                    old_c = str(code_diff.get("old_code") or "").strip()
+                    new_c = str(code_diff.get("new_code") or "").strip()
+                    diff_t = str(code_diff.get("title") or "Formula / Code Comparison").strip()
+                    if old_c or new_c:
+                        data_model["diff_title"] = diff_t
+                        data_model["old_code"] = old_c
+                        data_model["new_code"] = new_c
+
                 choices = content_structured.get("choices")
                 if isinstance(choices, list) and choices:
                     clean_choices: list[dict[str, Any]] = []
@@ -849,12 +860,13 @@ class S13Runtime:
                       '...}. Do NOT wrap fields in a "props" object and do NOT nest a "properties" key. The '
                       'catalog uses A2UI Basic names: use "Text" with "variant":"heading" for titles (there is NO '
                       '"Heading" type), "Row"/"Column"/"List"/"Card" for layout (there is NO "Grid" type), "Tabs" '
-                      'whose "children" are the panels directly (there is NO separate "Tab" type), and "Button" '
+                      'whose "children" are the panels directly (there is NO separate "Tab" type), "CodeDiff" for code/solution diffs, and "Button" '
                       'for tappable choices. Shape examples (fields inline): '
                       '{"id":"h","type":"Text","variant":"heading","text":{"$bind":"/title"}}  '
                       '{"id":"r","type":"Row","align":"stretch","justify":"spaceBetween","children":["a","b"]}  '
                       '{"id":"b1","type":"Button","label":"Choice A","onPress":{"action":"request_data"}}  '
                       '{"id":"body","type":"Text","variant":"body","text":{"$bind":"/summary"}}  '
+                      '{"id":"cd","type":"CodeDiff","title":"Diff","oldCode":{"$bind":"/old_code"},"newCode":{"$bind":"/new_code"}}  '
                       '{"id":"tabs","type":"Tabs","labels":"One,Two","children":["p0","p1"]}. '
                       "Use ONLY the component types and props named in the catalog. Every DATA value a component "
                       'shows MUST be a binding {"$bind":"/pointer"} into the dataModel; a Button/Card/Tabs '
@@ -863,7 +875,7 @@ class S13Runtime:
                       "type, prop, event handler, URL, or markup. children/labels reference component ids. "
                       "Prefer the RICHEST fitting component for each piece of data, NEVER one big Text blob: a "
                       "Timeline or a List/Column of Cards for ordered groups, StatTiles in a Row for key numbers, "
-                      "a BarChart or Sparkline for a numeric series, a DataTable for tabular rows, and Buttons for "
+                      "a CodeDiff for code/formula updates, a BarChart or Sparkline for a numeric series, a DataTable for tabular rows, and Buttons for "
                       "tappable choices. Fall back to a single Text only when the data has no structure. Return "
                       "JSON only: no prose, no fences.")
             instruction = {
@@ -881,6 +893,7 @@ class S13Runtime:
                             "and a Text bound to /section_N_points; "
                             "for /metrics render a Row of StatTiles, each StatTile value bound to /metric_N_value "
                             "with a literal label; "
+                            "for /old_code or /new_code render a CodeDiff (title literal or \"Solution Diff\", oldCode bound to /old_code, newCode bound to /new_code); "
                             "for /series render a BarChart (data bound to /series, xKey \"label\", yKey \"value\") "
                             "or a Sparkline bound to /series_values; "
                             "for /table_rows render a DataTable (rows bound to /table_rows, columns the literal "

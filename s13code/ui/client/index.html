@@ -135,6 +135,7 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  CodeDiff:(c,ctx)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(text(c.title));e.append(h);}const oldText=String(resolve(c.oldCode,ctx.dm)||"");const newText=String(resolve(c.newCode,ctx.dm)||"");const box=$("div");box.style.cssText="font-family:var(--font-mono);font-size:12px;display:flex;flex-direction:column;gap:3px;margin-top:6px";oldText.split(/\r?\n/).forEach(l=>{if(!l)return;const r=$("div");r.style.cssText="background:var(--red-soft);color:var(--red-ink);padding:3px 8px;border-radius:4px";r.append(text("- "+l));box.append(r);});newText.split(/\r?\n/).forEach(l=>{if(!l)return;const r=$("div");r.style.cssText="background:var(--green-soft);color:var(--green-ink);padding:3px 8px;border-radius:4px";r.append(text("+ "+l));box.append(r);});e.append(box);return e;},
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}

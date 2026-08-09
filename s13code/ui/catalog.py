@@ -117,6 +117,10 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "summary": PropSpec("binding"), "params": PropSpec("binding"),
         "confirm": PropSpec("action"), "reject": PropSpec("action"),
     }, source="custom"),
+    "CodeDiff": ComponentSpec("CodeDiff", {
+        "title": PropSpec("text"), "oldCode": PropSpec("binding"),
+        "newCode": PropSpec("binding"), "language": PropSpec("text"),
+    }, source="custom"),
 }
 
 # The closed set of action names a surface may emit. An action the agent did
