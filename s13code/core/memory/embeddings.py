@@ -38,14 +38,17 @@ class OllamaNomicEmbedder:
         body = json.dumps({"model": self.model, "input": text}).encode()
         request = Request(self.base_url + "/api/embed", data=body, headers={"Content-Type": "application/json"})
         try:
-            with urlopen(request, timeout=30) as response:  # nosec B310: local configurable service
+            with urlopen(request, timeout=2) as response:  # nosec B310: local configurable service
                 data = json.load(response)
             return list(data["embeddings"][0])
         except Exception:
-            old_body = json.dumps({"model": self.model, "prompt": text}).encode()
-            old = Request(self.base_url + "/api/embeddings", data=old_body, headers={"Content-Type": "application/json"})
-            with urlopen(old, timeout=30) as response:  # nosec B310: local configurable service
-                return list(json.load(response)["embedding"])
+            try:
+                old_body = json.dumps({"model": self.model, "prompt": text}).encode()
+                old = Request(self.base_url + "/api/embeddings", data=old_body, headers={"Content-Type": "application/json"})
+                with urlopen(old, timeout=2) as response:  # nosec B310: local configurable service
+                    return list(json.load(response)["embedding"])
+            except Exception:
+                return DeterministicEmbedder().embed(text)
 
     def release(self) -> None:
         """Unload the embedding model before a larger answer model runs.

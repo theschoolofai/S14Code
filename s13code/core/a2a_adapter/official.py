@@ -82,6 +82,7 @@ class OfficialA2AServicer(pb_grpc.A2AServiceServicer):
         yield p.StreamResponse(task=_task(task))
         while task.state not in {TaskState.COMPLETED,TaskState.FAILED,TaskState.CANCELED}:
             await asyncio.sleep(.02); yield p.StreamResponse(task=_task(task))
+        yield p.StreamResponse(task=_task(task))
     async def CreateTaskPushNotificationConfig(self, request, context): await self._auth(context); return self.pushes.put(request)
     async def GetTaskPushNotificationConfig(self, request, context):
         await self._auth(context)
