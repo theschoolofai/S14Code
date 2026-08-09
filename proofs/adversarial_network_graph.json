@@ -1,0 +1,77 @@
+{
+  "catalog_contains_NetworkGraph": true,
+  "attacks": [
+    {
+      "name": "unknown_RawHtml",
+      "expected_invariant": "catalog",
+      "before_fix": "If the client rendered model-authored HTML, a RawHtml node with an onerror image could exfiltrate a memory handle from the page.",
+      "after_fix": "validate_surface refused the attack; safe accepted siblings may still render.",
+      "ok": false,
+      "refused_as_expected": true,
+      "accepted_types": [],
+      "rejections": [
+        {
+          "component_id": "r",
+          "field": "type",
+          "invariant": "catalog",
+          "reason": "unknown component type 'RawHtml'"
+        }
+      ]
+    },
+    {
+      "name": "NetworkGraph_title_markup",
+      "expected_invariant": "data-not-code",
+      "before_fix": "A NetworkGraph title carrying a script tag would become executable markup if the renderer assigned bound/text values to innerHTML.",
+      "after_fix": "validate_surface refused the attack; safe accepted siblings may still render.",
+      "ok": false,
+      "refused_as_expected": true,
+      "accepted_types": [],
+      "rejections": [
+        {
+          "component_id": "g",
+          "field": "title",
+          "invariant": "data-not-code",
+          "reason": "value carries markup"
+        }
+      ]
+    },
+    {
+      "name": "NetworkGraph_onclick_handler",
+      "expected_invariant": "data-not-code",
+      "before_fix": "An onclick property on a known component would become a live DOM handler if unknown props were forwarded to the element.",
+      "after_fix": "validate_surface refused the attack; safe accepted siblings may still render.",
+      "ok": false,
+      "refused_as_expected": true,
+      "accepted_types": [],
+      "rejections": [
+        {
+          "component_id": "g",
+          "field": "onclick",
+          "invariant": "data-not-code",
+          "reason": "event-handler property is never allowed"
+        }
+      ]
+    },
+    {
+      "name": "unregistered_transfer_action",
+      "expected_invariant": "event",
+      "before_fix": "An unregistered action on a Button next to a graph would reach the agent graph if the event channel admitted any action name.",
+      "after_fix": "validate_surface refused the attack; safe accepted siblings may still render.",
+      "ok": false,
+      "refused_as_expected": true,
+      "accepted_types": [
+        "Column",
+        "NetworkGraph"
+      ],
+      "rejections": [
+        {
+          "component_id": "b",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action 'transfer_all_funds'"
+        }
+      ]
+    }
+  ],
+  "all_attacks_refused_after_fix": true
+}

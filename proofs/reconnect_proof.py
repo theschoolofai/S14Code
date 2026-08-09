@@ -26,14 +26,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from s13code.ui.agui import (  # noqa: E402
-    empty_state,
+from s13code.ui.agui import (
     replay_state,
     run_data_model,
     state_snapshot,
     stream_agui,
 )
-from s13code.ui.fixtures import RecordedS13  # noqa: E402
+from s13code.ui.fixtures import RecordedS13
 
 OUT = Path(__file__).parent / "reconnect_proof.json"
 DROP_AFTER = 6  # the socket dies partway through the run

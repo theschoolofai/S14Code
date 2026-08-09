@@ -19,11 +19,11 @@ import httpx
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from s13code.ui.fixtures import RecordedS13  # noqa: E402
-from s13code.ui.validator import validate_surface  # noqa: E402
-
 # reuse the prompt + normalizer already written for the local demo
-from generate_live import SYSTEM, build_prompt, extract, normalize  # noqa: E402
+from generate_live import SYSTEM, build_prompt, extract, normalize
+
+from s13code.ui.fixtures import RecordedS13
+from s13code.ui.validator import validate_surface
 
 OUT = Path(__file__).parent / "gemini_surface.json"
 BASE = os.getenv("GLC_BASE_URL", "http://127.0.0.1:8111").rstrip("/")

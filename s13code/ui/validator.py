@@ -23,9 +23,9 @@ from .catalog import COMPONENTS, REGISTERED_ACTIONS
 
 # Markup / script / javascript-url smells. A ``text`` or ``binding`` value that
 # matches is treated as an attempt to reach execution and is refused.
-_MARKUP = re.compile(r"<[a-z!/][^>]*>|</[a-z]+>", re.I)
-_JS_URL = re.compile(r"^\s*(javascript|data|vbscript):", re.I)
-_HANDLER = re.compile(r"^on[a-z]+$", re.I)  # onclick, onerror, onload, ...
+_MARKUP = re.compile(r"<[a-z!/][^>]*>|</[a-z]+>", re.IGNORECASE)
+_JS_URL = re.compile(r"^\s*(javascript|data|vbscript):", re.IGNORECASE)
+_HANDLER = re.compile(r"^on[a-z]+$", re.IGNORECASE)  # onclick, onerror, onload, ...
 _POINTER = re.compile(r"^/[^\s]*$")  # a JSON Pointer: /rows, /pending/params
 
 

@@ -5,9 +5,9 @@ S13Core components into the code path used by HTTP and channel messages.
 """
 from __future__ import annotations
 
+import json
 import os
 import re
-import json
 import uuid
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
@@ -16,7 +16,7 @@ from typing import Any
 
 from s13code.core.live_graph import GraphPatch, GraphStore, LiveGraphExecutor, TaskSpec
 from s13code.core.memory import MemoryKind, MemoryRecord, MemoryScope, MemoryStore, Principal, SourceRef
-from s13code.core.memory.embeddings import OllamaNomicEmbedder
+from s13code.core.memory.embeddings import DeterministicEmbedder, OllamaNomicEmbedder
 from s13code.planner import ConstrainedGraphPatchPlanner
 from s13code.tools import fetch_url, sandbox_files, sandbox_path, web_search
 
@@ -91,7 +91,7 @@ def _research_topic(prompt: str, entities: list[str]) -> str:
     topic = prompt
     for entity in entities:
         topic = topic.replace(entity, " ")
-    topic = re.split(r"\b(?:compose|build|create|make|generate|design)\b", topic, maxsplit=1, flags=re.I)[0]
+    topic = re.split(r"\b(?:compose|build|create|make|generate|design)\b", topic, maxsplit=1, flags=re.IGNORECASE)[0]
     topic = re.sub(r"[^A-Za-z0-9 ]+", " ", topic)
     return " ".join(topic.split())
 
@@ -207,7 +207,14 @@ class S13Runtime:
         # between those profiles.
         self.root = root or Path(os.getenv("S13_DATA_DIR", str(Path.home() / ".s13code")))
         self.root.mkdir(parents=True, exist_ok=True)
-        self.memory = MemoryStore(self.root / "memory.sqlite", embedder=OllamaNomicEmbedder())
+        # Episode writes embed on every run. Local laptops use Ollama; proofs and
+        # hosted demos can set S13_EMBEDDER=deterministic for the offline embedder.
+        embedder = (
+            DeterministicEmbedder()
+            if os.getenv("S13_EMBEDDER", "ollama").strip().lower() == "deterministic"
+            else OllamaNomicEmbedder(base_url=os.getenv("OLLAMA_URL", "http://127.0.0.1:11434"))
+        )
+        self.memory = MemoryStore(self.root / "memory.sqlite", embedder=embedder)
         self.graph = GraphStore(self.root / "graph.sqlite")
 
     def close(self) -> None:
@@ -391,7 +398,7 @@ class S13Runtime:
                 return GraphPatch()
 
         async def recall(task: TaskSpec) -> dict[str, Any]:
-            corpus_query = bool(re.search(r"\b(papers?|documents?|indexed|corpus)\b", task.input["query"], re.I))
+            corpus_query = bool(re.search(r"\b(papers?|documents?|indexed|corpus)\b", task.input["query"], re.IGNORECASE))
             kinds = ([MemoryKind.DOCUMENT_CHUNK] if corpus_query else
                      [MemoryKind.FACT, MemoryKind.DOCUMENT_CHUNK, MemoryKind.PLAYBOOK, MemoryKind.EPISODE])
             # Ask the store for a wider candidate pool, then diversify corpus
@@ -499,7 +506,7 @@ class S13Runtime:
         async def remember_explicit(task: TaskSpec) -> dict[str, Any]:
             fact_text = task.input["text"]
             birthday = re.search(r"(?:my\s+)?mom(?:'s)?\s+birthday\s+is\s+(\d{1,2}\s+[A-Za-z]+\s+\d{4})",
-                                 fact_text, re.I)
+                                 fact_text, re.IGNORECASE)
             if birthday:
                 fact_text = f"Mom's birthday is {birthday.group(1)}."
             record = runtime.memory.write(MemoryRecord(
@@ -525,7 +532,7 @@ class S13Runtime:
             return {"path": str(path), "text": path.read_text(encoding="utf-8")[:60_000]}
 
         async def create_reminder(task: TaskSpec) -> dict[str, Any]:
-            match = re.search(r"birthday is\s+(\d{1,2}\s+[A-Za-z]+\s+\d{4})", task.input["prompt"], re.I)
+            match = re.search(r"birthday is\s+(\d{1,2}\s+[A-Za-z]+\s+\d{4})", task.input["prompt"], re.IGNORECASE)
             if not match:
                 raise ValueError("could not safely parse a birthday date for the reminder")
             day = datetime.strptime(match.group(1), "%d %B %Y").date()
@@ -872,6 +879,23 @@ class S13Runtime:
                                     "weight": weight if weight is not None else 1.0,
                                 })
                         data_model["edges"] = clean_edges
+
+            # Relational goals researched as multi-entity runs still need a graph
+            # the composer can bind: expose outcome subjects as undirected nodes/
+            # edges when the content role did not already supply them.
+            relational = bool(re.search(
+                r"\b(network|similarity|similar|connections?|relate|related|graph)\b",
+                prompt, re.IGNORECASE))
+            if relational and outcomes and "nodes" not in data_model:
+                data_model["nodes"] = [{"id": item["key"], "label": item["label"]} for item in outcomes]
+                pair_edges: list[dict[str, Any]] = []
+                for index, left in enumerate(outcomes):
+                    for right in outcomes[index + 1:]:
+                        weight = float(min(left["sources_count"], right["sources_count"]) + 1)
+                        pair_edges.append({
+                            "source": left["key"], "target": right["key"], "weight": weight,
+                        })
+                data_model["edges"] = pair_edges
 
             manifest = catalog_manifest()
             pointers = sorted("/" + key for key in data_model)

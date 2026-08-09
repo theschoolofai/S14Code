@@ -8,7 +8,6 @@ from s13code.core.memory import MemoryKind, MemoryScope, MemoryStore
 from s13code.core.memory.chunking import DocumentChunk
 from s13code.core.memory.embeddings import DeterministicEmbedder
 
-
 SCOPE = MemoryScope("tenant", "project", "user")
 
 
