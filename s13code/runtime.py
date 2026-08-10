@@ -708,6 +708,7 @@ class S13Runtime:
                 '"table": {"columns": [string, ...], "rows": [{column: value, ...}]}, '
                 '"choices": [{"id": string, "label": string}], '
                 '"diff": {"before": string, "after": string, "beforeLabel": string, "afterLabel": string}, '
+                '"board": {"columns": [{"title": string, "cards": [{"title": string, "meta": string, "tone": "neutral"|"good"|"warn"|"bad"}]}]}, '
                 '"map": {"markers": [{"lat": number, "lng": number, "label": string}]}}. '
                 "Produce WHICHEVER of these fit the goal; prefer structured fields over long prose; keep points "
                 "short. Use 'sections' for ordered groups (days, steps, stages, phases, topics). Use 'metrics' "
@@ -984,6 +985,29 @@ class S13Runtime:
                         for index, choice in enumerate(clean_choices):
                             data_model[f"choice_{index}_label"] = choice["label"]
 
+                board = content_structured.get("board")
+                if isinstance(board, dict):
+                    clean_columns: list[dict[str, Any]] = []
+                    for column in (board.get("columns") or []):
+                        if not isinstance(column, dict):
+                            continue
+                        title = str(column.get("title") or "").strip()
+                        if not title:
+                            continue
+                        cards: list[dict[str, Any]] = []
+                        for card in (column.get("cards") or []):
+                            if isinstance(card, dict) and str(card.get("title") or "").strip():
+                                cards.append({"title": str(card["title"]).strip(),
+                                              "meta": str(card.get("meta") or "").strip(),
+                                              "tone": str(card.get("tone") or "neutral").strip()})
+                            elif isinstance(card, str) and card.strip():
+                                cards.append({"title": card.strip(), "meta": "", "tone": "neutral"})
+                        clean_columns.append({"title": title, "cards": cards})
+                    if clean_columns:
+                        data_model["board_columns"] = clean_columns
+                        data_model["board_card_count"] = sum(len(col["cards"]) for col in clean_columns)
+                        data_model["board_stage_count"] = len(clean_columns)
+
                 diff = content_structured.get("diff")
                 if isinstance(diff, dict):
                     before = str(diff.get("before") or "").strip()
@@ -1039,7 +1063,8 @@ class S13Runtime:
                       "Prefer the RICHEST fitting component for each piece of data, NEVER one big Text blob: a "
                       "Timeline or a List/Column of Cards for ordered groups, StatTiles in a Row for key numbers, "
                       "a BarChart or Sparkline for a numeric series, a DataTable for tabular rows, a CodeDiff when "
-                      "before/after plain-text plans are present, a Map when /map_markers is present, and Buttons for "
+                      "before/after plain-text plans are present, a KanbanBoard when /board_columns is present, "
+                      "a Map when /map_markers is present, and Buttons for "
                       "tappable choices. Fall back to a "
                       "single Text only when the data has no structure. Return JSON only: no prose, no fences.")
             instruction = {
@@ -1058,6 +1083,8 @@ class S13Runtime:
                             "for /metrics render a Row of StatTiles, each StatTile value bound to /metric_N_value "
                             "with a literal label; "
                             "for /series render a BarChart (data bound to /series, xKey \"label\", yKey \"value\") "
+                            "for /board_columns render a KanbanBoard with columns bound to /board_columns and "
+                            "onCardPress action \"request_data\"; "
                             "or a Sparkline bound to /series_values; "
                             "for /table_rows render a DataTable (rows bound to /table_rows, columns the literal "
                             "/table_columns joined by commas); "

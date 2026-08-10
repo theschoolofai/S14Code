@@ -97,6 +97,7 @@
 const RUN = "__RUN_ID__";
 const $ = (t, cls) => { const e = document.createElement(t); if (cls) e.className = cls; return e; };
 const text = (t) => document.createTextNode(t == null ? "" : String(t));
+const REGISTERED_ACTIONS = new Set(["approve","reject","rerun","request_data"]);
 
 function resolve(v, dm){ return (v && typeof v === "object" && "$bind" in v) ? pointer(dm, v["$bind"]) : v; }
 // safe markdown -> DOM (createElement + text nodes only; never raw HTML)
@@ -154,6 +155,7 @@ const RENDERERS = {
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
   CodeDiff:(c,ctx)=>renderCodeDiff(c,ctx),
   Map:(c,ctx)=>renderMap(c,ctx),
+  KanbanBoard:(c,ctx)=>renderKanban(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -250,6 +252,20 @@ function renderMap(c,ctx){
   if(markers.length){const leg=$("div","legend");markers.forEach((m,i)=>{const s=$("span");const d=$("span","dot");s.append(d,text((i+1)+". "+String(m.label||"")));leg.append(s);});e.append(leg);}
   if(c.caption){const cap=$("div","cap");cap.append(text(c.caption));e.append(cap);}
   return e;
+}
+
+function renderKanban(c,ctx){
+  const e=$("div","KanbanBoard");const h=$("div","ct");h.append(text(c.title||"board"));e.append(h);
+  const lanes=$("div","lanes");const action=c.onCardPress&&c.onCardPress.action;
+  const tappable=REGISTERED_ACTIONS.has(action);
+  (resolve(c.columns,ctx.dm)||[]).forEach(col=>{const lane=$("div","lane");
+    const lh=$("div","ct");lh.append(text(col&&col.title||""));lane.append(lh);
+    (col&&col.cards||[]).forEach(card=>{const box=$(tappable?"button":"div","card");
+      const title=$("div","ct");title.append(text(card&&card.title||""));box.append(title);
+      if(card&&card.meta)box.append(text(card.meta));
+      if(tappable){box.type="button";box.onclick=()=>emitAction(action,{card:card&&card.title,lane:col&&col.title});}
+      lane.append(box);});lanes.append(lane);});
+  e.append(lanes);return e;
 }
 
 function emitAction(name,args){ // the only way the surface changes the world: a named, validated event

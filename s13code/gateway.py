@@ -17,7 +17,13 @@ class GatewayClient:
         payload: dict[str, Any] = {
             "messages": [{"role": "user", "content": prompt}],
             "system": system,
-            "max_tokens": 700,
+            # The content role answers as a SINGLE structured JSON object, and a
+            # comparison table of a few rows already exceeds 700 tokens. When the
+            # reply is cut short the JSON does not parse, the structured fields
+            # are lost, and a downstream compose step binds to pointers that were
+            # never created. max_tokens is a cap, not a spend, so the ceiling is
+            # generous and overridable.
+            "max_tokens": int(os.getenv("S13_ANSWER_MAX_TOKENS", "2000")),
             "temperature": 0,
             "reasoning": "off",
             "agent": "s13_answer",

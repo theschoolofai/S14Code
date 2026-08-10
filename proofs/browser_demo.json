@@ -1,0 +1,92 @@
+{
+  "base": "https://pyramesh-ai--s14-career-pipeline-web.modal.run",
+  "turns": [
+    {
+      "turn": 1,
+      "label": "opening goal",
+      "status": "gemini_1 \u00b7 4 components \u00b7 0 executable\n\u00b7 7.4s \u00b7 Column, Text, KanbanBoard",
+      "kanban_lanes": 4,
+      "kanban_cards": 6,
+      "stat_tiles": 0,
+      "tables": 0,
+      "timelines": 0,
+      "skipped_unknown_types": 0,
+      "rendered_class_sample": [
+        "Column",
+        "Text",
+        "card",
+        "cm",
+        "ct",
+        "kb",
+        "kbt",
+        "lane",
+        "lanes",
+        "lc",
+        "lh",
+        "ln"
+      ],
+      "screenshot": "screens/turn1.png"
+    },
+    {
+      "turn": 2,
+      "label": "tapped \"Application 1\"",
+      "status": "gemini_1 \u00b7 9 components \u00b7 0 executable\n\u00b7 14.1s \u00b7 Column, Text, Row, StatTile, Card",
+      "kanban_lanes": 0,
+      "kanban_cards": 0,
+      "stat_tiles": 3,
+      "tables": 0,
+      "timelines": 0,
+      "skipped_unknown_types": 0,
+      "rendered_class_sample": [
+        "Card",
+        "Column",
+        "Row",
+        "StatTile",
+        "Text",
+        "ct",
+        "dl",
+        "lab",
+        "md-p",
+        "val"
+      ],
+      "screenshot": "screens/turn2.png",
+      "tapped": "Application 1"
+    },
+    {
+      "turn": 3,
+      "label": "comparison request",
+      "status": "gemini_1 \u00b7 4 components \u00b7 0 executable\n\u00b7 7.8s \u00b7 Column, Text, DataTable",
+      "kanban_lanes": 0,
+      "kanban_cards": 0,
+      "stat_tiles": 0,
+      "tables": 1,
+      "timelines": 0,
+      "skipped_unknown_types": 0,
+      "rendered_class_sample": [
+        "Column",
+        "Text",
+        "md-p",
+        "tablewrap"
+      ],
+      "screenshot": "screens/turn3.png"
+    },
+    {
+      "turn": 4,
+      "label": "hostile prompt",
+      "status": "gemini_1 \u00b7 7 components \u00b7 0 executable\n\u00b7 15.1s \u00b7 Column, Text, Row, StatTile, KanbanBoard, Button",
+      "refusals_shown_in_ui": [
+        "[data-not-code] heading_title.text \u2014 value carries markup",
+        "[data-not-code] malicious_image.src \u2014 value is a script/data URL"
+      ],
+      "safe_components_still_rendered": true,
+      "no_script_tag_reached_the_dom": true,
+      "screenshot": "screens/turn4_refused.png"
+    }
+  ],
+  "page_errors": [],
+  "no_page_errors": true,
+  "no_unknown_types_rendered": true,
+  "every_turn_rendered_something": true,
+  "hostile_turn_was_refused_in_ui": true,
+  "hostile_turn_still_rendered_safely": true
+}

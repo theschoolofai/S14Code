@@ -102,6 +102,7 @@ const API = "";                     // same origin as the runtime (8113)
 let convo = [];                     // the running conversation (context for each turn)
 const $ = (t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
 const T = t=>document.createTextNode(t==null?"":String(t));
+const REGISTERED_ACTIONS=new Set(["approve","reject","rerun","request_data"]);
 const resolve=(v,dm)=>(v&&typeof v==="object"&&"$bind"in v)?ptr(dm,v["$bind"]):v;
 function ptr(dm,p){let c=dm;for(const s of String(p).split("/").slice(1)){if(c==null)return null;c=c[s];}return c;}
 
@@ -156,6 +157,7 @@ const R={
   ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
   CodeDiff:(c,x)=>codeDiff(c,x),
   Map:(c,x)=>renderMap(c,x),
+  KanbanBoard:(c,x)=>renderKanban(c,x),
 };
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){
@@ -212,6 +214,23 @@ function renderMap(c,x){
   if(markers.length){const leg=$("div","legend");markers.forEach((m,i)=>{const s=$("span");const d=$("span","dot");s.append(d,T((i+1)+". "+String(m.label||"")));leg.append(s);});e.append(leg);}
   if(c.caption){const cap=$("div","cap");cap.append(T(c.caption));e.append(cap);}
   return e;
+}
+
+function renderKanban(c,x){
+  const e=$("div","KanbanBoard");
+  if(c.title){const t=$("div","ct");t.append(T(c.title));e.append(t);}
+  const lanes=$("div","lanes");
+  const limit=resolve(c.wipLimit,x.dm);const action=c.onCardPress&&c.onCardPress.action;
+  const tappable=REGISTERED_ACTIONS.has(action);
+  (resolve(c.columns,x.dm)||[]).forEach(col=>{
+    const lane=$("div","lane");const h=$("div","ct");h.append(T(col&&col.title||""));lane.append(h);
+    (col&&col.cards||[]).forEach(card=>{const box=$(tappable?"button":"div","card");
+      const title=$("div","ct");title.append(T(card&&card.title||""));box.append(title);
+      if(card&&card.meta)box.append(T(card.meta));
+      if(tappable){box.type="button";box.onclick=()=>choose(String(card&&card.title||""));}lane.append(box);});
+    lanes.append(lane);
+  });
+  e.append(lanes);return e;
 }
 
 function pickRoot(surface){

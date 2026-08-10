@@ -131,6 +131,7 @@ All served by the runtime on 8113, defined in
 | `GET /s/{id}` | the render client, pointed at a run |
 | `GET /app` | bare-minimal UI-only conversation shell |
 | `GET /app/trip` | Trip Planner shell (destination → days+map → revision with CodeDiff) |
+| `GET /jobhunt` | Career Pipeline shell with KanbanBoard and adversarial proof flow |
 
 ## The generative loop (UI composed by the harness)
 

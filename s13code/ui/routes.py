@@ -245,6 +245,15 @@ async def app_viewer():
     return path.read_text(encoding="utf-8")
 
 
+@router.get("/jobhunt", response_class=HTMLResponse)
+@router.get("/jobhunt/", response_class=HTMLResponse)
+async def jobhunt_app():
+    path = Path(__file__).parent / "client" / "jobhunt.html"
+    if not path.exists():
+        raise HTTPException(500, "jobhunt app missing")
+    return path.read_text(encoding="utf-8")
+
+
 @router.get("/app/trip", response_class=HTMLResponse)
 @router.get("/app/trip/", response_class=HTMLResponse)
 async def trip_viewer():
