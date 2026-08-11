@@ -147,10 +147,87 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
+| `generated_accordion.json` | `generate_accordion.py` | Gemini reaches for the new Accordion type on its own; 0 rejections |
+| `part2_demo_run.json` | `patched_app.py` | two-turn live app: Accordion + Buttons across a real multi-turn run |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
 uv run pytest -q                             # S13 core + regression tests + the S14 invariant tests
+```
+
+### Evidence: Accordion component (24th catalog type)
+
+**What changed.** `catalog.py` adds `Accordion` as the 24th component (15 A2UI
+Basic + 9 custom). `runtime.py` extends the `compose_surface` per-pointer hint so
+that `/sections` data whose headings read like separate questions now maps to
+`Accordion` instead of always choosing Timeline or Cards. Both render clients
+(`index.html`, `app.html`) gain a `renderAccordion` function that guards against
+non-array upstream bindings (`Array.isArray` check) and never writes model output
+via `innerHTML`. Five new invariant tests cover all three walls for the new type.
+
+**Exact prompt (generate_accordion.py, reproduced verbatim in the proof):**
+
+```
+Answer these frequently asked questions about getting started with open-source
+contribution, so a reader can open one question at a time: why contribute,
+what the common early challenges are, and what the first steps are.
+```
+
+**Graph — ordered event trace (from `part2_demo_run.json`, turn 1):**
+
+| Step | Event |
+|---|---|
+| 1 | `run_started` |
+| 2 | `graph_patched` |
+| 3 | `task_started content` |
+| 4 | `task_succeeded content` |
+| 5 | `graph_patched` |
+| 6 | `task_started surface` |
+
+**Agent / provider assignment:**
+
+| Role | Agent | Provider | Model |
+|---|---|---|---|
+| content | `assistant` (runtime) | `gemini_1` (via `glc_v3`) | `gemini-2.5-flash` |
+| surface compose | `s14_surface` (runtime) | `gemini_1` (via `glc_v3`) | `gemini-2.5-flash` |
+| validation | `validator.py` (in-process) | — | — |
+
+**Actual result (`generated_accordion.json`):** Gemini chose `Accordion`
+unprompted by name (it only saw the type in the catalog manifest). The validator
+accepted all 4 components with 0 rejections. `used_accordion=true`,
+`dangling_child_refs=[]`. Component types used: `Accordion`, `Column`, `Text`.
+
+**Two-turn live app (`part2_demo_run.json`):** Turn 1 — FAQ prompt → Accordion
++ Buttons (10 components, 0 rejections, `provider=gemini_1`). Turn 2 — user taps
+"What are my first steps?" → second Accordion with 5 step-sections + new Buttons
+(9 components, 0 rejections, `provider=gemini_1`).
+
+**Adversarial failure → fix.** The injection wall rejects Accordion surfaces
+carrying markup or unregistered actions (invariant tests added in
+`tests/test_s14_ui.py`):
+
+| Attack | Field | Invariant raised |
+|---|---|---|
+| `type: "Accordian"` (misspelled) | `type` | `CATALOG` |
+| `title: "<img src=x onerror=alert(1)>"` | `title` | `DATA_NOT_CODE` |
+| `sections: [{...}]` (inline literal, not `$bind`) | `sections` | `DATA_NOT_CODE` |
+| `onExpand: {action: "delete_everything"}` | `onExpand` | `EVENT` |
+
+The same attack surfaces all fail after the fix — the validator test suite covers
+every invariant for the new type and `uv run pytest -q` passes.
+
+**Reproduce from a fresh checkout:**
+
+```bash
+# Accordion catalog proof (gateway required)
+GLC_BASE_URL=http://127.0.0.1:8111 uv run python proofs/generate_accordion.py
+# → proofs/generated_accordion.json  (used_accordion=true, 0 rejections)
+
+# Invariant tests (no gateway needed)
+uv run pytest tests/test_s14_ui.py -q -k accordion
+
+# Full suite
+uv run pytest -q
 ```
 
 ## Architecture

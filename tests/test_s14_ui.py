@@ -372,6 +372,45 @@ def test_safe_siblings_survive_a_partially_poisoned_surface():
 # catalog.py — catalog_manifest
 # --------------------------------------------------------------------------- #
 
+# --------------------------------------------------------------------------- #
+# catalog.py / validator.py — Accordion: the three invariants, for the new type
+# --------------------------------------------------------------------------- #
+
+def test_accordion_typo_variant_breaks_catalog_invariant():
+    """A misspelled/renamed Accordion is not the registered type — rejected."""
+    assert _reject({"id": "x", "type": "Accordian", "sections": {"$bind": "/s"}}).invariant == Invariant.CATALOG
+
+
+def test_accordion_title_with_markup_breaks_data_not_code():
+    r = _reject({"id": "a", "type": "Accordion", "title": "<img src=x onerror=alert(1)>",
+                 "sections": {"$bind": "/sections"}})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "title"
+
+
+def test_accordion_sections_inline_literal_breaks_data_not_code():
+    """sections is a binding slot; an inline array (not {'$bind': ...}) is refused."""
+    r = _reject({"id": "a", "type": "Accordion", "sections": [{"heading": "h", "points": ["p"]}]})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+
+
+def test_accordion_onexpand_unregistered_action_breaks_event_invariant():
+    r = _reject({"id": "a", "type": "Accordion", "sections": {"$bind": "/sections"},
+                 "onExpand": {"action": "delete_everything"}})
+    assert r.invariant == Invariant.EVENT
+
+
+def test_accordion_clean_component_validates_and_registered_action_survives():
+    surface = {
+        "root": "a",
+        "components": [{"id": "a", "type": "Accordion", "title": "FAQ",
+                        "sections": {"$bind": "/sections"}, "onExpand": {"action": "request_data"}}],
+        "dataModel": {"sections": [{"heading": "Q1", "points": ["ans"]}]},
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+
+
 def test_manifest_returns_components_and_actions():
     m = catalog_manifest()
     assert set(m) == {"components", "actions"}
@@ -390,8 +429,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """23 types: 15 A2UI-Basic + 8 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 23
+    """24 types: 15 A2UI-Basic + 9 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 24
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -402,7 +441,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard",
+        "Notice", "ApprovalCard", "Accordion",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -596,6 +635,14 @@ def test_render_client_never_uses_innerhtml_and_documents_the_contract():
     # The one place the word appears is the documented safety contract itself.
     assert html.count("innerHTML") == 1
     assert "NEVER sets" in html and "innerHTML from a bound value" in html
+
+
+def test_render_client_accordion_guards_against_a_non_array_binding():
+    """A live run can leave Accordion.sections bound to malformed upstream data
+    (e.g. a raw string, when content generation was truncated/unparseable)."""
+    for filename in ("index.html", "app.html"):
+        html = (_BUILD_ROOT / "s13code" / "ui" / "client" / filename).read_text(encoding="utf-8")
+        assert "Array.isArray" in html, filename
 
 
 def test_render_client_reconnects_and_rebuilds_from_a_state_snapshot():

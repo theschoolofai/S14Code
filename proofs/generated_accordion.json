@@ -1,0 +1,106 @@
+{
+  "goal": "Answer these frequently asked questions about getting started with open-source contribution, so a reader can open one question at a time: why contribute, what the common early challenges are, and what the first steps are.",
+  "provider": "gemini_1",
+  "model": "gemini-2.5-flash",
+  "raw": "```json\n{\n  \"root\": \"root\",\n  \"components\": [\n    {\n      \"id\": \"root\",\n      \"type\": \"Column\",\n      \"children\": [\n        \"title_text\",\n        \"summary_text\",\n        \"faq_accordion\"\n      ]\n    },\n    {\n      \"id\": \"title_text\",\n      \"type\": \"Text\",\n      \"variant\": \"heading\",\n      \"text\": {\n        \"$bind\": \"/title\"\n      }\n    },\n    {\n      \"id\": \"summary_text\",\n      \"type\": \"Text\",\n      \"variant\": \"body\",\n      \"text\": {\n        \"$bind\": \"/summary\"\n      }\n    },\n    {\n      \"id\": \"faq_accordion\",\n      \"type\": \"Accordion\",\n      \"title\": \"Frequently Asked Questions\",\n      \"sections\": {\n        \"$bind\": \"/sections\"\n      },\n      \"onExpand\": {\n        \"action\": \"request_data\"\n      }\n    }\n  ]\n}\n```",
+  "surface_accepted": {
+    "root": "root",
+    "components": [
+      {
+        "id": "root",
+        "type": "Column",
+        "children": [
+          "title_text",
+          "summary_text",
+          "faq_accordion"
+        ]
+      },
+      {
+        "id": "title_text",
+        "type": "Text",
+        "variant": "heading",
+        "text": {
+          "$bind": "/title"
+        }
+      },
+      {
+        "id": "summary_text",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/summary"
+        }
+      },
+      {
+        "id": "faq_accordion",
+        "type": "Accordion",
+        "title": "Frequently Asked Questions",
+        "sections": {
+          "$bind": "/sections"
+        },
+        "onExpand": {
+          "action": "request_data"
+        }
+      }
+    ],
+    "dataModel": {
+      "title": "Getting started with open-source contribution",
+      "goal": "Answer these frequently asked questions about getting started with open-source contribution, so a reader can open one question at a time: why contribute, what the common early challenges are, and what the first steps are.",
+      "summary": "A short FAQ for a first-time open-source contributor.",
+      "sections": [
+        {
+          "heading": "Why contribute?",
+          "points": [
+            "Learn real-world codebases and review practices",
+            "Build a public track record of shipped work",
+            "Meet maintainers and other contributors"
+          ]
+        },
+        {
+          "heading": "What are the common early challenges?",
+          "points": [
+            "Finding an issue scoped for a first-time contributor",
+            "Understanding the project's contribution guidelines",
+            "Getting a pull request reviewed in a busy project"
+          ]
+        },
+        {
+          "heading": "What are the first steps?",
+          "points": [
+            "Read CONTRIBUTING.md and the code of conduct",
+            "Look for issues labeled good-first-issue",
+            "Open a small pull request and ask for review"
+          ]
+        }
+      ],
+      "section_events": [
+        {
+          "time": "Why contribute?",
+          "label": "Learn real-world codebases and review practices; Build a public track record of shipped work; Meet maintainers and other contributors"
+        },
+        {
+          "time": "What are the common early challenges?",
+          "label": "Finding an issue scoped for a first-time contributor; Understanding the project's contribution guidelines; Getting a pull request reviewed in a busy project"
+        },
+        {
+          "time": "What are the first steps?",
+          "label": "Read CONTRIBUTING.md and the code of conduct; Look for issues labeled good-first-issue; Open a small pull request and ask for review"
+        }
+      ],
+      "section_0_heading": "Why contribute?",
+      "section_1_heading": "What are the common early challenges?",
+      "section_2_heading": "What are the first steps?",
+      "section_0_points": "\u2022 Learn real-world codebases and review practices\n\u2022 Build a public track record of shipped work\n\u2022 Meet maintainers and other contributors",
+      "section_1_points": "\u2022 Finding an issue scoped for a first-time contributor\n\u2022 Understanding the project's contribution guidelines\n\u2022 Getting a pull request reviewed in a busy project",
+      "section_2_points": "\u2022 Read CONTRIBUTING.md and the code of conduct\n\u2022 Look for issues labeled good-first-issue\n\u2022 Open a small pull request and ask for review"
+    }
+  },
+  "rejections": [],
+  "component_types_used": [
+    "Accordion",
+    "Column",
+    "Text"
+  ],
+  "used_accordion": true,
+  "dangling_child_refs": []
+}

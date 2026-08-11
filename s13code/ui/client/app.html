@@ -54,6 +54,12 @@
   .tabs button{border:1px solid var(--rule-strong);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-mono);color:var(--ink-muted)}
   .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
   .Notice{border-left:4px solid var(--amber);background:var(--amber-soft);border-radius:10px;padding:12px 14px}
+  .Accordion{display:flex;flex-direction:column;gap:8px}
+  .Accordion .act{font-weight:700;color:var(--ink);margin-bottom:2px}
+  .acc-item{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--surface)}
+  .acc-head{width:100%;display:flex;gap:8px;align-items:center;text-align:left;padding:10px 12px;background:var(--surface-alt);border:none;cursor:pointer;font-weight:600;font-size:13px;font-family:var(--font-sans);color:var(--ink-body)}
+  .acc-caret{color:var(--accent);font-size:11px;width:10px;flex:none}
+  .acc-body{padding:10px 14px;font-size:13px;line-height:1.6}
   .actbtn{width:100%;text-align:center;border:1px solid var(--rule-strong);background:var(--surface);border-radius:12px;padding:14px;font-weight:600;font-size:15px;cursor:pointer;color:var(--ink);transition:all 120ms}
   .actbtn:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
   .actbtn:active{transform:translateY(1px)}
@@ -137,6 +143,26 @@ const R={
   DateTime:(c,x)=>{const i=$("input","field");i.type="date";return i;},
   Modal:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
   ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=document.createElement("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
+  Accordion:(c,x)=>{const e=$("div","Accordion");
+    if(c.title){const h=$("div","act");h.append(T(c.title));e.append(h);}
+    const secRaw=resolve(c.sections,x.dm);
+    (Array.isArray(secRaw)?secRaw:[]).forEach((sec,i)=>{
+      const item=$("div","acc-item");const head=$("button","acc-head");
+      const caret=$("span","acc-caret");caret.append(T(i===0?"▾":"▸"));
+      const lab=$("span");lab.append(T(sec&&sec.heading!=null?sec.heading:("Section "+(i+1))));
+      head.append(caret,lab);
+      const body=$("div","acc-body");body.style.display=i===0?"block":"none";
+      if(sec&&Array.isArray(sec.points)&&sec.points.length){
+        const ul=document.createElement("ul");ul.className="md-ul";
+        sec.points.forEach(p=>{const li=document.createElement("li");mdInline(String(p),li);ul.append(li);});
+        body.append(ul);
+      }else{
+        body.append(md(sec&&(sec.body!=null?sec.body:sec.text)||""));
+      }
+      head.onclick=()=>{const opening=body.style.display==="none";body.style.display=opening?"block":"none";caret.textContent=opening?"▾":"▸";};
+      item.append(head,body);e.append(item);
+    });
+    return e;},
 };
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}return f(c,x);}

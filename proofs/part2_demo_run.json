@@ -1,0 +1,477 @@
+{
+  "app": "Getting-Started Assistant (Part 2 demo)",
+  "server": "http://127.0.0.1:8113 (s13code.main:app, real S13Runtime, real glc_v3/Gemini gateway)",
+  "turns": [
+    {
+      "turn": 1,
+      "user_prompt": "I want to start contributing to open source. Answer these frequently asked questions so I can open one at a time: why should I contribute, what are the common early challenges, and what are my first steps. Then ask me which of those three topics I want to go deeper on.",
+      "run_id": "run-ba99aa433798",
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "component_count": 10,
+      "clean": true,
+      "component_types": [
+        "Accordion",
+        "Button",
+        "Column",
+        "ProgressBar",
+        "Text",
+        "Timeline"
+      ],
+      "surface": {
+        "root": "root_column",
+        "components": [
+          {
+            "id": "root_column",
+            "type": "Column",
+            "children": [
+              "title_text",
+              "summary_text",
+              "faq_accordion",
+              "choice_prompt",
+              "choices_column",
+              "progress_bar",
+              "timeline_events"
+            ]
+          },
+          {
+            "id": "title_text",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary_text",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "faq_accordion",
+            "type": "Accordion",
+            "title": "Frequently Asked Questions",
+            "sections": {
+              "$bind": "/sections"
+            }
+          },
+          {
+            "id": "choices_column",
+            "type": "Column",
+            "children": [
+              "button_0",
+              "button_1",
+              "button_2"
+            ]
+          },
+          {
+            "id": "button_0",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_0_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "button_1",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_1_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "button_2",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_2_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "progress_bar",
+            "type": "ProgressBar",
+            "value": {
+              "$bind": "/progress_value"
+            },
+            "max": {
+              "$bind": "/progress_max"
+            }
+          },
+          {
+            "id": "timeline_events",
+            "type": "Timeline",
+            "title": "Run Steps",
+            "events": {
+              "$bind": "/timeline"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "I want to start contributing to open source. Answer these frequently asked questions so I can open one at a time: why should I contribute, what are the common early challenges, and what are my first steps. Then ask me which of those three topics I want to go deeper on.",
+          "goal": "I want to start contributing to open source. Answer these frequently asked questions so I can open one at a time: why should I contribute, what are the common early challenges, and what are my first steps. Then ask me which of those three topics I want to go deeper on.",
+          "summary": "I want to start contributing to open source. Answer these frequently asked questions so I can open one at a time: why should I contribute, what are the common early challenges, and what are my first steps. Then ask me which of those three topics I want to go deeper on.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Why should I contribute to open source?",
+            "What are common early challenges?",
+            "What are my first steps?"
+          ],
+          "timeline": [
+            {
+              "time": "1",
+              "label": "run_started"
+            },
+            {
+              "time": "2",
+              "label": "graph_patched"
+            },
+            {
+              "time": "3",
+              "label": "task_started content"
+            },
+            {
+              "time": "4",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "5",
+              "label": "graph_patched"
+            },
+            {
+              "time": "6",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "section_0_heading": "Why should I contribute to open source?",
+          "section_0_points": "• Improve coding skills and learn new technologies.\n• Build a public portfolio of your work.\n• Network with other developers and experts.\n• Gain experience with real-world projects and collaboration workflows.\n• Give back to the community and impact projects you use.\n• Enhance your resume and career opportunities.",
+          "section_1_heading": "What are common early challenges?",
+          "section_1_points": "• Finding the right project that matches your skills and interests.\n• Understanding a large, unfamiliar codebase.\n• Navigating project-specific contribution guidelines and tools.\n• Fear of making mistakes or submitting low-quality code.\n• Dealing with initial feedback or rejections.\n• Time commitment and balancing with other responsibilities.",
+          "section_2_heading": "What are my first steps?",
+          "section_2_points": "• Define your interests and skill level.\n• Explore projects you already use or are passionate about.\n• Look for projects with 'good first issue' or 'help wanted' labels.\n• Read the project's `CONTRIBUTING.md` file.\n• Start with small contributions like documentation fixes or bug reports.\n• Engage with the community on forums or chat channels.",
+          "sections": [
+            {
+              "heading": "Why should I contribute to open source?",
+              "points": [
+                "Improve coding skills and learn new technologies.",
+                "Build a public portfolio of your work.",
+                "Network with other developers and experts.",
+                "Gain experience with real-world projects and collaboration workflows.",
+                "Give back to the community and impact projects you use.",
+                "Enhance your resume and career opportunities."
+              ]
+            },
+            {
+              "heading": "What are common early challenges?",
+              "points": [
+                "Finding the right project that matches your skills and interests.",
+                "Understanding a large, unfamiliar codebase.",
+                "Navigating project-specific contribution guidelines and tools.",
+                "Fear of making mistakes or submitting low-quality code.",
+                "Dealing with initial feedback or rejections.",
+                "Time commitment and balancing with other responsibilities."
+              ]
+            },
+            {
+              "heading": "What are my first steps?",
+              "points": [
+                "Define your interests and skill level.",
+                "Explore projects you already use or are passionate about.",
+                "Look for projects with 'good first issue' or 'help wanted' labels.",
+                "Read the project's `CONTRIBUTING.md` file.",
+                "Start with small contributions like documentation fixes or bug reports.",
+                "Engage with the community on forums or chat channels."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Why should I contribute to open source?",
+              "label": "Improve coding skills and learn new technologies.; Build a public portfolio of your work.; Network with other developers and experts.; Gain experience with real-world projects and collaboration workflows.; Give back to the community and impact projects you use.; Enhance your resume and career opportunities."
+            },
+            {
+              "time": "What are common early challenges?",
+              "label": "Finding the right project that matches your skills and interests.; Understanding a large, unfamiliar codebase.; Navigating project-specific contribution guidelines and tools.; Fear of making mistakes or submitting low-quality code.; Dealing with initial feedback or rejections.; Time commitment and balancing with other responsibilities."
+            },
+            {
+              "time": "What are my first steps?",
+              "label": "Define your interests and skill level.; Explore projects you already use or are passionate about.; Look for projects with 'good first issue' or 'help wanted' labels.; Read the project's `CONTRIBUTING.md` file.; Start with small contributions like documentation fixes or bug reports.; Engage with the community on forums or chat channels."
+            }
+          ],
+          "choices": [
+            {
+              "id": "why_contribute",
+              "label": "Why should I contribute to open source?"
+            },
+            {
+              "id": "early_challenges",
+              "label": "What are common early challenges?"
+            },
+            {
+              "id": "first_steps",
+              "label": "What are my first steps?"
+            }
+          ],
+          "choice_0_label": "Why should I contribute to open source?",
+          "choice_1_label": "What are common early challenges?",
+          "choice_2_label": "What are my first steps?"
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "user_action": "tapped the \"What are my first steps?\" button",
+      "run_id": "run-00cbc80dba57",
+      "provider": "gemini_1",
+      "model": "gemini-2.5-flash",
+      "component_count": 9,
+      "clean": true,
+      "component_types": [
+        "Accordion",
+        "Button",
+        "Column",
+        "Divider",
+        "Text"
+      ],
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "title",
+              "summary",
+              "steps_accordion",
+              "divider",
+              "question_text",
+              "choice_buttons"
+            ]
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "steps_accordion",
+            "type": "Accordion",
+            "title": "Your First Steps",
+            "sections": {
+              "$bind": "/sections"
+            }
+          },
+          {
+            "id": "divider",
+            "type": "Divider"
+          },
+          {
+            "id": "choice_buttons",
+            "type": "Column",
+            "children": [
+              "button_0",
+              "button_1",
+              "button_2"
+            ]
+          },
+          {
+            "id": "button_0",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_0_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "button_1",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_1_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          },
+          {
+            "id": "button_2",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_2_label"
+            },
+            "onPress": {
+              "action": "request_data"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Your First Steps in Open Source",
+          "goal": "I want to start contributing to open source. Answer these frequently asked questions so I can open one at a time: why should I contribute, what are the common early challenges, and what are my first steps. Then ask me which of those three topics I want to go deeper on.\nSo far the user then picked: What are my first steps?.\nRespond with the next interface for that.",
+          "summary": "Your First Steps in Open Source",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Choosing the Right Project",
+            "Making Your First Pull Request",
+            "Back to Main Topics"
+          ],
+          "timeline": [
+            {
+              "time": "9",
+              "label": "run_started"
+            },
+            {
+              "time": "10",
+              "label": "graph_patched"
+            },
+            {
+              "time": "11",
+              "label": "task_started content"
+            },
+            {
+              "time": "12",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "13",
+              "label": "graph_patched"
+            },
+            {
+              "time": "14",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "section_0_heading": "1. Understand Your Motivation",
+          "section_0_points": "• Identify what you want to gain (learn a new skill, build a portfolio, solve a problem, network).\n• This helps you choose the right projects and maintain momentum.",
+          "section_1_heading": "2. Choose a Project",
+          "section_1_points": "• Start small: look for projects with 'good first issue' or 'help wanted' tags.\n• Consider projects related to technologies you already know or want to learn.\n• Look for active communities and clear contribution guidelines.",
+          "section_2_heading": "3. Set Up Your Environment",
+          "section_2_points": "• Fork the repository to your GitHub account.\n• Clone your forked repository to your local machine.\n• Follow the project's setup instructions (install dependencies, run tests).",
+          "section_3_heading": "4. Make Your First Contribution",
+          "section_3_points": "• Start with documentation fixes, typo corrections, or small bug fixes.\n• Read the `CONTRIBUTING.md` file for specific guidelines.\n• Create a new branch for your changes.\n• Commit your changes with a clear message.\n• Push your branch to your fork.\n• Open a pull request (PR) to the original repository.",
+          "section_4_heading": "5. Engage with the Community",
+          "section_4_points": "• Be responsive to feedback on your PR.\n• Be polite and open to suggestions.\n• Learn from code reviews and discussions.",
+          "sections": [
+            {
+              "heading": "1. Understand Your Motivation",
+              "points": [
+                "Identify what you want to gain (learn a new skill, build a portfolio, solve a problem, network).",
+                "This helps you choose the right projects and maintain momentum."
+              ]
+            },
+            {
+              "heading": "2. Choose a Project",
+              "points": [
+                "Start small: look for projects with 'good first issue' or 'help wanted' tags.",
+                "Consider projects related to technologies you already know or want to learn.",
+                "Look for active communities and clear contribution guidelines."
+              ]
+            },
+            {
+              "heading": "3. Set Up Your Environment",
+              "points": [
+                "Fork the repository to your GitHub account.",
+                "Clone your forked repository to your local machine.",
+                "Follow the project's setup instructions (install dependencies, run tests)."
+              ]
+            },
+            {
+              "heading": "4. Make Your First Contribution",
+              "points": [
+                "Start with documentation fixes, typo corrections, or small bug fixes.",
+                "Read the `CONTRIBUTING.md` file for specific guidelines.",
+                "Create a new branch for your changes.",
+                "Commit your changes with a clear message.",
+                "Push your branch to your fork.",
+                "Open a pull request (PR) to the original repository."
+              ]
+            },
+            {
+              "heading": "5. Engage with the Community",
+              "points": [
+                "Be responsive to feedback on your PR.",
+                "Be polite and open to suggestions.",
+                "Learn from code reviews and discussions."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "1. Understand Your Motivation",
+              "label": "Identify what you want to gain (learn a new skill, build a portfolio, solve a problem, network).; This helps you choose the right projects and maintain momentum."
+            },
+            {
+              "time": "2. Choose a Project",
+              "label": "Start small: look for projects with 'good first issue' or 'help wanted' tags.; Consider projects related to technologies you already know or want to learn.; Look for active communities and clear contribution guidelines."
+            },
+            {
+              "time": "3. Set Up Your Environment",
+              "label": "Fork the repository to your GitHub account.; Clone your forked repository to your local machine.; Follow the project's setup instructions (install dependencies, run tests)."
+            },
+            {
+              "time": "4. Make Your First Contribution",
+              "label": "Start with documentation fixes, typo corrections, or small bug fixes.; Read the `CONTRIBUTING.md` file for specific guidelines.; Create a new branch for your changes.; Commit your changes with a clear message.; Push your branch to your fork.; Open a pull request (PR) to the original repository."
+            },
+            {
+              "time": "5. Engage with the Community",
+              "label": "Be responsive to feedback on your PR.; Be polite and open to suggestions.; Learn from code reviews and discussions."
+            }
+          ],
+          "choices": [
+            {
+              "id": "choose_project",
+              "label": "Choosing the Right Project"
+            },
+            {
+              "id": "make_contribution",
+              "label": "Making Your First Pull Request"
+            },
+            {
+              "id": "back_to_main",
+              "label": "Back to Main Topics"
+            }
+          ],
+          "choice_0_label": "Choosing the Right Project",
+          "choice_1_label": "Making Your First Pull Request",
+          "choice_2_label": "Back to Main Topics"
+        }
+      }
+    }
+  ]
+}

@@ -58,6 +58,14 @@
   .Approval button.ok{background:var(--green);color:#fff;border-color:var(--green)}
   .prog{height:12px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}
   .prog>i{display:block;height:100%;background:var(--green)}
+  .Accordion{display:flex;flex-direction:column;gap:8px}
+  .Accordion .act{font-weight:700;color:var(--ink);margin-bottom:2px}
+  .acc-item{border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--surface)}
+  .acc-head{width:100%;display:flex;gap:8px;align-items:center;text-align:left;padding:10px 12px;
+    background:var(--surface-alt);border:none;cursor:pointer;font-weight:600;font-size:13px;
+    font-family:var(--font-sans);color:var(--ink-body)}
+  .acc-caret{color:var(--accent);font-size:11px;width:10px;flex:none}
+  .acc-body{padding:10px 14px;font-size:13px;line-height:1.6}
   @media (prefers-color-scheme:dark){:root{--bg:#0d0f14;--surface:#161922;--surface-alt:#11131a;--ink:#f3f5f9;--ink-body:#e4e8f0;--ink-muted:#9aa4b8;--rule:#252a36;--rule-strong:#333a49}body{background:var(--surface-alt)}}
 
   .Text .md-h{font-weight:700;color:var(--ink);margin:12px 0 4px}.Text .md-p{margin:6px 0;line-height:1.6}.Text .md-ul{margin:6px 0 6px 4px;padding-left:18px}.Text .md-ul li{margin:3px 0}
@@ -135,6 +143,7 @@ const RENDERERS = {
   DataTable:(c,ctx)=>renderTable(c,ctx),
   Timeline:(c,ctx)=>renderTimeline(c,ctx),
   ApprovalCard:(c,ctx)=>renderApproval(c,ctx),
+  Accordion:(c,ctx)=>renderAccordion(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -185,6 +194,35 @@ function renderApproval(c,ctx){const e=$("div","Approval");const sm=$("div","sm"
   const pre=$("pre");pre.append(text(JSON.stringify(resolve(c.params,ctx.dm),null,2)));const btns=$("div","btns");
   const ok=$("button","ok");ok.append(text("Approve"));ok.onclick=()=>emitAction("approve",resolve(c.params,ctx.dm));
   const no=$("button");no.append(text("Reject"));no.onclick=()=>emitAction("reject",{});btns.append(ok,no);e.append(sm,pre,btns);return e;}
+
+// Collapsible sections bound to an array of {heading, points|body}. Local open/
+// closed state lives only in the DOM; the ONLY thing that can leave the browser
+// is emitAction(c.onExpand.action, ...) — a registered action name, never markup.
+// The bound value is untrusted upstream model output, not just untyped JSON: if
+// it resolves to anything other than an array (a raw string, null, an object),
+// render nothing rather than throwing and blanking the whole surface.
+function renderAccordion(c,ctx){const e=$("div","Accordion");
+  if(c.title){const h=$("div","act");h.append(text(c.title));e.append(h);}
+  const raw=resolve(c.sections,ctx.dm);
+  (Array.isArray(raw)?raw:[]).forEach((sec,i)=>{
+    const item=$("div","acc-item");const head=$("button","acc-head");
+    const caret=$("span","acc-caret");caret.append(text(i===0?"▾":"▸"));
+    const lab=$("span");lab.append(text(sec&&sec.heading!=null?sec.heading:("Section "+(i+1))));
+    head.append(caret,lab);
+    const body=$("div","acc-body");body.style.display=i===0?"block":"none";
+    if(sec&&Array.isArray(sec.points)&&sec.points.length){
+      const ul=document.createElement("ul");ul.className="md-ul";
+      sec.points.forEach(p=>{const li=document.createElement("li");mdInline(String(p),li);ul.append(li);});
+      body.append(ul);
+    }else{
+      body.append(md(sec&&(sec.body!=null?sec.body:sec.text)||""));
+    }
+    head.onclick=()=>{const opening=body.style.display==="none";body.style.display=opening?"block":"none";
+      caret.textContent=opening?"▾":"▸";
+      if(opening&&c.onExpand&&c.onExpand.action)emitAction(c.onExpand.action,{index:i,heading:sec&&sec.heading});};
+    item.append(head,body);e.append(item);
+  });
+  return e;}
 
 function emitAction(name,args){ // the only way the surface changes the world: a named, validated event
   document.getElementById("meta").textContent = "action emitted → "+name+" "+JSON.stringify(args);
