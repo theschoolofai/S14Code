@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Vitality — 1% Daily Health & Wellbeing Coach</title>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap">
+  <style>
+    :root {
+      --bg: #18181B;
+      /* zinc-900 */
+      --surface: #27272A;
+      --surface-alt: #3F3F46;
+      --surface-border: #52525B;
+      --ink: #FAFAFA;
+      --ink-body: #E4E4E7;
+      --ink-muted: #A1A1AA;
+
+      --rule: #3F3F46;
+      --rule-strong: #52525B;
+
+      --accent: #14B8A6;
+      /* teal-400 */
+      --accent-hover: #0D9488;
+      --accent-soft: rgba(20, 184, 166, 0.15);
+      --accent-border: rgba(20, 184, 166, 0.3);
+
+      --blue: #38BDF8;
+      --blue-soft: rgba(56, 189, 248, 0.15);
+      --blue-ink: #7DD3FC;
+
+      --green: #4ADE80;
+      --green-soft: rgba(74, 222, 128, 0.15);
+      --green-ink: #86EFAC;
+
+      --amber: #FBBF24;
+      --amber-soft: rgba(251, 191, 36, 0.15);
+      --amber-ink: #FDE68A;
+
+      --red: #F87171;
+      --red-soft: rgba(248, 113, 113, 0.15);
+      --red-ink: #FCA5A5;
+
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-heading: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(1000px 500px at 20% -10%, rgba(16, 185, 129, 0.08), transparent 60%),
+        radial-gradient(800px 400px at 90% 10%, rgba(59, 130, 246, 0.06), transparent 50%),
+        var(--bg);
+      color: var(--ink-body);
+      font-family: var(--font-sans);
+      font-size: 14.5px;
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 28px 20px 80px;
+    }
+
+    /* Header Branding */
+    .head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #14B8A6, #0D9488);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFF;
+      font-weight: 700;
+      font-family: var(--font-heading);
+      box-shadow: 0 0 16px rgba(20, 184, 166, 0.4);
+    }
+
+    .brand h1 {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    .badge-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--surface-alt);
+      border: 1px solid var(--rule-strong);
+      color: var(--accent);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .hint {
+      margin: 0 0 18px;
+      color: var(--ink-muted);
+      font-size: 13.5px;
+      line-height: 1.5;
+    }
+
+    /* Financial Workflows Starters */
+    .starters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .starters button {
+      border: 1px solid var(--rule-strong);
+      background: var(--surface);
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-family: var(--font-sans);
+      font-weight: 500;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: all 150ms ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .starters button:hover {
+      border-color: var(--accent);
+      color: var(--ink);
+      background: var(--accent-soft);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+    }
+
+    /* Command Bar */
+    .startbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .startbar input {
+      flex: 1;
+      padding: 13px 16px;
+      border: 1px solid var(--rule-strong);
+      border-radius: 12px;
+      font-size: 14.5px;
+      font-family: var(--font-sans);
+      background: var(--surface);
+      color: var(--ink);
+      transition: all 150ms ease;
+    }
+
+    .startbar input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .startbar button {
+      padding: 13px 22px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: #FFF;
+      font-weight: 600;
+      font-size: 14px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+      transition: all 150ms ease;
+    }
+
+    .startbar button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Status Bar */
+    .status {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--ink-muted);
+      min-height: 22px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.03em;
+    }
+
+    .pill.good {
+      background: var(--green-soft);
+      color: var(--green-ink);
+      border: 1px solid var(--accent-border);
+    }
+
+    .pill.think {
+      background: var(--blue-soft);
+      color: var(--blue-ink);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .pill.bad {
+      background: var(--red-soft);
+      color: var(--red-ink);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* Main Surface Screen */
+    .screen {
+      background: var(--surface);
+      border: 1px solid var(--rule-strong);
+      border-radius: 18px;
+      padding: 26px;
+      box-shadow: 0 12px 36px -12px rgba(0, 0, 0, 0.6);
+      min-height: 180px;
+    }
+
+    .empty {
+      color: var(--ink-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 48px 16px;
+      line-height: 1.6;
+    }
+
+    .crumbs {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      margin-top: 16px;
+      line-height: 1.6;
+    }
+
+    .refused {
+      margin-top: 14px;
+      border: 1px solid var(--red);
+      background: var(--red-soft);
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+
+    .refused h4 {
+      margin: 0 0 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--red-ink);
+      font-family: var(--font-mono);
+    }
+
+    /* Catalog Component Styling */
+    .Text {
+      color: var(--ink-body);
+      line-height: 1.65;
+      white-space: pre-wrap;
+      margin: 3px 0;
+    }
+
+    .Text.heading {
+      font-family: var(--font-heading);
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--ink);
+      white-space: normal;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .Text.subtitle {
+      font-style: italic;
+      color: var(--ink-muted);
+      font-size: 15.5px;
+      margin-bottom: 6px;
+    }
+
+    .Text.caption {
+      font-size: 12px;
+      color: var(--ink-muted);
+      font-family: var(--font-mono);
+    }
+
+    .Column {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .List {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .Row {
+      display: flex;
+      gap: 14px;
+      align-items: stretch;
+      flex-wrap: wrap;
+    }
+
+    .Row>.StatTile,
+    .Row>.chart,
+    .Row>.Card,
+    .Row>.actbtn {
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .Card {
+      background: var(--surface-alt);
+      border: 1px solid var(--rule-strong);
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+
+    .Card>.ct {
+      font-family: var(--font-heading);
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--ink);
+    }
+
+    .Divider {
+      height: 1px;
+      background: var(--rule);
+      margin: 6px 0;
+    }
+
+    /* StatTile */
+    .StatTile {
+      background: var(--surface-alt);
+      border: 1px solid var(--rule-strong);
+      border-top: 3px solid var(--accent);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .StatTile.good {
+      border-top-color: var(--green);
+    }
+
+    .StatTile.warn {
+      border-top-color: var(--amber);
+    }
+
+    .StatTile.bad {
+      border-top-color: var(--red);
+    }
+
+    .StatTile .lab {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ink-muted);
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+
+    .StatTile .val {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-top: 6px;
+      font-family: var(--font-heading);
+      letter-spacing: -0.01em;
+    }
+
+    .StatTile .dl {
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      margin-top: 4px;
+    }
+
+    /* BarChart & Sparkline */
+    .chart {
+      background: var(--surface-alt);
+      border: 1px solid var(--rule-strong);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .chart .ct {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      margin-bottom: 10px;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      height: 120px;
+      padding-top: 10px;
+    }
+
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .bar-fill {
+      width: 100%;
+      max-width: 36px;
+      background: linear-gradient(180deg, var(--accent), var(--accent-hover));
+      border-radius: 6px 6px 0 0;
+      transition: height 300ms ease;
+    }
+
+    .bar-lbl {
+      font-size: 10.5px;
+      font-family: var(--font-mono);
+      color: var(--ink-muted);
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 100%;
+    }
+
+    .spark-svg {
+      width: 100%;
+      height: 48px;
+      display: block;
+    }
+
+    /* ProgressBar */
+    .prog {
+      height: 12px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--rule-strong);
+      overflow: hidden;
+    }
+
+    .prog>i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+    }
+
+    /* DataTable */
+    .tablewrap {
+      overflow-x: auto;
+      margin: 4px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface-alt);
+      border: 1px solid var(--rule-strong);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--rule-strong);
+      font-size: 13.5px;
+    }
+
+    th {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      background: var(--surface);
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tabs button {
+      border: 1px solid var(--rule-strong);
+      background: var(--surface-alt);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      color: var(--ink-muted);
+    }
+
+    .tabs button.on {
+      background: var(--accent);
+      color: #FFF;
+      border-color: var(--accent);
+    }
+
+    /* Notice Alert */
+    .Notice {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-soft);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--ink);
+    }
+
+    .Notice.good {
+      border-left-color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .Notice.bad {
+      border-left-color: var(--red);
+      background: var(--red-soft);
+    }
+
+    /* Accordion / ExpandableSection */
+    .Accordion {
+      background: var(--surface-alt);
+      border: 1px solid var(--rule-strong);
+      border-radius: 12px;
+      margin: 8px 0;
+      overflow: hidden;
+      transition: all 200ms ease;
+    }
+    .Accordion.good { border-left: 3px solid var(--green); }
+    .Accordion.warn { border-left: 3px solid var(--amber); }
+    .Accordion.bad { border-left: 3px solid var(--red); }
+    .Accordion-header {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      background: var(--surface-alt);
+      transition: background 150ms ease;
+    }
+    .Accordion-header:hover {
+      background: var(--surface);
+    }
+    .Accordion-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .Accordion-title {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--ink);
+    }
+    .Accordion-summary {
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+    .Accordion-icon {
+      font-size: 13px;
+      color: var(--ink-muted);
+      transition: transform 200ms ease;
+      margin-left: 10px;
+    }
+    .Accordion.open .Accordion-icon {
+      transform: rotate(180deg);
+      color: var(--accent);
+    }
+    .Accordion-content {
+      display: none;
+      padding: 14px 16px;
+      border-top: 1px solid var(--rule-strong);
+      background: var(--surface);
+      color: var(--ink-body);
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+    .Accordion.open .Accordion-content {
+      display: block;
+    }
+
+    /* Interactive Action Buttons & Approval Card */
+    .actbtn {
+      width: 100%;
+      text-align: center;
+      border: 1px solid var(--rule-strong);
+      background: var(--surface-alt);
+      border-radius: 12px;
+      padding: 14px;
+      font-weight: 600;
+      font-size: 14.5px;
+      cursor: pointer;
+      color: var(--ink);
+      transition: all 150ms ease;
+      font-family: var(--font-sans);
+    }
+
+    .actbtn:hover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .actbtn:active {
+      transform: translateY(1px);
+    }
+
+    .ApprovalCard {
+      background: var(--surface-alt);
+      border: 1px solid var(--accent-border);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
+    }
+
+    .ApprovalCard .head-title {
+      font-family: var(--font-heading);
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .ApprovalCard .body-summary {
+      font-size: 14px;
+      color: var(--ink-body);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    .ApprovalCard .actions-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .ApprovalCard button.btn-approve {
+      flex: 1;
+      padding: 11px;
+      border: none;
+      border-radius: 10px;
+      background: var(--green);
+      color: #FFF;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-sans);
+    }
+
+    .ApprovalCard button.btn-reject {
+      flex: 1;
+      padding: 11px;
+      border: 1px solid var(--rule-strong);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--red-ink);
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-sans);
+    }
+
+    /* CodeDiff */
+    .CodeDiff {
+      background: var(--surface-alt);
+      border: 1px solid var(--rule-strong);
+      border-radius: 14px;
+      overflow: hidden;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .CodeDiff .ct {
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      border-bottom: 1px solid var(--rule-strong);
+      background: var(--surface);
+    }
+
+    .CodeDiff .cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .CodeDiff .pane {
+      min-width: 0;
+    }
+
+    .CodeDiff .pane+.pane {
+      border-left: 1px solid var(--rule-strong);
+    }
+
+    .CodeDiff .plab {
+      padding: 6px 12px;
+      background: var(--surface);
+      color: var(--ink-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--rule-strong);
+    }
+
+    .CodeDiff .lines {
+      padding: 8px 0;
+      max-height: 280px;
+      overflow: auto;
+    }
+
+    .CodeDiff .ln {
+      display: flex;
+      gap: 8px;
+      padding: 2px 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.45;
+    }
+
+    .CodeDiff .ln.del {
+      background: var(--red-soft);
+      color: var(--red-ink);
+    }
+
+    .CodeDiff .ln.add {
+      background: var(--green-soft);
+      color: var(--green-ink);
+    }
+
+    .CodeDiff .mk {
+      width: 1ch;
+      flex: 0 0 auto;
+      opacity: 0.8;
+    }
+
+    /* Safe Markdown Formatting */
+    .md-h {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      color: var(--ink);
+      margin: 14px 0 6px;
+      font-size: 18px;
+    }
+
+    .md-p {
+      margin: 6px 0;
+      line-height: 1.6;
+    }
+
+    .md-ul {
+      margin: 6px 0 6px 4px;
+      padding-left: 18px;
+    }
+
+    .md-ul li {
+      margin: 3px 0;
+      line-height: 1.55;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div class="brand">
+        <div class="brand-logo">V+</div>
+        <h1>Vitality</h1>
+      </div>
+      <span class="badge-tag">1% Health Coach</span>
+    </div>
+    <p class="hint">Act as my empathetic 1% Health Coach. Do NOT invent data for me. Instead, generate interactive forms
+      to ask me about my day across Food, Activity, and Mindset, and THEN provide a 1% tweak.</p>
+
+    <!-- Health Starter Workflows -->
+    <div class="starters">
+      <button type="button" data-prompt="Ask me about my food intake and water consumption today">
+        🍎 Today's Food Check-in
+      </button>
+      <button type="button" data-prompt="Ask me about my physical activity, steps, and workout today">
+        🏃‍♂️ Physical Activity Check-in
+      </button>
+      <button type="button" data-prompt="Ask me about my stress levels, sleep quality, and mood today">
+        🧘‍♀️ Daily Mental Check-in
+      </button>
+      <button type="button"
+        data-prompt="Ask me for a comprehensive daily review across Food, Water, Physical Activity, and Mental Health">
+        ✨ Full Daily Review
+      </button>
+    </div>
+
+    <!-- Command Entry Bar -->
+    <div class="startbar">
+      <input id="prompt" value="Ask me about my food intake and water consumption today"
+        placeholder="Ask your health coach (e.g., Log my physical activity, How was my sleep?)..." />
+      <button id="ask">Run Turn</button>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="screen">
+      <div id="mount">
+        <div class="empty">
+          Select a health pillar above or enter a prompt. The coach will ask you about your day and compose a validated
+          personalized wellbeing UI.
+        </div>
+      </div>
+    </div>
+
+    <div class="crumbs" id="crumbs"></div>
+  </div>
+
+  <script>
+    const API = "";
+    let currentRunId = null;
+
+    const $ = (tag, className) => {
+      const el = document.createElement(tag);
+      if (className) el.className = className;
+      return el;
+    };
+    const T = txt => document.createTextNode(txt == null ? "" : String(txt));
+
+    // Existing helper functions ... (unchanged)
+
+
+    function ptr(dm, path) {
+      if (!path || typeof path !== "string" || !path.startsWith("/")) return null;
+      let curr = dm;
+      for (const seg of path.split("/").slice(1)) {
+        if (curr == null) return null;
+        curr = curr[seg];
+      }
+      return curr;
+    }
+
+    function resolve(val, dm) {
+      if (val && typeof val === "object" && "$bind" in val) {
+        return ptr(dm, val["$bind"]);
+      }
+      return val;
+    }
+
+
+    function mdInline(line, parent) {
+      const parts = String(line).split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
+      for (const p of parts) {
+        if (!p) continue;
+        if (p.startsWith("**") && p.endsWith("**")) {
+          const b = $("strong"); b.appendChild(T(p.slice(2, -2))); parent.appendChild(b);
+        } else if (p.startsWith("*") && p.endsWith("*")) {
+          const em = $("em"); em.appendChild(T(p.slice(1, -1))); parent.appendChild(em);
+        } else if (p.startsWith("`") && p.endsWith("`")) {
+          const code = $("code"); code.appendChild(T(p.slice(1, -1))); parent.appendChild(code);
+        } else {
+          parent.appendChild(T(p));
+        }
+      }
+    }
+
+    function mdBlock(text, container) {
+      const lines = String(text || "").split("\n");
+      let list = null;
+      for (const raw of lines) {
+        const l = raw.trim();
+        if (!l) { list = null; continue; }
+        if (l.startsWith("### ")) {
+          list = null; const h = $("div", "md-h"); mdInline(l.slice(4), h); container.appendChild(h);
+        } else if (l.startsWith("- ") || l.startsWith("* ")) {
+          if (!list) { list = $("ul", "md-ul"); container.appendChild(list); }
+          const li = $("li"); mdInline(l.slice(2), li); list.appendChild(li);
+        } else {
+          list = null; const p = $("p", "md-p"); mdInline(l, p); container.appendChild(p);
+        }
+      }
+    }
+
+    /* -------------------------------------------------------------------------
+       Closed-Catalog Declarative Render Engine
+       Maps trusted catalog component types into safe DOM nodes.
+       NO raw innerHTML from bound values.
+    ------------------------------------------------------------------------- */
+    function renderTree(cid, byId, dm) {
+      const c = byId[cid];
+      if (!c) return $("div");
+      const props = c.props || c;
+
+      switch (c.type) {
+        case "Column": {
+          const el = $("div", "Column");
+          for (const ch of props.children || []) el.appendChild(renderTree(ch, byId, dm));
+          return el;
+        }
+        case "Row": {
+          const el = $("div", "Row");
+          for (const ch of props.children || []) el.appendChild(renderTree(ch, byId, dm));
+          return el;
+        }
+        case "List": {
+          const el = $("div", "List");
+          for (const ch of props.children || []) el.appendChild(renderTree(ch, byId, dm));
+          return el;
+        }
+        case "Card": {
+          const el = $("div", "Card");
+          if (props.title) { const t = $("div", "ct"); t.appendChild(T(props.title)); el.appendChild(t); }
+          for (const ch of props.children || []) el.appendChild(renderTree(ch, byId, dm));
+          return el;
+        }
+        case "Divider": return $("div", "Divider");
+        case "Text": {
+          const v = props.variant || "body";
+          const el = $("div", "Text " + v);
+          const txt = resolve(props.text, dm);
+          if (v === "heading" || v === "subtitle" || v === "caption") {
+            el.appendChild(T(txt));
+          } else {
+            mdBlock(txt, el);
+          }
+          return el;
+        }
+        case "StatTile": {
+          const tone = props.tone || "neutral";
+          const el = $("div", "StatTile " + tone);
+          if (props.label) { const l = $("div", "lab"); l.appendChild(T(props.label)); el.appendChild(l); }
+          const val = resolve(props.value, dm);
+          const unit = props.unit || "";
+          const vEl = $("div", "val"); vEl.appendChild(T(val != null ? (unit ? unit + " " + val : val) : "—")); el.appendChild(vEl);
+          const dl = resolve(props.delta, dm);
+          if (dl) { const d = $("div", "dl"); d.appendChild(T(dl)); el.appendChild(d); }
+          return el;
+        }
+        case "BarChart": {
+          const el = $("div", "chart");
+          if (props.title) { const t = $("div", "ct"); t.appendChild(T(props.title)); el.appendChild(t); }
+          const rows = resolve(props.data, dm) || [];
+          const xKey = props.xKey || "label";
+          const yKey = props.yKey || "value";
+
+          if (Array.isArray(rows) && rows.length > 0) {
+            const bars = $("div", "chart-bars");
+            let maxVal = 1;
+            rows.forEach(r => { const v = Number(r[yKey]) || 0; if (v > maxVal) maxVal = v; });
+            rows.slice(0, 8).forEach(r => {
+              const col = $("div", "bar-col");
+              const v = Number(r[yKey]) || 0;
+              const pct = Math.max(8, Math.min(100, Math.round((v / maxVal) * 100)));
+              const fill = $("div", "bar-fill");
+              fill.style.height = pct + "%";
+              col.appendChild(fill);
+              const lbl = $("div", "bar-lbl");
+              lbl.appendChild(T(String(r[xKey] || "")));
+              col.appendChild(lbl);
+              bars.appendChild(col);
+            });
+            el.appendChild(bars);
+          }
+          return el;
+        }
+        case "Sparkline": {
+          const el = $("div", "chart");
+          const data = resolve(props.data, dm) || [];
+          if (Array.isArray(data) && data.length > 1) {
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("class", "spark-svg");
+            svg.setAttribute("viewBox", "0 0 200 40");
+            let min = Math.min(...data), max = Math.max(...data);
+            if (min === max) { min -= 1; max += 1; }
+            const points = data.map((v, i) => {
+              const x = (i / (data.length - 1)) * 190 + 5;
+              const y = 35 - ((v - min) / (max - min)) * 30;
+              return `${x},${y}`;
+            }).join(" ");
+            const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+            polyline.setAttribute("fill", "none");
+            polyline.setAttribute("stroke", "#10B981");
+            polyline.setAttribute("stroke-width", "2");
+            polyline.setAttribute("points", points);
+            svg.appendChild(polyline);
+            el.appendChild(svg);
+          }
+          return el;
+        }
+        case "ProgressBar": {
+          const el = $("div", "prog");
+          const val = Number(resolve(props.value, dm)) || 0;
+          const max = Number(props.max) || 100;
+          const pct = Math.max(0, Math.min(100, Math.round((val / max) * 100)));
+          const fill = document.createElement("i");
+          fill.style.width = pct + "%";
+          el.appendChild(fill);
+          return el;
+        }
+        case "DataTable": {
+          const wrap = $("div", "tablewrap");
+          const tbl = $("table");
+          const rows = resolve(props.rows, dm) || [];
+          if (Array.isArray(rows) && rows.length > 0) {
+            const cols = Object.keys(rows[0]);
+            const thtr = $("tr");
+            for (const col of cols) { const th = $("th"); th.appendChild(T(col)); thtr.appendChild(th); }
+            const thead = $("thead"); thead.appendChild(thtr); tbl.appendChild(thead);
+
+            const tbody = $("tbody");
+            for (const r of rows) {
+              const tr = $("tr");
+              for (const col of cols) {
+                const td = $("td");
+                td.appendChild(T(r[col]));
+                tr.appendChild(td);
+              }
+              tbody.appendChild(tr);
+            }
+            tbl.appendChild(tbody);
+          }
+          wrap.appendChild(tbl);
+          return wrap;
+        }
+        case "Tabs": {
+          const el = $("div");
+          const tabsDiv = $("div", "tabs");
+          const labels = (props.labels || "Tab 1").split(",");
+          labels.forEach((lbl, idx) => {
+            const btn = $("button", idx === 0 ? "on" : "");
+            btn.appendChild(T(lbl.trim()));
+            tabsDiv.appendChild(btn);
+          });
+          el.appendChild(tabsDiv);
+          for (const ch of props.children || []) el.appendChild(renderTree(ch, byId, dm));
+          return el;
+        }
+        case "Notice": {
+          const tone = props.tone || "warn";
+          const el = $("div", "Notice " + tone);
+          const txt = resolve(props.text, dm);
+          mdBlock(txt, el);
+          return el;
+        }
+        case "Accordion": {
+          const tone = props.tone || "neutral";
+          const el = $("div", "Accordion " + tone);
+
+          const header = $("div", "Accordion-header");
+          const titleGroup = $("div", "Accordion-title-group");
+
+          const titleTxt = props.title ? String(resolve(props.title, dm) || props.title) : "Guidance & Details";
+          const titleEl = $("div", "Accordion-title");
+          titleEl.appendChild(T(titleTxt));
+          titleGroup.appendChild(titleEl);
+
+          const summaryTxt = props.summary ? String(resolve(props.summary, dm) || props.summary) : "";
+          if (summaryTxt) {
+            const summaryEl = $("div", "Accordion-summary");
+            summaryEl.appendChild(T(summaryTxt));
+            titleGroup.appendChild(summaryEl);
+          }
+          header.appendChild(titleGroup);
+
+          const icon = $("div", "Accordion-icon");
+          icon.appendChild(T("▼"));
+          header.appendChild(icon);
+
+          const content = $("div", "Accordion-content");
+          const detailsTxt = resolve(props.details, dm);
+          if (detailsTxt) {
+            mdBlock(detailsTxt, content);
+          }
+          if (props.children) {
+            for (const ch of props.children) content.appendChild(renderTree(ch, byId, dm));
+          }
+
+          header.onclick = () => {
+            el.classList.toggle("open");
+          };
+
+          el.appendChild(header);
+          el.appendChild(content);
+          return el;
+        }
+        case "Button": {
+          const btn = $("button", "actbtn");
+          const resolvedLabel = resolve(props.label, dm);
+          const labelText = typeof resolvedLabel === "string" ? resolvedLabel : (resolvedLabel != null ? JSON.stringify(resolvedLabel) : "Action");
+          btn.appendChild(T(labelText));
+          btn.onclick = () => {
+            if (props.onPress) handleAction(props.onPress.action, props.onPress.args || {}, labelText);
+          };
+          return btn;
+        }
+        case "ApprovalCard": {
+          const el = $("div", "ApprovalCard");
+          const head = $("div", "head-title");
+          head.appendChild(T("Transaction Approval Required"));
+          el.appendChild(head);
+
+          const summary = resolve(props.summary, dm) || "Approve requested financial operation?";
+          const body = $("div", "body-summary");
+          mdBlock(summary, body);
+          el.appendChild(body);
+
+          const actions = $("div", "actions-row");
+          const appBtn = $("button", "btn-approve");
+          appBtn.appendChild(T("Approve Transaction"));
+          appBtn.onclick = () => handleAction(props.confirm?.action || "approve", props.confirm?.args || {}, "Approve Transaction");
+          actions.appendChild(appBtn);
+
+          const rejBtn = $("button", "btn-reject");
+          rejBtn.appendChild(T("Reject"));
+          rejBtn.onclick = () => handleAction(props.reject?.action || "reject", props.reject?.args || {}, "Reject");
+          actions.appendChild(rejBtn);
+
+          el.appendChild(actions);
+          return el;
+        }
+        case "CodeDiff": {
+          const el = $("div", "CodeDiff");
+          if (props.title) { const t = $("div", "ct"); t.appendChild(T(props.title)); el.appendChild(t); }
+          const cols = $("div", "cols");
+
+          const beforeTxt = String(resolve(props.before, dm) || "");
+          const afterTxt = String(resolve(props.after, dm) || "");
+
+          const pane1 = $("div", "pane");
+          const l1 = $("div", "plab"); l1.appendChild(T(props.beforeLabel || "Current Allocation")); pane1.appendChild(l1);
+          const lines1 = $("div", "lines");
+          for (const line of beforeTxt.split("\n")) {
+            const ln = $("div", "ln del");
+            const mk = $("span", "mk"); mk.appendChild(T("-")); ln.appendChild(mk);
+            ln.appendChild(T(line));
+            lines1.appendChild(ln);
+          }
+          pane1.appendChild(lines1);
+          cols.appendChild(pane1);
+
+          const pane2 = $("div", "pane");
+          const l2 = $("div", "plab"); l2.appendChild(T(props.afterLabel || "Target Allocation")); pane2.appendChild(l2);
+          const lines2 = $("div", "lines");
+          for (const line of afterTxt.split("\n")) {
+            const ln = $("div", "ln add");
+            const mk = $("span", "mk"); mk.appendChild(T("+")); ln.appendChild(mk);
+            ln.appendChild(T(line));
+            lines2.appendChild(ln);
+          }
+          pane2.appendChild(lines2);
+          cols.appendChild(pane2);
+
+          el.appendChild(cols);
+          return el;
+        }
+        default: {
+          const fallback = $("div");
+          if (props.children) {
+            for (const ch of props.children) fallback.appendChild(renderTree(ch, byId, dm));
+          }
+          return fallback;
+        }
+      }
+    }
+
+    function formatHealthPrompt(rawText) {
+      const text = (rawText || "").trim();
+      if (!text) return text;
+      if (text.startsWith("As my 1% Health Coach") || text.startsWith("You are my 1% Health Coach")) {
+        return text;
+      }
+      return `You are my empathetic 1% Health Coach. STEP 1: The user request is: "${text}". Ask interactive questions STRICTLY focused ONLY on the specific health pillars requested in this prompt (such as water intake, food, physical activity, or mental health as specified). EXCLUDE any unrequested pillars (e.g. if the user asks ONLY about sleep and stress, do NOT ask about food or physical activity). Generate 3-5 clickable choice buttons for the user to easily select their status. Do NOT give advice or 1% tweaks yet — ask questions via selectable options first.`;
+    }
+
+    function handleAction(actName, args, labelText) {
+      if (actName !== "approve" && actName !== "reject") {
+        const labelInfo = labelText ? ` ("${labelText}")` : "";
+        runTurn(`As my 1% Health Coach, the user logged their status by selecting: ${labelInfo} (Action: ${actName}). STEP 2: Evaluate this user response specifically for their requested focus, and provide a personalized, actionable 1% tweak advice.`);
+        return;
+      }
+
+      document.getElementById("status").innerHTML = `<span class="pill think">Executing ${actName}...</span>`;
+
+      // Resolve bound args if they are bindings, so the backend gets actual values
+      let resolvedArgs = args;
+      if (args && typeof args === "object" && "$bind" in args) {
+        const dm = window._currentDataModel || {};
+        resolvedArgs = resolve(args, dm);
+      }
+
+      fetch(API + "/v1/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          run_id: currentRunId || "demo-run",
+          node_id: "surface",
+          action: actName,
+          args: resolvedArgs,
+          pending_params: resolvedArgs
+        })
+      }).then(async r => {
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.detail || "Refused");
+        return j;
+      }).then(res => {
+        if (res.resumed) {
+          document.getElementById("status").innerHTML = `<span class="pill good">Action Approved: ${actName}</span>`;
+          runTurn(`Action ${actName} confirmed. Update portfolio state.`);
+        } else {
+          document.getElementById("status").innerHTML = `<span class="pill bad">Action Refused</span>`;
+        }
+      }).catch(e => {
+        document.getElementById("status").innerHTML = `<span class="pill bad">Action Refused: ${e.message}</span>`;
+      });
+    }
+
+    function runTurn(promptText) {
+      const statusEl = document.getElementById("status");
+      const mountEl = document.getElementById("mount");
+      const crumbsEl = document.getElementById("crumbs");
+
+      const formattedPrompt = formatHealthPrompt(promptText);
+
+      statusEl.innerHTML = `<span class="pill think">Thinking & Executing Graph...</span>`;
+      mountEl.innerHTML = `<div class="empty">Evaluating health context & composing validated wellbeing interface...</div>`;
+
+      fetch(API + "/v1/agent/runs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tenant_id: "course",
+          project_id: "s14-health",
+          user_id: "wellbeing-01",
+          agent_id: "health_coach",
+          prompt: formattedPrompt,
+          respond_as: "ui"
+        })
+      })
+        .then(async r => {
+          if (!r.ok) {
+            const txt = await r.text();
+            let errMsg = `HTTP ${r.status}`;
+            try {
+              const j = JSON.parse(txt);
+              errMsg = j.detail || j.message || errMsg;
+            } catch (e) {
+              errMsg = txt.slice(0, 300) || errMsg;
+            }
+            throw new Error(errMsg);
+          }
+          return r.json();
+        })
+        .then(data => {
+          currentRunId = data.run_id;
+          crumbsEl.appendChild(T(`Run: ${currentRunId} | State: ${data.finished ? "Finished" : "Running"}\n`));
+          pollComposed(data.run_id);
+        })
+        .catch(err => {
+          statusEl.innerHTML = `<span class="pill bad">Run Error (${err.message})</span>`;
+          mountEl.innerHTML = `<div class="refused"><h4>Gateway / Runtime Error</h4><p style="margin:4px 0;color:var(--ink-body);">${err.message}</p><p style="font-size:12px;color:var(--ink-muted);margin:8px 0 0;">Ensure the <strong>glc_v3</strong> gateway is running on <code>http://127.0.0.1:8111</code> and has valid model credentials configured in <code>.env</code>.</p></div>`;
+        });
+    }
+
+    function pollComposed(runId, attempts = 0) {
+      fetch(API + `/v1/runs/${runId}/composed`)
+        .then(r => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
+        .then(res => {
+          document.getElementById("status").innerHTML = `<span class="pill good">Surface Composed & Validated</span>`;
+          const surface = res.surface;
+          const byId = {};
+          for (const comp of surface.components) byId[comp.id] = comp;
+
+          const mount = document.getElementById("mount");
+          mount.innerHTML = "";
+          window._currentDataModel = surface.dataModel;
+          mount.appendChild(renderTree(surface.root, byId, surface.dataModel));
+        })
+        .catch(err => {
+          if (attempts < 15) {
+            setTimeout(() => pollComposed(runId, attempts + 1), 1000);
+          } else {
+            document.getElementById("status").innerHTML = `<span class="pill bad">Surface poll timeout</span>`;
+          }
+        });
+    }
+
+    // Event Bindings
+    document.getElementById("ask").addEventListener("click", () => {
+      const p = document.getElementById("prompt").value.trim();
+      if (p) runTurn(p);
+    });
+
+    document.querySelectorAll(".starters button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const p = btn.getAttribute("data-prompt");
+        document.getElementById("prompt").value = p;
+        runTurn(p);
+      });
+    });
+  </script>
+</body>
+
+</html>

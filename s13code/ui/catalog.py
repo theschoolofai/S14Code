@@ -136,6 +136,13 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "onCardPress": PropSpec("action"),
         "wipLimit": PropSpec("number"),
     }, source="custom"),
+    "Accordion": ComponentSpec("Accordion", {
+        "title": PropSpec("text"),
+        "summary": PropSpec("text"),
+        "details": PropSpec("binding"),
+        "children": PropSpec("ref"),
+        "tone": _TONE,
+    }, source="custom"),
 }
 
 # The closed set of action names a surface may emit. An action the agent did

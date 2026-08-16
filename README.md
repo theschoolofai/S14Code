@@ -75,7 +75,15 @@ curl http://127.0.0.1:8113/v1/catalog
 open  http://127.0.0.1:8113/s/harness      # the render client, which executes nothing
 open  http://127.0.0.1:8113/app            # generic UI-only app loop
 open  http://127.0.0.1:8113/app/trip       # Trip Planner (every turn is a composed interface)
+open  http://127.0.0.1:8113/app/health     # 1% Daily Health & Wellbeing Coach (multi-turn interactive agent)
 ```
+
+## Health Coach App (UI-only application)
+
+`GET /app/health` (or `/health`) serves the multi-turn 1% Daily Health & Wellbeing Coach application.
+Synthetic identities (`tenant_id=course`, `project_id=s14-health`, `user_id=wellbeing-01`).
+Features interactive health tracking (`BarChart`, `StatTile`, `DataTable`), daily activity comparison (`Sparkline`),
+habit auditing (`Notice`, `ProgressBar`), and daily tweak approvals with before/after diffs (`CodeDiff`, `ApprovalCard`).
 
 ## Trip Planner (UI-only application)
 

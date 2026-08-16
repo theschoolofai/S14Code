@@ -262,3 +262,16 @@ async def trip_viewer():
     if not path.exists():
         raise HTTPException(500, "trip viewer missing")
     return path.read_text(encoding="utf-8")
+
+
+@router.get("/app/health", response_class=HTMLResponse)
+@router.get("/app/health/", response_class=HTMLResponse)
+@router.get("/health", response_class=HTMLResponse)
+@router.get("/health/", response_class=HTMLResponse)
+async def health_viewer():
+    """Health App: 1% Daily Health & Wellbeing Coach generative agent UI."""
+    path = Path(__file__).parent / "client" / "health.html"
+    if not path.exists():
+        raise HTTPException(500, "health viewer missing")
+    return path.read_text(encoding="utf-8")
+
