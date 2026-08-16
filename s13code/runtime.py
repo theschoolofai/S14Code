@@ -1064,7 +1064,7 @@ class S13Runtime:
                       "Timeline or a List/Column of Cards for ordered groups, StatTiles in a Row for key numbers, "
                       "a BarChart or Sparkline for a numeric series, a DataTable for tabular rows, a CodeDiff when "
                       "before/after plain-text plans are present, a KanbanBoard when /board_columns is present, "
-                      "a Map when /map_markers is present, and Buttons for "
+                      "a Map when /map_markers is present, an Accordion for collapsible section details, and Buttons for "
                       "tappable choices. Fall back to a "
                       "single Text only when the data has no structure. Return JSON only: no prose, no fences.")
             instruction = {
@@ -1077,9 +1077,12 @@ class S13Runtime:
                             'Start with a Text (variant "heading") bound to /title, then a Text (variant "body") '
                             "bound to /intro or /summary if present. Then map the structured data to rich "
                             "components (skip any pointer that is absent): "
-                            "for /sections (ordered groups) render EITHER a Timeline bound to /section_events OR a "
-                            "List/Column of Cards, one Card per section titled with the literal /section_N_heading "
-                            "and a Text bound to /section_N_points; "
+                            "for /sections (ordered groups) use the FIRST section (section_0) as a Card titled with "
+                            "the literal /section_0_heading and a Text child bound to /section_0_points. "
+                            "For ALL SUBSEQUENT sections (section_1, section_2, ...) you MUST use an Accordion "
+                            "(type Accordion, title the literal /section_N_heading, summary a short 1-line preview, "
+                            "details bound to /section_N_points, tone good). This keeps the primary content visible "
+                            "and collapses supporting detail behind expandable headers. "
                             "for /metrics render a Row of StatTiles, each StatTile value bound to /metric_N_value "
                             "with a literal label; "
                             "for /series render a BarChart (data bound to /series, xKey \"label\", yKey \"value\") "
