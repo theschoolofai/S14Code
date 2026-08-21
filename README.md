@@ -110,6 +110,12 @@ entirely from the resolved *number* in that cell — never from a bound string �
 so no cell can smuggle markup or a style payload; row/column labels are plain
 text nodes, exactly like every other component in the render client.
 
+## Video walkthrough
+
+[Recipe Assistant + Heatmap walkthrough](https://youtu.be/54Yu0ekKW0E) — a
+live run through the three-turn `/app/recipe` demo and the adversarial
+refusal, end to end against the real gateway.
+
 ## Run a prompt
 
 ```bash
