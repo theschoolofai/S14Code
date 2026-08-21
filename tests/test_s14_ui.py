@@ -483,6 +483,107 @@ def test_map_markup_caption_is_refused():
     assert r.field == "caption"
 
 
+def test_heatmap_clean_surface_validates():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["h", "hm"]},
+            {"id": "h", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+            {
+                "id": "hm",
+                "type": "Heatmap",
+                "title": "Nutrition comparison",
+                "rows": {"$bind": "/heatmap_rows"},
+                "cols": {"$bind": "/heatmap_cols"},
+                "cells": {"$bind": "/heatmap_cells"},
+                "caption": "0-10 per dimension",
+            },
+        ],
+        "dataModel": {
+            "title": "Recipe comparison",
+            "heatmap_rows": ["Chicken Fried Rice", "Stir-Fry"],
+            "heatmap_cols": ["Protein", "Carbs"],
+            "heatmap_cells": [[7, 6], [8, 3]],
+        },
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert any(c["type"] == "Heatmap" for c in result.accepted)
+
+
+def test_heatmap_markup_cells_is_refused_while_siblings_remain():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["ok", "evil", "btn"]},
+            {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+            {
+                "id": "evil",
+                "type": "Heatmap",
+                "title": "Poison",
+                "rows": {"$bind": "/heatmap_rows"},
+                "cols": {"$bind": "/heatmap_cols"},
+                "cells": "<img src=x onerror=steal()>",
+            },
+            {"id": "btn", "type": "Button", "label": "Checkout", "onPress": {"action": "checkout_now"}},
+        ],
+        "dataModel": {"title": "Safe", "heatmap_rows": ["a"], "heatmap_cols": ["b"]},
+    }
+    result = validate_surface(surface)
+    accepted_ids = {c["id"] for c in result.accepted}
+    assert "ok" in accepted_ids and "root" in accepted_ids
+    assert "evil" not in accepted_ids and "btn" not in accepted_ids
+    invariants = {r.invariant for r in result.rejections}
+    assert Invariant.DATA_NOT_CODE in invariants
+    assert Invariant.EVENT in invariants
+
+
+def test_heatmap_unknown_sibling_type_breaks_catalog_only():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["hm", "evil"]},
+            {
+                "id": "hm",
+                "type": "Heatmap",
+                "rows": {"$bind": "/heatmap_rows"},
+                "cols": {"$bind": "/heatmap_cols"},
+                "cells": {"$bind": "/heatmap_cells"},
+            },
+            {"id": "evil", "type": "RawHtml", "html": "<img src=x onerror=alert(1)>"},
+        ],
+        "dataModel": {"heatmap_rows": ["a"], "heatmap_cols": ["b"], "heatmap_cells": [[1]]},
+    }
+    result = validate_surface(surface)
+    assert any(c["type"] == "Heatmap" for c in result.accepted)
+    assert all(c.get("type") != "RawHtml" for c in result.accepted)
+    assert any(r.invariant == Invariant.CATALOG for r in result.rejections)
+
+
+def test_clean_heatmap_normalizes_labels_and_pads_ragged_rows():
+    from s13code.runtime import _clean_heatmap
+
+    cleaned = _clean_heatmap({
+        "title": "Nutrition",
+        "rowLabels": ["Chicken Fried Rice", "  Stir-Fry  ", ""],
+        "colLabels": ["Protein", "Carbs"],
+        "cells": [[7, 6], [8]],  # second row is ragged: missing one value
+    })
+    assert cleaned == {
+        "rows": ["Chicken Fried Rice", "Stir-Fry"],
+        "cols": ["Protein", "Carbs"],
+        "cells": [[7.0, 6.0], [8.0, 0.0]],
+    }
+
+
+def test_clean_heatmap_rejects_non_numeric_or_missing_shape():
+    from s13code.runtime import _clean_heatmap
+
+    assert _clean_heatmap(None) is None
+    assert _clean_heatmap({"rowLabels": [], "colLabels": ["a"], "cells": []}) is None
+    assert _clean_heatmap({"rowLabels": ["a"], "colLabels": ["b"], "cells": [["n/a"]]}) is None
+
+
 def test_clean_map_markers_accepts_aliases_and_schematic_fallback():
     from s13code.runtime import (
         _clean_map_markers,
@@ -559,8 +660,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """26 types: 15 A2UI-Basic + 11 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 26
+    """27 types: 15 A2UI-Basic + 12 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 27
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -571,7 +672,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard", "CodeDiff", "Map", "KanbanBoard",
+        "Notice", "ApprovalCard", "CodeDiff", "Map", "KanbanBoard", "Heatmap",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -646,6 +747,15 @@ def test_route_trip_app_serves_shell_with_codediff_renderer(client):
     assert "Map" in resp.text
     assert "s14-trip" in resp.text
     assert "traveler-01" in resp.text
+    assert "respond_as" in resp.text
+
+
+def test_route_recipe_app_serves_shell_with_heatmap_renderer(client):
+    resp = client.get("/app/recipe")
+    assert resp.status_code == 200
+    assert "Heatmap" in resp.text
+    assert "s14-recipe" in resp.text
+    assert "cook-01" in resp.text
     assert "respond_as" in resp.text
 
 
@@ -775,6 +885,22 @@ def test_render_client_never_uses_innerhtml_and_documents_the_contract():
     # The one place the word appears is the documented safety contract itself.
     assert html.count("innerHTML") == 1
     assert "NEVER sets" in html and "innerHTML from a bound value" in html
+
+
+def test_render_client_draws_heatmap_from_text_and_computed_color_only():
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "index.html").read_text()
+    assert "renderHeatmap" in html
+    assert "Heatmap:(c,ctx)=>renderHeatmap(c,ctx)" in html
+    # The cell colour comes from OUR numeric interpolation, never a bound string.
+    assert "backgroundColor" in html
+    assert html.count("innerHTML") == 1  # unchanged: still just the doc comment
+
+
+def test_recipe_shell_never_uses_innerhtml_for_bound_data():
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "recipe.html").read_text(encoding="utf-8")
+    assert "renderHeatmap" in html
+    assert "createTextNode" in html
+    assert not re.search(r"\.innerHTML\s*=\s*(resolve|c\.|rowVals|cells)", html)
 
 
 def test_render_client_reconnects_and_rebuilds_from_a_state_snapshot():

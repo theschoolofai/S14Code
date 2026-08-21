@@ -1,0 +1,34 @@
+{
+  "task": "I have chicken, rice, and bell peppers in my kitchen tonight. Compare exactly three dinner recipes I could make with these \u2014 Chicken Fried Rice, Bell Pepper Chicken Stir-Fry, and Chicken & Rice Bake \u2014 across four nutrition dimensions: Protein, Carbs, Fat, and Spice-level, each scored 0-10 so I can see at a glance which recipe wins on which dimension. Then offer exactly one next-step choice: pick a recipe to cook tonight.",
+  "run_id": "run-51df54e66981",
+  "status": "failed",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "gateway_provider_env": "gemini",
+  "graph_nodes": {
+    "content": {
+      "skill": "content",
+      "state": "failed",
+      "error": null,
+      "result_keys": [
+        "error"
+      ]
+    }
+  },
+  "content_structured_keys": [],
+  "compose_surface_node": {
+    "state": null,
+    "error": null,
+    "provider": null,
+    "model": null,
+    "validator": null,
+    "component_types": [],
+    "has_heatmap": false,
+    "data_model_keys": [],
+    "surface_accepted": [],
+    "data_model": {},
+    "revalidate_ok": true,
+    "revalidate_rejections": []
+  },
+  "assert_heatmap_composed_unprompted": false,
+  "assert_surface_clean": true
+}

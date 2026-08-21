@@ -262,3 +262,14 @@ async def trip_viewer():
     if not path.exists():
         raise HTTPException(500, "trip viewer missing")
     return path.read_text(encoding="utf-8")
+
+
+@router.get("/app/recipe", response_class=HTMLResponse)
+@router.get("/app/recipe/", response_class=HTMLResponse)
+async def recipe_viewer():
+    """Recipe Assistant: pantry -> recipe choices -> ingredients/steps/nutrition
+    heatmap -> shopping list, every turn a composed interface."""
+    path = Path(__file__).parent / "client" / "recipe.html"
+    if not path.exists():
+        raise HTTPException(500, "recipe viewer missing")
+    return path.read_text(encoding="utf-8")

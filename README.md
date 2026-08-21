@@ -75,6 +75,7 @@ curl http://127.0.0.1:8113/v1/catalog
 open  http://127.0.0.1:8113/s/harness      # the render client, which executes nothing
 open  http://127.0.0.1:8113/app            # generic UI-only app loop
 open  http://127.0.0.1:8113/app/trip       # Trip Planner (every turn is a composed interface)
+open  http://127.0.0.1:8113/app/recipe     # Recipe Assistant (every turn is a composed interface)
 ```
 
 ## Trip Planner (UI-only application)
@@ -86,6 +87,34 @@ validated surface. A button tap becomes the next turn. The catalog includes a cu
 `CodeDiff` and `Map` components so itinerary revisions and place markers can
 render as before/after plain-text plans and an SVG marker map — drawn with text
 nodes only, never `innerHTML` from bound values.
+
+## Recipe Assistant (UI-only application, adds `Heatmap`)
+
+`GET /app/recipe` is the same fork pattern for a pantry-to-plate cooking assistant.
+Synthetic identities only (`tenant_id=course`, `project_id=s14-recipe`,
+`user_id=cook-01`). Three turns, each a composed, catalog-validated interface —
+never a paragraph of text:
+
+1. **"I have chicken, rice, and bell peppers…"** → recipe option Cards with a
+   cook-time StatTile each, and exactly 3 Buttons to pick one.
+2. **tap a recipe** → the ingredient list as a `DataTable`, the numbered steps as
+   a `Timeline`, and a `Heatmap` comparing all three candidate recipes across
+   Protein / Carbs / Fat / Spice-level — the new custom component, chosen by the
+   model itself because `compose_surface` offers it whenever `/heatmap_cells` is
+   present in the data model, never because the prompt named "Heatmap".
+3. **tap "Plan this into my week"** → a consolidated shopping-list `DataTable`
+   plus a total-cost `StatTile`.
+
+`Heatmap` renders as an HTML table whose cell background colour is computed
+entirely from the resolved *number* in that cell — never from a bound string —
+so no cell can smuggle markup or a style payload; row/column labels are plain
+text nodes, exactly like every other component in the render client.
+
+## Video walkthrough
+
+[Recipe Assistant + Heatmap walkthrough](https://youtu.be/54Yu0ekKW0E) — a
+live run through the three-turn `/app/recipe` demo and the adversarial
+refusal, end to end against the real gateway.
 
 ## Run a prompt
 
@@ -131,6 +160,7 @@ All served by the runtime on 8113, defined in
 | `GET /s/{id}` | the render client, pointed at a run |
 | `GET /app` | bare-minimal UI-only conversation shell |
 | `GET /app/trip` | Trip Planner shell (destination → days+map → revision with CodeDiff) |
+| `GET /app/recipe` | Recipe Assistant shell (pantry → ingredients/steps+Heatmap → shopping list) |
 | `GET /jobhunt` | Career Pipeline shell with KanbanBoard and adversarial proof flow |
 
 ## The generative loop (UI composed by the harness)
@@ -162,16 +192,21 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_run.json` | `harness_run.py` | a real live-graph run → the model composes a 19-component surface |
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `harness_codediff.json` | `harness_codediff.py` | live compose includes `CodeDiff` without naming it in the user prompt |
+| `harness_heatmap.json` | `harness_heatmap.py` | live compose includes `Heatmap` without naming it in the user prompt |
 | `adversarial_trip.json` | `adversarial_trip.py` | RawHtml / markup / unregistered action refused; safe heading survives |
+| `adversarial_recipe.json` | `adversarial_recipe.py` | RawHtml / markup in `Heatmap.cells` / unregistered action refused; safe heading survives |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |
 
 ```bash
 uv run python proofs/run_surface_proof.py    # writes proof.json, prints the table
 uv run python proofs/adversarial_trip.py     # three invariants against a hostile surface
+uv run python proofs/adversarial_recipe.py   # same three invariants, attacking Heatmap.cells
 # gateway on 8111 required:
 S13_GATEWAY_PROVIDER=gemini GLC_BASE_URL=http://127.0.0.1:8111 \
   uv run python proofs/harness_codediff.py   # -> proofs/harness_codediff.json
+S13_GATEWAY_PROVIDER=gemini GLC_BASE_URL=http://127.0.0.1:8111 \
+  uv run python proofs/harness_heatmap.py    # -> proofs/harness_heatmap.json
 uv run pytest -q                             # S13 core + regression tests + the S14 invariant tests
 ```
 
