@@ -78,6 +78,15 @@
   .Map .legend{display:flex;flex-wrap:wrap;gap:8px 14px;padding:8px 12px;font-size:12px}
   .Map .legend span{display:inline-flex;align-items:center;gap:6px}
   .Map .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+  .Heatmap{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  .Heatmap .ct{padding:10px 12px;font-size:12px;font-weight:600;color:var(--ink-muted);border-bottom:1px solid var(--rule);font-family:var(--font-mono)}
+  .Heatmap .cap{padding:8px 12px;font-size:12px;color:var(--ink-muted);border-top:1px solid var(--rule)}
+  .Heatmap .grid-wrap{padding:12px;overflow:auto}
+  .Heatmap table{border-collapse:collapse;width:auto}
+  .Heatmap th,.Heatmap td{border:1px solid var(--rule);padding:0;font-size:11px}
+  .Heatmap th{background:var(--surface-alt);color:var(--ink-muted);font-family:var(--font-mono);padding:6px 8px;text-align:left;white-space:nowrap}
+  .Heatmap td.rowlab{background:var(--surface-alt);color:var(--ink-muted);font-family:var(--font-mono);padding:6px 8px;white-space:nowrap;text-align:left}
+  .Heatmap td.cell{width:38px;height:28px;text-align:center;color:var(--ink);font-weight:600;min-width:38px}
 </style>
 </head>
 <body>
@@ -156,6 +165,7 @@ const RENDERERS = {
   CodeDiff:(c,ctx)=>renderCodeDiff(c,ctx),
   Map:(c,ctx)=>renderMap(c,ctx),
   KanbanBoard:(c,ctx)=>renderKanban(c,ctx),
+  Heatmap:(c,ctx)=>renderHeatmap(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -266,6 +276,53 @@ function renderKanban(c,ctx){
       if(tappable){box.type="button";box.onclick=()=>emitAction(action,{card:card&&card.title,lane:col&&col.title});}
       lane.append(box);});lanes.append(lane);});
   e.append(lanes);return e;
+}
+
+function renderHeatmap(c,ctx){
+  // Draws a 2D intensity grid from three bound arrays: rows (labels), cols
+  // (labels), cells (rows x cols numbers). Every cell's color is computed by
+  // OUR OWN numeric interpolation off the resolved number — never a bound
+  // string reaching a style or markup sink. Labels are text nodes only.
+  const e=$("div","Heatmap");
+  if(c.title){const t=$("div","ct");t.append(text(c.title));e.append(t);}
+  const rows=resolve(c.rows,ctx.dm)||[];
+  const cols=resolve(c.cols,ctx.dm)||[];
+  const cells=resolve(c.cells,ctx.dm)||[];
+  const wrap=$("div","grid-wrap");
+  const t=$("table");
+  let lo=Infinity,hi=-Infinity;
+  cells.forEach(r=>(Array.isArray(r)?r:[]).forEach(v=>{const n=+v;if(isFinite(n)){if(n<lo)lo=n;if(n>hi)hi=n;}}));
+  if(!isFinite(lo)||!isFinite(hi)){lo=0;hi=1;}
+  const span=(hi-lo)||1;
+  function colorFor(v){
+    const n=+v; if(!isFinite(n))return "transparent";
+    const frac=Math.max(0,Math.min(1,(n-lo)/span));
+    // interpolate a cool->warm scale purely numerically (no bound text ever
+    // touches this string): low = soft blue, high = solid amber/red.
+    const rC=Math.round(224+(217-224)*frac);
+    const gC=Math.round(238+(83-238)*frac);
+    const bC=Math.round(255+(6-255)*frac);
+    return "rgb("+rC+","+gC+","+bC+")";
+  }
+  const hr=$("tr");hr.append($("th"));
+  cols.forEach(cl=>{const th=$("th");th.append(text(cl));hr.append(th);});
+  t.append(hr);
+  rows.forEach((rowLabel,ri)=>{
+    const tr=$("tr");
+    const rl=$("td","rowlab");rl.append(text(rowLabel));tr.append(rl);
+    const rowVals=Array.isArray(cells[ri])?cells[ri]:[];
+    cols.forEach((_,ci)=>{
+      const v=rowVals[ci];
+      const td=$("td","cell");
+      td.style.backgroundColor=colorFor(v);
+      td.append(text(isFinite(+v)?(+v).toFixed(3).replace(/\.?0+$/,""):""));
+      tr.append(td);
+    });
+    t.append(tr);
+  });
+  wrap.append(t);e.append(wrap);
+  if(c.caption){const cap=$("div","cap");cap.append(text(c.caption));e.append(cap);}
+  return e;
 }
 
 function emitAction(name,args){ // the only way the surface changes the world: a named, validated event
