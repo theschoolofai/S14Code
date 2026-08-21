@@ -100,10 +100,10 @@
   "all_checks_passed": true,
   "live_validate": {
     "reachable": false,
-    "error": "<urlopen error [Errno 111] Connection refused>"
+    "error": "<urlopen error [Errno 61] Connection refused>"
   },
   "live_hostile_compose": {
     "reachable": false,
-    "error": "<urlopen error [Errno 111] Connection refused>"
+    "error": "<urlopen error [Errno 61] Connection refused>"
   }
 }
