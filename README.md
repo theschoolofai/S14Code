@@ -192,6 +192,7 @@ uv run pytest -q                             # S13 core + regression tests + the
 - **Skill Proficiency Grid**: Uses the `Rating` component to draw stars dynamically based on candidates' skills.
 - **STAR Bullet Optimizer**: Demonstrates the `CodeDiff` component comparing candidate draft bullets against AI-enhanced ones.
 - **Bento Sheet Summary**: Generates a unified, structured resume sheet layout utilizing columns, rows, data tables, and stat tiles.
+- **Video Walkthrough**: Watch the interactive [ResuMake Video Walkthrough](https://youtu.be/w-x5TEN0o6Y) showing layout composition and transitions.
 
 ### Reproduction Commands
 ```bash
