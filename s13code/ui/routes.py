@@ -262,3 +262,15 @@ async def trip_viewer():
     if not path.exists():
         raise HTTPException(500, "trip viewer missing")
     return path.read_text(encoding="utf-8")
+
+
+@router.get("/app/resume", response_class=HTMLResponse)
+@router.get("/app/resume/", response_class=HTMLResponse)
+async def resume_app():
+    """ResuMake: AI Resume Builder Application."""
+    path = Path(__file__).parent / "client" / "resume.html"
+    if not path.exists():
+        raise HTTPException(500, "resume app missing")
+    return path.read_text(encoding="utf-8")
+
+

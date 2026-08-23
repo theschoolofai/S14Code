@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ResuMake — Multi-Turn AI Resume Builder</title>
+  <style>
+    :root {
+      --bg: #0B1329;
+      --surface: #1C2541;
+      --surface-alt: #3A506B;
+      --ink: #FFFFFF;
+      --ink-body: #E2E8F0;
+      --ink-muted: #8D99AE;
+      --rule: #3A506B;
+      --rule-strong: #5C677D;
+      --accent: #64DFDF;
+      --accent-soft: rgba(100, 223, 223, .12);
+      --green: #22C55E;
+      --green-soft: rgba(34, 197, 94, .15);
+      --green-ink: #4ADE80;
+      --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --font-mono: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink-body);
+      font-family: var(--font-sans);
+      font-size: 15px
+    }
+
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 24px 18px 60px
+    }
+
+    .head {
+      display: flex;
+      gap: 12px;
+      align-items: baseline;
+      flex-wrap: wrap;
+      margin-bottom: 4px
+    }
+
+    .head h1 {
+      font-size: 26px;
+      margin: 0;
+      color: var(--ink);
+      font-weight: 700;
+      letter-spacing: -0.02em
+    }
+
+    .head .sub {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent)
+    }
+
+    .rule {
+      height: 1px;
+      background: var(--rule);
+      margin: 14px 0 16px
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+      align-items: center
+    }
+
+    .btn-start {
+      background: var(--accent);
+      color: #0B1329;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease
+    }
+
+    .btn-start:hover {
+      background: #52B7B7;
+      transform: translateY(-1px)
+    }
+
+    .status {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      min-height: 22px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .pill {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 11px
+    }
+
+    .pill.good {
+      background: var(--green-soft);
+      color: var(--green-ink)
+    }
+
+    .pill.think {
+      background: var(--accent-soft);
+      color: var(--accent)
+    }
+
+    /* Bento Grid Layout Styles */
+    .screen {
+      min-height: 240px
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+
+    .bento-grid>* {
+      grid-column: span 12;
+    }
+
+    .bento-grid>.bento-card {
+      background: var(--surface);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 20px 22px;
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .bento-grid>.bento-card.span-8 {
+      grid-column: span 8;
+    }
+
+    .bento-grid>.bento-card.span-6 {
+      grid-column: span 6;
+    }
+
+    .bento-grid>.bento-card.span-4 {
+      grid-column: span 4;
+    }
+
+    .bento-grid>.StatTile {
+      grid-column: span 4;
+    }
+
+    @media (max-width: 720px) {
+
+      .bento-grid>.bento-card.span-8,
+      .bento-grid>.bento-card.span-6,
+      .bento-grid>.bento-card.span-4,
+      .bento-grid>.StatTile {
+        grid-column: span 12;
+      }
+    }
+
+    .bento-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      margin-bottom: 6px;
+      font-family: var(--font-mono);
+    }
+
+    .Text.heading {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 4px
+    }
+
+    .Text.subtitle {
+      font-style: italic;
+      color: var(--ink-muted);
+      font-size: 15px
+    }
+
+    /* Input fields inside Bento Cards */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px
+    }
+
+    .field .lb {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-body);
+      font-family: var(--font-mono)
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      padding: 11px 14px;
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: var(--bg);
+      color: var(--ink);
+      width: 100%
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: var(--accent)
+    }
+
+    .actbtn {
+      background: var(--accent);
+      color: #0B1329;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14.5px;
+      font-family: inherit;
+      transition: all 0.15s ease;
+      width: 100%;
+      margin-top: 10px
+    }
+
+    .actbtn:hover {
+      background: #52B7B7;
+      transform: translateY(-1px)
+    }
+
+    /* CodeDiff styling */
+    .CodeDiff {
+      background: var(--bg);
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 4px
+    }
+
+    .CodeDiff .cols {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      flex-wrap: wrap
+    }
+
+    .CodeDiff .pane {
+      flex: 1;
+      min-width: 240px;
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      padding: 10px
+    }
+
+    .CodeDiff .plab {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+      text-transform: uppercase
+    }
+
+    .CodeDiff .lines {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      line-height: 1.5
+    }
+
+    .CodeDiff .ln {
+      display: flex;
+      gap: 8px;
+      padding: 2px 4px;
+      border-radius: 4px
+    }
+
+    .CodeDiff .ln.del {
+      color: #F87171;
+      background: rgba(239, 68, 68, 0.15)
+    }
+
+    .CodeDiff .ln.add {
+      color: #4ADE80;
+      background: rgba(34, 197, 94, 0.15)
+    }
+
+    .StatTile {
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-top: 3px solid var(--accent);
+      border-radius: 12px;
+      padding: 14px 16px
+    }
+
+    .StatTile .lab {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--ink-muted);
+      font-weight: 600;
+      font-family: var(--font-mono)
+    }
+
+    .StatTile .val {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-top: 4px;
+      line-height: 1.15
+    }
+
+    .Row {
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .Row>* {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .Row>button,
+    .Row>.actbtn {
+      flex: none;
+      width: auto;
+      margin-top: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="head">
+      <h1>ResuMake</h1>
+      <span class="sub">Generative Bento Resume Builder</span>
+    </div>
+    <div style="font-size:13.5px;color:var(--ink-muted);margin-top:2px">
+      A2UI Dynamic Grid Composition — The agent composes layout and fields at each turn.
+    </div>
+
+    <div class="rule"></div>
+
+    <div class="top-actions">
+      <button class="btn-start" onclick="startResumeBuilder()">🚀 Start AI Resume Builder</button>
+      <label
+        style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-muted);cursor:pointer;user-select:none;margin-left:auto">
+        <input type="checkbox" id="mock_mode" checked> ⚡ Demo Mode (Instant, No API Costs)
+      </label>
+    </div>
+
+    <div class="status" id="status">Ready.</div>
+
+    <div class="screen" id="screen">
+      <div class="empty">
+        <h3 style="margin-top:0;color:var(--ink)">Welcome to ResuMake</h3>
+        Click <b>🚀 Start AI Resume Builder</b> above to let the AI agent dynamically compose your layout.
+      </div>
+    </div>
+
+    <div class="crumbs" id="crumbs"></div>
+  </div>
+
+  <script>
+    const REGISTERED_ACTIONS = new Set(["approve", "reject", "rerun", "request_data"]);
+    const convo = [];
+    const currentFormValues = {};
+
+    function startResumeBuilder() {
+      convo.length = 0;
+      for (const k in currentFormValues) delete currentFormValues[k];
+      convo.push("Start Resume Builder");
+      sendPrompt();
+    }
+
+    function buildGoalPayload() {
+      const len = convo.length;
+      const last = convo[len - 1] || "";
+
+      // Parse all entered values from the conversation progression log
+      const summaryData = {};
+      convo.forEach(turn => {
+        const match = turn.match(/\(Input data: ([^\)]+)\)/);
+        if (match) {
+          const regex = /(\w[\w\s\/]*?)="([^"]*?)"/g;
+          let m;
+          while ((m = regex.exec(match[1])) !== null) {
+            summaryData[m[1].trim()] = m[2].trim();
+          }
+        }
+      });
+
+      if (len === 1) {
+        return "The user is starting the AI Resume Builder. " +
+          "This is TURN 1 of 8 (Identity & Target Role). " +
+          "CRITICAL: DO NOT GENERATE THE FINAL COMPLETED RESUME YET! " +
+          "Compose TURN 1 interface: " +
+          "1. StepWizard component with steps ['1. Role', '2. Basics', '3. Level', '4. Experience', '5. Education', '6. Skills', '7. Extras', '8. Style', 'Final Resume'], currentStep 1. " +
+          "2. Text heading 'What role are you building this resume for?'. " +
+          "3. InputChoice for Role with options ['Software Engineering', 'Design', 'Marketing', 'Sales', 'Student / Fresher', 'Other']. " +
+          "4. TextField for 'Or Write Custom Target Role' (placeholder e.g. Senior AI Engineer). " +
+          "5. Button labeled 'Continue to Step 2: Personal Basics' with onPress action 'approve'.";
+      }
+
+      if (len === 2) {
+        return "The user provided role selection: \"" + last + "\". " +
+          "This is TURN 2 of 8 (Personal Basics Input Form). " +
+          "CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! " +
+          "Compose TURN 2 interface: " +
+          "1. StepWizard with currentStep 2. " +
+          "2. Text heading 'Let\\'s start with your personal basics'. " +
+          "3. TextField for 'Full Name' (placeholder e.g. Alex Chen). " +
+          "4. TextField for 'Target Job Title' (placeholder e.g. Senior Software Engineer). " +
+          "5. TextField for 'Location' (placeholder e.g. San Francisco, CA). " +
+          "6. TextField for 'Email' and TextField for 'Phone'. " +
+          "7. TextField for 'LinkedIn URL (Optional)'. " +
+          "8. Button labeled 'Continue to Step 3: Experience Level' with onPress action 'approve'.";
+      }
+
+      if (len === 3) {
+        return "The user entered personal basics: \"" + last + "\". " +
+          "This is TURN 3 of 8 (Experience Level Selection). " +
+          "CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! " +
+          "Compose TURN 3 interface: " +
+          "1. StepWizard with currentStep 3. " +
+          "2. Text heading 'What\\'s your experience level?'. " +
+          "3. InputChoice for Experience Level with options ['Fresher', '1-3 years', '3-7 years', '7+ years']. " +
+          "4. Button labeled 'Continue to Step 4: Work Experience' with onPress action 'approve'.";
+      }
+
+      if (len === 4) {
+        return "The user selected experience level: \"" + last + "\". " +
+          "This is TURN 4 of 8 (Work Experience & AI Bullet Enhancer). " +
+          "CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! " +
+          "Compose TURN 4 interface: " +
+          "1. StepWizard with currentStep 4. " +
+          "2. Text heading 'Add your work experience'. " +
+          "3. TextField for 'Company Name', TextField for 'Role Title', TextField for 'Dates (Start - End)'. " +
+          "4. TextField for 'Draft Achievement Bullet Point'. " +
+          "5. CodeDiff component showing AI Bullet Enhancer (Draft bullet vs AI STAR-method enhanced bullet). " +
+          "6. Button labeled 'Continue to Step 5: Education' with onPress action 'approve'.";
+      }
+
+      if (len === 5) {
+        return "The user entered work experience: \"" + last + "\". " +
+          "This is TURN 5 of 8 (Education Entry). " +
+          "CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! " +
+          "Compose TURN 5 interface: " +
+          "1. StepWizard with currentStep 5. " +
+          "2. Text heading 'Add your education'. " +
+          "3. TextField for 'School / University', TextField for 'Degree / Major', TextField for 'Graduation Dates'. " +
+          "4. Button labeled 'Continue to Step 6: Skills' with onPress action 'approve'.";
+      }
+
+      if (len === 6) {
+        return "The user entered education: \"" + last + "\". " +
+          "This is TURN 6 of 8 (Skills Selection & Proficiency Ratings). " +
+          "CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! " +
+          "Compose TURN 6 interface: " +
+          "1. StepWizard with currentStep 6. " +
+          "2. Text heading 'Select your top skills & ratings'. " +
+          "3. InputChoice / CheckBox for role-specific skills (e.g. Python, System Design, React, AWS, Docker). " +
+          "4. Rating components for skill proficiency ratings (1 to 5 stars). " +
+          "5. Button labeled 'Continue to Step 7: Extras' with onPress action 'approve'.";
+      }
+
+      if (len === 7) {
+        return "The user selected skills: \"" + last + "\". " +
+          "This is TURN 7 of 8 (Additional Sections). " +
+          "CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! " +
+          "Compose TURN 7 interface: " +
+          "1. StepWizard with currentStep 7. " +
+          "2. Text heading 'Anything else to include?'. " +
+          "3. CheckBox choices for optional sections ['Certifications', 'Projects', 'Awards', 'Languages', 'Publications']. " +
+          "4. Button labeled 'Continue to Step 8: Pick Style' with onPress action 'approve'.";
+      }
+
+      if (len === 8) {
+        return "The user selected extras: \"" + last + "\". " +
+          "This is TURN 8 of 8 (Resume Style Selection). " +
+          "CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! " +
+          "Compose TURN 8 interface: " +
+          "1. StepWizard with currentStep 8. " +
+          "2. Text heading 'Pick a resume style'. " +
+          "3. InputChoice for Style with options ['Minimal', 'Modern', 'Classic', 'Compact']. " +
+          "4. Button labeled 'Generate Final Resume' with onPress action 'approve'.";
+      }
+
+      return "The user selected style: \"" + last + "\". " +
+        "This is the FINAL RESUME SUMMARY. " +
+        "Here is the clean JSON dictionary containing all the user's collected resume data: " +
+        JSON.stringify(summaryData) + "\n\n" +
+        "CRITICAL: Do NOT use empty bindings. Read the actual values from the JSON dictionary above and render them directly as static text properties in the A2UI tree so they display perfectly. " +
+        "Compose the complete, live, styled resume preview: " +
+        "1. StepWizard component with currentStep 9 (Complete). " +
+        "2. Text heading showing Candidate Name and Target Role from the JSON (e.g. '" + (summaryData["Full Name"] || "Mani") + " | " + (summaryData["Target Job Title"] || "AI Engineer") + "'). " +
+        "3. Text subtitle showing Location, Email, Phone, and LinkedIn URL. " +
+        "4. Card containing 'EXECUTIVE SUMMARY' with a static bio, and a rating grid of top skills (e.g., PyTorch, Python, Docker) with Rating stars. " +
+        "5. DataTable showing Professional Work Experience with columns 'Company', 'Role', 'Dates', 'Bullet' using the collected work values (e.g. '" + (summaryData["Company Name"] || "XYZ Private Limited") + "'). " +
+        "6. Row of StatTiles for Key Highlights (+65% Performance, 8+ Yrs Exp, 98/100 Score). " +
+        "7. ApprovalCard labeled 'Resume Optimization Complete (Selected Style)' with the collected data dictionary as params.";
+    }
+
+    async function sendPrompt() {
+      const status = document.getElementById("status");
+
+      if (document.getElementById("mock_mode").checked) {
+        status.innerHTML = `<span class="pill think">Demo Mode</span> Rendering mock components...`;
+        setTimeout(() => {
+          const composed = getMockComposed(convo.length);
+          status.innerHTML = `<span class="pill good">Demo Mode</span> Rendered ${composed.component_count} components locally`;
+          renderSurface(composed.surface);
+          updateCrumbs();
+        }, 150);
+        return;
+      }
+
+      status.innerHTML = `<span class="pill think">Thinking...</span> Requesting layout from runtime via GLC...`;
+
+      try {
+        const runRes = await fetch("/v1/agent/runs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tenant_id: "course",
+            project_id: "s14-resume",
+            user_id: "jobseeker-synthetic-01",
+            agent_id: "resumake",
+            respond_as: "ui",
+            prompt: buildGoalPayload()
+          })
+        });
+        const run = await runRes.json();
+        const runId = run.run_id;
+
+        status.innerHTML = `<span class="pill think">Validating...</span> Fetching composed interface for run ${runId.slice(0, 8)}...`;
+        const compRes = await fetch(`/v1/runs/${runId}/composed`);
+        const composed = await compRes.json();
+
+        status.innerHTML = `<span class="pill good">Validated</span> Rendered ${composed.component_count} components by ${composed.provider || "gateway"}`;
+        renderSurface(composed.surface);
+        updateCrumbs();
+      } catch (e) {
+        status.innerHTML = `<span class="pill bad">Error</span> ${e.message}`;
+      }
+    }
+
+    function updateCrumbs() {
+      const c = document.getElementById("crumbs");
+      c.textContent = "Step progression (" + convo.length + " turns): " + convo.map((t, i) => (i + 1) + ". " + t).join(" → ");
+    }
+
+    function choose(label) {
+      let collected = "";
+      const keys = Object.keys(currentFormValues);
+      if (keys.length) {
+        collected = " (Input data: " + keys.map(k => `${k}="${currentFormValues[k]}"`).join(", ") + ")";
+        for (const k of keys) delete currentFormValues[k];
+      }
+      convo.push(label + collected);
+      sendPrompt();
+    }
+
+    // ---- A2UI Surface Renderer --------------------------------------------------
+    function T(txt) { return document.createTextNode(txt == null ? "" : String(txt)); }
+    function $(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; return e; }
+
+    function resolve(prop, dm) {
+      if (prop && typeof prop === "object" && prop.$bind) {
+        const v = dm ? dm[prop.$bind] : undefined;
+        return v !== undefined ? v : "";
+      }
+      return prop == null ? "" : prop;
+    }
+
+    const R = {
+      Text: (c, x) => { const e = $("div", "Text " + (c.variant || "body")); const v = resolve(c.text, x.dm); e.append(T(v)); return e; },
+      Column: (c, x) => { const e = $("div", "bento-grid"); kids(c, x, e); return e; },
+      List: (c, x) => { const e = $("div", "List"); kids(c, x, e); return e; },
+      Row: (c, x) => { const e = $("div", "Row"); kids(c, x, e); return e; },
+      Card: (c, x) => {
+        const e = $("div", "bento-card span-6");
+        if (c.title) { const h = $("div", "bento-card-title"); h.append(T(c.title)); e.append(h); }
+        kids(c, x, e); return e;
+      },
+      Divider: (c, x) => $("div", "Divider"),
+      Notice: (c, x) => { const e = $("div", "Notice"); e.append(T(resolve(c.text, x.dm))); return e; },
+      StatTile: (c, x) => {
+        const e = $("div", "StatTile");
+        const l = $("div", "lab"); l.append(T(c.label));
+        const val = resolve(c.value, x.dm);
+        const valStr = (val !== "" && val !== undefined) ? (String(val) + (c.unit ? " " + c.unit : "")) : "N/A";
+        const v = $("div", "val"); v.append(T(valStr));
+        e.append(l, v); return e;
+      },
+      DataTable: (c, x) => table(c, x),
+      TextField: (c, x) => {
+        const w = $("div", "field");
+        const labelText = c.label || "Full Name";
+        if (c.label) { const l = $("span", "lb"); l.append(T(c.label)); w.append(l); }
+        const i = document.createElement("input"); i.type = "text";
+        i.placeholder = c.placeholder || "";
+        const initVal = resolve(c.value, x.dm) || "";
+        i.value = initVal;
+        if (initVal) currentFormValues[labelText] = initVal;
+        i.oninput = () => { currentFormValues[labelText] = i.value; };
+        w.append(i); return w;
+      },
+      CheckBox: (c, x) => {
+        const w = $("label"); w.style.cssText = "display:flex;gap:8px;align-items:center;font-size:13.5px;margin-bottom:6px;cursor:pointer";
+        const labelText = c.label || "Choice";
+        const i = document.createElement("input"); i.type = "checkbox"; i.checked = !!resolve(c.checked, x.dm);
+        currentFormValues[labelText] = i.checked;
+        i.onchange = () => { currentFormValues[labelText] = i.checked; };
+        w.append(i, T(labelText)); return w;
+      },
+      InputChoice: (c, x) => {
+        const w = $("div", "field");
+        const labelText = c.label || "Selection";
+        if (c.label) { const l = $("span", "lb"); l.append(T(c.label)); w.append(l); }
+        const s = document.createElement("select");
+        let opts = resolve(c.options, x.dm);
+        if (!Array.isArray(opts) || opts.length === 0) {
+          const lower = labelText.toLowerCase();
+          if (lower.includes("experience") || lower.includes("level") || lower.includes("seniority")) {
+            opts = ["Fresher", "1-3 years", "3-7 years", "7+ years"];
+          } else if (lower.includes("style") || lower.includes("theme")) {
+            opts = ["Minimal", "Modern", "Classic", "Compact"];
+          } else {
+            opts = ["Software Engineering", "Design", "Marketing", "Sales", "Student / Fresher", "Other"];
+          }
+        }
+        opts.forEach(o => {
+          const op = document.createElement("option");
+          op.value = String(o); op.append(T(String(o))); s.append(op);
+        });
+        currentFormValues[labelText] = String(opts[0]);
+        s.onchange = () => { currentFormValues[labelText] = s.value; };
+        w.append(s); return w;
+      },
+      Button: (c, x) => {
+        const b = $("button", "actbtn");
+        let rawLab = resolve(c.label, x.dm);
+        let lab = (rawLab && String(rawLab).trim()) ? String(rawLab).trim() : "Continue to Next Step ➔";
+        b.append(T(lab));
+        b.onclick = () => choose(lab);
+        return b;
+      },
+      ApprovalCard: (c, x) => {
+        const e = $("div", "Card"); const s = $("div", "ct"); s.append(T(resolve(c.summary, x.dm) || "Export Resume?"));
+        const pre = document.createElement("pre"); pre.style.cssText = "font-size:12px;background:var(--bg);padding:12px;border-radius:10px;overflow:auto;color:var(--green-ink)";
+        pre.append(T(JSON.stringify(resolve(c.params, x.dm), null, 2)));
+        const ok = $("button", "actbtn"); ok.append(T("Approve & Export A4 PDF")); ok.onclick = () => { alert("A4 Executive PDF Resume Generated Successfully!"); choose("approve"); };
+        e.append(s, pre, ok); return e;
+      },
+      CodeDiff: (c, x) => codeDiff(c, x),
+      Rating: (c, x) => renderRating(c, x),
+      StepWizard: (c, x) => renderStepWizard(c, x)
+    };
+
+    function kids(c, x, e) { for (const id of (c.children || [])) { const ch = x.byId[id]; if (ch) e.append(node(ch, x)); } }
+    function node(c, x) {
+      if (!c || typeof c !== "object") { const s = document.createElement("div"); s.append(T("[missing component]")); return s; }
+      const f = R[c.type];
+      if (!f) { const s = document.createElement("div"); s.style.cssText = "color:var(--red-ink);font-family:var(--font-mono);font-size:11px"; s.append(T("[skipped unknown component: " + c.type + "]")); return s; }
+      return f(c, x);
+    }
+
+    function table(c, x) {
+      const wrap = $("div", "table-wrap"); const cols = (c.columns || "").split(",").map(s => s.trim());
+      const rows = resolve(c.rows, x.dm) || []; const t = document.createElement("table"); const tr = document.createElement("tr");
+      cols.forEach(col => { const th = document.createElement("th"); th.append(T(col)); tr.append(th); }); t.append(tr);
+      rows.forEach(r => {
+        const rr = document.createElement("tr"); cols.forEach(col => {
+          const td = document.createElement("td"); const cell = r[col];
+          if (cell && typeof cell === "object" && cell.card) {
+            const b = document.createElement("button"); b.className = "actbtn"; b.append(T(cell.card)); b.onclick = () => choose(cell.card); td.append(b);
+          } else { td.append(T(cell)); }
+          rr.append(td);
+        }); t.append(rr);
+      }); wrap.append(t); return wrap;
+    }
+
+    function codeDiff(c, x) {
+      const e = $("div", "CodeDiff"); if (c.title) { const t = $("div", "bento-card-title"); t.append(T(c.title)); e.append(t); }
+      const before = String(resolve(c.before, x.dm) ?? ""), after = String(resolve(c.after, x.dm) ?? "");
+      const cols = $("div", "cols");
+      function pane(label, body, cls) {
+        const p = $("div", "pane"), lab = $("div", "plab"); lab.append(T(label)); p.append(lab);
+        const lines = $("div", "lines");
+        String(body).split(/\r?\n/).forEach(line => {
+          const row = $("div", "ln " + cls);
+          row.append(T(line)); lines.append(row);
+        }); p.append(lines); return p;
+      }
+      cols.append(pane(c.beforeLabel || "Draft", before, "del"), pane(c.afterLabel || "AI Enhanced", after, "add"));
+      e.append(cols); return e;
+    }
+
+    function renderRating(c, x) {
+      const e = $("div", "StatTile");
+      if (c.label) { const l = $("div", "lab"); l.append(T(c.label)); e.append(l); }
+      const val = Math.max(0, Math.min(5, +(resolve(c.value, x.dm) || c.value || 0)));
+      const max = +(resolve(c.max, x.dm) || c.max || 5);
+      const stars = $("div"); stars.style.cssText = "font-size:18px;letter-spacing:2px;color:var(--accent);margin-top:4px";
+      let sStr = ""; for (let i = 1; i <= max; i++) { sStr += i <= val ? "★" : "☆"; }
+      stars.append(T(sStr + " (" + val + "/" + max + ")")); e.append(stars); return e;
+    }
+
+    function renderStepWizard(c, x) {
+      const e = $("div", "bento-card span-12");
+      if (c.title) { const h = $("div", "bento-card-title"); h.append(T(c.title)); e.append(h); }
+      const steps = resolve(c.steps, x.dm) || [];
+      const cur = +(resolve(c.currentStep, x.dm) || c.currentStep || 1);
+      const wrap = $("div"); wrap.style.cssText = "display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap";
+      const action = c.onStepPress && c.onStepPress.action;
+      const tappable = REGISTERED_ACTIONS.has(action);
+      steps.forEach((st, i) => {
+        const idx = i + 1; const isCur = idx === cur; const isDone = idx < cur;
+        const btn = $(tappable ? "button" : "div");
+        btn.style.cssText = `padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;font-family:var(--font-mono);border:1px solid ${isCur ? "var(--accent)" : (isDone ? "var(--green)" : "var(--rule)")};background:${isCur ? "var(--accent-soft)" : (isDone ? "var(--green-soft)" : "var(--bg)")};color:${isCur ? "var(--accent)" : (isDone ? "var(--green-ink)" : "var(--ink-muted)")}`;
+        btn.append(T((isDone ? "✓ " : idx + ". ") + String(st)));
+        if (tappable) { btn.onclick = () => choose(String(st)); }
+        wrap.append(btn);
+      });
+      e.append(wrap); return e;
+    }
+
+    function getMockComposed(len) {
+      const summaryData = {};
+      convo.forEach(turn => {
+        const match = turn.match(/\(Input data: ([^\)]+)\)/);
+        if (match) {
+          const regex = /(\w[\w\s\/]*?)="([^"]*?)"/g;
+          let m;
+          while ((m = regex.exec(match[1])) !== null) {
+            summaryData[m[1].trim()] = m[2].trim();
+          }
+        }
+      });
+
+      const steps = ["Role", "Basics", "Level", "Experience", "Education", "Skills", "Extras", "Style", "Final Resume"];
+
+      if (len === 1) {
+        return {
+          component_count: 5,
+          provider: "mock_agent",
+          surface: {
+            root: "c",
+            components: [
+              { id: "c", type: "Column", children: ["w", "h", "role", "custom_role", "btn"] },
+              { id: "w", type: "StepWizard", steps: steps, currentStep: 1, onStepPress: { action: "approve" } },
+              { id: "h", type: "Text", variant: "heading", text: "What role are you building this resume for?" },
+              { id: "role", type: "InputChoice", label: "Target Role", options: ["Software Engineering", "Design", "Marketing", "Other"] },
+              { id: "custom_role", type: "TextField", label: "Or Write Custom Target Role", placeholder: "e.g. Senior AI Engineer" },
+              { id: "btn", type: "Button", label: "Continue to Step 2: Personal Basics" }
+            ]
+          }
+        };
+      }
+
+      if (len === 2) {
+        return {
+          component_count: 8,
+          provider: "mock_agent",
+          surface: {
+            root: "c",
+            components: [
+              { id: "c", type: "Column", children: ["w", "h", "name", "title", "loc", "email", "phone", "btn"] },
+              { id: "w", type: "StepWizard", steps: steps, currentStep: 2, onStepPress: { action: "approve" } },
+              { id: "h", type: "Text", variant: "heading", text: "Let's start with your personal basics" },
+              { id: "name", type: "TextField", label: "Full Name", placeholder: "e.g. Alex Chen", value: summaryData["Full Name"] || "Mani" },
+              { id: "title", type: "TextField", label: "Target Job Title", placeholder: "e.g. Senior Software Engineer", value: summaryData["Target Job Title"] || "AI Engineer" },
+              { id: "loc", type: "TextField", label: "Location", placeholder: "e.g. San Francisco, CA", value: summaryData["Location"] || "Bangalore" },
+              { id: "email", type: "TextField", label: "Email", placeholder: "e.g. alex@example.com", value: summaryData["Email"] || "mani@gmail.com" },
+              { id: "phone", type: "TextField", label: "Phone", placeholder: "e.g. +1 555-0199", value: summaryData["Phone"] || "14141491980" },
+              { id: "btn", type: "Button", label: "Continue to Step 3: Experience Level" }
+            ]
+          }
+        };
+      }
+
+      if (len === 3) {
+        return {
+          component_count: 5,
+          provider: "mock_agent",
+          surface: {
+            root: "c",
+            components: [
+              { id: "c", type: "Column", children: ["w", "h", "level", "btn"] },
+              { id: "w", type: "StepWizard", steps: steps, currentStep: 3, onStepPress: { action: "approve" } },
+              { id: "h", type: "Text", variant: "heading", text: "What's your experience level?" },
+              { id: "level", type: "InputChoice", label: "Experience Level", options: ["Fresher", "1-3 years", "3-7 years", "7+ years"] },
+              { id: "btn", type: "Button", label: "Continue to Step 4: Work Experience" }
+            ]
+          }
+        };
+      }
+
+      if (len === 4) {
+        return {
+          component_count: 8,
+          provider: "mock_agent",
+          surface: {
+            root: "c",
+            components: [
+              { id: "c", type: "Column", children: ["w", "h", "form_card", "diff", "btn"] },
+              { id: "w", type: "StepWizard", steps: steps, currentStep: 4, onStepPress: { action: "approve" } },
+              { id: "h", type: "Text", variant: "heading", text: "Add your work experience" },
+              { id: "form_card", type: "Card", title: "Job Details", children: ["row1", "row2"] },
+              { id: "row1", type: "Row", children: ["company", "role_title", "dates"] },
+              { id: "company", type: "TextField", label: "Company Name", placeholder: "e.g. XYZ Private Limited", value: summaryData["Company Name"] || "XYZ Private Limited" },
+              { id: "role_title", type: "TextField", label: "Role Title", placeholder: "e.g. AI Engineer", value: summaryData["Role Title"] || "AI Engineer" },
+              { id: "dates", type: "TextField", label: "Dates (Start - End)", placeholder: "e.g. 2024-Present", value: summaryData["Dates (Start - End)"] || "2024-Present" },
+              { id: "row2", type: "Row", children: ["bullet"] },
+              { id: "bullet", type: "TextField", label: "Draft Achievement Bullet Point", placeholder: "e.g. Build Agents", value: summaryData["Draft Achievement Bullet Point"] || "Build Agents" },
+              { id: "diff", type: "CodeDiff", title: "AI Bullet Enhancer", before: summaryData["Draft Achievement Bullet Point"] || "Build Agents", after: "Architected scalable Agent-to-User Interface (A2UI) runtime parser, processing 200k+ parallel LLM-composed layouts, reducing latency by 45%." },
+              { id: "btn", type: "Button", label: "Continue to Step 5: Education" }
+            ]
+          }
+        };
+      }
+
+      if (len === 5) {
+        return {
+          component_count: 7,
+          provider: "mock_agent",
+          surface: {
+            root: "c",
+            components: [
+              { id: "c", type: "Column", children: ["w", "h", "school", "degree", "grad_dates", "btn"] },
+              { id: "w", type: "StepWizard", steps: steps, currentStep: 5, onStepPress: { action: "approve" } },
+              { id: "h", type: "Text", variant: "heading", text: "Add your education" },
+              { id: "school", type: "TextField", label: "School / University", placeholder: "e.g. ABX University", value: summaryData["School / University"] || "ABX University" },
+              { id: "degree", type: "TextField", label: "Degree / Major", placeholder: "e.g. BTECH MECH", value: summaryData["Degree / Major"] || "BTECH MECH" },
+              { id: "grad_dates", type: "TextField", label: "Graduation Dates", placeholder: "e.g. 2018", value: summaryData["Graduation Dates"] || "2018" },
+              { id: "btn", type: "Button", label: "Continue to Step 6: Skills" }
+            ]
+          }
+        };
+      }
+
+      if (len === 6) {
+        return {
+          component_count: 7,
+          provider: "mock_agent",
+          surface: {
+            root: "c",
+            components: [
+              { id: "c", type: "Column", children: ["w", "h", "skill_select", "rating1", "rating2", "btn"] },
+              { id: "w", type: "StepWizard", steps: steps, currentStep: 6, onStepPress: { action: "approve" } },
+              { id: "h", type: "Text", variant: "heading", text: "Select your top skills & ratings" },
+              { id: "skill_select", type: "InputChoice", label: "Core Technical Skill", options: ["Python", "System Design", "Docker", "React"] },
+              { id: "rating1", type: "Rating", label: "System Design & Architecture", value: 5, max: 5 },
+              { id: "rating2", type: "Rating", label: "Python & Backend API Dev", value: 5, max: 5 },
+              { id: "btn", type: "Button", label: "Continue to Step 7: Extras" }
+            ]
+          }
+        };
+      }
+
+      if (len === 7) {
+        return {
+          component_count: 6,
+          provider: "mock_agent",
+          surface: {
+            root: "c",
+            components: [
+              { id: "c", type: "Column", children: ["w", "h", "cert", "proj", "btn"] },
+              { id: "w", type: "StepWizard", steps: steps, currentStep: 7, onStepPress: { action: "approve" } },
+              { id: "h", type: "Text", variant: "heading", text: "Anything else to include?" },
+              { id: "cert", type: "CheckBox", label: "Include Certifications", checked: true },
+              { id: "proj", type: "CheckBox", label: "Include Projects", checked: true },
+              { id: "btn", type: "Button", label: "Continue to Step 8: Pick Style" }
+            ]
+          }
+        };
+      }
+
+      if (len === 8) {
+        return {
+          component_count: 5,
+          provider: "mock_agent",
+          surface: {
+            root: "c",
+            components: [
+              { id: "c", type: "Column", children: ["w", "h", "style", "btn"] },
+              { id: "w", type: "StepWizard", steps: steps, currentStep: 8, onStepPress: { action: "approve" } },
+              { id: "h", type: "Text", variant: "heading", text: "Pick a resume style" },
+              { id: "style", type: "InputChoice", label: "Resume Style", options: ["Minimal", "Modern", "Classic", "Compact"] },
+              { id: "btn", type: "Button", label: "Generate Final Resume" }
+            ]
+          }
+        };
+      }
+
+      // Step 9: Final Bento Resume
+      const name = summaryData["Full Name"] || "Mani Radhakrishnan";
+      const role = summaryData["Target Job Title"] || "AI Engineer";
+      const loc = summaryData["Location"] || "Bangalore, India";
+      const email = summaryData["Email"] || "mani@gmail.com";
+      const phone = summaryData["Phone"] || "+91 14141491980";
+      const linked = summaryData["LinkedIn URL (Optional)"] || "linkedin.com/in/mani";
+      const school = summaryData["School / University"] || "ABX University";
+      const degree = summaryData["Degree / Major"] || "BTECH MECH";
+      const grad = summaryData["Graduation Dates"] || "2018";
+
+      return {
+        component_count: 14,
+        provider: "mock_agent",
+        surface: {
+          root: "c",
+          components: [
+            { id: "c", type: "Column", children: ["w", "header_card", "summary_card", "stats_row", "education_card", "approval"] },
+            { id: "w", type: "StepWizard", steps: steps, currentStep: 9, onStepPress: { action: "approve" } },
+
+            // Header Bento Card
+            { id: "header_card", type: "Card", title: "Candidate Profile", children: ["name_title", "meta_text"] },
+            { id: "name_title", type: "Text", variant: "heading", text: name + " | " + role },
+            { id: "meta_text", type: "Text", variant: "subtitle", text: loc + " · " + email + " · " + phone + " · " + linked },
+
+            // Summary Card with Ratings
+            { id: "summary_card", type: "Card", title: "Executive Summary & Skills", children: ["summary_pitch", "skills_title", "skill1", "skill2"] },
+            { id: "summary_pitch", type: "Text", variant: "body", text: "Senior systems practitioner specializing in agentic workflows, large-scale layout composition engines, and robust security validators." },
+            { id: "skills_title", type: "Text", variant: "subtitle", text: "Skill Proficiencies" },
+            { id: "skill1", type: "Rating", label: "System Design & Architecture", value: 5, max: 5 },
+            { id: "skill2", type: "Rating", label: "Python & Backend API Dev", value: 5, max: 5 },
+
+            // Stats Row (Bento highlights)
+            { id: "stats_row", type: "Row", children: ["stat1", "stat2", "stat3"] },
+            { id: "stat1", type: "StatTile", label: "Performance Increase", value: "+65%", unit: "" },
+            { id: "stat2", type: "StatTile", label: "Total Experience", value: "8+", unit: "Yrs" },
+            { id: "stat3", type: "StatTile", label: "Resume Score", value: "98/100", unit: "" },
+
+            // Education Card
+            { id: "education_card", type: "Card", title: "Education & Credentials", children: ["edu_details"] },
+            { id: "edu_details", type: "Text", variant: "body", text: degree + " | " + school + " | Graduated: " + grad },
+
+            // Approval Card
+            { id: "approval", type: "ApprovalCard", summary: "Resume Optimization Complete (Selected Theme: " + (summaryData["Resume Style"] || "Modern") + ")", params: summaryData }
+          ]
+        }
+      };
+    }
+
+    function renderSurface(surface) {
+      const mount = document.getElementById("screen");
+      mount.innerHTML = "";
+      if (!surface || !surface.components || !surface.components.length) {
+        mount.innerHTML = `<div class="empty">No components returned in surface.</div>`;
+        return;
+      }
+      const byId = {};
+      surface.components.forEach(c => { if (c && c.id) byId[c.id] = c; });
+      const rootComp = byId[surface.root] || surface.components[0];
+      mount.appendChild(node(rootComp, { byId, dm: surface.dataModel || {} }));
+    }
+  </script>
+</body>
+
+</html>

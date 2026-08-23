@@ -136,6 +136,30 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "onCardPress": PropSpec("action"),
         "wipLimit": PropSpec("number"),
     }, source="custom"),
+    "RadarChart": ComponentSpec("RadarChart", {
+        "title": PropSpec("text"),
+        "axes": PropSpec("binding"),
+        "series": PropSpec("binding"),
+    }, source="custom"),
+    "Heatmap": ComponentSpec("Heatmap", {
+        "title": PropSpec("text"),
+        "xLabels": PropSpec("binding"),
+        "yLabels": PropSpec("binding"),
+        "data": PropSpec("binding"),
+        "caption": PropSpec("text"),
+    }, source="custom"),
+    "Rating": ComponentSpec("Rating", {
+        "label": PropSpec("text"),
+        "value": PropSpec("number"),
+        "max": PropSpec("number"),
+        "tone": _TONE,
+    }, source="custom"),
+    "StepWizard": ComponentSpec("StepWizard", {
+        "title": PropSpec("text"),
+        "steps": PropSpec("binding"),
+        "currentStep": PropSpec("number"),
+        "onStepPress": PropSpec("action"),
+    }, source="custom"),
 }
 
 # The closed set of action names a surface may emit. An action the agent did

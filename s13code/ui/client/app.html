@@ -158,6 +158,10 @@ const R={
   CodeDiff:(c,x)=>codeDiff(c,x),
   Map:(c,x)=>renderMap(c,x),
   KanbanBoard:(c,x)=>renderKanban(c,x),
+  RadarChart:(c,x)=>renderRadar(c,x),
+  Heatmap:(c,x)=>renderHeatmap(c,x),
+  Rating:(c,x)=>renderRating(c,x),
+  StepWizard:(c,x)=>renderStepWizard(c,x),
 };
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){
@@ -231,6 +235,109 @@ function renderKanban(c,x){
     lanes.append(lane);
   });
   e.append(lanes);return e;
+}
+
+function renderRadar(c,x){
+  const e=$("div","chart");
+  if(c.title){const t=$("div","ct");t.append(T(c.title));e.append(t);}
+  const axes=resolve(c.axes,x.dm)||[];
+  const series=resolve(c.series,x.dm)||[];
+  if(!axes.length||!series.length){const em=$("div","cap");em.append(T("no radar data"));e.append(em);return e;}
+  const w=320,h=260,cx=160,cy=130,r=90,ns="http://www.w3.org/2000/svg";
+  const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox",`0 0 ${w} ${h}`);svg.setAttribute("width","100%");svg.setAttribute("height","260");
+  const numAxes=axes.length;
+  [0.25,0.5,0.75,1.0].forEach(level=>{
+    const pts=axes.map((_,i)=>{
+      const angle=(i/numAxes)*2*Math.PI-Math.PI/2;
+      return `${cx+r*level*Math.cos(angle)},${cy+r*level*Math.sin(angle)}`;
+    }).join(" ");
+    const poly=document.createElementNS(ns,"polygon");poly.setAttribute("points",pts);poly.setAttribute("fill","none");poly.setAttribute("stroke","var(--rule)");poly.setAttribute("stroke-dasharray",level===1?"none":"3,3");svg.append(poly);
+  });
+  axes.forEach((axis,i)=>{
+    const angle=(i/numAxes)*2*Math.PI-Math.PI/2;
+    const ax=cx+r*Math.cos(angle), ay=cy+r*Math.sin(angle);
+    const line=document.createElementNS(ns,"line");line.setAttribute("x1",cx);line.setAttribute("y1",cy);line.setAttribute("x2",ax);line.setAttribute("y2",ay);line.setAttribute("stroke","var(--rule)");svg.append(line);
+    const lx=cx+(r+16)*Math.cos(angle), ly=cy+(r+16)*Math.sin(angle);
+    const txt=document.createElementNS(ns,"text");txt.setAttribute("x",lx);txt.setAttribute("y",ly+4);txt.setAttribute("text-anchor",Math.abs(lx-cx)<5?"middle":(lx>cx?"start":"end"));txt.setAttribute("font-size","10");txt.setAttribute("font-family","var(--font-mono)");txt.setAttribute("fill","var(--ink-muted)");txt.textContent=axis;svg.append(txt);
+  });
+  const colors=["#6366F1","#10B981","#F59E0B","#EF4444","#EC4899"];
+  series.forEach((s,sIdx)=>{
+    const vals=s.values||[];const col=colors[sIdx%colors.length];
+    const pts=axes.map((_,i)=>{
+      const val=Math.max(0,Math.min(100,+(vals[i]||0)));
+      const angle=(i/numAxes)*2*Math.PI-Math.PI/2;
+      return `${cx+r*(val/100)*Math.cos(angle)},${cy+r*(val/100)*Math.sin(angle)}`;
+    }).join(" ");
+    const poly=document.createElementNS(ns,"polygon");poly.setAttribute("points",pts);poly.setAttribute("fill",col);poly.setAttribute("fill-opacity","0.25");poly.setAttribute("stroke",col);poly.setAttribute("stroke-width","2");svg.append(poly);
+  });
+  e.append(svg);
+  if(series.length){
+    const leg=$("div","legend");series.forEach((s,sIdx)=>{
+      const col=colors[sIdx%colors.length];const span=$("span");
+      const dot=$("span","dot");dot.style.background=col;
+      span.append(dot,T(s.name||`Series ${sIdx+1}`));leg.append(span);
+    });
+    e.append(leg);
+  }
+  return e;
+}
+
+function renderHeatmap(c,x){
+  const e=$("div","chart");
+  if(c.title){const t=$("div","ct");t.append(T(c.title));e.append(t);}
+  const xLabels=resolve(c.xLabels,x.dm)||[];
+  const yLabels=resolve(c.yLabels,x.dm)||[];
+  const grid=resolve(c.data,x.dm)||[];
+  const wrap=$("div");wrap.style.cssText="overflow-x:auto;margin-top:8px";
+  const tbl=$("table");tbl.style.cssText="width:100%;border-collapse:collapse;font-size:11px;font-family:var(--font-mono)";
+  const trH=$("tr");const thCorner=$("th");trH.append(thCorner);
+  xLabels.forEach(xl=>{const th=$("th");th.style.cssText="padding:6px;text-align:center;color:var(--ink-muted)";th.append(T(xl));trH.append(th);});
+  tbl.append(trH);
+  yLabels.forEach((y,rIdx)=>{
+    const tr=$("tr");const tdL=$("td");tdL.style.cssText="padding:6px;font-weight:600;color:var(--ink);text-align:right";tdL.append(T(y));tr.append(tdL);
+    xLabels.forEach((_,cIdx)=>{
+      const item=(grid[rIdx]&&grid[rIdx][cIdx])||(Array.isArray(grid)&&grid.find&&grid.find(d=>d.x===cIdx&&d.y===rIdx))||{};
+      const val=item.value!=null?item.value:(typeof item==="number"?item:0);
+      const tone=item.tone||(val>85?"good":val>60?"neutral":val>35?"warn":"bad");
+      const bg=({good:"rgba(16,185,129,0.2)",neutral:"rgba(99,102,241,0.2)",warn:"rgba(245,158,11,0.2)",bad:"rgba(239,68,68,0.2)"}[tone]||"rgba(99,102,241,0.1)");
+      const fg=({good:"var(--green)",neutral:"var(--accent)",warn:"var(--amber)",bad:"var(--red)"}[tone]||"var(--ink)");
+      const td=$("td");td.style.cssText=`padding:8px;text-align:center;background:${bg};color:${fg};font-weight:600;border:1px solid var(--rule)`;
+      td.append(T(String(val)+(item.unit||"")));tr.append(td);
+    });
+    tbl.append(tr);
+  });
+  wrap.append(tbl);e.append(wrap);
+  if(c.caption){const cap=$("div","cap");cap.append(T(c.caption));e.append(cap);}
+  return e;
+}
+
+function renderRating(c,x){
+  const e=$("div","StatTile "+(c.tone||"neutral"));
+  if(c.label){const l=$("div","lab");l.append(T(c.label));e.append(l);}
+  const val=Math.max(0,Math.min(5,+(resolve(c.value,x.dm)||c.value||0)));
+  const max=+(resolve(c.max,x.dm)||c.max||5);
+  const stars=$("div");stars.style.cssText="font-size:18px;letter-spacing:2px;color:var(--amber);margin-top:4px";
+  let sStr="";for(let i=1;i<=max;i++){sStr+=i<=val?"★":"☆";}
+  stars.append(T(sStr+" ("+val+"/"+max+")"));e.append(stars);return e;
+}
+
+function renderStepWizard(c,x){
+  const e=$("div","Card");
+  if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}
+  const steps=resolve(c.steps,x.dm)||[];
+  const cur=+(resolve(c.currentStep,x.dm)||c.currentStep||1);
+  const wrap=$("div");wrap.style.cssText="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap";
+  const action=c.onStepPress&&c.onStepPress.action;
+  const tappable=REGISTERED_ACTIONS.has(action);
+  steps.forEach((st,i)=>{
+    const idx=i+1;const isCur=idx===cur;const isDone=idx<cur;
+    const btn=$(tappable?"button":"div");
+    btn.style.cssText=`padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;font-family:var(--font-mono);border:1px solid ${isCur?"var(--accent)":(isDone?"var(--green)":"var(--rule)")};background:${isCur?"var(--accent-soft)":(isDone?"var(--green-soft)":"var(--surface)")};color:${isCur?"var(--accent)":(isDone?"var(--green-ink)":"var(--ink-muted)")}`;
+    btn.append(T((isDone?"✓ ":idx+". ")+String(st)));
+    if(tappable){btn.onclick=()=>choose(String(st));}
+    wrap.append(btn);
+  });
+  e.append(wrap);return e;
 }
 
 function pickRoot(surface){

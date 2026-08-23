@@ -70,3 +70,79 @@ def test_hitl_matching_approve_allowed_widened_refused():
 def test_hitl_is_order_independent_on_params():
     pending = PendingAction("run", "node", "s", {"a": 1, "b": [1, 2]})
     assert decide_resume(pending, "approve", {"b": [1, 2], "a": 1}).allowed
+
+
+def test_radarchart_and_heatmap_pass_validation():
+    surface = {
+        "root": "r",
+        "components": [
+            {
+                "id": "r",
+                "type": "Column",
+                "children": ["radar", "heatmap"],
+            },
+            {
+                "id": "radar",
+                "type": "RadarChart",
+                "title": "Actuator Performance Radar",
+                "axes": {"$bind": "/axes"},
+                "series": {"$bind": "/series"},
+            },
+            {
+                "id": "heatmap",
+                "type": "Heatmap",
+                "title": "Joint Requirement Heatmap",
+                "xLabels": {"$bind": "/x"},
+                "yLabels": {"$bind": "/y"},
+                "data": {"$bind": "/grid"},
+                "caption": "Joint torque demand",
+            },
+        ],
+        "dataModel": {
+            "/axes": ["Torque Density", "Backdrivability", "Thermal", "Bandwidth", "Cost"],
+            "/series": [{"name": "T-Motor AK10-9", "values": [90, 85, 80, 90, 75]}],
+            "/x": ["Hip", "Knee", "Ankle"],
+            "/y": ["Torque (Nm)", "Velocity (RPM)"],
+            "/grid": [[150, 180, 90], [120, 200, 150]],
+        },
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert len(result.accepted) == 3
+
+
+def test_rating_and_stepwizard_pass_validation():
+    surface = {
+        "root": "r",
+        "components": [
+            {
+                "id": "r",
+                "type": "Column",
+                "children": ["wizard", "rating"],
+            },
+            {
+                "id": "wizard",
+                "type": "StepWizard",
+                "title": "Resume Builder Progress",
+                "steps": {"$bind": "/steps"},
+                "currentStep": 2,
+                "onStepPress": {"action": "approve"},
+            },
+            {
+                "id": "rating",
+                "type": "Rating",
+                "label": "Python Mastery",
+                "value": 5,
+                "max": 5,
+                "tone": "good",
+            },
+        ],
+        "dataModel": {
+            "/steps": ["1. Profile", "2. Experience", "3. Skills", "4. Export"],
+        },
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert len(result.accepted) == 3
+
+

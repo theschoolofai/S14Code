@@ -1,0 +1,2218 @@
+{
+  "base": "http://127.0.0.1:8113",
+  "turns": [
+    {
+      "user_said": "Turn 1: Identity & Target Role (Alex Rivera, Senior AI Systems Engineer)",
+      "goal_sent": "The user is starting the AI Resume Builder. This is TURN 1 of 8 (Identity & Target Role). CRITICAL: DO NOT GENERATE THE FINAL COMPLETED RESUME YET! Compose TURN 1 interface: 1. StepWizard component with steps ['1. Identity', '2. Contact', '3. Bio', '4. Experience', '5. Education', '6. Skills', '7. Stats', '8. Style', 'Final A4 Resume'], currentStep 1. 2. Text heading 'Step 1: Identity & Target Role'. 3. TextField for 'Full Name' (placeholder e.g. Alex Rivera). 4. TextField for 'Target Job Title' (placeholder e.g. Senior AI Systems Engineer). 5. InputChoice for 'Industry Domain' with options ['AI & Robotics', 'Software Engineering', 'Design', 'Marketing', 'Product', 'Other']. 6. Button labeled 'Continue to Step 2: Contact Info' with onPress action 'approve'.",
+      "run_id": "run-60b6a611bea0",
+      "latency_s": 13.4,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite",
+      "clean": true,
+      "component_count": 8,
+      "component_types": [
+        "Button",
+        "Column",
+        "InputChoice",
+        "StepWizard",
+        "Text",
+        "TextField"
+      ],
+      "validator": {
+        "proposed": 8,
+        "accepted": 8,
+        "rejected": 0,
+        "ok": true,
+        "rejections": [],
+        "dangling_child_refs": [],
+        "component_types": [
+          "Button",
+          "Column",
+          "InputChoice",
+          "StepWizard",
+          "Text",
+          "TextField"
+        ],
+        "component_count": 8
+      },
+      "data_pointers": [
+        "choice_0_label",
+        "choice_1_label",
+        "choice_2_label",
+        "choice_3_label",
+        "choice_4_label",
+        "choice_5_label",
+        "choices",
+        "goal",
+        "intro",
+        "item_count",
+        "items",
+        "metric_0_value",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "section_0_heading",
+        "section_0_points",
+        "section_events",
+        "sections",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_columns",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "wizard",
+              "title",
+              "intro",
+              "nameField",
+              "titleField",
+              "industryChoice",
+              "submitButton"
+            ]
+          },
+          {
+            "id": "wizard",
+            "type": "StepWizard",
+            "title": "Resume Builder Progress",
+            "steps": {
+              "$bind": "/sections/0/points"
+            },
+            "currentStep": 1
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "intro",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "nameField",
+            "type": "TextField",
+            "label": "Full Name",
+            "placeholder": "e.g. Alex Rivera"
+          },
+          {
+            "id": "titleField",
+            "type": "TextField",
+            "label": "Target Job Title",
+            "placeholder": "e.g. Senior AI Systems Engineer"
+          },
+          {
+            "id": "industryChoice",
+            "type": "InputChoice",
+            "label": "Industry Domain",
+            "options": {
+              "$bind": "/subjects"
+            }
+          },
+          {
+            "id": "submitButton",
+            "type": "Button",
+            "label": "Continue to Step 2: Contact Info",
+            "onPress": {
+              "action": "approve"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Step 1: Identity & Target Role",
+          "goal": "The user is starting the AI Resume Builder. This is TURN 1 of 8 (Identity & Target Role). CRITICAL: DO NOT GENERATE THE FINAL COMPLETED RESUME YET! Compose TURN 1 interface: 1. StepWizard component with steps ['1. Identity', '2. Contact', '3. Bio', '4. Experience', '5. Education', '6. Skills', '7. Stats', '8. Style', 'Final A4 Resume'], currentStep 1. 2. Text heading 'Step 1: Identity & Target Role'. 3. TextField for 'Full Name' (placeholder e.g. Alex Rivera). 4. TextField for 'Target Job Title' (placeholder e.g. Senior AI Systems Engineer). 5. InputChoice for 'Industry Domain' with options ['AI & Robotics', 'Software Engineering', 'Design', 'Marketing', 'Product', 'Other']. 6. Button labeled 'Continue to Step 2: Contact Info' with onPress action 'approve'.",
+          "summary": "Let's start by defining your professional profile and the role you are aiming for.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Progress",
+              "value": 1.0,
+              "unit": "Step"
+            }
+          ],
+          "spark": [],
+          "table_rows": [
+            {
+              "Field": "Full Name",
+              "Input Type": "Text (e.g. Alex Rivera)"
+            },
+            {
+              "Field": "Target Job Title",
+              "Input Type": "Text (e.g. Senior AI Systems Engineer)"
+            }
+          ],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "AI & Robotics",
+            "Software Engineering",
+            "Design",
+            "Marketing",
+            "Product",
+            "Other"
+          ],
+          "timeline": [
+            {
+              "time": "886",
+              "label": "run_started"
+            },
+            {
+              "time": "887",
+              "label": "graph_patched"
+            },
+            {
+              "time": "888",
+              "label": "task_started content"
+            },
+            {
+              "time": "889",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "890",
+              "label": "graph_patched"
+            },
+            {
+              "time": "891",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Let's start by defining your professional profile and the role you are aiming for.",
+          "section_0_heading": "Step Wizard",
+          "section_0_points": "\u2022 1. Identity (Current)\n\u2022 2. Contact\n\u2022 3. Bio\n\u2022 4. Experience\n\u2022 5. Education\n\u2022 6. Skills\n\u2022 7. Stats\n\u2022 8. Style\n\u2022 9. Final A4 Resume",
+          "sections": [
+            {
+              "heading": "Step Wizard",
+              "points": [
+                "1. Identity (Current)",
+                "2. Contact",
+                "3. Bio",
+                "4. Experience",
+                "5. Education",
+                "6. Skills",
+                "7. Stats",
+                "8. Style",
+                "9. Final A4 Resume"
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Step Wizard",
+              "label": "1. Identity (Current); 2. Contact; 3. Bio; 4. Experience; 5. Education; 6. Skills; 7. Stats; 8. Style; 9. Final A4 Resume"
+            }
+          ],
+          "metric_0_value": 1.0,
+          "table_columns": [
+            "Field",
+            "Input Type"
+          ],
+          "choices": [
+            {
+              "id": "ai_robotics",
+              "label": "AI & Robotics"
+            },
+            {
+              "id": "software_eng",
+              "label": "Software Engineering"
+            },
+            {
+              "id": "design",
+              "label": "Design"
+            },
+            {
+              "id": "marketing",
+              "label": "Marketing"
+            },
+            {
+              "id": "product",
+              "label": "Product"
+            },
+            {
+              "id": "other",
+              "label": "Other"
+            }
+          ],
+          "choice_0_label": "AI & Robotics",
+          "choice_1_label": "Software Engineering",
+          "choice_2_label": "Design",
+          "choice_3_label": "Marketing",
+          "choice_4_label": "Product",
+          "choice_5_label": "Other"
+        }
+      }
+    },
+    {
+      "user_said": "Turn 2: Contact Information & Links",
+      "goal_sent": "The user entered identity info: \"Turn 2: Contact Information & Links\". This is TURN 2 of 8 (Contact Information & Social Links). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 2 interface: 1. StepWizard with currentStep 2. 2. Text heading 'Step 2: Contact Information & Links'. 3. TextField for 'Email Address', 'Phone Number', 'Location', 'LinkedIn / Portfolio Link'. 4. Button labeled 'Continue to Step 3: Seniority & Bio' with onPress action 'approve'.",
+      "run_id": "run-efd6c28a2bee",
+      "latency_s": 14.3,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite",
+      "clean": true,
+      "component_count": 8,
+      "component_types": [
+        "Button",
+        "Column",
+        "StepWizard",
+        "Text",
+        "TextField"
+      ],
+      "validator": {
+        "proposed": 8,
+        "accepted": 8,
+        "rejected": 0,
+        "ok": true,
+        "rejections": [],
+        "dangling_child_refs": [],
+        "component_types": [
+          "Button",
+          "Column",
+          "StepWizard",
+          "Text",
+          "TextField"
+        ],
+        "component_count": 8
+      },
+      "data_pointers": [
+        "choice_0_label",
+        "choices",
+        "goal",
+        "intro",
+        "item_count",
+        "items",
+        "metric_0_value",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "section_0_heading",
+        "section_0_points",
+        "section_events",
+        "sections",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "wizard",
+              "heading",
+              "email",
+              "phone",
+              "location",
+              "link",
+              "submit"
+            ]
+          },
+          {
+            "id": "wizard",
+            "type": "StepWizard",
+            "title": "Resume Builder",
+            "steps": {
+              "$bind": "/sections"
+            },
+            "currentStep": 2
+          },
+          {
+            "id": "heading",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "email",
+            "type": "TextField",
+            "label": "Email Address",
+            "value": {
+              "$bind": "/email"
+            }
+          },
+          {
+            "id": "phone",
+            "type": "TextField",
+            "label": "Phone Number",
+            "value": {
+              "$bind": "/phone"
+            }
+          },
+          {
+            "id": "location",
+            "type": "TextField",
+            "label": "Location",
+            "value": {
+              "$bind": "/location"
+            }
+          },
+          {
+            "id": "link",
+            "type": "TextField",
+            "label": "LinkedIn / Portfolio Link",
+            "value": {
+              "$bind": "/link"
+            }
+          },
+          {
+            "id": "submit",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_0_label"
+            },
+            "onPress": {
+              "action": "approve"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Step 2: Contact Information & Links",
+          "goal": "The user entered identity info: \"Turn 2: Contact Information & Links\". This is TURN 2 of 8 (Contact Information & Social Links). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 2 interface: 1. StepWizard with currentStep 2. 2. Text heading 'Step 2: Contact Information & Links'. 3. TextField for 'Email Address', 'Phone Number', 'Location', 'LinkedIn / Portfolio Link'. 4. Button labeled 'Continue to Step 3: Seniority & Bio' with onPress action 'approve'.",
+          "summary": "Provide your professional contact details and links to your online presence.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Current Step",
+              "value": 2.0,
+              "unit": "of 8"
+            }
+          ],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Continue to Step 3: Seniority & Bio"
+          ],
+          "timeline": [
+            {
+              "time": "894",
+              "label": "run_started"
+            },
+            {
+              "time": "895",
+              "label": "graph_patched"
+            },
+            {
+              "time": "896",
+              "label": "task_started content"
+            },
+            {
+              "time": "897",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "898",
+              "label": "graph_patched"
+            },
+            {
+              "time": "899",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Provide your professional contact details and links to your online presence.",
+          "section_0_heading": "Contact Details",
+          "section_0_points": "\u2022 Email Address\n\u2022 Phone Number\n\u2022 Location (City, State)\n\u2022 LinkedIn / Portfolio Link",
+          "sections": [
+            {
+              "heading": "Contact Details",
+              "points": [
+                "Email Address",
+                "Phone Number",
+                "Location (City, State)",
+                "LinkedIn / Portfolio Link"
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Contact Details",
+              "label": "Email Address; Phone Number; Location (City, State); LinkedIn / Portfolio Link"
+            }
+          ],
+          "metric_0_value": 2.0,
+          "choices": [
+            {
+              "id": "approve",
+              "label": "Continue to Step 3: Seniority & Bio"
+            }
+          ],
+          "choice_0_label": "Continue to Step 3: Seniority & Bio"
+        }
+      }
+    },
+    {
+      "user_said": "Turn 3: Seniority & Bio",
+      "goal_sent": "The user entered contact details: \"Turn 3: Seniority & Bio\". This is TURN 3 of 8 (Seniority & Executive Bio). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 3 interface: 1. StepWizard with currentStep 3. 2. Text heading 'Step 3: Seniority & Elevator Pitch'. 3. InputChoice for Experience Level with options ['Fresher', '1-3 years', '3-7 years', '7+ years']. 4. TextField for 'Executive Bio / Elevator Pitch'. 5. Button labeled 'Continue to Step 4: Work Experience' with onPress action 'approve'.",
+      "run_id": "run-eb76be09a0c8",
+      "latency_s": 13.9,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite",
+      "clean": true,
+      "component_count": 6,
+      "component_types": [
+        "Button",
+        "Column",
+        "InputChoice",
+        "Text",
+        "TextField"
+      ],
+      "validator": {
+        "proposed": 6,
+        "accepted": 6,
+        "rejected": 1,
+        "ok": false,
+        "rejections": [
+          {
+            "component_id": "wizard",
+            "field": "steps",
+            "invariant": "data-not-code",
+            "reason": "binding must be {'$bind': '/pointer'}"
+          }
+        ],
+        "dangling_child_refs": [],
+        "component_types": [
+          "Button",
+          "Column",
+          "InputChoice",
+          "Text",
+          "TextField"
+        ],
+        "component_count": 6
+      },
+      "data_pointers": [
+        "choice_0_label",
+        "choice_1_label",
+        "choice_2_label",
+        "choice_3_label",
+        "choices",
+        "goal",
+        "intro",
+        "item_count",
+        "items",
+        "metric_0_value",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "section_0_heading",
+        "section_0_points",
+        "section_events",
+        "sections",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "surface": {
+        "root": "auto_root",
+        "components": [
+          {
+            "id": "auto_root",
+            "type": "Column",
+            "children": [
+              "title",
+              "intro",
+              "experience_level",
+              "bio_field",
+              "continue_btn"
+            ]
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "intro",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/intro"
+            }
+          },
+          {
+            "id": "experience_level",
+            "type": "InputChoice",
+            "label": "Experience Level",
+            "options": {
+              "$bind": "/subjects"
+            },
+            "value": {
+              "$bind": "/subjects"
+            }
+          },
+          {
+            "id": "bio_field",
+            "type": "TextField",
+            "label": "Executive Bio / Elevator Pitch",
+            "value": {
+              "$bind": "/summary"
+            },
+            "placeholder": "Enter your professional summary here..."
+          },
+          {
+            "id": "continue_btn",
+            "type": "Button",
+            "label": "Continue to Step 4: Work Experience",
+            "onPress": {
+              "action": "approve"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Step 3: Seniority & Elevator Pitch",
+          "goal": "The user entered contact details: \"Turn 3: Seniority & Bio\". This is TURN 3 of 8 (Seniority & Executive Bio). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 3 interface: 1. StepWizard with currentStep 3. 2. Text heading 'Step 3: Seniority & Elevator Pitch'. 3. InputChoice for Experience Level with options ['Fresher', '1-3 years', '3-7 years', '7+ years']. 4. TextField for 'Executive Bio / Elevator Pitch'. 5. Button labeled 'Continue to Step 4: Work Experience' with onPress action 'approve'.",
+          "summary": "Define your professional standing and craft a compelling summary to capture recruiter interest.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Current Progress",
+              "value": 3.0,
+              "unit": "of 8 steps"
+            }
+          ],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Fresher",
+            "1-3 years",
+            "3-7 years",
+            "7+ years"
+          ],
+          "timeline": [
+            {
+              "time": "902",
+              "label": "run_started"
+            },
+            {
+              "time": "903",
+              "label": "graph_patched"
+            },
+            {
+              "time": "904",
+              "label": "task_started content"
+            },
+            {
+              "time": "905",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "906",
+              "label": "graph_patched"
+            },
+            {
+              "time": "907",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Define your professional standing and craft a compelling summary to capture recruiter interest.",
+          "section_0_heading": "Instructions",
+          "section_0_points": "\u2022 Select your total years of professional experience.\n\u2022 Draft a 3-4 sentence summary highlighting your core value proposition.\n\u2022 Focus on achievements rather than just responsibilities.",
+          "sections": [
+            {
+              "heading": "Instructions",
+              "points": [
+                "Select your total years of professional experience.",
+                "Draft a 3-4 sentence summary highlighting your core value proposition.",
+                "Focus on achievements rather than just responsibilities."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Instructions",
+              "label": "Select your total years of professional experience.; Draft a 3-4 sentence summary highlighting your core value proposition.; Focus on achievements rather than just responsibilities."
+            }
+          ],
+          "metric_0_value": 3.0,
+          "choices": [
+            {
+              "id": "fresher",
+              "label": "Fresher"
+            },
+            {
+              "id": "1-3",
+              "label": "1-3 years"
+            },
+            {
+              "id": "3-7",
+              "label": "3-7 years"
+            },
+            {
+              "id": "7+",
+              "label": "7+ years"
+            }
+          ],
+          "choice_0_label": "Fresher",
+          "choice_1_label": "1-3 years",
+          "choice_2_label": "3-7 years",
+          "choice_3_label": "7+ years"
+        }
+      }
+    },
+    {
+      "user_said": "Turn 4: Work Experience & AI Bullet Enhancer",
+      "goal_sent": "The user entered bio & seniority: \"Turn 4: Work Experience & AI Bullet Enhancer\". This is TURN 4 of 8 (Work Experience & AI Bullet Enhancer). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 4 interface: 1. StepWizard with currentStep 4. 2. Text heading 'Step 4: Work Experience & Achievement Enhancer'. 3. TextField for 'Company Name & Position', 'Dates Worked', 'Draft Achievement Bullet Point'. 4. CodeDiff component showing AI Bullet Enhancer (Draft vs AI STAR method bullet). 5. Button labeled 'Continue to Step 5: Education' with onPress action 'approve'.",
+      "run_id": "run-b25c2feb495d",
+      "latency_s": 9.6,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite",
+      "clean": true,
+      "component_count": 9,
+      "component_types": [
+        "Button",
+        "CodeDiff",
+        "Column",
+        "Text",
+        "TextField"
+      ],
+      "validator": {
+        "proposed": 10,
+        "accepted": 9,
+        "rejected": 1,
+        "ok": false,
+        "rejections": [
+          {
+            "component_id": "wizard",
+            "field": "steps",
+            "invariant": "data-not-code",
+            "reason": "binding must be {'$bind': '/pointer'}"
+          }
+        ],
+        "dangling_child_refs": [
+          "wizard"
+        ],
+        "component_types": [
+          "Button",
+          "CodeDiff",
+          "Column",
+          "Text",
+          "TextField"
+        ],
+        "component_count": 9
+      },
+      "data_pointers": [
+        "choice_0_label",
+        "choices",
+        "diff_after",
+        "diff_after_label",
+        "diff_before",
+        "diff_before_label",
+        "goal",
+        "intro",
+        "item_count",
+        "items",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "section_0_heading",
+        "section_0_points",
+        "section_events",
+        "sections",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "wizard",
+              "title",
+              "intro",
+              "fields",
+              "diff",
+              "nextButton"
+            ]
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "intro",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/intro"
+            }
+          },
+          {
+            "id": "fields",
+            "type": "Column",
+            "children": [
+              "f1",
+              "f2",
+              "f3"
+            ]
+          },
+          {
+            "id": "f1",
+            "type": "TextField",
+            "label": "Company Name & Position",
+            "value": {
+              "$bind": "/section_0_points"
+            },
+            "placeholder": "Enter your role"
+          },
+          {
+            "id": "f2",
+            "type": "TextField",
+            "label": "Dates Worked",
+            "value": {
+              "$bind": "/section_0_points"
+            },
+            "placeholder": "MM/YYYY - MM/YYYY"
+          },
+          {
+            "id": "f3",
+            "type": "TextField",
+            "label": "Draft Achievement Bullet Point",
+            "value": {
+              "$bind": "/section_0_points"
+            },
+            "placeholder": "Describe a key accomplishment"
+          },
+          {
+            "id": "diff",
+            "type": "CodeDiff",
+            "title": "AI Bullet Enhancer",
+            "before": {
+              "$bind": "/diff_before"
+            },
+            "after": {
+              "$bind": "/diff_after"
+            },
+            "beforeLabel": "Draft Bullet",
+            "afterLabel": "AI STAR Enhancement"
+          },
+          {
+            "id": "nextButton",
+            "type": "Button",
+            "label": "Continue to Step 5: Education",
+            "onPress": {
+              "action": "approve"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Step 4: Work Experience & Achievement Enhancer",
+          "goal": "The user entered bio & seniority: \"Turn 4: Work Experience & AI Bullet Enhancer\". This is TURN 4 of 8 (Work Experience & AI Bullet Enhancer). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 4 interface: 1. StepWizard with currentStep 4. 2. Text heading 'Step 4: Work Experience & Achievement Enhancer'. 3. TextField for 'Company Name & Position', 'Dates Worked', 'Draft Achievement Bullet Point'. 4. CodeDiff component showing AI Bullet Enhancer (Draft vs AI STAR method bullet). 5. Button labeled 'Continue to Step 5: Education' with onPress action 'approve'.",
+          "summary": "Refine your professional experience by transforming basic tasks into high-impact STAR (Situation, Task, Action, Result) bullet points.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Continue to Step 5: Education"
+          ],
+          "timeline": [
+            {
+              "time": "910",
+              "label": "run_started"
+            },
+            {
+              "time": "911",
+              "label": "graph_patched"
+            },
+            {
+              "time": "912",
+              "label": "task_started content"
+            },
+            {
+              "time": "913",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "914",
+              "label": "graph_patched"
+            },
+            {
+              "time": "915",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Refine your professional experience by transforming basic tasks into high-impact STAR (Situation, Task, Action, Result) bullet points.",
+          "section_0_heading": "Experience Details",
+          "section_0_points": "\u2022 Company Name & Position: [Enter your role]\n\u2022 Dates Worked: [MM/YYYY - MM/YYYY]\n\u2022 Draft Achievement Bullet Point: [Describe a key accomplishment]",
+          "sections": [
+            {
+              "heading": "Experience Details",
+              "points": [
+                "Company Name & Position: [Enter your role]",
+                "Dates Worked: [MM/YYYY - MM/YYYY]",
+                "Draft Achievement Bullet Point: [Describe a key accomplishment]"
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Experience Details",
+              "label": "Company Name & Position: [Enter your role]; Dates Worked: [MM/YYYY - MM/YYYY]; Draft Achievement Bullet Point: [Describe a key accomplishment]"
+            }
+          ],
+          "choices": [
+            {
+              "id": "next",
+              "label": "Continue to Step 5: Education"
+            }
+          ],
+          "choice_0_label": "Continue to Step 5: Education",
+          "diff_before": "Managed social media accounts and posted content.",
+          "diff_after": "Spearheaded a cross-platform social media strategy, increasing organic engagement by 45% over 6 months through data-driven content scheduling.",
+          "diff_before_label": "Draft Bullet",
+          "diff_after_label": "AI STAR Enhancement"
+        }
+      }
+    },
+    {
+      "user_said": "Turn 5: Education & Credentials",
+      "goal_sent": "The user entered work experience: \"Turn 5: Education & Credentials\". This is TURN 5 of 8 (Education Entry). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 5 interface: 1. StepWizard with currentStep 5. 2. Text heading 'Step 5: Education & Credentials'. 3. TextField for 'University / School', 'Degree & Major', 'Graduation Year & Honors'. 4. Button labeled 'Continue to Step 6: Skills' with onPress action 'approve'.",
+      "run_id": "run-9713806a1323",
+      "latency_s": 10.8,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite",
+      "clean": true,
+      "component_count": 8,
+      "component_types": [
+        "Button",
+        "Column",
+        "StepWizard",
+        "Text",
+        "TextField"
+      ],
+      "validator": {
+        "proposed": 7,
+        "accepted": 8,
+        "rejected": 0,
+        "ok": true,
+        "rejections": [],
+        "dangling_child_refs": [],
+        "component_types": [
+          "Button",
+          "Column",
+          "StepWizard",
+          "Text",
+          "TextField"
+        ],
+        "component_count": 8
+      },
+      "data_pointers": [
+        "choice_0_label",
+        "choices",
+        "goal",
+        "intro",
+        "item_count",
+        "items",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "section_0_heading",
+        "section_0_points",
+        "section_events",
+        "sections",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "surface": {
+        "root": "auto_root",
+        "components": [
+          {
+            "id": "auto_root",
+            "type": "Column",
+            "children": [
+              "wizard",
+              "heading",
+              "intro",
+              "school_field",
+              "degree_field",
+              "grad_field",
+              "continue_btn"
+            ]
+          },
+          {
+            "id": "wizard",
+            "type": "StepWizard",
+            "title": "Resume Builder",
+            "currentStep": 5,
+            "steps": {
+              "$bind": "/sections"
+            }
+          },
+          {
+            "id": "heading",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "intro",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "school_field",
+            "type": "TextField",
+            "label": "University / School",
+            "value": {
+              "$bind": "/items"
+            }
+          },
+          {
+            "id": "degree_field",
+            "type": "TextField",
+            "label": "Degree & Major",
+            "value": {
+              "$bind": "/items"
+            }
+          },
+          {
+            "id": "grad_field",
+            "type": "TextField",
+            "label": "Graduation Year & Honors",
+            "value": {
+              "$bind": "/items"
+            }
+          },
+          {
+            "id": "continue_btn",
+            "type": "Button",
+            "label": {
+              "$bind": "/choice_0_label"
+            },
+            "onPress": {
+              "action": "approve"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Step 5: Education & Credentials",
+          "goal": "The user entered work experience: \"Turn 5: Education & Credentials\". This is TURN 5 of 8 (Education Entry). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 5 interface: 1. StepWizard with currentStep 5. 2. Text heading 'Step 5: Education & Credentials'. 3. TextField for 'University / School', 'Degree & Major', 'Graduation Year & Honors'. 4. Button labeled 'Continue to Step 6: Skills' with onPress action 'approve'.",
+          "summary": "Provide your academic background to highlight your qualifications.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Continue to Step 6: Skills"
+          ],
+          "timeline": [
+            {
+              "time": "918",
+              "label": "run_started"
+            },
+            {
+              "time": "919",
+              "label": "graph_patched"
+            },
+            {
+              "time": "920",
+              "label": "task_started content"
+            },
+            {
+              "time": "921",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "922",
+              "label": "graph_patched"
+            },
+            {
+              "time": "923",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Provide your academic background to highlight your qualifications.",
+          "section_0_heading": "Education Details",
+          "section_0_points": "\u2022 University / School\n\u2022 Degree & Major\n\u2022 Graduation Year & Honors",
+          "sections": [
+            {
+              "heading": "Education Details",
+              "points": [
+                "University / School",
+                "Degree & Major",
+                "Graduation Year & Honors"
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Education Details",
+              "label": "University / School; Degree & Major; Graduation Year & Honors"
+            }
+          ],
+          "choices": [
+            {
+              "id": "continue_step_6",
+              "label": "Continue to Step 6: Skills"
+            }
+          ],
+          "choice_0_label": "Continue to Step 6: Skills"
+        }
+      }
+    },
+    {
+      "user_said": "Turn 6: Select Skills & Star Ratings",
+      "goal_sent": "The user entered education: \"Turn 6: Select Skills & Star Ratings\". This is TURN 6 of 8 (Core Skills & Star Ratings). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 6 interface: 1. StepWizard with currentStep 6. 2. Text heading 'Step 6: Core Skills & Proficiency Ratings'. 3. Rating components for top technical skills (5-star ratings). 4. InputChoice for Additional Skill Tags. 5. Button labeled 'Continue to Step 7: Impact Stats' with onPress action 'approve'.",
+      "run_id": "run-da995339f962",
+      "latency_s": 33.1,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite",
+      "clean": true,
+      "component_count": 10,
+      "component_types": [
+        "Button",
+        "Column",
+        "InputChoice",
+        "Rating",
+        "StepWizard",
+        "Text"
+      ],
+      "validator": {
+        "proposed": 10,
+        "accepted": 10,
+        "rejected": 0,
+        "ok": true,
+        "rejections": [],
+        "dangling_child_refs": [],
+        "component_types": [
+          "Button",
+          "Column",
+          "InputChoice",
+          "Rating",
+          "StepWizard",
+          "Text"
+        ],
+        "component_count": 10
+      },
+      "data_pointers": [
+        "choice_0_label",
+        "choice_1_label",
+        "choices",
+        "goal",
+        "intro",
+        "item_count",
+        "items",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "section_0_heading",
+        "section_0_points",
+        "section_events",
+        "sections",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "wizard",
+              "heading",
+              "ratings",
+              "skill_input",
+              "continue_button"
+            ]
+          },
+          {
+            "id": "wizard",
+            "type": "StepWizard",
+            "title": "Resume Builder",
+            "currentStep": 6,
+            "steps": {
+              "$bind": "/sections"
+            }
+          },
+          {
+            "id": "heading",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "ratings",
+            "type": "Column",
+            "children": [
+              "r1",
+              "r2",
+              "r3",
+              "r4"
+            ]
+          },
+          {
+            "id": "r1",
+            "type": "Rating",
+            "label": "JavaScript",
+            "value": 5,
+            "max": 5
+          },
+          {
+            "id": "r2",
+            "type": "Rating",
+            "label": "Python",
+            "value": 4,
+            "max": 5
+          },
+          {
+            "id": "r3",
+            "type": "Rating",
+            "label": "Cloud Architecture",
+            "value": 4,
+            "max": 5
+          },
+          {
+            "id": "r4",
+            "type": "Rating",
+            "label": "Data Analysis",
+            "value": 3,
+            "max": 5
+          },
+          {
+            "id": "skill_input",
+            "type": "InputChoice",
+            "label": "Additional Skill Tags",
+            "options": {
+              "$bind": "/subjects"
+            },
+            "value": {
+              "$bind": "/subjects"
+            }
+          },
+          {
+            "id": "continue_button",
+            "type": "Button",
+            "label": "Continue to Step 7: Impact Stats",
+            "onPress": {
+              "action": "approve"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Step 6: Core Skills & Proficiency Ratings",
+          "goal": "The user entered education: \"Turn 6: Select Skills & Star Ratings\". This is TURN 6 of 8 (Core Skills & Star Ratings). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 6 interface: 1. StepWizard with currentStep 6. 2. Text heading 'Step 6: Core Skills & Proficiency Ratings'. 3. Rating components for top technical skills (5-star ratings). 4. InputChoice for Additional Skill Tags. 5. Button labeled 'Continue to Step 7: Impact Stats' with onPress action 'approve'.",
+          "summary": "Define your technical expertise and proficiency levels to highlight your core competencies.",
+          "results": [],
+          "items": [],
+          "metrics": [],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Add Skill Tag",
+            "Continue to Step 7: Impact Stats"
+          ],
+          "timeline": [
+            {
+              "time": "926",
+              "label": "run_started"
+            },
+            {
+              "time": "927",
+              "label": "graph_patched"
+            },
+            {
+              "time": "928",
+              "label": "task_started content"
+            },
+            {
+              "time": "929",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "930",
+              "label": "graph_patched"
+            },
+            {
+              "time": "931",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Define your technical expertise and proficiency levels to highlight your core competencies.",
+          "section_0_heading": "Technical Proficiency",
+          "section_0_points": "\u2022 JavaScript: 5 Stars\n\u2022 Python: 4 Stars\n\u2022 Cloud Architecture: 4 Stars\n\u2022 Data Analysis: 3 Stars",
+          "sections": [
+            {
+              "heading": "Technical Proficiency",
+              "points": [
+                "JavaScript: 5 Stars",
+                "Python: 4 Stars",
+                "Cloud Architecture: 4 Stars",
+                "Data Analysis: 3 Stars"
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Technical Proficiency",
+              "label": "JavaScript: 5 Stars; Python: 4 Stars; Cloud Architecture: 4 Stars; Data Analysis: 3 Stars"
+            }
+          ],
+          "choices": [
+            {
+              "id": "add_skill",
+              "label": "Add Skill Tag"
+            },
+            {
+              "id": "continue_step_7",
+              "label": "Continue to Step 7: Impact Stats"
+            }
+          ],
+          "choice_0_label": "Add Skill Tag",
+          "choice_1_label": "Continue to Step 7: Impact Stats"
+        }
+      }
+    },
+    {
+      "user_said": "Turn 7: Career Impact Stats",
+      "goal_sent": "The user entered skills: \"Turn 7: Career Impact Stats\". This is TURN 7 of 8 (Career Impact Stats). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 7 interface: 1. StepWizard with currentStep 7. 2. Text heading 'Step 7: Key Impact Highlights'. 3. StatTile components for metric highlights (+65% Throughput, $1.2M Saved, 8+ Yrs Exp). 4. Button labeled 'Continue to Step 8: Bento Theme' with onPress action 'approve'.",
+      "run_id": "run-345237fc81a9",
+      "latency_s": 12.5,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite",
+      "clean": true,
+      "component_count": 9,
+      "component_types": [
+        "Button",
+        "Column",
+        "Row",
+        "StatTile",
+        "StepWizard",
+        "Text"
+      ],
+      "validator": {
+        "proposed": 9,
+        "accepted": 9,
+        "rejected": 0,
+        "ok": true,
+        "rejections": [],
+        "dangling_child_refs": [],
+        "component_types": [
+          "Button",
+          "Column",
+          "Row",
+          "StatTile",
+          "StepWizard",
+          "Text"
+        ],
+        "component_count": 9
+      },
+      "data_pointers": [
+        "choice_0_label",
+        "choices",
+        "goal",
+        "intro",
+        "item_count",
+        "items",
+        "metric_0_value",
+        "metric_1_value",
+        "metric_2_value",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "section_0_heading",
+        "section_0_points",
+        "section_events",
+        "sections",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "wizard",
+              "title",
+              "summary",
+              "stats",
+              "button"
+            ]
+          },
+          {
+            "id": "wizard",
+            "type": "StepWizard",
+            "currentStep": 7,
+            "steps": {
+              "$bind": "/sections"
+            }
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "stats",
+            "type": "Row",
+            "align": "center",
+            "justify": "spaceBetween",
+            "children": [
+              "s1",
+              "s2",
+              "s3"
+            ]
+          },
+          {
+            "id": "s1",
+            "type": "StatTile",
+            "label": "Throughput Increase",
+            "value": {
+              "$bind": "/metric_0_value"
+            },
+            "unit": "%"
+          },
+          {
+            "id": "s2",
+            "type": "StatTile",
+            "label": "Cost Savings",
+            "value": {
+              "$bind": "/metric_1_value"
+            },
+            "unit": "M USD"
+          },
+          {
+            "id": "s3",
+            "type": "StatTile",
+            "label": "Experience",
+            "value": {
+              "$bind": "/metric_2_value"
+            },
+            "unit": "Years"
+          },
+          {
+            "id": "button",
+            "type": "Button",
+            "label": "Continue to Step 8: Bento Theme",
+            "onPress": {
+              "action": "approve"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Step 7: Key Impact Highlights",
+          "goal": "The user entered skills: \"Turn 7: Career Impact Stats\". This is TURN 7 of 8 (Career Impact Stats). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 7 interface: 1. StepWizard with currentStep 7. 2. Text heading 'Step 7: Key Impact Highlights'. 3. StatTile components for metric highlights (+65% Throughput, $1.2M Saved, 8+ Yrs Exp). 4. Button labeled 'Continue to Step 8: Bento Theme' with onPress action 'approve'.",
+          "summary": "Quantify your professional achievements to demonstrate tangible value and ROI to potential employers.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Throughput Increase",
+              "value": 65.0,
+              "unit": "%"
+            },
+            {
+              "label": "Cost Savings",
+              "value": 1.2,
+              "unit": "M USD"
+            },
+            {
+              "label": "Professional Experience",
+              "value": 8.0,
+              "unit": "Years"
+            }
+          ],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Continue to Step 8: Bento Theme"
+          ],
+          "timeline": [
+            {
+              "time": "934",
+              "label": "run_started"
+            },
+            {
+              "time": "935",
+              "label": "graph_patched"
+            },
+            {
+              "time": "936",
+              "label": "task_started content"
+            },
+            {
+              "time": "937",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "938",
+              "label": "graph_patched"
+            },
+            {
+              "time": "939",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Quantify your professional achievements to demonstrate tangible value and ROI to potential employers.",
+          "section_0_heading": "Drafting Impact Statements",
+          "section_0_points": "\u2022 Focus on the 'Action-Result' framework.\n\u2022 Use specific percentages, currency, or time-based metrics.\n\u2022 Highlight cross-functional collaboration results.\n\u2022 Ensure metrics align with the target job description.",
+          "sections": [
+            {
+              "heading": "Drafting Impact Statements",
+              "points": [
+                "Focus on the 'Action-Result' framework.",
+                "Use specific percentages, currency, or time-based metrics.",
+                "Highlight cross-functional collaboration results.",
+                "Ensure metrics align with the target job description."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Drafting Impact Statements",
+              "label": "Focus on the 'Action-Result' framework.; Use specific percentages, currency, or time-based metrics.; Highlight cross-functional collaboration results.; Ensure metrics align with the target job description."
+            }
+          ],
+          "metric_0_value": 65.0,
+          "metric_1_value": 1.2,
+          "metric_2_value": 8.0,
+          "choices": [
+            {
+              "id": "step_8",
+              "label": "Continue to Step 8: Bento Theme"
+            }
+          ],
+          "choice_0_label": "Continue to Step 8: Bento Theme"
+        }
+      }
+    },
+    {
+      "user_said": "Turn 8: Bento Resume Theme Selection",
+      "goal_sent": "The user entered impact stats: \"Turn 8: Bento Resume Theme Selection\". This is TURN 8 of 8 (Bento Resume Theme Selection). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 8 interface: 1. StepWizard with currentStep 8. 2. Text heading 'Step 8: Choose Bento Grid Theme'. 3. InputChoice for Theme with options ['Dark Glassmorphism Bento', 'Modern Executive Light', 'Minimal Slate', 'Cyber Neon']. 4. Button labeled 'Generate 1-Page A4 Bento Resume' with onPress action 'approve'.",
+      "run_id": "run-d48eb8ae2539",
+      "latency_s": 14.1,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite",
+      "clean": true,
+      "component_count": 6,
+      "component_types": [
+        "Button",
+        "Column",
+        "InputChoice",
+        "StepWizard",
+        "Text"
+      ],
+      "validator": {
+        "proposed": 6,
+        "accepted": 6,
+        "rejected": 0,
+        "ok": true,
+        "rejections": [],
+        "dangling_child_refs": [],
+        "component_types": [
+          "Button",
+          "Column",
+          "InputChoice",
+          "StepWizard",
+          "Text"
+        ],
+        "component_count": 6
+      },
+      "data_pointers": [
+        "choice_0_label",
+        "choice_1_label",
+        "choice_2_label",
+        "choice_3_label",
+        "choice_4_label",
+        "choices",
+        "goal",
+        "intro",
+        "item_count",
+        "items",
+        "metric_0_value",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "section_0_heading",
+        "section_0_points",
+        "section_events",
+        "sections",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "wizard",
+              "title",
+              "summary",
+              "theme_input",
+              "action_button"
+            ]
+          },
+          {
+            "id": "wizard",
+            "type": "StepWizard",
+            "title": "Progress",
+            "currentStep": 8,
+            "steps": {
+              "$bind": "/timeline"
+            }
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "summary",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "theme_input",
+            "type": "InputChoice",
+            "label": "Select Theme",
+            "options": {
+              "$bind": "/subjects"
+            },
+            "value": {
+              "$bind": "/subjects"
+            }
+          },
+          {
+            "id": "action_button",
+            "type": "Button",
+            "label": "Generate 1-Page A4 Bento Resume",
+            "onPress": {
+              "action": "approve"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Step 8: Choose Bento Grid Theme",
+          "goal": "The user entered impact stats: \"Turn 8: Bento Resume Theme Selection\". This is TURN 8 of 8 (Bento Resume Theme Selection). CRITICAL: DO NOT GENERATE THE FINAL RESUME YET! Compose TURN 8 interface: 1. StepWizard with currentStep 8. 2. Text heading 'Step 8: Choose Bento Grid Theme'. 3. InputChoice for Theme with options ['Dark Glassmorphism Bento', 'Modern Executive Light', 'Minimal Slate', 'Cyber Neon']. 4. Button labeled 'Generate 1-Page A4 Bento Resume' with onPress action 'approve'.",
+          "summary": "Select the visual aesthetic for your Bento-style resume layout. This theme will dictate the color palette, typography, and grid spacing for your final document.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Current Step",
+              "value": 8.0,
+              "unit": "of 8"
+            }
+          ],
+          "spark": [],
+          "table_rows": [],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Dark Glassmorphism Bento",
+            "Modern Executive Light",
+            "Minimal Slate",
+            "Cyber Neon",
+            "Generate 1-Page A4 Bento Resume"
+          ],
+          "timeline": [
+            {
+              "time": "942",
+              "label": "run_started"
+            },
+            {
+              "time": "943",
+              "label": "graph_patched"
+            },
+            {
+              "time": "944",
+              "label": "task_started content"
+            },
+            {
+              "time": "945",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "946",
+              "label": "graph_patched"
+            },
+            {
+              "time": "947",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "Select the visual aesthetic for your Bento-style resume layout. This theme will dictate the color palette, typography, and grid spacing for your final document.",
+          "section_0_heading": "Theme Selection Guide",
+          "section_0_points": "\u2022 Dark Glassmorphism: High contrast, modern, translucent elements.\n\u2022 Modern Executive: Clean, professional, high readability.\n\u2022 Minimal Slate: Sophisticated, monochromatic, understated.\n\u2022 Cyber Neon: Bold, high-energy, tech-focused accents.",
+          "sections": [
+            {
+              "heading": "Theme Selection Guide",
+              "points": [
+                "Dark Glassmorphism: High contrast, modern, translucent elements.",
+                "Modern Executive: Clean, professional, high readability.",
+                "Minimal Slate: Sophisticated, monochromatic, understated.",
+                "Cyber Neon: Bold, high-energy, tech-focused accents."
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Theme Selection Guide",
+              "label": "Dark Glassmorphism: High contrast, modern, translucent elements.; Modern Executive: Clean, professional, high readability.; Minimal Slate: Sophisticated, monochromatic, understated.; Cyber Neon: Bold, high-energy, tech-focused accents."
+            }
+          ],
+          "metric_0_value": 8.0,
+          "choices": [
+            {
+              "id": "dark_glass",
+              "label": "Dark Glassmorphism Bento"
+            },
+            {
+              "id": "exec_light",
+              "label": "Modern Executive Light"
+            },
+            {
+              "id": "min_slate",
+              "label": "Minimal Slate"
+            },
+            {
+              "id": "cyber_neon",
+              "label": "Cyber Neon"
+            },
+            {
+              "id": "approve",
+              "label": "Generate 1-Page A4 Bento Resume"
+            }
+          ],
+          "choice_0_label": "Dark Glassmorphism Bento",
+          "choice_1_label": "Modern Executive Light",
+          "choice_2_label": "Minimal Slate",
+          "choice_3_label": "Cyber Neon",
+          "choice_4_label": "Generate 1-Page A4 Bento Resume"
+        }
+      }
+    },
+    {
+      "user_said": "FINAL: Generate 1-Page A4 Bento Resume",
+      "goal_sent": "The user completed all 8 turns. This is the FINAL TURN 9 (1-PAGE A4 BENTO BOX RESUME COMPONENT). Compose a complete, live, pixel-perfect 1-Page A4 Bento Grid Resume preview using all collected data: 1. StepWizard component with currentStep 9 (Complete). 2. Header Bento Box with Candidate Name, Job Title, Contact Badges, and Social Links. 3. Bio Bento Card with Elevator Pitch. 4. StatTile Bento Row with 3 Career Highlight Metrics. 5. Work Experience Bento Box with AI-enhanced STAR bullets. 6. Education Bento Box. 7. Rating Grid Bento Box for Skills. 8. ApprovalCard labeled 'Bento Resume Complete' with 'Approve & Print/Export A4 PDF' action.",
+      "run_id": "run-34e513990035",
+      "latency_s": 14.8,
+      "provider": "gemini_1",
+      "model": "gemini-3.1-flash-lite",
+      "clean": true,
+      "component_count": 18,
+      "component_types": [
+        "ApprovalCard",
+        "Card",
+        "Column",
+        "DataTable",
+        "Row",
+        "StatTile",
+        "StepWizard",
+        "Text"
+      ],
+      "validator": {
+        "proposed": 18,
+        "accepted": 18,
+        "rejected": 0,
+        "ok": true,
+        "rejections": [],
+        "dangling_child_refs": [],
+        "component_types": [
+          "ApprovalCard",
+          "Card",
+          "Column",
+          "DataTable",
+          "Row",
+          "StatTile",
+          "StepWizard",
+          "Text"
+        ],
+        "component_count": 18
+      },
+      "data_pointers": [
+        "choice_0_label",
+        "choice_1_label",
+        "choices",
+        "goal",
+        "intro",
+        "item_count",
+        "items",
+        "metric_0_value",
+        "metric_1_value",
+        "metric_2_value",
+        "metrics",
+        "progress_max",
+        "progress_value",
+        "results",
+        "section_0_heading",
+        "section_0_points",
+        "section_1_heading",
+        "section_1_points",
+        "section_events",
+        "sections",
+        "source_count",
+        "spark",
+        "subjects",
+        "summary",
+        "table_columns",
+        "table_rows",
+        "timeline",
+        "title"
+      ],
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "wizard",
+              "header",
+              "bio",
+              "stats",
+              "experience",
+              "education",
+              "skills",
+              "approval"
+            ]
+          },
+          {
+            "id": "wizard",
+            "type": "StepWizard",
+            "title": "Resume Progress",
+            "currentStep": 9,
+            "steps": {
+              "$bind": "/subjects"
+            }
+          },
+          {
+            "id": "header",
+            "type": "Card",
+            "title": "Candidate Profile",
+            "children": [
+              "name",
+              "title"
+            ]
+          },
+          {
+            "id": "name",
+            "type": "Text",
+            "variant": "heading",
+            "text": {
+              "$bind": "/title"
+            }
+          },
+          {
+            "id": "title",
+            "type": "Text",
+            "variant": "subtitle",
+            "text": {
+              "$bind": "/summary"
+            }
+          },
+          {
+            "id": "bio",
+            "type": "Card",
+            "title": "Elevator Pitch",
+            "children": [
+              "bioText"
+            ]
+          },
+          {
+            "id": "bioText",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/intro"
+            }
+          },
+          {
+            "id": "stats",
+            "type": "Row",
+            "align": "center",
+            "justify": "spaceAround",
+            "children": [
+              "s1",
+              "s2",
+              "s3"
+            ]
+          },
+          {
+            "id": "s1",
+            "type": "StatTile",
+            "label": "Years Experience",
+            "value": {
+              "$bind": "/metric_0_value"
+            },
+            "unit": "Years"
+          },
+          {
+            "id": "s2",
+            "type": "StatTile",
+            "label": "Projects Delivered",
+            "value": {
+              "$bind": "/metric_1_value"
+            },
+            "unit": "Count"
+          },
+          {
+            "id": "s3",
+            "type": "StatTile",
+            "label": "Efficiency Gain",
+            "value": {
+              "$bind": "/metric_2_value"
+            },
+            "unit": "%"
+          },
+          {
+            "id": "experience",
+            "type": "Card",
+            "title": "Experience",
+            "children": [
+              "expText"
+            ]
+          },
+          {
+            "id": "expText",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/section_0_points"
+            }
+          },
+          {
+            "id": "education",
+            "type": "Card",
+            "title": "Education",
+            "children": [
+              "eduText"
+            ]
+          },
+          {
+            "id": "eduText",
+            "type": "Text",
+            "variant": "body",
+            "text": {
+              "$bind": "/section_1_points"
+            }
+          },
+          {
+            "id": "skills",
+            "type": "Card",
+            "title": "Skills",
+            "children": [
+              "table"
+            ]
+          },
+          {
+            "id": "table",
+            "type": "DataTable",
+            "columns": "Skill,Proficiency",
+            "rows": {
+              "$bind": "/table_rows"
+            }
+          },
+          {
+            "id": "approval",
+            "type": "ApprovalCard",
+            "summary": {
+              "$bind": "/summary"
+            },
+            "params": {
+              "$bind": "/choices"
+            },
+            "confirm": {
+              "action": "request_data"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Professional Bento Resume",
+          "goal": "The user completed all 8 turns. This is the FINAL TURN 9 (1-PAGE A4 BENTO BOX RESUME COMPONENT). Compose a complete, live, pixel-perfect 1-Page A4 Bento Grid Resume preview using all collected data: 1. StepWizard component with currentStep 9 (Complete). 2. Header Bento Box with Candidate Name, Job Title, Contact Badges, and Social Links. 3. Bio Bento Card with Elevator Pitch. 4. StatTile Bento Row with 3 Career Highlight Metrics. 5. Work Experience Bento Box with AI-enhanced STAR bullets. 6. Education Bento Box. 7. Rating Grid Bento Box for Skills. 8. ApprovalCard labeled 'Bento Resume Complete' with 'Approve & Print/Export A4 PDF' action.",
+          "summary": "A high-impact, single-page A4 layout optimized for modern ATS and visual clarity.",
+          "results": [],
+          "items": [],
+          "metrics": [
+            {
+              "label": "Years Experience",
+              "value": 8.0,
+              "unit": "Years"
+            },
+            {
+              "label": "Projects Delivered",
+              "value": 45.0,
+              "unit": "Count"
+            },
+            {
+              "label": "Efficiency Gain",
+              "value": 25.0,
+              "unit": "%"
+            }
+          ],
+          "spark": [],
+          "table_rows": [
+            {
+              "Skill": "System Architecture",
+              "Proficiency": "Expert"
+            },
+            {
+              "Skill": "Cloud Infrastructure",
+              "Proficiency": "Advanced"
+            },
+            {
+              "Skill": "Team Leadership",
+              "Proficiency": "Advanced"
+            }
+          ],
+          "item_count": 0,
+          "source_count": 0,
+          "subjects": [
+            "Generate A4 PDF",
+            "Modify Layout"
+          ],
+          "timeline": [
+            {
+              "time": "950",
+              "label": "run_started"
+            },
+            {
+              "time": "951",
+              "label": "graph_patched"
+            },
+            {
+              "time": "952",
+              "label": "task_started content"
+            },
+            {
+              "time": "953",
+              "label": "task_succeeded content"
+            },
+            {
+              "time": "954",
+              "label": "graph_patched"
+            },
+            {
+              "time": "955",
+              "label": "task_started surface"
+            }
+          ],
+          "progress_value": 1,
+          "progress_max": 2,
+          "intro": "A high-impact, single-page A4 layout optimized for modern ATS and visual clarity.",
+          "section_0_heading": "Experience",
+          "section_0_points": "\u2022 Led cross-functional teams to deliver 20% efficiency gains via automated workflows.\n\u2022 Architected scalable cloud infrastructure reducing latency by 150ms.\n\u2022 Mentored junior developers, resulting in a 30% increase in team velocity.",
+          "section_1_heading": "Education",
+          "section_1_points": "\u2022 M.Sc. in Computer Science, Tech University\n\u2022 B.Sc. in Software Engineering, State College",
+          "sections": [
+            {
+              "heading": "Experience",
+              "points": [
+                "Led cross-functional teams to deliver 20% efficiency gains via automated workflows.",
+                "Architected scalable cloud infrastructure reducing latency by 150ms.",
+                "Mentored junior developers, resulting in a 30% increase in team velocity."
+              ]
+            },
+            {
+              "heading": "Education",
+              "points": [
+                "M.Sc. in Computer Science, Tech University",
+                "B.Sc. in Software Engineering, State College"
+              ]
+            }
+          ],
+          "section_events": [
+            {
+              "time": "Experience",
+              "label": "Led cross-functional teams to deliver 20% efficiency gains via automated workflows.; Architected scalable cloud infrastructure reducing latency by 150ms.; Mentored junior developers, resulting in a 30% increase in team velocity."
+            },
+            {
+              "time": "Education",
+              "label": "M.Sc. in Computer Science, Tech University; B.Sc. in Software Engineering, State College"
+            }
+          ],
+          "metric_0_value": 8.0,
+          "metric_1_value": 45.0,
+          "metric_2_value": 25.0,
+          "table_columns": [
+            "Skill",
+            "Proficiency"
+          ],
+          "choices": [
+            {
+              "id": "print",
+              "label": "Generate A4 PDF"
+            },
+            {
+              "id": "edit",
+              "label": "Modify Layout"
+            }
+          ],
+          "choice_0_label": "Generate A4 PDF",
+          "choice_1_label": "Modify Layout"
+        }
+      }
+    }
+  ],
+  "every_turn_composed": true,
+  "every_turn_clean": true,
+  "distinct_component_signatures": 8,
+  "union_of_component_types": [
+    "ApprovalCard",
+    "Button",
+    "Card",
+    "CodeDiff",
+    "Column",
+    "DataTable",
+    "InputChoice",
+    "Rating",
+    "Row",
+    "StatTile",
+    "StepWizard",
+    "Text",
+    "TextField"
+  ],
+  "rich_component_coverage": {
+    "step wizard -> StepWizard": [
+      "StepWizard"
+    ],
+    "single/multi select -> InputChoice/CheckBox": [
+      "InputChoice"
+    ],
+    "identity & text fields -> TextField": [
+      "TextField"
+    ],
+    "bullet enhancer -> CodeDiff": [
+      "CodeDiff"
+    ],
+    "skill ratings -> Rating": [
+      "Rating"
+    ],
+    "final Bento A4 resume -> Card/DataTable/ApprovalCard": [
+      "ApprovalCard",
+      "Card",
+      "DataTable"
+    ]
+  },
+  "every_shape_got_its_component": true,
+  "every_binding_resolved": true
+}
