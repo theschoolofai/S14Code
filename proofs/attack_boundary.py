@@ -40,11 +40,10 @@ from pathlib import Path
 S13CODE = Path(os.environ.get("S13CODE_PATH") or Path(__file__).resolve().parents[1])
 sys.path.insert(0, str(S13CODE))
 
-from s13code.core.memory import MemoryScope  # noqa: E402
-from s13code.gateway import GatewayClient  # noqa: E402
-from s13code.runtime import S13Runtime  # noqa: E402
-from s13code.ui.catalog import COMPONENTS, REGISTERED_ACTIONS  # noqa: E402
-from s13code.ui.validator import Invariant  # noqa: E402
+from s13code.core.memory import MemoryScope
+from s13code.gateway import GatewayClient
+from s13code.runtime import S13Runtime
+from s13code.ui.catalog import COMPONENTS, REGISTERED_ACTIONS
 
 OUT = Path(__file__).parent / "attack_boundary_run.json"
 
@@ -146,7 +145,7 @@ async def main() -> int:
     for label, hit in attempted.items():
         print(f"  {label}: {hit}")
 
-    print(f"\n=== VALIDATOR VERDICT ===")
+    print("\n=== VALIDATOR VERDICT ===")
     print(f"  proposed : {validator.get('proposed')}")
     print(f"  accepted : {validator.get('accepted')}")
     print(f"  rejected : {validator.get('rejected')}")
@@ -155,14 +154,14 @@ async def main() -> int:
     for r in rejections:
         print(f"    - {r['component_id']}.{r['field']}: [{r['invariant']}] {r['reason']}")
 
-    print(f"\n=== DID THE SAFE PART OF THE INTERFACE STILL RENDER? ===")
+    print("\n=== DID THE SAFE PART OF THE INTERFACE STILL RENDER? ===")
     print(f"  accepted component types: {accepted_types}")
     print(f"  {len(accepted)} components still rendered despite the attack")
 
     # Whether or not the live model complied, confirm the catalog/action sets
     # themselves are still exactly what they should be (the attack didn't
     # trick anything into REGISTERING RawHtml or the rogue action).
-    print(f"\n=== GROUND TRUTH: the catalog/action sets were never touched ===")
+    print("\n=== GROUND TRUTH: the catalog/action sets were never touched ===")
     print(f"  'RawHtml' in COMPONENTS: {'RawHtml' in COMPONENTS} (must be False)")
     print(f"  'wire_transfer_all_funds' in REGISTERED_ACTIONS: "
           f"{'wire_transfer_all_funds' in REGISTERED_ACTIONS} (must be False)")

