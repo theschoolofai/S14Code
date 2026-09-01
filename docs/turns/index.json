@@ -1,0 +1,52 @@
+{
+  "turns": [
+    {
+      "file": "turns/turn1.json",
+      "label": "Household overview",
+      "provider": "ollama",
+      "model": "qwen3:8b",
+      "component_count": 9,
+      "component_types": [
+        "Button",
+        "ProgressBar",
+        "Row",
+        "SankeyDiagram",
+        "Text",
+        "Timeline"
+      ]
+    },
+    {
+      "file": "turns/turn2.json",
+      "label": "Heating diagnosis",
+      "provider": "ollama",
+      "model": "qwen3:8b",
+      "component_count": 9,
+      "component_types": [
+        "BarChart",
+        "Button",
+        "DataTable",
+        "ProgressBar",
+        "Row",
+        "SankeyDiagram",
+        "Text"
+      ]
+    },
+    {
+      "file": "turns/turn3.json",
+      "label": "Reduction plan",
+      "provider": "ollama",
+      "model": "qwen3:8b",
+      "component_count": 10,
+      "component_types": [
+        "Button",
+        "ProgressBar",
+        "Row",
+        "SankeyDiagram",
+        "StatTile",
+        "Text",
+        "Timeline"
+      ]
+    }
+  ],
+  "note": "Recorded live qwen3:8b compositions via glc_v3; static replay for GitHub Pages."
+}

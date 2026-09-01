@@ -10,7 +10,7 @@ import httpx
 class GatewayClient:
     def __init__(self, base_url: str | None = None, *, client: httpx.AsyncClient | None = None) -> None:
         self.base_url = (base_url or os.getenv("GLC_BASE_URL", "http://127.0.0.1:8111")).rstrip("/")
-        self._client = client or httpx.AsyncClient(timeout=120)
+        self._client = client or httpx.AsyncClient(timeout=float(os.getenv("S13_GATEWAY_HTTP_TIMEOUT", "300")))
         self._owns_client = client is None
 
     async def complete(self, prompt: str, system: str, *, session: str | None = None) -> dict[str, Any]:

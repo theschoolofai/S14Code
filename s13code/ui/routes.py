@@ -254,6 +254,16 @@ async def jobhunt_app():
     return path.read_text(encoding="utf-8")
 
 
+@router.get("/app/energy", response_class=HTMLResponse)
+@router.get("/app/energy/", response_class=HTMLResponse)
+async def energy_viewer():
+    """Energy Planner: the agent answers only by composing interfaces across turns."""
+    path = Path(__file__).parent / "client" / "energy.html"
+    if not path.exists():
+        raise HTTPException(500, "energy viewer missing")
+    return path.read_text(encoding="utf-8")
+
+
 @router.get("/app/trip", response_class=HTMLResponse)
 @router.get("/app/trip/", response_class=HTMLResponse)
 async def trip_viewer():

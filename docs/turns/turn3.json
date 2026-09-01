@@ -1,0 +1,346 @@
+{
+  "label": "Reduction plan",
+  "provider": "ollama",
+  "model": "qwen3:8b",
+  "component_count": 10,
+  "component_types": [
+    "Button",
+    "ProgressBar",
+    "Row",
+    "SankeyDiagram",
+    "StatTile",
+    "Text",
+    "Timeline"
+  ],
+  "surface": {
+    "root": "r1",
+    "components": [
+      {
+        "id": "h1",
+        "type": "Text",
+        "variant": "heading",
+        "text": {
+          "$bind": "/title"
+        }
+      },
+      {
+        "id": "b1",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/intro"
+        }
+      },
+      {
+        "id": "r1",
+        "type": "Row",
+        "children": [
+          "s0",
+          "s1",
+          "s2",
+          "h1",
+          "b1",
+          "t1",
+          "p1",
+          "b2"
+        ],
+        "justify": "spaceBetween"
+      },
+      {
+        "id": "s0",
+        "type": "StatTile",
+        "label": "Progress",
+        "value": {
+          "$bind": "/metric_0_value"
+        },
+        "unit": "%",
+        "tone": "good"
+      },
+      {
+        "id": "s1",
+        "type": "StatTile",
+        "label": "Projected kWh Saved",
+        "value": {
+          "$bind": "/metric_1_value"
+        },
+        "unit": {
+          "$bind": "/flow_unit"
+        },
+        "tone": "good"
+      },
+      {
+        "id": "s2",
+        "type": "StatTile",
+        "label": "Annual Cost Savings",
+        "value": {
+          "$bind": "/metric_2_value"
+        },
+        "unit": "USD",
+        "tone": "good"
+      },
+      {
+        "id": "t1",
+        "type": "Timeline",
+        "events": {
+          "$bind": "/section_events"
+        }
+      },
+      {
+        "id": "s2",
+        "type": "SankeyDiagram",
+        "title": "Projected Source-to-Sink Flow",
+        "nodes": {
+          "$bind": "/flow_nodes"
+        },
+        "links": {
+          "$bind": "/flow_links"
+        },
+        "unit": "kWh"
+      },
+      {
+        "id": "p1",
+        "type": "ProgressBar",
+        "value": {
+          "$bind": "/progress_value"
+        },
+        "max": {
+          "$bind": "/progress_max"
+        },
+        "tone": "good"
+      },
+      {
+        "id": "b2",
+        "type": "Button",
+        "label": {
+          "$bind": "/choice_0_label"
+        },
+        "onPress": {
+          "action": "request_data"
+        }
+      }
+    ],
+    "dataModel": {
+      "title": "Heating Reduction Plan",
+      "goal": "Show my household energy use as a source-to-sink flow with metrics and comparable category series.\nDiagnosed load: Heating. Latest pick: Build a reduction plan.\nCompose the NEXT interface only: an ordered reduction plan as sections/timeline events, a progress value toward savings, metrics for projected kWh saved, and a projected source-to-sink flow after the plan. At most one short next-step choice. Prefer structured fields over long prose.",
+      "summary": "A 4-week plan to reduce heating energy use with projected savings and system flow analysis.",
+      "results": [],
+      "items": [],
+      "metrics": [
+        {
+          "label": "Progress",
+          "value": "65%",
+          "unit": "%"
+        },
+        {
+          "label": "Projected kWh Saved",
+          "value": 700.0,
+          "unit": "kWh"
+        },
+        {
+          "label": "Annual Cost Savings",
+          "value": "$182",
+          "unit": "USD"
+        }
+      ],
+      "spark": [],
+      "table_rows": [
+        {
+          "Category": "Source",
+          "Before Plan": "Grid (12,000 kWh)",
+          "After Plan": "Grid (9,000 kWh)"
+        },
+        {
+          "Category": "Source",
+          "Before Plan": "Fuel (3,000 kWh)",
+          "After Plan": "Fuel (2,500 kWh)"
+        },
+        {
+          "Category": "Sink",
+          "Before Plan": "Losses (2,000 kWh)",
+          "After Plan": "Losses (1,500 kWh)"
+        }
+      ],
+      "item_count": 0,
+      "source_count": 0,
+      "subjects": [
+        "Audit Insulation Now"
+      ],
+      "timeline": [
+        {
+          "time": "136",
+          "label": "run_started"
+        },
+        {
+          "time": "137",
+          "label": "graph_patched"
+        },
+        {
+          "time": "138",
+          "label": "task_started content"
+        },
+        {
+          "time": "139",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "140",
+          "label": "graph_patched"
+        },
+        {
+          "time": "141",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "intro": "A 4-week plan to reduce heating energy use with projected savings and system flow analysis.",
+      "section_0_heading": "Week 1: Insulation Audit",
+      "section_0_points": "\u2022 Inspect attic/duct insulation\n\u2022 Seal window/door gaps\n\u2022 Install draft stoppers",
+      "section_1_heading": "Week 2: Thermostat Optimization",
+      "section_1_points": "\u2022 Program thermostat to 68\u00b0F (20\u00b0C) baseline\n\u2022 Install smart thermostat\n\u2022 Set back 5\u00b0F during sleep",
+      "section_2_heading": "Week 3: System Upgrade",
+      "section_2_points": "\u2022 Replace old furnace with AFUE 95%+ model\n\u2022 Install programmable boiler controls",
+      "section_3_heading": "Week 4: Monitoring",
+      "section_3_points": "\u2022 Track weekly kWh usage\n\u2022 Adjust settings based on weather patterns",
+      "sections": [
+        {
+          "heading": "Week 1: Insulation Audit",
+          "points": [
+            "Inspect attic/duct insulation",
+            "Seal window/door gaps",
+            "Install draft stoppers"
+          ]
+        },
+        {
+          "heading": "Week 2: Thermostat Optimization",
+          "points": [
+            "Program thermostat to 68\u00b0F (20\u00b0C) baseline",
+            "Install smart thermostat",
+            "Set back 5\u00b0F during sleep"
+          ]
+        },
+        {
+          "heading": "Week 3: System Upgrade",
+          "points": [
+            "Replace old furnace with AFUE 95%+ model",
+            "Install programmable boiler controls"
+          ]
+        },
+        {
+          "heading": "Week 4: Monitoring",
+          "points": [
+            "Track weekly kWh usage",
+            "Adjust settings based on weather patterns"
+          ]
+        }
+      ],
+      "section_events": [
+        {
+          "time": "Week 1: Insulation Audit",
+          "label": "Inspect attic/duct insulation; Seal window/door gaps; Install draft stoppers"
+        },
+        {
+          "time": "Week 2: Thermostat Optimization",
+          "label": "Program thermostat to 68\u00b0F (20\u00b0C) baseline; Install smart thermostat; Set back 5\u00b0F during sleep"
+        },
+        {
+          "time": "Week 3: System Upgrade",
+          "label": "Replace old furnace with AFUE 95%+ model; Install programmable boiler controls"
+        },
+        {
+          "time": "Week 4: Monitoring",
+          "label": "Track weekly kWh usage; Adjust settings based on weather patterns"
+        }
+      ],
+      "metric_0_value": "65%",
+      "metric_1_value": 700.0,
+      "metric_2_value": "$182",
+      "table_columns": [
+        "Category",
+        "Before Plan",
+        "After Plan"
+      ],
+      "choices": [
+        {
+          "id": "audit",
+          "label": "Audit Insulation Now"
+        }
+      ],
+      "choice_0_label": "Audit Insulation Now",
+      "flow_nodes": [
+        {
+          "id": "grid",
+          "label": "Electric Grid"
+        },
+        {
+          "id": "fuel",
+          "label": "Fossil Fuel"
+        },
+        {
+          "id": "heating",
+          "label": "Space Heating"
+        },
+        {
+          "id": "losses",
+          "label": "Thermal Losses"
+        }
+      ],
+      "flow_links": [
+        {
+          "source": "grid",
+          "target": "heating",
+          "value": 12000.0
+        },
+        {
+          "source": "fuel",
+          "target": "heating",
+          "value": 3000.0
+        },
+        {
+          "source": "heating",
+          "target": "losses",
+          "value": 2000.0
+        }
+      ],
+      "flow": {
+        "nodes": [
+          {
+            "id": "grid",
+            "label": "Electric Grid"
+          },
+          {
+            "id": "fuel",
+            "label": "Fossil Fuel"
+          },
+          {
+            "id": "heating",
+            "label": "Space Heating"
+          },
+          {
+            "id": "losses",
+            "label": "Thermal Losses"
+          }
+        ],
+        "links": [
+          {
+            "source": "grid",
+            "target": "heating",
+            "value": 12000.0
+          },
+          {
+            "source": "fuel",
+            "target": "heating",
+            "value": 3000.0
+          },
+          {
+            "source": "heating",
+            "target": "losses",
+            "value": 2000.0
+          }
+        ],
+        "unit": "kWh"
+      },
+      "flow_unit": "kWh"
+    }
+  }
+}

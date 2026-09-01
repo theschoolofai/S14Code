@@ -78,6 +78,16 @@
   .Map .legend{display:flex;flex-wrap:wrap;gap:8px 14px;padding:8px 12px;font-size:12px}
   .Map .legend span{display:inline-flex;align-items:center;gap:6px}
   .Map .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+  .SankeyDiagram{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  .SankeyDiagram .ct{padding:10px 12px;font-size:12px;font-weight:600;color:var(--ink-muted);border-bottom:1px solid var(--rule);font-family:var(--font-mono)}
+  .SankeyDiagram .cap{padding:8px 12px;font-size:12px;color:var(--ink-muted);border-top:1px solid var(--rule)}
+  .SankeyDiagram .legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 12px;font-size:12px;color:var(--ink-body)}
+  .KanbanBoard{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  .KanbanBoard>.ct{padding:10px 12px;font-size:12px;font-weight:600;color:var(--ink-muted);border-bottom:1px solid var(--rule);font-family:var(--font-mono)}
+  .KanbanBoard .lanes{display:flex;gap:10px;padding:12px;overflow:auto}
+  .KanbanBoard .lane{flex:1;min-width:140px;background:var(--surface-alt);border:1px solid var(--rule);border-radius:10px;padding:8px}
+  .KanbanBoard .lane>.ct{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-muted);margin-bottom:8px;font-family:var(--font-mono)}
+  .KanbanBoard .card{display:block;width:100%;text-align:left;border:1px solid var(--rule);background:var(--surface);border-radius:8px;padding:8px;margin:0 0 8px;font-size:13px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -156,6 +166,7 @@ const RENDERERS = {
   CodeDiff:(c,ctx)=>renderCodeDiff(c,ctx),
   Map:(c,ctx)=>renderMap(c,ctx),
   KanbanBoard:(c,ctx)=>renderKanban(c,ctx),
+  SankeyDiagram:(c,ctx)=>renderSankey(c,ctx),
 };
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
@@ -266,6 +277,83 @@ function renderKanban(c,ctx){
       if(tappable){box.type="button";box.onclick=()=>emitAction(action,{card:card&&card.title,lane:col&&col.title});}
       lane.append(box);});lanes.append(lane);});
   e.append(lanes);return e;
+}
+
+function renderSankey(c,ctx){
+  const e=$("div","SankeyDiagram");
+  if(c.title){const t=$("div","ct");t.append(text(c.title));e.append(t);}
+  let nodes=resolve(c.nodes,ctx.dm); let links=resolve(c.links,ctx.dm);
+  if(nodes&&!Array.isArray(nodes)&&Array.isArray(nodes.nodes))nodes=nodes.nodes;
+  if(links&&!Array.isArray(links)&&Array.isArray(links.links))links=links.links;
+  nodes=Array.isArray(nodes)?nodes:[]; links=Array.isArray(links)?links:[];
+  const unit=String(c.unit||(ctx.dm&&ctx.dm.flow_unit)||"");
+  const byId={}; nodes.forEach(n=>{if(n&&n.id!=null)byId[String(n.id)]={id:String(n.id),label:String(n.label||n.id)};});
+  links.forEach(l=>{
+    if(!l)return;
+    const s=String(l.source), t=String(l.target);
+    if(!byId[s])byId[s]={id:s,label:s};
+    if(!byId[t])byId[t]={id:t,label:t};
+  });
+  const ids=Object.keys(byId);
+  const sources=new Set(links.map(l=>String(l&&l.source)));
+  const targets=new Set(links.map(l=>String(l&&l.target)));
+  const left=ids.filter(id=>sources.has(id)&&!targets.has(id));
+  const right=ids.filter(id=>targets.has(id)&&!sources.has(id));
+  const mid=ids.filter(id=>!left.includes(id)&&!right.includes(id));
+  const cols=[left.length?left:ids.slice(0,Math.ceil(ids.length/2)), mid, right.length?right:ids.slice(Math.ceil(ids.length/2))];
+  const colX=[40,280,520];
+  const w=560,h=Math.max(220, Math.max(left.length,mid.length,right.length,2)*48+40);
+  const pos={};
+  cols.forEach((col,ci)=>{
+    const usable=col.filter(Boolean);
+    usable.forEach((id,i)=>{
+      const y=30+(i+0.5)*((h-40)/Math.max(usable.length,1));
+      pos[id]={x:colX[ci],y,label:byId[id].label};
+    });
+  });
+  const maxV=Math.max(...links.map(l=>+l.value||0),1);
+  const ns="http://www.w3.org/2000/svg";
+  const svg=document.createElementNS(ns,"svg");
+  svg.setAttribute("viewBox","0 0 "+w+" "+h);svg.setAttribute("width","100%");svg.setAttribute("height",String(Math.min(h,360)));
+  const bg=document.createElementNS(ns,"rect");bg.setAttribute("x","0");bg.setAttribute("y","0");bg.setAttribute("width",w);bg.setAttribute("height",h);bg.setAttribute("fill","#F8FAFC");svg.append(bg);
+  const palette=["#0F766E","#1D4ED8","#B45309","#7C3AED","#BE123C","#0E7490"];
+  links.forEach((l,i)=>{
+    const a=pos[String(l.source)], b=pos[String(l.target)]; if(!a||!b)return;
+    const thick=Math.max(4, (+l.value||0)/maxV*28);
+    const path=document.createElementNS(ns,"path");
+    const mx=(a.x+b.x)/2;
+    path.setAttribute("d",`M${a.x+8} ${a.y} C ${mx} ${a.y}, ${mx} ${b.y}, ${b.x-8} ${b.y}`);
+    path.setAttribute("fill","none");path.setAttribute("stroke",palette[i%palette.length]);
+    path.setAttribute("stroke-width",String(thick));path.setAttribute("stroke-opacity","0.45");
+    svg.append(path);
+    const midX=(a.x+b.x)/2, midY=(a.y+b.y)/2;
+    const tv=document.createElementNS(ns,"text");tv.setAttribute("x",String(midX));tv.setAttribute("y",String(midY-2));
+    tv.setAttribute("text-anchor","middle");tv.setAttribute("font-size","10");tv.setAttribute("fill","#475569");
+    tv.setAttribute("font-family","ui-monospace,Menlo,monospace");
+    tv.textContent=String(l.value)+(unit?" "+unit:"");svg.append(tv);
+  });
+  Object.keys(pos).forEach(id=>{
+    const p=pos[id];
+    const g=document.createElementNS(ns,"g");
+    const r=document.createElementNS(ns,"rect");r.setAttribute("x",String(p.x-8));r.setAttribute("y",String(p.y-12));
+    r.setAttribute("width","16");r.setAttribute("height","24");r.setAttribute("rx","4");r.setAttribute("fill","#0F172A");g.append(r);
+    const lab=document.createElementNS(ns,"text");lab.setAttribute("x",String(p.x+14));lab.setAttribute("y",String(p.y+4));
+    lab.setAttribute("font-size","11");lab.setAttribute("fill","#0F172A");lab.setAttribute("font-family","ui-sans-serif,system-ui");
+    lab.textContent=p.label;g.append(lab);svg.append(g);
+  });
+  e.append(svg);
+  if(links.length){
+    const leg=$("div","legend");
+    links.slice(0,8).forEach((l,i)=>{
+      const s=$("span"); const d=$("span","dot"); d.style.background=palette[i%palette.length];
+      const src=(byId[String(l.source)]||{}).label||l.source;
+      const dst=(byId[String(l.target)]||{}).label||l.target;
+      s.append(d,text(`${src} → ${dst}: ${l.value}${unit?" "+unit:""}`)); leg.append(s);
+    });
+    e.append(leg);
+  }
+  if(c.caption){const cap=$("div","cap");cap.append(text(c.caption));e.append(cap);}
+  return e;
 }
 
 function emitAction(name,args){ // the only way the surface changes the world: a named, validated event

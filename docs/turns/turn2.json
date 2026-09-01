@@ -1,0 +1,316 @@
+{
+  "label": "Heating diagnosis",
+  "provider": "ollama",
+  "model": "qwen3:8b",
+  "component_count": 9,
+  "component_types": [
+    "BarChart",
+    "Button",
+    "DataTable",
+    "ProgressBar",
+    "Row",
+    "SankeyDiagram",
+    "Text"
+  ],
+  "surface": {
+    "root": "m",
+    "components": [
+      {
+        "id": "h1",
+        "type": "Text",
+        "variant": "heading",
+        "text": {
+          "$bind": "/title"
+        }
+      },
+      {
+        "id": "s",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/summary"
+        }
+      },
+      {
+        "id": "m",
+        "type": "Row",
+        "align": "stretch",
+        "justify": "spaceBetween",
+        "children": [
+          "h1",
+          "s",
+          "t",
+          "b",
+          "f",
+          "b0",
+          "b1",
+          "p"
+        ]
+      },
+      {
+        "id": "t",
+        "type": "DataTable",
+        "columns": "End-Use,Energy Use,Cost,Emissions",
+        "rows": {
+          "$bind": "/table_rows"
+        }
+      },
+      {
+        "id": "b",
+        "type": "BarChart",
+        "title": "Energy Use Comparison",
+        "data": {
+          "$bind": "/series"
+        },
+        "xKey": "label",
+        "yKey": "value"
+      },
+      {
+        "id": "f",
+        "type": "SankeyDiagram",
+        "title": "Heating Flow",
+        "nodes": {
+          "$bind": "/flow_nodes"
+        },
+        "links": {
+          "$bind": "/flow_links"
+        },
+        "unit": "kWh"
+      },
+      {
+        "id": "b0",
+        "type": "Button",
+        "label": {
+          "$bind": "/choice_0_label"
+        },
+        "onPress": {
+          "action": "request_data"
+        }
+      },
+      {
+        "id": "b1",
+        "type": "Button",
+        "label": {
+          "$bind": "/choice_1_label"
+        },
+        "onPress": {
+          "action": "request_data"
+        }
+      },
+      {
+        "id": "p",
+        "type": "ProgressBar",
+        "value": {
+          "$bind": "/progress_value"
+        },
+        "max": {
+          "$bind": "/progress_max"
+        },
+        "tone": "neutral"
+      }
+    ],
+    "dataModel": {
+      "title": "Heating Energy Flow Analysis",
+      "goal": "Show my household energy use as a source-to-sink flow with metrics and comparable category series. Offer exactly three short next-step choices naming one load each (Heating, Cooling, Appliances). Do not name any UI component types.\nSo far the user then picked: Heating.\nThe user wants to diagnose load: Heating.\nCompose the NEXT interface only: metrics for Heating, a comparison table of contributing end-uses, a numeric series or bar comparison, and exactly two short next-step choices including \"Build a reduction plan\". Also include a source-to-sink flow focused on Heating. Prefer structured fields over long prose.",
+      "summary": "Heating Energy Flow Analysis",
+      "results": [],
+      "items": [],
+      "metrics": [
+        {
+          "label": "Monthly Consumption",
+          "value": 1200.0,
+          "unit": "kWh"
+        },
+        {
+          "label": "Monthly Cost",
+          "value": 150.0,
+          "unit": "$"
+        },
+        {
+          "label": "CO2 Emissions",
+          "value": 1.2,
+          "unit": "tons"
+        }
+      ],
+      "spark": [
+        1200.0,
+        300.0,
+        150.0
+      ],
+      "table_rows": [
+        {
+          "End-Use": "Heating",
+          "Energy Use": "1200 kWh",
+          "Cost": "$150",
+          "Emissions": "1.2 tons"
+        },
+        {
+          "End-Use": "Water Heating",
+          "Energy Use": "300 kWh",
+          "Cost": "$45",
+          "Emissions": "0.3 tons"
+        },
+        {
+          "End-Use": "Lighting",
+          "Energy Use": "150 kWh",
+          "Cost": "$22",
+          "Emissions": "0.15 tons"
+        }
+      ],
+      "item_count": 0,
+      "source_count": 0,
+      "subjects": [
+        "Build a reduction plan",
+        "Audit insulation"
+      ],
+      "timeline": [
+        {
+          "time": "120",
+          "label": "run_started"
+        },
+        {
+          "time": "121",
+          "label": "graph_patched"
+        },
+        {
+          "time": "122",
+          "label": "task_started content"
+        },
+        {
+          "time": "123",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "124",
+          "label": "graph_patched"
+        },
+        {
+          "time": "125",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "metric_0_value": 1200.0,
+      "metric_1_value": 150.0,
+      "metric_2_value": 1.2,
+      "series": [
+        {
+          "label": "Heating",
+          "value": 1200.0
+        },
+        {
+          "label": "Water Heating",
+          "value": 300.0
+        },
+        {
+          "label": "Lighting",
+          "value": 150.0
+        }
+      ],
+      "series_values": [
+        1200.0,
+        300.0,
+        150.0
+      ],
+      "table_columns": [
+        "End-Use",
+        "Energy Use",
+        "Cost",
+        "Emissions"
+      ],
+      "choices": [
+        {
+          "id": "build_plan",
+          "label": "Build a reduction plan"
+        },
+        {
+          "id": "audit_insulation",
+          "label": "Audit insulation"
+        }
+      ],
+      "choice_0_label": "Build a reduction plan",
+      "choice_1_label": "Audit insulation",
+      "flow_nodes": [
+        {
+          "id": "Heating Source",
+          "label": "Furnace"
+        },
+        {
+          "id": "Distribution",
+          "label": "Ducts"
+        },
+        {
+          "id": "End-Use",
+          "label": "Radiators"
+        },
+        {
+          "id": "heating_source",
+          "label": "Heating Source"
+        },
+        {
+          "id": "distribution",
+          "label": "Distribution"
+        },
+        {
+          "id": "end_use",
+          "label": "End-Use"
+        }
+      ],
+      "flow_links": [
+        {
+          "source": "heating_source",
+          "target": "distribution",
+          "value": 1000.0
+        },
+        {
+          "source": "distribution",
+          "target": "end_use",
+          "value": 1200.0
+        }
+      ],
+      "flow": {
+        "nodes": [
+          {
+            "id": "Heating Source",
+            "label": "Furnace"
+          },
+          {
+            "id": "Distribution",
+            "label": "Ducts"
+          },
+          {
+            "id": "End-Use",
+            "label": "Radiators"
+          },
+          {
+            "id": "heating_source",
+            "label": "Heating Source"
+          },
+          {
+            "id": "distribution",
+            "label": "Distribution"
+          },
+          {
+            "id": "end_use",
+            "label": "End-Use"
+          }
+        ],
+        "links": [
+          {
+            "source": "heating_source",
+            "target": "distribution",
+            "value": 1000.0
+          },
+          {
+            "source": "distribution",
+            "target": "end_use",
+            "value": 1200.0
+          }
+        ],
+        "unit": "kWh"
+      },
+      "flow_unit": "kWh"
+    }
+  }
+}
