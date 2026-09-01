@@ -32,17 +32,18 @@ Two services, not three. The Session 14 UI is part of the runtime on 8113.
 | `glc_v3` | `http://127.0.0.1:8111` | Models, keys, routing and channels (owns every credential) |
 | `S14Code` HTTP | `http://127.0.0.1:8113` | Agent API (graph, memory, documents, JSON-RPC A2A) **and** the UI (catalog, validator, surface, AG-UI stream, render client) |
 | `S14Code` gRPC | `127.0.0.1:8114` | Official A2A gRPC service |
-| Ollama | `http://127.0.0.1:11434` | Phi-4 segmentation and Nomic embeddings |
+| Ollama | `http://127.0.0.1:11434` | Local chat model (`qwen3:8b`), Phi-4 segmentation, Nomic embeddings |
 
 ## Requirements
 
 - Python 3.11 or newer
 - [`uv`](https://docs.astral.sh/uv/)
 - A running `glc_v3` (for live runs and the generative UI loop)
-- A running Ollama with `phi4` and `nomic-embed-text` (for live semantic chunking)
+- A running Ollama with `qwen3:8b`, `phi4`/`phi4-mini`, and `nomic-embed-text`
 
 ```bash
-ollama pull phi4
+ollama pull qwen3:8b
+ollama pull phi4-mini
 ollama pull nomic-embed-text
 ollama serve
 ```
@@ -52,13 +53,30 @@ above — they replay real captured output.
 
 ## Install and run
 
+Configure `glc_v3` for Ollama only (no Gemini/Groq keys required):
+
 ```bash
+# in glc_v3/.env
+OLLAMA_MODEL=qwen3:8b
+OLLAMA_URL=http://localhost:11434
+LLM_ORDER=ollama
+GLC_PORT=8111
+```
+
+Then start both services:
+
+```bash
+# terminal 1
+cd ../glc_v3 && uv sync && uv run glc serve
+
+# terminal 2
+cd ../S14Code
 uv sync
 
 export GLC_BASE_URL=http://127.0.0.1:8111
-export S13_GATEWAY_PROVIDER=gemini
+export S13_GATEWAY_PROVIDER=ollama
 export S13_SANDBOX_ROOT="$PWD/sandbox"
-export S13_CHUNK_MODEL=phi4:latest
+export S13_CHUNK_MODEL=phi4-mini:latest
 export S13_LIVE_SEMANTIC_CHUNKING=1
 
 uv run s14code serve            # http://127.0.0.1:8113  (agent API + UI)
@@ -75,7 +93,44 @@ curl http://127.0.0.1:8113/v1/catalog
 open  http://127.0.0.1:8113/s/harness      # the render client, which executes nothing
 open  http://127.0.0.1:8113/app            # generic UI-only app loop
 open  http://127.0.0.1:8113/app/trip       # Trip Planner (every turn is a composed interface)
+open  http://127.0.0.1:8113/app/energy     # Energy Planner (SankeyDiagram multi-turn UI)
 ```
+
+## Energy Planner (UI-only application)
+
+`GET /app/energy` is a three-turn household energy planner. Synthetic identities
+only (`tenant_id=course`, `project_id=s14-energy`, `user_id=resident-01`). Each
+turn posts `respond_as:"ui"`, reads `/v1/runs/{id}/composed`, and renders a
+catalog-validated surface. The custom `SankeyDiagram` component draws source-to-
+sink flows with SVG text nodes only. Suggested path:
+
+1. Household overview (StatTiles + Sankey + Buttons)
+2. Diagnose one load such as Heating (DataTable / BarChart)
+3. Reduction plan (Timeline + ProgressBar + projected Sankey)
+
+Adversarial proof (no live model required):
+
+```bash
+uv run python proofs/adversarial_energy.py   # -> proofs/adversarial_energy.json
+```
+
+Live Ollama compose proof (gateway + Ollama required; does **not** name SankeyDiagram):
+
+```bash
+S13_GATEWAY_PROVIDER=ollama GLC_BASE_URL=http://127.0.0.1:8111 \
+  uv run python proofs/harness_sankey.py     # -> proofs/harness_sankey.json
+```
+
+Temporary public demo (local stack must stay up):
+
+```bash
+cloudflared tunnel --url http://127.0.0.1:8113
+# then open https://<tunnel>/app/energy
+```
+
+Current quick-tunnel URL while this checkout is serving locally:
+
+https://cloud-inquiries-mirrors-washington.trycloudflare.com/app/energy
 
 ## Trip Planner (UI-only application)
 
@@ -131,6 +186,7 @@ All served by the runtime on 8113, defined in
 | `GET /s/{id}` | the render client, pointed at a run |
 | `GET /app` | bare-minimal UI-only conversation shell |
 | `GET /app/trip` | Trip Planner shell (destination → days+map → revision with CodeDiff) |
+| `GET /app/energy` | Energy Planner shell (overview Sankey → diagnose load → reduction plan) |
 | `GET /jobhunt` | Career Pipeline shell with KanbanBoard and adversarial proof flow |
 
 ## The generative loop (UI composed by the harness)
@@ -162,6 +218,8 @@ Everything the Session 14 widgets replay is real captured output under `proofs/`
 | `harness_run.json` | `harness_run.py` | a real live-graph run → the model composes a 19-component surface |
 | `harness_selfcorrect.json` | `harness_selfcorrect.py` | the planner catches weak Berlin evidence and re-researches |
 | `harness_codediff.json` | `harness_codediff.py` | live compose includes `CodeDiff` without naming it in the user prompt |
+| `harness_sankey.json` | `harness_sankey.py` | live Ollama compose includes `SankeyDiagram` without naming it |
+| `adversarial_energy.json` | `adversarial_energy.py` | RawHtml / Sankey markup / unregistered action refused; safe heading survives |
 | `adversarial_trip.json` | `adversarial_trip.py` | RawHtml / markup / unregistered action refused; safe heading survives |
 | `generated_surface.json` | `generate_live.py` | a local model's output caught by the validator |
 | `gemini_surface.json` | `generate_gemini.py` | Gemini's raw output via the gateway |

@@ -1,0 +1,55 @@
+[
+  {
+    "turn": 1,
+    "run_id": "run-213a3e096b74",
+    "http": 200,
+    "provider": "ollama",
+    "model": "qwen3:8b",
+    "types": [
+      "Button",
+      "ProgressBar",
+      "Row",
+      "SankeyDiagram",
+      "Text",
+      "Timeline"
+    ],
+    "count": 9,
+    "run_status": "completed"
+  },
+  {
+    "turn": 2,
+    "run_id": "run-7ef42daa5bd6",
+    "http": 200,
+    "provider": "ollama",
+    "model": "qwen3:8b",
+    "types": [
+      "BarChart",
+      "Button",
+      "DataTable",
+      "ProgressBar",
+      "Row",
+      "SankeyDiagram",
+      "Text"
+    ],
+    "count": 9,
+    "run_status": "completed"
+  },
+  {
+    "turn": 3,
+    "run_id": "run-ae11bd5d2ada",
+    "http": 200,
+    "provider": "ollama",
+    "model": "qwen3:8b",
+    "types": [
+      "Button",
+      "ProgressBar",
+      "Row",
+      "SankeyDiagram",
+      "StatTile",
+      "Text",
+      "Timeline"
+    ],
+    "count": 10,
+    "run_status": "completed"
+  }
+]

@@ -559,8 +559,8 @@ def test_manifest_surfaces_every_registered_action():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """26 types: 15 A2UI-Basic + 11 custom, each tagged with its source."""
-    assert len(COMPONENTS) == 26
+    """27 types: 15 A2UI-Basic + 12 custom, each tagged with its source."""
+    assert len(COMPONENTS) == 27
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -571,7 +571,7 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     }
     assert by_source["custom"] == {
         "BarChart", "Sparkline", "StatTile", "ProgressBar", "Timeline", "DataTable",
-        "Notice", "ApprovalCard", "CodeDiff", "Map", "KanbanBoard",
+        "Notice", "ApprovalCard", "CodeDiff", "Map", "KanbanBoard", "SankeyDiagram",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
@@ -580,6 +580,125 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
     m = catalog_manifest()
     assert m["components"]["Text"]["source"] == "a2ui-basic"
     assert m["components"]["BarChart"]["source"] == "custom"
+    assert m["components"]["SankeyDiagram"]["source"] == "custom"
+
+
+def test_sankey_surface_validates_clean():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["h", "s"]},
+            {"id": "h", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+            {
+                "id": "s",
+                "type": "SankeyDiagram",
+                "title": "Household energy",
+                "nodes": {"$bind": "/flow_nodes"},
+                "links": {"$bind": "/flow_links"},
+                "unit": "kWh",
+                "caption": "Monthly flow",
+            },
+        ],
+        "dataModel": {
+            "title": "Energy overview",
+            "flow_nodes": [
+                {"id": "grid", "label": "Grid"},
+                {"id": "heating", "label": "Heating"},
+                {"id": "cooling", "label": "Cooling"},
+            ],
+            "flow_links": [
+                {"source": "grid", "target": "heating", "value": 420},
+                {"source": "grid", "target": "cooling", "value": 180},
+            ],
+        },
+    }
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert any(c["type"] == "SankeyDiagram" for c in result.accepted)
+
+
+def test_sankey_markup_caption_is_refused():
+    r = _reject({
+        "id": "s",
+        "type": "SankeyDiagram",
+        "title": "Flow",
+        "nodes": {"$bind": "/flow_nodes"},
+        "links": {"$bind": "/flow_links"},
+        "caption": "<script>steal()</script>",
+    })
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "caption"
+
+
+def test_sankey_unknown_sibling_and_unregistered_action_are_refused():
+    surface = {
+        "root": "root",
+        "components": [
+            {"id": "root", "type": "Column", "children": ["ok", "evil", "btn"]},
+            {"id": "ok", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+            {
+                "id": "evil",
+                "type": "RawHtml",
+                "html": "<img src=x onerror=alert(1)>",
+            },
+            {"id": "btn", "type": "Button", "label": "Wire funds", "onPress": {"action": "transfer_all_funds"}},
+        ],
+        "dataModel": {"title": "Safe"},
+    }
+    result = validate_surface(surface)
+    assert any(c["type"] == "Text" for c in result.accepted)
+    assert all(c.get("type") != "RawHtml" for c in result.accepted)
+    invariants = {r.invariant for r in result.rejections}
+    assert Invariant.CATALOG in invariants
+    assert Invariant.EVENT in invariants
+
+
+def test_clean_sankey_flow_normalizes_links():
+    from s13code.runtime import _clean_sankey_flow
+    cleaned = _clean_sankey_flow({
+        "unit": "kWh",
+        "links": [
+            {"source": "Grid", "target": "Heating", "value": 100},
+            {"from": "Grid", "to": "Appliances", "amount": 40},
+        ],
+    })
+    assert cleaned is not None
+    assert cleaned["unit"] == "kWh"
+    assert len(cleaned["links"]) == 2
+    assert {n["id"] for n in cleaned["nodes"]} >= {"grid", "heating", "appliances"}
+
+
+def test_fallback_surface_includes_sankey_from_flow_data():
+    from s13code.runtime import _fallback_surface_from_data_model
+    surface = _fallback_surface_from_data_model({
+        "title": "Energy",
+        "intro": "Overview",
+        "metrics": [{"label": "Total", "value": 900, "unit": "kWh"}],
+        "metric_0_value": 900,
+        "flow_nodes": [{"id": "grid", "label": "Grid"}, {"id": "heat", "label": "Heating"}],
+        "flow_links": [{"source": "grid", "target": "heat", "value": 400}],
+        "flow_unit": "kWh",
+        "series": [{"label": "Heat", "value": 400}],
+        "choices": [{"id": "heating", "label": "Heating"}],
+        "choice_0_label": "Heating",
+    })
+    result = validate_surface(surface)
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    types = {c["type"] for c in result.accepted}
+    assert "SankeyDiagram" in types
+    assert "StatTile" in types
+    assert "Button" in types
+
+
+def test_reachable_ids_ignores_dict_children():
+    from s13code.runtime import _reachable_component_ids
+    comps = [
+        {"id": "root", "type": "Column", "children": ["a", {"bad": True}]},
+        {"id": "a", "type": "Text", "text": {"$bind": "/title"}},
+        {"id": "orphan", "type": "Notice", "text": {"$bind": "/n"}},
+    ]
+    seen = _reachable_component_ids("root", comps)
+    assert seen == {"root", "a"}
 
 
 # --------------------------------------------------------------------------- #
@@ -647,6 +766,18 @@ def test_route_trip_app_serves_shell_with_codediff_renderer(client):
     assert "s14-trip" in resp.text
     assert "traveler-01" in resp.text
     assert "respond_as" in resp.text
+
+
+def test_route_energy_app_serves_shell_with_sankey_renderer(client):
+    resp = client.get("/app/energy")
+    assert resp.status_code == 200
+    assert "SankeyDiagram" in resp.text
+    assert "renderSankey" in resp.text
+    assert "s14-energy" in resp.text
+    assert "resident-01" in resp.text
+    assert "respond_as" in resp.text
+    assert "createTextNode" in resp.text
+    assert not re.search(r"innerHTML\s*=", resp.text)
 
 
 def test_route_validate_rejects_a_wormhole_on_catalog(client):
@@ -775,6 +906,9 @@ def test_render_client_never_uses_innerhtml_and_documents_the_contract():
     # The one place the word appears is the documented safety contract itself.
     assert html.count("innerHTML") == 1
     assert "NEVER sets" in html and "innerHTML from a bound value" in html
+    assert "SankeyDiagram" in html
+    assert "renderSankey" in html
+    assert "createElementNS" in html
 
 
 def test_render_client_reconnects_and_rebuilds_from_a_state_snapshot():

@@ -1,0 +1,72 @@
+{
+  "description": "Sankey energy planner adversarial suite: catalog, data-not-code, event.",
+  "all_matched": true,
+  "cases": [
+    {
+      "name": "raw-html-type",
+      "expect_invariant": "catalog",
+      "ok": false,
+      "invariants": [
+        "catalog"
+      ],
+      "rejections": [
+        {
+          "component_id": "evil",
+          "field": "type",
+          "invariant": "catalog",
+          "reason": "unknown component type 'RawHtml'"
+        }
+      ],
+      "accepted_types": [
+        "Column",
+        "Text"
+      ],
+      "safe_sibling_survived": true,
+      "matched": true
+    },
+    {
+      "name": "markup-in-sankey-caption",
+      "expect_invariant": "data-not-code",
+      "ok": false,
+      "invariants": [
+        "data-not-code"
+      ],
+      "rejections": [
+        {
+          "component_id": "evil",
+          "field": "caption",
+          "invariant": "data-not-code",
+          "reason": "value carries markup"
+        }
+      ],
+      "accepted_types": [
+        "Column",
+        "Text"
+      ],
+      "safe_sibling_survived": true,
+      "matched": true
+    },
+    {
+      "name": "unregistered-action",
+      "expect_invariant": "event",
+      "ok": false,
+      "invariants": [
+        "event"
+      ],
+      "rejections": [
+        {
+          "component_id": "evil",
+          "field": "onPress",
+          "invariant": "event",
+          "reason": "unregistered action 'exfiltrate_meter'"
+        }
+      ],
+      "accepted_types": [
+        "Column",
+        "Text"
+      ],
+      "safe_sibling_survived": true,
+      "matched": true
+    }
+  ]
+}
