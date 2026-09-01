@@ -121,16 +121,19 @@ S13_GATEWAY_PROVIDER=ollama GLC_BASE_URL=http://127.0.0.1:8111 \
   uv run python proofs/harness_sankey.py     # -> proofs/harness_sankey.json
 ```
 
-Temporary public demo (local stack must stay up):
+### Hosted app (always-on, free)
+
+GitHub Pages cannot run Ollama or FastAPI. The hosted link is therefore a **static replay** of the three real `qwen3:8b` compositions recorded in `docs/turns/`. It stays up for weeks with no laptop process.
+
+**Hosted URL:** https://tanmays369.github.io/S14Code/
+
+Live composition still requires the local stack (`glc_v3` + Ollama + `s14code serve`) at `/app/energy`.
+
+Optional short-lived tunnel while the laptop is awake:
 
 ```bash
 cloudflared tunnel --url http://127.0.0.1:8113
-# then open https://<tunnel>/app/energy
 ```
-
-Current quick-tunnel URL while this checkout is serving locally:
-
-https://cloud-inquiries-mirrors-washington.trycloudflare.com/app/energy
 
 ## Trip Planner (UI-only application)
 
