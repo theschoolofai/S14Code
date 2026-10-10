@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Insurance Actuarial AI · Use Case Hub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#0A0F1E;--surface:#111827;--surface-card:#14213D;
+    --ink:#F1F5F9;--ink-body:#CBD5E1;--ink-muted:#64748B;
+    --rule:#1E2D45;--rule-strong:#2D3F58;
+    --font-sans:'Inter',system-ui,sans-serif;--font-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+    --r-sm:8px;--r-md:14px;--r-lg:20px;--r-xl:28px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink-body);font-family:var(--font-sans);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+
+  /* Starfield background */
+  body::before{content:"";position:fixed;inset:0;background:
+    radial-gradient(ellipse 80% 50% at 20% 10%,rgba(59,130,246,.07) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%,rgba(139,92,246,.06) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 30% at 50% 50%,rgba(16,185,129,.04) 0%,transparent 70%);
+    pointer-events:none;z-index:0}
+
+  .wrap{max-width:960px;margin:0 auto;padding:60px 24px 100px;position:relative;z-index:1}
+
+  /* Hero */
+  .hero{text-align:center;margin-bottom:64px}
+  .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:999px;font-size:11px;font-weight:600;font-family:var(--font-mono);color:#60A5FA;text-transform:uppercase;letter-spacing:.08em;margin-bottom:24px}
+  .hero-title{font-size:clamp(32px,6vw,56px);font-weight:900;color:var(--ink);letter-spacing:-.03em;line-height:1.1;margin-bottom:16px}
+  .hero-title span{background:linear-gradient(135deg,#60A5FA 0%,#A78BFA 50%,#34D399 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero-sub{font-size:16px;color:var(--ink-muted);max-width:560px;margin:0 auto 32px;line-height:1.7}
+  .hero-meta{display:flex;justify-content:center;gap:24px;flex-wrap:wrap}
+  .hero-pill{padding:4px 14px;background:rgba(255,255,255,.04);border:1px solid var(--rule-strong);border-radius:999px;font-size:11px;font-family:var(--font-mono);color:var(--ink-muted)}
+
+  /* Cards grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:48px}
+
+  .usecase-card{
+    background:var(--surface-card);
+    border:1px solid var(--rule-strong);
+    border-radius:var(--r-xl);
+    padding:28px;
+    cursor:pointer;
+    text-decoration:none;
+    display:flex;flex-direction:column;gap:0;
+    position:relative;overflow:hidden;
+    transition:all 200ms cubic-bezier(.4,0,.2,1);
+  }
+  .usecase-card::before{content:"";position:absolute;inset:0;opacity:0;transition:opacity 200ms;border-radius:var(--r-xl)}
+  .usecase-card:hover{transform:translateY(-3px);border-color:transparent;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .usecase-card:hover::before{opacity:1}
+
+  .card-a::before{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(139,92,246,.04))}
+  .card-a:hover{box-shadow:0 20px 60px rgba(139,92,246,.2),0 0 0 1px rgba(139,92,246,.4)}
+  .card-b::before{background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(59,130,246,.04))}
+  .card-b:hover{box-shadow:0 20px 60px rgba(59,130,246,.2),0 0 0 1px rgba(59,130,246,.4)}
+  .card-c::before{background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(16,185,129,.04))}
+  .card-c:hover{box-shadow:0 20px 60px rgba(16,185,129,.2),0 0 0 1px rgba(16,185,129,.4)}
+
+  .card-inner{position:relative;z-index:1;display:flex;flex-direction:column;gap:16px;height:100%}
+  .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .card-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+  .icon-a{background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3)}
+  .icon-b{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3)}
+  .icon-c{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3)}
+  .card-option{padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;font-family:var(--font-mono);letter-spacing:.04em}
+  .opt-a{background:rgba(139,92,246,.15);color:#A78BFA;border:1px solid rgba(139,92,246,.3)}
+  .opt-b{background:rgba(59,130,246,.15);color:#60A5FA;border:1px solid rgba(59,130,246,.3)}
+  .opt-c{background:rgba(16,185,129,.15);color:#34D399;border:1px solid rgba(16,185,129,.3)}
+  .card-title{font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}
+  .card-subtitle{font-size:11px;font-family:var(--font-mono);margin-bottom:12px}
+  .sub-a{color:#A78BFA}
+  .sub-b{color:#60A5FA}
+  .sub-c{color:#34D399}
+  .card-desc{font-size:13px;color:var(--ink-muted);line-height:1.65;flex:1}
+  .card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:14px}
+  .tag{padding:3px 8px;background:rgba(255,255,255,.04);border:1px solid var(--rule-strong);border-radius:6px;font-size:11px;font-family:var(--font-mono);color:var(--ink-muted)}
+  .card-cta{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--rule);margin-top:4px}
+  .cta-text{font-size:12px;font-weight:600}
+  .cta-a{color:#A78BFA}
+  .cta-b{color:#60A5FA}
+  .cta-c{color:#34D399}
+  .cta-arrow{font-size:16px;transition:transform 200ms}
+  .usecase-card:hover .cta-arrow{transform:translateX(4px)}
+
+  /* Preview components */
+  .card-preview{margin:8px 0;padding:12px;background:rgba(0,0,0,.25);border-radius:10px;border:1px solid var(--rule)}
+  .prev-row{display:flex;gap:6px;margin-bottom:6px}
+  .prev-tile{flex:1;padding:6px 8px;border-radius:6px;text-align:center}
+  .prev-tile .pv{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--ink)}
+  .prev-tile .pk{font-size:9px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.05em}
+  .tile-a{background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2)}
+  .tile-b{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2)}
+  .tile-c{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2)}
+  .prev-bar{height:6px;border-radius:999px;margin-top:2px}
+  .bar-a{background:linear-gradient(90deg,#8B5CF6,#A78BFA)}
+  .bar-b{background:linear-gradient(90deg,#3B82F6,#60A5FA)}
+  .bar-c{background:linear-gradient(90deg,#10B981,#34D399)}
+  .prev-chart{display:flex;align-items:flex-end;gap:3px;height:32px;padding:0 2px}
+  .prev-chart>div{border-radius:2px 2px 0 0;flex:1;min-width:4px}
+
+  /* Footer */
+  .footer{text-align:center;border-top:1px solid var(--rule);padding-top:32px;font-size:12px;color:var(--ink-muted);font-family:var(--font-mono)}
+  .footer a{color:var(--ink-muted);text-decoration:none}
+  .footer a:hover{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <span>🛡️</span>
+      <span>EAG Session 14 · Part 2 · Actuarial AI</span>
+    </div>
+    <h1 class="hero-title">Personal Lines<br><span>Insurance Actuarial</span><br>Workbench</h1>
+    <p class="hero-sub">Three generative UI applications for Home &amp; Motor actuarial workflows in Australia. Each app uses the AI compose protocol — every response is a catalog-validated, injection-proof interface.</p>
+    <div class="hero-meta">
+      <span class="hero-pill">Home &amp; Motor · Personal Lines</span>
+      <span class="hero-pill">APRA Reserving</span>
+      <span class="hero-pill">Chain Ladder · BF · LDF</span>
+      <span class="hero-pill">3-Turn Conversation</span>
+    </div>
+  </div>
+
+  <!-- 3 Use Case Cards -->
+  <div class="grid">
+
+    <!-- Option A -->
+    <a class="usecase-card card-a" href="/triangle">
+      <div class="card-inner">
+        <div class="card-head">
+          <div class="card-icon icon-a">📐</div>
+          <span class="card-option opt-a">Option A</span>
+        </div>
+        <div>
+          <div class="card-title">Claims Development Triangle</div>
+          <div class="card-subtitle sub-a">Chain Ladder · IBNR Estimation</div>
+          <p class="card-desc">View the Motor cumulative paid claims development triangle for accident years 2021–2024. Calculate projected IBNR using the chain ladder method and approve the reserve estimate.</p>
+        </div>
+        <div class="card-preview">
+          <div class="prev-row">
+            <div class="prev-tile tile-a"><div class="pv">$4.2M</div><div class="pk">IBNR</div></div>
+            <div class="prev-tile tile-a"><div class="pv">1.38×</div><div class="pk">LDF 12m</div></div>
+            <div class="prev-tile tile-a"><div class="pv">$31.5M</div><div class="pk">Ultimate</div></div>
+          </div>
+          <div class="prev-chart">
+            <div style="height:45%;background:#8B5CF6;opacity:.6"></div>
+            <div style="height:60%;background:#8B5CF6;opacity:.7"></div>
+            <div style="height:80%;background:#8B5CF6;opacity:.8"></div>
+            <div style="height:95%;background:#8B5CF6;opacity:.9"></div>
+            <div style="height:100%;background:#A78BFA"></div>
+          </div>
+        </div>
+        <div class="card-tags">
+          <span class="tag">DataTable</span>
+          <span class="tag">DualAxisChart</span>
+          <span class="tag">ApprovalCard</span>
+          <span class="tag">Timeline</span>
+        </div>
+        <div class="card-cta">
+          <span class="cta-text cta-a">Open Triangle Viewer</span>
+          <span class="cta-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Option B -->
+    <a class="usecase-card card-b" href="/reserve">
+      <div class="card-inner">
+        <div class="card-head">
+          <div class="card-icon icon-b">📊</div>
+          <span class="card-option opt-b">Option B</span>
+        </div>
+        <div>
+          <div class="card-title">Reserve Adequacy Dashboard</div>
+          <div class="card-subtitle sub-b">A/E Ratio · APRA Compliance</div>
+          <p class="card-desc">Run the reserve adequacy test for Home &amp; Motor personal lines Q3 2025. Compare actual vs expected paid claims development, identify adverse accident years, and approve reserve strengthening.</p>
+        </div>
+        <div class="card-preview">
+          <div class="prev-row">
+            <div class="prev-tile tile-b"><div class="pv">1.08</div><div class="pk">A/E Ratio</div></div>
+            <div class="prev-tile tile-b"><div class="pv">$24.6M</div><div class="pk">Reserve</div></div>
+            <div class="prev-tile tile-b"><div class="pv">75th pct</div><div class="pk">APRA</div></div>
+          </div>
+          <div class="prev-chart">
+            <div style="height:65%;background:#3B82F6;opacity:.7"></div>
+            <div style="height:75%;background:#3B82F6;opacity:.8"></div>
+            <div style="height:90%;background:#3B82F6;opacity:.85"></div>
+            <div style="height:85%;background:#3B82F6;opacity:.9"></div>
+            <div style="height:100%;background:#60A5FA"></div>
+          </div>
+        </div>
+        <div class="card-tags">
+          <span class="tag">DualAxisChart</span>
+          <span class="tag">StatTile ×4</span>
+          <span class="tag">KanbanBoard</span>
+          <span class="tag">CodeDiff</span>
+        </div>
+        <div class="card-cta">
+          <span class="cta-text cta-b">Open Adequacy Dashboard</span>
+          <span class="cta-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Option C -->
+    <a class="usecase-card card-c" href="/ldf">
+      <div class="card-inner">
+        <div class="card-head">
+          <div class="card-icon icon-c">⚙️</div>
+          <span class="card-option opt-c">Option C</span>
+        </div>
+        <div>
+          <div class="card-title">LDF Method Selector</div>
+          <div class="card-subtitle sub-c">3yr vs 5yr Average · IBNR Sensitivity</div>
+          <p class="card-desc">Select loss development factors for Home insurance and see how IBNR changes between 3-year volume-weighted and 5-year simple average methods. Finalise the approved method for APRA filing.</p>
+        </div>
+        <div class="card-preview">
+          <div class="prev-row">
+            <div class="prev-tile tile-c"><div class="pv">1.42×</div><div class="pk">LDF (3yr)</div></div>
+            <div class="prev-tile tile-c"><div class="pv">1.38×</div><div class="pk">LDF (5yr)</div></div>
+            <div class="prev-tile tile-c"><div class="pv">$3.1M</div><div class="pk">IBNR</div></div>
+          </div>
+          <div class="prev-chart">
+            <div style="height:100%;background:#10B981;opacity:.8"></div>
+            <div style="height:78%;background:#10B981;opacity:.75"></div>
+            <div style="height:55%;background:#10B981;opacity:.7"></div>
+            <div style="height:35%;background:#10B981;opacity:.65"></div>
+            <div style="height:18%;background:#34D399;opacity:.8"></div>
+          </div>
+        </div>
+        <div class="card-tags">
+          <span class="tag">DualAxisChart</span>
+          <span class="tag">DataTable</span>
+          <span class="tag">ProgressBar</span>
+          <span class="tag">ApprovalCard</span>
+        </div>
+        <div class="card-cta">
+          <span class="cta-text cta-c">Open LDF Selector</span>
+          <span class="cta-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="footer">
+    <p>Personal Lines · Home &amp; Motor · Australia &nbsp;·&nbsp; EAG Session 14 · Part 2 &nbsp;·&nbsp; A2UI Compose Protocol &nbsp;·&nbsp; Every interface is catalog-validated, injection-proof</p>
+  </div>
+</div>
+</body>
+</html>

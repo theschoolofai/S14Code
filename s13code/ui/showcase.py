@@ -77,9 +77,10 @@ def build_corpus_dashboard(run: dict) -> dict:
 
     # Charts row
     add({"id": "bars", "type": "BarChart", "title": "Chunks per paper", "data": {"$bind": "/chunks_by_paper"}, "xKey": "label", "yKey": "value"})
+    add({"id": "dual", "type": "DualAxisChart", "title": "Chunks vs Words Index", "data": {"$bind": "/table_rows"}, "xKey": "Paper", "barKey": "Chunks", "lineKey": "Words", "barLabel": "Chunks", "lineLabel": "Words"})
     add({"id": "spark", "type": "Sparkline", "data": {"$bind": "/chunk_spark"}, "tone": "good"})
     add({"id": "prog", "type": "ProgressBar", "value": {"$bind": "/index_progress"}, "max": 20, "tone": "good"})
-    add({"id": "charts_row", "type": "Row", "align": "stretch", "justify": "spaceBetween", "children": ["bars", "spark", "prog"]})
+    add({"id": "charts_row", "type": "Row", "align": "stretch", "justify": "spaceBetween", "children": ["bars", "dual", "spark", "prog"]})
 
     # Sortable / filterable data table
     add({"id": "table", "type": "DataTable", "columns": "Paper,Chunks,Words,Year", "rows": {"$bind": "/table_rows"}, "sortable": True, "filterKey": "Paper"})

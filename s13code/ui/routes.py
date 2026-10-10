@@ -262,3 +262,68 @@ async def trip_viewer():
     if not path.exists():
         raise HTTPException(500, "trip viewer missing")
     return path.read_text(encoding="utf-8")
+
+
+@router.get("/app/aus_pricing", response_class=HTMLResponse)
+@router.get("/app/aus_pricing/", response_class=HTMLResponse)
+@router.get("/aus_pricing", response_class=HTMLResponse)
+@router.get("/aus_pricing/", response_class=HTMLResponse)
+async def aus_pricing_viewer():
+    """Australian Insurance Valuation & Technical Pricing Workbench."""
+    path = Path(__file__).parent / "client" / "aus_pricing.html"
+    if not path.exists():
+        raise HTTPException(500, "aus_pricing viewer missing")
+    return path.read_text(encoding="utf-8")
+
+
+@router.get("/app/reserve", response_class=HTMLResponse)
+@router.get("/app/reserve/", response_class=HTMLResponse)
+@router.get("/reserve", response_class=HTMLResponse)
+@router.get("/reserve/", response_class=HTMLResponse)
+async def reserve_adequacy_viewer():
+    """Personal Lines Reserve Adequacy Workbench — Home & Motor (Part 2)."""
+    path = Path(__file__).parent / "client" / "reserve_adequacy.html"
+    if not path.exists():
+        raise HTTPException(500, "reserve_adequacy viewer missing")
+    return path.read_text(encoding="utf-8")
+
+
+@router.get("/hub", response_class=HTMLResponse)
+@router.get("/hub/", response_class=HTMLResponse)
+async def hub_viewer():
+    """Insurance Actuarial Use Case Hub — all 3 Part 2 apps."""
+    path = Path(__file__).parent / "client" / "hub.html"
+    if not path.exists():
+        raise HTTPException(500, "hub viewer missing")
+    return path.read_text(encoding="utf-8")
+
+
+@router.get("/triangle", response_class=HTMLResponse)
+@router.get("/triangle/", response_class=HTMLResponse)
+async def claims_triangle_viewer():
+    """Claims Development Triangle Viewer — Option A."""
+    path = Path(__file__).parent / "client" / "claims_triangle.html"
+    if not path.exists():
+        raise HTTPException(500, "claims_triangle viewer missing")
+    return path.read_text(encoding="utf-8")
+
+
+@router.get("/ldf", response_class=HTMLResponse)
+@router.get("/ldf/", response_class=HTMLResponse)
+async def ldf_selector_viewer():
+    """Loss Development Factor Selector — Option C."""
+    path = Path(__file__).parent / "client" / "ldf_selector.html"
+    if not path.exists():
+        raise HTTPException(500, "ldf_selector viewer missing")
+    return path.read_text(encoding="utf-8")
+
+
+@router.get("/workbench", response_class=HTMLResponse)
+@router.get("/workbench/", response_class=HTMLResponse)
+async def actuarial_workbench_viewer():
+    """Unified Home Insurance Actuarial Workbench — Triangle · LDF · Reserve A vs E (Part 2)."""
+    path = Path(__file__).parent / "client" / "actuarial_workbench.html"
+    if not path.exists():
+        raise HTTPException(500, "actuarial_workbench viewer missing")
+    return path.read_text(encoding="utf-8")
+

@@ -1,0 +1,290 @@
+{
+  "task": "Compare the annual revenue in millions (bars) alongside profit margin percentages (line) for TechCorp, BioHealth, RetailMax, and AutoGlobal in 2025. Present a multi-metric comparative breakdown of these four companies.",
+  "run_id": "run-ca217409fd08",
+  "status": "completed",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "gateway_provider_env": "gemini",
+  "graph_nodes": {
+    "content": {
+      "skill": "content",
+      "state": "succeeded",
+      "error": null,
+      "result_keys": [
+        "agent",
+        "model",
+        "provider",
+        "raw",
+        "structured",
+        "text"
+      ]
+    },
+    "surface": {
+      "skill": "compose_surface",
+      "state": "succeeded",
+      "error": null,
+      "result_keys": [
+        "agent",
+        "data_model",
+        "model",
+        "parse_ok",
+        "provider",
+        "raw_surface",
+        "surface",
+        "upstream_used",
+        "validator"
+      ]
+    }
+  },
+  "content_structured_keys": [
+    "intro",
+    "metrics",
+    "series",
+    "table",
+    "title"
+  ],
+  "compose_surface_node": {
+    "state": "succeeded",
+    "error": null,
+    "provider": "gemini_1",
+    "model": "gemini-3.1-flash-lite-preview",
+    "validator": {
+      "proposed": 8,
+      "accepted": 8,
+      "rejected": 0,
+      "ok": true,
+      "rejections": [],
+      "dangling_child_refs": [],
+      "component_types": [
+        "Column",
+        "DataTable",
+        "DualAxisChart",
+        "Row",
+        "StatTile",
+        "Text"
+      ],
+      "component_count": 8
+    },
+    "component_types": [
+      "Column",
+      "DataTable",
+      "DualAxisChart",
+      "Row",
+      "StatTile",
+      "Text"
+    ],
+    "has_dualchart": true,
+    "data_model_keys": [
+      "goal",
+      "intro",
+      "item_count",
+      "items",
+      "metric_0_value",
+      "metric_1_value",
+      "metrics",
+      "progress_max",
+      "progress_value",
+      "results",
+      "series",
+      "series_values",
+      "source_count",
+      "spark",
+      "subjects",
+      "summary",
+      "table_columns",
+      "table_rows",
+      "timeline",
+      "title"
+    ],
+    "surface_accepted": [
+      {
+        "id": "root",
+        "type": "Column",
+        "children": [
+          "title",
+          "summary",
+          "stats",
+          "chart",
+          "table"
+        ]
+      },
+      {
+        "id": "title",
+        "type": "Text",
+        "variant": "heading",
+        "text": {
+          "$bind": "/title"
+        }
+      },
+      {
+        "id": "summary",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/summary"
+        }
+      },
+      {
+        "id": "stats",
+        "type": "Row",
+        "justify": "spaceBetween",
+        "children": [
+          "stat1",
+          "stat2"
+        ]
+      },
+      {
+        "id": "stat1",
+        "type": "StatTile",
+        "label": "Average Profit Margin",
+        "value": {
+          "$bind": "/metric_0_value"
+        },
+        "unit": "%"
+      },
+      {
+        "id": "stat2",
+        "type": "StatTile",
+        "label": "Total Combined Revenue",
+        "value": {
+          "$bind": "/metric_1_value"
+        },
+        "unit": "$M"
+      },
+      {
+        "id": "chart",
+        "type": "DualAxisChart",
+        "title": "2025 Financial Performance",
+        "data": {
+          "$bind": "/table_rows"
+        },
+        "xKey": "Company",
+        "barKey": "Revenue ($M)",
+        "lineKey": "Profit Margin (%)",
+        "barLabel": "Revenue ($M)",
+        "lineLabel": "Profit Margin (%)"
+      },
+      {
+        "id": "table",
+        "type": "DataTable",
+        "columns": "Company, Revenue ($M), Profit Margin (%)",
+        "rows": {
+          "$bind": "/table_rows"
+        }
+      }
+    ],
+    "data_model": {
+      "title": "2025 Corporate Financial Performance Overview",
+      "goal": "Compare the annual revenue in millions (bars) alongside profit margin percentages (line) for TechCorp, BioHealth, RetailMax, and AutoGlobal in 2025. Present a multi-metric comparative breakdown of these four companies.",
+      "summary": "A comparative analysis of annual revenue and profit margins for four major industry leaders.",
+      "results": [],
+      "items": [],
+      "metrics": [
+        {
+          "label": "Average Profit Margin",
+          "value": 17.5,
+          "unit": "%"
+        },
+        {
+          "label": "Total Combined Revenue",
+          "value": 1760.0,
+          "unit": "$M"
+        }
+      ],
+      "spark": [
+        450.0,
+        320.0,
+        580.0,
+        410.0
+      ],
+      "table_rows": [
+        {
+          "Company": "TechCorp",
+          "Revenue ($M)": 450,
+          "Profit Margin (%)": 28
+        },
+        {
+          "Company": "BioHealth",
+          "Revenue ($M)": 320,
+          "Profit Margin (%)": 22
+        },
+        {
+          "Company": "RetailMax",
+          "Revenue ($M)": 580,
+          "Profit Margin (%)": 8
+        },
+        {
+          "Company": "AutoGlobal",
+          "Revenue ($M)": 410,
+          "Profit Margin (%)": 12
+        }
+      ],
+      "item_count": 0,
+      "source_count": 0,
+      "subjects": [],
+      "timeline": [
+        {
+          "time": "1",
+          "label": "run_started"
+        },
+        {
+          "time": "2",
+          "label": "graph_patched"
+        },
+        {
+          "time": "3",
+          "label": "task_started content"
+        },
+        {
+          "time": "4",
+          "label": "task_succeeded content"
+        },
+        {
+          "time": "5",
+          "label": "graph_patched"
+        },
+        {
+          "time": "6",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 1,
+      "progress_max": 2,
+      "intro": "A comparative analysis of annual revenue and profit margins for four major industry leaders.",
+      "metric_0_value": 17.5,
+      "metric_1_value": 1760.0,
+      "series": [
+        {
+          "label": "TechCorp Revenue",
+          "value": 450.0
+        },
+        {
+          "label": "BioHealth Revenue",
+          "value": 320.0
+        },
+        {
+          "label": "RetailMax Revenue",
+          "value": 580.0
+        },
+        {
+          "label": "AutoGlobal Revenue",
+          "value": 410.0
+        }
+      ],
+      "series_values": [
+        450.0,
+        320.0,
+        580.0,
+        410.0
+      ],
+      "table_columns": [
+        "Company",
+        "Revenue ($M)",
+        "Profit Margin (%)"
+      ]
+    },
+    "revalidate_ok": true,
+    "revalidate_rejections": []
+  },
+  "assert_dualchart_composed_unprompted": true,
+  "assert_surface_clean": true
+}

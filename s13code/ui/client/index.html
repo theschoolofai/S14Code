@@ -156,7 +156,20 @@ const RENDERERS = {
   CodeDiff:(c,ctx)=>renderCodeDiff(c,ctx),
   Map:(c,ctx)=>renderMap(c,ctx),
   KanbanBoard:(c,ctx)=>renderKanban(c,ctx),
+  DualAxisChart:(c,ctx)=>{const e=$("div","chart");const t=$("div","ct");t.append(text(c.title||"dual chart"));e.append(t);
+    e.append(dualBarSvg(resolve(c.data,ctx.dm)||[],c.xKey,c.barKey,c.lineKey));return e;},
 };
+
+function dualBarSvg(data,xk,bk,lk){const ns="http://www.w3.org/2000/svg";const w=320,h=150,pad=24;
+  const maxBar=Math.max(...data.map(d=>+d[bk]||0),1);const maxLine=Math.max(...data.map(d=>+d[lk]||0),1);
+  const bw=(w-pad*2)/data.length*.45;const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox",`0 0 ${w} ${h}`);svg.setAttribute("width","100%");svg.setAttribute("height","auto");
+  const pts=[];data.forEach((d,i)=>{const step=(w-pad*2)/data.length,x=pad+i*step+(step-bw)/2,bh=(+d[bk]||0)/maxBar*(h-pad*2);
+    const r=document.createElementNS(ns,"rect");r.setAttribute("x",x);r.setAttribute("y",h-pad-bh);r.setAttribute("width",bw);r.setAttribute("height",bh);r.setAttribute("rx",3);r.setAttribute("fill","var(--accent)");svg.append(r);
+    const lx=x+bw/2,ly=h-pad-((+d[lk]||0)/maxLine*(h-pad*2));pts.push(`${lx},${ly}`);
+    const tl=document.createElementNS(ns,"text");tl.setAttribute("x",lx);tl.setAttribute("y",h-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","9");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=d[xk]||"";svg.append(tl);});
+  if(pts.length>1){const p=document.createElementNS(ns,"polyline");p.setAttribute("points",pts.join(" "));p.setAttribute("fill","none");p.setAttribute("stroke","var(--amber)");p.setAttribute("stroke-width","2.5");svg.append(p);}
+  pts.forEach(pt=>{const [cx,cy]=pt.split(",");const circ=document.createElementNS(ns,"circle");circ.setAttribute("cx",cx);circ.setAttribute("cy",cy);circ.setAttribute("r","4");circ.setAttribute("fill","var(--amber)");circ.setAttribute("stroke","#fff");circ.setAttribute("stroke-width","1.5");svg.append(circ);});
+  return svg;}
 
 function field(c,mk){const wrap=$("label","field");if(c.label){const l=$("span","lb");l.append(text(c.label));wrap.append(l);}wrap.append(mk());return wrap;}
 

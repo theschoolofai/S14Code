@@ -136,6 +136,15 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "onCardPress": PropSpec("action"),
         "wipLimit": PropSpec("number"),
     }, source="custom"),
+    "DualAxisChart": ComponentSpec("DualAxisChart", {
+        "title": PropSpec("text"),
+        "data": PropSpec("binding"),
+        "xKey": PropSpec("text"),
+        "barKey": PropSpec("text"),
+        "lineKey": PropSpec("text"),
+        "barLabel": PropSpec("text"),
+        "lineLabel": PropSpec("text"),
+    }, source="custom"),
 }
 
 # The closed set of action names a surface may emit. An action the agent did
