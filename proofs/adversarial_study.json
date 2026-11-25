@@ -1,0 +1,54 @@
+{
+  "all_passed": true,
+  "cases": [
+    {
+      "name": "unknown GanttTimeline type",
+      "expect": "rejected",
+      "got": "rejected",
+      "passed": true,
+      "rejections": [
+        {
+          "component_id": "root",
+          "field": "type",
+          "invariant": "catalog",
+          "reason": "unknown component type 'GanttTimeline'"
+        }
+      ]
+    },
+    {
+      "name": "markup in GanttChart title",
+      "expect": "rejected",
+      "got": "rejected",
+      "passed": true,
+      "rejections": [
+        {
+          "component_id": "root",
+          "field": "title",
+          "invariant": "data-not-code",
+          "reason": "value carries markup"
+        }
+      ]
+    },
+    {
+      "name": "unregistered action on KanbanBoard",
+      "expect": "rejected",
+      "got": "rejected",
+      "passed": true,
+      "rejections": [
+        {
+          "component_id": "root",
+          "field": "onCardPress",
+          "invariant": "event",
+          "reason": "unregistered action 'exfiltrate_data'"
+        }
+      ]
+    },
+    {
+      "name": "valid GanttChart surface",
+      "expect": "accepted",
+      "got": "accepted",
+      "passed": true,
+      "rejections": []
+    }
+  ]
+}

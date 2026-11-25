@@ -1,0 +1,330 @@
+{
+  "every_turn_composed": true,
+  "every_turn_clean": true,
+  "distinct_signatures": 3,
+  "union_component_types": [
+    "BarChart",
+    "Column",
+    "DataTable",
+    "GanttChart",
+    "Notice",
+    "Row",
+    "StatTile",
+    "Timeline"
+  ],
+  "gantt_in_turn_1": true,
+  "datatable_in_turn_2": true,
+  "timeline_in_turn_3": true,
+  "turns": [
+    {
+      "turn": 1,
+      "user_said": "Show my assignment schedule for November and December",
+      "model": "gemini-2.5-flash-lite",
+      "latency_s": 1.7,
+      "clean": true,
+      "component_count": 4,
+      "component_types": [
+        "Column",
+        "GanttChart",
+        "StatTile"
+      ],
+      "rejections": [],
+      "surface": {
+        "root": "a",
+        "components": [
+          {
+            "id": "a",
+            "type": "Column",
+            "children": [
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "id": "b",
+            "type": "StatTile",
+            "label": "Open tasks",
+            "value": {
+              "$bind": "/open_count"
+            }
+          },
+          {
+            "id": "c",
+            "type": "StatTile",
+            "label": "Submitted tasks",
+            "value": {
+              "$bind": "/submitted_count"
+            }
+          },
+          {
+            "id": "d",
+            "type": "GanttChart",
+            "title": "Study schedule \u2014 Nov/Dec 2026",
+            "tasks": {
+              "$bind": "/tasks"
+            },
+            "caption": {
+              "$bind": "/caption"
+            }
+          }
+        ],
+        "dataModel": {
+          "title": "Study schedule \u2014 Nov/Dec 2026",
+          "open_count": 3,
+          "submitted_count": 2,
+          "tasks": [
+            {
+              "id": "t1",
+              "label": "EAG Session 14",
+              "start": "2026-11-25",
+              "end": "2026-12-01"
+            },
+            {
+              "id": "t2",
+              "label": "NLP Assignment 3",
+              "start": "2026-11-27",
+              "end": "2026-12-05"
+            },
+            {
+              "id": "t3",
+              "label": "CV Mini-Project",
+              "start": "2026-11-28",
+              "end": "2026-12-10"
+            },
+            {
+              "id": "t4",
+              "label": "RL Quiz",
+              "start": "2026-11-15",
+              "end": "2026-11-20"
+            },
+            {
+              "id": "t5",
+              "label": "Math Worksheet",
+              "start": "2026-11-10",
+              "end": "2026-11-18"
+            }
+          ],
+          "caption": "Bars show start \u2192 due date"
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "user_said": "Show my grades across all courses",
+      "model": "gemini-2.5-flash-lite",
+      "latency_s": 1.6,
+      "clean": true,
+      "component_count": 4,
+      "component_types": [
+        "BarChart",
+        "Column",
+        "DataTable",
+        "StatTile"
+      ],
+      "rejections": [],
+      "surface": {
+        "root": "a",
+        "components": [
+          {
+            "id": "a",
+            "type": "Column",
+            "children": [
+              "b",
+              "c",
+              "d"
+            ]
+          },
+          {
+            "id": "b",
+            "type": "StatTile",
+            "label": "GPA",
+            "value": {
+              "$bind": "/gpa"
+            }
+          },
+          {
+            "id": "c",
+            "type": "DataTable",
+            "columns": "Course,Grade,Score,Credits",
+            "rows": {
+              "$bind": "/grade_rows"
+            },
+            "filterKey": "Course"
+          },
+          {
+            "id": "d",
+            "type": "BarChart",
+            "title": "Scores",
+            "data": {
+              "$bind": "/score_bars"
+            },
+            "xKey": "label",
+            "yKey": "value"
+          }
+        ],
+        "dataModel": {
+          "title": "Semester grades",
+          "gpa": "8.6",
+          "courses_count": 5,
+          "grade_rows": [
+            {
+              "Course": "EAG v3",
+              "Grade": "A",
+              "Score": "92",
+              "Credits": "4"
+            },
+            {
+              "Course": "NLP",
+              "Grade": "A-",
+              "Score": "88",
+              "Credits": "3"
+            },
+            {
+              "Course": "Computer Vision",
+              "Grade": "B+",
+              "Score": "85",
+              "Credits": "4"
+            },
+            {
+              "Course": "Reinforcement Learning",
+              "Grade": "A",
+              "Score": "91",
+              "Credits": "3"
+            },
+            {
+              "Course": "Mathematics",
+              "Grade": "B",
+              "Score": "82",
+              "Credits": "4"
+            }
+          ],
+          "score_bars": [
+            {
+              "label": "EAG",
+              "value": 92
+            },
+            {
+              "label": "NLP",
+              "value": 88
+            },
+            {
+              "label": "CV",
+              "value": 85
+            },
+            {
+              "label": "RL",
+              "value": 91
+            },
+            {
+              "label": "Math",
+              "value": 82
+            }
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "user_said": "Build an exam prep timeline for my RL exam next week",
+      "model": "gemini-2.5-flash-lite",
+      "latency_s": 1.7,
+      "clean": true,
+      "component_count": 4,
+      "component_types": [
+        "Column",
+        "Notice",
+        "Row",
+        "Timeline"
+      ],
+      "rejections": [],
+      "surface": {
+        "root": "root",
+        "components": [
+          {
+            "id": "root",
+            "type": "Column",
+            "children": [
+              "stat_tile",
+              "timeline",
+              "notice"
+            ]
+          },
+          {
+            "id": "stat_tile",
+            "type": "Row",
+            "justify": "spaceAround",
+            "children": [
+              {
+                "id": "days_left_tile",
+                "type": "StatTile",
+                "label": "Days left",
+                "value": {
+                  "$bind": "/days_left"
+                },
+                "unit": "days",
+                "delta": -1,
+                "tone": "neutral"
+              },
+              {
+                "id": "readiness_score_tile",
+                "type": "StatTile",
+                "label": "Readiness score",
+                "value": {
+                  "$bind": "/readiness_score"
+                },
+                "unit": "%",
+                "delta": 5,
+                "tone": "good"
+              }
+            ]
+          },
+          {
+            "id": "timeline",
+            "type": "Timeline",
+            "title": "RL Exam Prep Plan",
+            "events": {
+              "$bind": "/study_events"
+            }
+          },
+          {
+            "id": "notice",
+            "type": "Notice",
+            "text": {
+              "$bind": "/notice"
+            },
+            "tone": "warn"
+          }
+        ],
+        "dataModel": {
+          "title": "RL Exam Prep Plan",
+          "days_left": 5,
+          "readiness_score": 72,
+          "study_events": [
+            {
+              "label": "Day 1 \u2014 Review Q-learning",
+              "detail": "Chapters 1\u20133, 2 hours"
+            },
+            {
+              "label": "Day 2 \u2014 Policy Gradient methods",
+              "detail": "Chapters 4\u20135, 2 hours"
+            },
+            {
+              "label": "Day 3 \u2014 Deep RL (DQN, PPO)",
+              "detail": "Chapters 6\u20137, 3 hours"
+            },
+            {
+              "label": "Day 4 \u2014 Past papers",
+              "detail": "3 past exams, timed"
+            },
+            {
+              "label": "Day 5 \u2014 Weak spots + rest",
+              "detail": "Focus on policy gradients"
+            }
+          ],
+          "notice": "Start early \u2014 policy gradient questions appeared in 4 of the last 5 exams."
+        }
+      }
+    }
+  ]
+}

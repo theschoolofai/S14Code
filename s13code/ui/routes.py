@@ -262,3 +262,13 @@ async def trip_viewer():
     if not path.exists():
         raise HTTPException(500, "trip viewer missing")
     return path.read_text(encoding="utf-8")
+
+
+@router.get("/app/study", response_class=HTMLResponse)
+@router.get("/app/study/", response_class=HTMLResponse)
+async def study_viewer():
+    """Study Planner: GanttChart-first scheduler — every answer is a composed interface."""
+    path = Path(__file__).parent / "client" / "study.html"
+    if not path.exists():
+        raise HTTPException(500, "study viewer missing")
+    return path.read_text(encoding="utf-8")
