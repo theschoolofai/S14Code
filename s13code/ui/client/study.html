@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Study Planner — the agent answers in UI</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#EEF2FF;--surface:#FFF;--surface-alt:#F5F7FF;--ink:#1E1B4B;--ink-body:#312E81;--ink-muted:#6B7280;
+    --rule:#E0E7FF;--rule-strong:#C7D2FE;--accent:#4F46E5;--accent-soft:rgba(79,70,229,.10);
+    --green:#059669;--green-soft:rgba(5,150,105,.12);--green-ink:#065F46;
+    --amber:#D97706;--amber-soft:rgba(217,119,6,.14);--amber-ink:#92400E;
+    --red:#DC2626;--red-soft:rgba(220,38,38,.10);--red-ink:#991B1C;
+    --font-sans:'Inter',system-ui,sans-serif;--font-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  }
+  @media(prefers-color-scheme:dark){:root{
+    --bg:#0F0F1A;--surface:#161624;--surface-alt:#1A1A2E;--ink:#E0E7FF;--ink-body:#C7D2FE;--ink-muted:#6B7280;
+    --rule:#2D2B55;--rule-strong:#3D3B6E;--accent:#818CF8;--accent-soft:rgba(129,140,248,.12);}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink-body);font-family:var(--font-sans);font-size:15px}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 18px 72px}
+  .head{display:flex;gap:8px;align-items:center;margin-bottom:4px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+  .head .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  .title{font-size:24px;font-weight:700;color:var(--ink);margin:0 0 4px;letter-spacing:-.02em}
+  .subtitle{font-size:13px;color:var(--ink-muted);margin-bottom:16px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+  .chip{border:1px solid var(--rule-strong);background:transparent;border-radius:999px;padding:5px 12px;font-size:12px;font-family:var(--font-mono);color:var(--ink-muted);cursor:pointer;transition:all 100ms}
+  .chip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .startbar{display:flex;gap:8px;margin-bottom:14px}
+  .startbar input{flex:1;padding:12px 14px;border:1px solid var(--rule-strong);border-radius:12px;font-size:15px;font-family:var(--font-sans);background:var(--surface);color:var(--ink)}
+  .startbar input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .startbar button{padding:12px 20px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-weight:600;font-size:14px;cursor:pointer}
+  .status{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);min-height:18px;margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pill{padding:2px 9px;border-radius:999px;font-weight:600;font-size:11px}
+  .pill.good{background:var(--green-soft);color:var(--green-ink)}.pill.think{background:var(--accent-soft);color:var(--accent)}
+  .screen{background:var(--surface);border:1px solid var(--rule);border-radius:18px;padding:22px;box-shadow:0 8px 24px -12px rgba(79,70,229,.18);min-height:120px}
+  .empty{color:var(--ink-muted);font-style:italic;text-align:center;padding:36px 12px;line-height:1.6}
+  .crumbs{font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);margin-top:10px}
+  /* component styles */
+  .Text{color:var(--ink-body);line-height:1.6;white-space:pre-wrap;margin:2px 0}
+  .Text.heading{font-size:24px;font-weight:700;color:var(--ink);white-space:normal;margin:0 0 8px;letter-spacing:-.02em}
+  .Text.subtitle{font-style:italic;color:var(--ink-muted);font-size:15px}
+  .Text.caption{font-size:12px;color:var(--ink-muted);font-family:var(--font-mono)}
+  .Column{display:flex;flex-direction:column;gap:14px}
+  .List{display:flex;flex-direction:column;gap:10px}
+  .Row{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap}
+  .Row>.StatTile,.Row>.chart,.Row>.Card,.Row>.actbtn{flex:1;min-width:140px}
+  .Card{background:var(--surface-alt);border:1px solid var(--rule);border-radius:14px;padding:14px 16px}
+  .Card>.ct{font-weight:600;margin-bottom:8px;color:var(--ink)}
+  .Divider{height:1px;background:var(--rule)}
+  .StatTile{background:var(--surface);border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:14px;padding:14px}
+  .StatTile .lab{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);font-weight:600;font-family:var(--font-mono)}
+  .StatTile .val{font-size:28px;font-weight:700;color:var(--ink);margin-top:5px;font-family:'Inter',sans-serif}
+  .StatTile .dl{font-size:11px;color:var(--ink-muted);margin-top:3px}
+  .chart{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:14px}
+  .chart .ct{font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:8px;font-family:var(--font-mono)}
+  .tl-item{display:flex;gap:12px;align-items:flex-start;padding:8px 0;position:relative}
+  .tl-item+.tl-item{border-top:1px dashed var(--rule)}
+  .tl-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);margin-top:5px;flex:0 0 auto;box-shadow:0 0 0 4px var(--accent-soft)}
+  .prog{height:10px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--rule);overflow:hidden}.prog>i{display:block;height:100%;background:var(--accent)}
+  table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--rule);border-radius:14px;overflow:hidden}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule);font-size:14px}
+  tr:last-child td{border-bottom:none}th{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-muted);font-weight:600;background:var(--surface-alt);font-family:var(--font-mono)}
+  input[type=text]{padding:9px 12px;border:1px solid var(--rule-strong);border-radius:9px;font-size:14px;font-family:var(--font-sans);width:100%;background:var(--surface);color:var(--ink)}
+  input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
+  .actbtn{padding:10px 18px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-weight:600;font-size:14px;cursor:pointer;font-family:var(--font-sans)}
+  .actbtn:hover{opacity:.88}
+  .Notice{padding:12px 14px;border-radius:12px;border:1px solid var(--rule-strong);font-size:14px;line-height:1.5}
+  .Notice.good{background:var(--green-soft);border-color:var(--green);color:var(--green-ink)}
+  .Notice.warn{background:var(--amber-soft);border-color:var(--amber);color:var(--amber-ink)}
+  .Notice.bad{background:var(--red-soft);border-color:var(--red);color:var(--red-ink)}
+  .Notice.neutral{background:var(--surface-alt)}
+  .KanbanBoard{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:14px;overflow-x:auto}
+  .lanes{display:flex;gap:12px;align-items:flex-start}
+  .lane{flex:1 0 170px;min-width:170px;background:var(--surface-alt);border:1px solid var(--rule);border-radius:10px;padding:10px}
+  .lane>.ct{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-muted);margin-bottom:8px}
+  .card{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:8px 10px;margin-bottom:7px;font-size:13px}
+  .card>.ct{font-weight:600;color:var(--ink)}
+  button.card{display:block;width:100%;text-align:left;cursor:pointer;font-family:inherit}
+  button.card:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .GanttChart{background:var(--surface);border:1px solid var(--rule);border-radius:14px;overflow:hidden}
+  .GanttChart .ct{padding:10px 14px;font-size:12px;font-weight:600;color:var(--ink-muted);border-bottom:1px solid var(--rule);font-family:var(--font-mono)}
+  .GanttChart .grid{padding:10px 14px 12px;overflow-x:auto}
+  .GanttChart .row{display:flex;align-items:center;gap:10px;padding:3px 0;font-size:12px;min-height:28px}
+  .GanttChart .lbl{flex:0 0 130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-body)}
+  .GanttChart .track{flex:1;position:relative;height:16px;background:var(--surface-alt);border-radius:4px;min-width:160px}
+  .GanttChart .bar{position:absolute;height:100%;border-radius:4px;background:var(--accent);opacity:.82}
+  .GanttChart .cap{padding:6px 14px;font-size:11px;color:var(--ink-muted);border-top:1px solid var(--rule)}
+  .Tabs{background:var(--surface);border:1px solid var(--rule);border-radius:14px;overflow:hidden}
+  .Tabs .tabs-nav{display:flex;border-bottom:1px solid var(--rule);overflow-x:auto}
+  .Tabs .tab-btn{padding:10px 16px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink-muted);font-family:var(--font-sans);border-bottom:2px solid transparent;white-space:nowrap}
+  .Tabs .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .Tabs .tab-body{padding:14px 16px}
+  .modal-open .Modal{display:flex!important}.Modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;align-items:center;justify-content:center}
+  .Modal .modal-box{background:var(--surface);border-radius:16px;padding:22px;max-width:420px;width:90%;box-shadow:0 20px 40px -12px rgba(0,0,0,.3)}
+  .BarChart .bar-chart-wrap{padding:8px 0}
+  .ProgressBar .pbwrap{margin:4px 0}
+  .ProgressBar .pblbl{font-size:12px;color:var(--ink-muted);margin-bottom:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head"><span class="dot"></span>EAG v3 · Session 14 · Study Planner</div>
+  <h1 class="title">Study Schedule Planner</h1>
+  <p class="subtitle">The agent answers only by composing interfaces — no paragraph of text.</p>
+  <div class="chips">
+    <button class="chip" onclick="start('Show my assignment schedule for November and December')">📅 Nov/Dec schedule</button>
+    <button class="chip" onclick="start('What are my pending assignments and their deadlines?')">📋 Pending tasks</button>
+    <button class="chip" onclick="start('Show my grade summary across all courses this semester')">📊 Grade summary</button>
+    <button class="chip" onclick="start('I need to plan study time for my upcoming ML exam')">🧠 Exam prep plan</button>
+  </div>
+  <div class="startbar">
+    <input id="prompt" placeholder="Ask about your schedule, grades, deadlines…" />
+    <button onclick="go()">Ask</button>
+  </div>
+  <div class="status" id="status"><span class="pill think" style="display:none">composing…</span></div>
+  <div class="screen" id="mount"><div class="empty">Your schedule, grades and deadlines will appear here as a composed interface — never as a paragraph.</div></div>
+  <div class="crumbs" id="crumbs"></div>
+</div>
+<script>
+const API = window.location.origin;
+const REGISTERED_ACTIONS = new Set(["approve","reject","rerun","request_data"]);
+const $=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
+const T=(t)=>document.createTextNode(t==null?"":String(t));
+let convo=[];
+
+function resolve(v,dm){return(v&&typeof v==="object"&&"$bind" in v)?pointer(dm,v["$bind"]):v;}
+function pointer(dm,ptr){let cur=dm;for(const seg of ptr.split("/").slice(1)){if(cur==null)return null;cur=cur[seg];}return cur;}
+function setPointer(dm,ptr,val){const segs=ptr.split("/").slice(1);let cur=dm;for(let i=0;i<segs.length-1;i++){if(cur[segs[i]]==null)cur[segs[i]]={};cur=cur[segs[i]];}if(segs.length)cur[segs[segs.length-1]]=val;}
+function isSafeUrl(u){return typeof u==="string"&&!/^\s*(javascript|data|vbscript):/i.test(u);}
+
+const JUSTIFY={start:"flex-start",center:"center",end:"flex-end",spaceBetween:"space-between",spaceAround:"space-around"};
+const ALIGN={start:"flex-start",center:"center",end:"flex-end",stretch:"stretch",baseline:"baseline"};
+
+function kids(c,x,e){for(const id of(c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
+
+const R={
+  Row:(c,x)=>{const e=$("div","Row");e.style.cssText="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap";if(c.justify)e.style.justifyContent=JUSTIFY[c.justify]||c.justify;if(c.align)e.style.alignItems=ALIGN[c.align]||c.align;kids(c,x,e);return e;},
+  Column:(c,x)=>{const e=$("div","Column");kids(c,x,e);return e;},
+  List:(c,x)=>{const e=$("div","List");kids(c,x,e);return e;},
+  Card:(c,x)=>{const e=$("div","Card");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}kids(c,x,e);return e;},
+  Divider:()=>{return $("div","Divider");},
+  Text:(c,x)=>{const e=$("div","Text"+(c.variant?" "+c.variant:""));const v=resolve(c.text,x.dm);e.append(T(v));return e;},
+  Image:(c,x)=>{const i=$("img");const src=isSafeUrl(c.src)?c.src:"";if(src)i.src=src;i.alt=c.alt||"";i.style.cssText="max-width:100%;border-radius:8px";return i;},
+  TextField:(c,x)=>{const wrap=$("div");if(c.label){const l=$("div");l.style.cssText="font-size:12px;color:var(--ink-muted);margin-bottom:4px;font-family:var(--font-mono)";l.append(T(c.label));wrap.append(l);}const i=$("input");i.type="text";if(c.placeholder)i.placeholder=c.placeholder;if(c.value&&typeof c.value==="object"&&"$bind" in c.value){const v=pointer(x.dm,c.value["$bind"]);if(v!=null)i.value=String(v);i.oninput=()=>setPointer(x.dm,c.value["$bind"],i.value);}wrap.append(i);return wrap;},
+  CheckBox:(c,x)=>{const wrap=$("label");wrap.style.cssText="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px";const cb=$("input");cb.type="checkbox";if(c.checked&&typeof c.checked==="object"&&"$bind" in c.checked){const v=pointer(x.dm,c.checked["$bind"]);cb.checked=!!v;cb.onchange=()=>setPointer(x.dm,c.checked["$bind"],cb.checked);}wrap.append(cb,T(c.label||""));return wrap;},
+  Slider:(c,x)=>{const wrap=$("div");const lbl=$("div");lbl.style.cssText="font-size:12px;color:var(--ink-muted);margin-bottom:4px";lbl.append(T(c.label||""));wrap.append(lbl);const sl=$("input");sl.type="range";sl.min=c.min||0;sl.max=c.max||100;if(c.value&&typeof c.value==="object"&&"$bind" in c.value){const v=pointer(x.dm,c.value["$bind"]);if(v!=null)sl.value=String(v);sl.oninput=()=>setPointer(x.dm,c.value["$bind"],+sl.value);}wrap.append(sl);return wrap;},
+  InputChoice:(c,x)=>{const wrap=$("div");const sel=$("select");sel.style.cssText="padding:8px 12px;border:1px solid var(--rule-strong);border-radius:9px;font-size:14px;width:100%;background:var(--surface);color:var(--ink)";const opts=resolve(c.options,x.dm)||[];opts.forEach(o=>{const opt=$("option");opt.value=String(o);opt.append(T(o));sel.append(opt);});if(c.value&&typeof c.value==="object"&&"$bind" in c.value){const v=pointer(x.dm,c.value["$bind"]);if(v!=null)sel.value=String(v);sel.onchange=()=>setPointer(x.dm,c.value["$bind"],sel.value);}wrap.append(sel);return wrap;},
+  DateTime:(c,x)=>{const i=$("input");i.type="date";return i;},
+  Button:(c,x)=>{const b=$("button","actbtn");b.append(T(resolve(c.label,x.dm)||""));b.onclick=()=>choose(String(resolve(c.label,x.dm)||""));return b;},
+  Tabs:(c,x)=>{const e=$("div","Tabs");const nav=$("div","tabs-nav");e.append(nav);const body=$("div","tab-body");e.append(body);const labels=(c.labels||"").split(",").map(s=>s.trim());const kids_arr=c.children||[];let active=0;function show(i){nav.querySelectorAll(".tab-btn").forEach((b,j)=>b.classList.toggle("active",j===i));body.textContent="";const ch=x.byId[kids_arr[i]];if(ch)body.append(node(ch,x));}labels.forEach((lab,i)=>{const btn=$("button","tab-btn");btn.append(T(lab));btn.onclick=()=>{active=i;show(i);};nav.append(btn);});show(0);return e;},
+  Modal:(c,x)=>{const wrap=$("div","Modal");const box=$("div","modal-box");kids(c,x,box);wrap.append(box);return wrap;},
+  StatTile:(c,x)=>{const e=$("div","StatTile");const tone=({good:"var(--green)",warn:"var(--amber)",bad:"var(--red)"})[c.tone]||"var(--accent)";e.style.borderTopColor=tone;const lab=$("div","lab");lab.append(T(c.label||""));e.append(lab);const val=$("div","val");val.append(T(resolve(c.value,x.dm)!=null?String(resolve(c.value,x.dm)):"—"));e.append(val);if(c.unit){const u=$("div","dl");u.append(T(c.unit));e.append(u);}if(c.delta){const dl=$("div","dl");const dv=resolve(c.delta,x.dm);dl.append(T(dv!=null?String(dv):""));e.append(dl);}return e;},
+  ProgressBar:(c,x)=>{const e=$("div","ProgressBar");const wrap=$("div","pbwrap");const lbl=$("div","pblbl");lbl.append(T(""));wrap.append(lbl);const p=$("div","prog");const fill=$("i");const val=resolve(c.value,x.dm);const max=c.max||100;fill.style.width=Math.min(100,Math.max(0,(val/max)*100))+'%';const tone=({good:"var(--green)",warn:"var(--amber)",bad:"var(--red)"})[c.tone]||"var(--accent)";fill.style.background=tone;p.append(fill);wrap.append(p);e.append(wrap);return e;},
+  Sparkline:(c,x)=>{const e=$("div","chart");const vals=resolve(c.data,x.dm)||[];const tone=({good:"var(--green)",warn:"var(--amber)",bad:"var(--red)"})[c.tone]||"var(--accent)";const ns="http://www.w3.org/2000/svg",w=180,h=44,mx=Math.max(...vals,1),mn=Math.min(...vals,0),rg=(mx-mn)||1;const pts=vals.map((v,i)=>`${i/(vals.length-1||1)*w},${h-6-(v-mn)/rg*(h-12)}`).join(" ");const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox",`0 0 ${w} ${h}`);svg.setAttribute("width","100%");svg.setAttribute("height",h);const pl=document.createElementNS(ns,"polyline");pl.setAttribute("points",pts);pl.setAttribute("fill","none");pl.setAttribute("stroke",tone);pl.setAttribute("stroke-width","2.5");svg.append(pl);e.append(svg);return e;},
+  BarChart:(c,x)=>{const e=$("div","chart");const h=$("div","ct");h.append(T(c.title||""));e.append(h);const data=resolve(c.data,x.dm)||[];const xk=c.xKey||"label",yk=c.yKey||"value";const ns="http://www.w3.org/2000/svg",w=300,ht=150,pad=24,mx=Math.max(...data.map(d=>+d[yk]),1);const bw=(w-pad*2)/Math.max(data.length,1)*.62;const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox",`0 0 ${w} ${ht}`);svg.setAttribute("width","100%");svg.setAttribute("height","auto");data.forEach((d,i)=>{const x2=pad+i*((w-pad*2)/data.length)+((w-pad*2)/data.length-bw)/2;const bh=(+d[yk])/mx*(ht-pad*2);const r=document.createElementNS(ns,"rect");r.setAttribute("x",x2);r.setAttribute("y",ht-pad-bh);r.setAttribute("width",bw);r.setAttribute("height",bh);r.setAttribute("rx",3);r.setAttribute("fill","var(--accent)");svg.append(r);const tv=document.createElementNS(ns,"text");tv.setAttribute("x",x2+bw/2);tv.setAttribute("y",ht-pad-bh-4);tv.setAttribute("text-anchor","middle");tv.setAttribute("font-size","10");tv.setAttribute("fill","var(--ink-muted)");tv.textContent=d[yk];svg.append(tv);const tl=document.createElementNS(ns,"text");tl.setAttribute("x",x2+bw/2);tl.setAttribute("y",ht-8);tl.setAttribute("text-anchor","middle");tl.setAttribute("font-size","10");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=d[xk];svg.append(tl);});e.append(svg);return e;},
+  Timeline:(c,x)=>{const e=$("div","chart");const h=$("div","ct");h.append(T(c.title||""));e.append(h);const evts=resolve(c.events,x.dm)||[];evts.forEach(ev=>{const row=$("div","tl-item");const dot=$("div","tl-dot");row.append(dot);const body=$("div");body.style.flex="1";const lbl=$("div");lbl.style.cssText="font-weight:600;font-size:14px;color:var(--ink)";lbl.append(T(ev&&ev.label||ev&&ev.title||""));body.append(lbl);if(ev&&ev.detail){const d=$("div");d.style.cssText="font-size:12px;color:var(--ink-muted);margin-top:2px";d.append(T(ev.detail));body.append(d);}row.append(body);e.append(row);});return e;},
+  DataTable:(c,x)=>{const wrap=$("div");const cols=(c.columns||"").split(",").map(s=>s.trim()).filter(Boolean);let rows=Array.isArray(resolve(c.rows,x.dm))?[...resolve(c.rows,x.dm)]:[];if(c.filterKey){const f=$("input");f.type="text";f.placeholder="filter "+c.filterKey+"...";f.style.cssText="margin-bottom:8px;width:100%;padding:7px 10px;border:1px solid var(--rule-strong);border-radius:8px;font-size:13px;background:var(--surface);color:var(--ink)";f.oninput=()=>draw(f.value);wrap.append(f);}const tbl=$("table");wrap.append(tbl);let sortCol=null,sortDir=1;function draw(filter){tbl.textContent="";const tr=$("tr");cols.forEach(col=>{const th=$("th");th.append(T(col));th.onclick=()=>{sortDir=sortCol===col?-sortDir:1;sortCol=col;draw(filter);};if(c.sortable&&sortCol===col)th.append(T(sortDir>0?" ▲":" ▼"));tr.append(th);});tbl.append(tr);let showing=[...rows];if(filter&&c.filterKey){const q=filter.toLowerCase();showing=showing.filter(r=>String(r&&r[c.filterKey]||"").toLowerCase().includes(q));}if(sortCol){showing.sort((a,b)=>{const av=a&&a[sortCol]||"",bv=b&&b[sortCol]||"";return String(av)<String(bv)?-sortDir:String(av)>String(bv)?sortDir:0;});}showing.forEach(row=>{const tr=$("tr");cols.forEach(col=>{const td=$("td");td.append(T(row&&row[col]!=null?String(row[col]):""));tr.append(td);});tbl.append(tr);});}draw("");return wrap;},
+  Notice:(c,x)=>{const e=$("div","Notice "+(c.tone||"neutral"));e.append(T(resolve(c.text,x.dm)||""));return e;},
+  ApprovalCard:(c,x)=>{const e=$("div","Card");const s=$("div","ct");s.append(T(resolve(c.summary,x.dm)||"Approve?"));const pre=$("pre");pre.style.cssText="font-size:12px;background:var(--surface-alt);padding:8px;border-radius:8px;overflow:auto";pre.append(T(JSON.stringify(resolve(c.params,x.dm),null,2)));const ok=$("button","actbtn");ok.append(T("Approve"));ok.onclick=()=>choose("approve");e.append(s,pre,ok);return e;},
+  CodeDiff:(c,x)=>{const e=$("div","CodeDiff");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}const cols=$("div");cols.style.cssText="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--rule)";function pane(label,text){const p=$("div");p.style.cssText="min-width:0;border-right:1px solid var(--rule)";const lab=$("div");lab.style.cssText="padding:5px 10px;font-size:11px;background:var(--surface-alt);color:var(--ink-muted);font-family:var(--font-mono)";lab.append(T(label||""));p.append(lab);const lines=$("div");lines.style.cssText="padding:6px 0;overflow:auto;max-height:260px";(resolve(text,x.dm)||"").split("\n").forEach(ln=>{const row=$("div");row.style.cssText="padding:1px 10px;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.45;font-family:var(--font-mono)";row.append(T(ln));lines.append(row);});p.append(lines);return p;}cols.append(pane(c.beforeLabel||"before",c.before),pane(c.afterLabel||"after",c.after));e.append(cols);return e;},
+  Map:(c,x)=>{const e=$("div","Map");if(c.title){const h=$("div","ct");h.append(T(c.title));e.append(h);}const markers=resolve(c.markers,x.dm)||[];const ns="http://www.w3.org/2000/svg";const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox","0 0 400 220");svg.setAttribute("width","100%");svg.setAttribute("height","auto");const rect=document.createElementNS(ns,"rect");rect.setAttribute("width","400");rect.setAttribute("height","220");rect.setAttribute("fill","var(--surface-alt)");rect.setAttribute("rx","8");svg.append(rect);markers.forEach((m,i)=>{const cx=50+Math.random()*300;const cy=30+Math.random()*160;const dot=document.createElementNS(ns,"circle");dot.setAttribute("cx",cx);dot.setAttribute("cy",cy);dot.setAttribute("r","7");dot.setAttribute("fill","var(--accent)");const tl=document.createElementNS(ns,"text");tl.setAttribute("x",cx+10);tl.setAttribute("y",cy+4);tl.setAttribute("font-size","11");tl.setAttribute("fill","var(--ink-muted)");tl.textContent=String(m&&m.label||"");svg.append(dot,tl);});e.append(svg);if(c.caption){const cap=$("div","cap");cap.append(T(c.caption));e.append(cap);}return e;},
+  KanbanBoard:(c,x)=>{const e=$("div","KanbanBoard");if(c.title){const h=$("div","ct");h.style.cssText="font-size:12px;font-weight:600;color:var(--ink-muted);margin-bottom:10px;font-family:var(--font-mono)";h.append(T(c.title));e.append(h);}const lanes=$("div","lanes");const action=c.onCardPress&&c.onCardPress.action;const tappable=REGISTERED_ACTIONS.has(action);(resolve(c.columns,x.dm)||[]).forEach(col=>{const lane=$("div","lane");const lh=$("div","ct");lh.append(T(col&&col.title||""));lane.append(lh);(col&&col.cards||[]).forEach(card=>{const box=$(tappable?"button":"div","card");const ti=$("div","ct");ti.append(T(card&&card.title||""));box.append(ti);if(card&&card.meta)box.append(T(card.meta));if(tappable){box.type="button";box.onclick=()=>choose(String(card&&card.title||""));}lane.append(box);});lanes.append(lane);});e.append(lanes);return e;},
+  GanttChart:(c,x)=>{
+    const e=$("div","GanttChart");const h=$("div","ct");h.append(T(c.title||"schedule"));e.append(h);
+    const tasks=resolve(c.tasks,x.dm)||[];
+    const grid=$("div","grid");
+    const starts=tasks.map(t=>t.start||"").filter(Boolean);const ends=tasks.map(t=>t.end||"").filter(Boolean);
+    const allDates=[...starts,...ends].map(d=>new Date(d)).filter(d=>!isNaN(d));
+    const useDates=allDates.length===tasks.length*2;
+    const tMin=useDates?Math.min(...allDates.map(d=>d.getTime())):0;
+    const tMax=useDates?Math.max(...allDates.map(d=>d.getTime())):1;
+    const span=tMax-tMin||1;
+    tasks.forEach(t=>{const row=$("div","row");const lbl=$("div","lbl");lbl.append(T(t.label||t.id||""));row.append(lbl);
+      const track=$("div","track");
+      if(useDates){const s=new Date(t.start),en=new Date(t.end);if(!isNaN(s)&&!isNaN(en)){const bar=$("div","bar");bar.style.left=((s-tMin)/span*100).toFixed(1)+"%";bar.style.width=(Math.max((en-s)/span*100,2)).toFixed(1)+"%";track.append(bar);}}
+      else{const bar=$("div","bar");bar.style.left="0%";bar.style.width="100%";track.append(bar);}
+      row.append(track);grid.append(row);});
+    e.append(grid);if(c.caption){const cap=$("div","cap");cap.append(T(c.caption));e.append(cap);}return e;
+  },
+};
+
+function node(c,x){const f=R[c.type];if(!f){const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped unknown type: "+c.type+"]"));return s;}return f(c,x);}
+
+function pickRoot(surface){const comps=surface.components||[];const byId={};comps.forEach(c=>{if(c&&c.id!=null)byId[c.id]=c;});if(surface.root!=null&&byId[surface.root])return surface.root;const layout=comps.find(c=>c&&["Column","Row","List","Card","Tabs"].includes(c.type));return(layout||comps[0]||{}).id;}
+
+function render(surface){const comps=surface.components||[];const byId={};comps.forEach(c=>{if(c&&c.id!=null)byId[c.id]=c;});const x={byId,dm:surface.dataModel||{}};const rootId=pickRoot(surface);const m=document.getElementById("mount");m.textContent="";if(!rootId||!byId[rootId]){const empty=$("div","empty");empty.append(T("Surface has no renderable root."));m.append(empty);return;}m.append(node(byId[rootId],x));}
+
+function setStatus(html){document.getElementById("status").innerHTML=html;}
+function crumbs(){document.getElementById("crumbs").textContent=convo.length?"path: "+convo.join(" › "):"";}
+
+function goalFor(convo){if(convo.length===1)return convo[0];return(convo[0]+"\nSo far the user chose: "+convo.slice(1).join(", then ")+". Respond with the next interface.");}
+
+async function runTurn(userText){
+  convo.push(userText);crumbs();
+  setStatus('<span class="pill think">composing…</span> composing interface for: "'+userText.slice(0,60)+(userText.length>60?"…":"")+'"');
+  const goal=goalFor(convo);
+  try{
+    const res=await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({prompt:goal,respond_as:"ui",tenant_id:"course",project_id:"s14-study",user_id:"student-01",agent_id:"study"})});
+    const run=await res.json();
+    if(!res.ok){setStatus('<span class="pill" style="background:var(--red-soft);color:var(--red-ink)">run failed</span> '+(run.detail||res.status));return;}
+    const rid=run.run_id;
+    const creq=await fetch(API+"/v1/runs/"+rid+"/composed");
+    const c=await creq.json();
+    if(creq.ok&&c.surface){render(c.surface);setStatus('<span class="pill good">'+(c.provider||"gemini")+'  ·  '+c.component_count+' components  ·  0 executable</span> composed live, validated in-catalog');}
+    else{setStatus('<span class="pill" style="background:var(--amber-soft);color:var(--amber-ink)">no surface</span> gateway not reachable — start the S14Code server and glc_v3 gateway');}
+  }catch(err){setStatus('<span class="pill" style="background:var(--red-soft);color:var(--red-ink)">error</span> '+String(err&&err.message||err));}
+}
+function choose(label){if(label)runTurn(label);}
+function start(text){convo=[];document.getElementById("prompt").value=text;runTurn(text);}
+function go(){convo=[];runTurn(document.getElementById("prompt").value.trim());}
+document.getElementById("prompt").addEventListener("keydown",e=>{if(e.key==="Enter")go();});
+</script>
+</body>
+</html>

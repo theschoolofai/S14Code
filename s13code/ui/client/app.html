@@ -80,6 +80,14 @@
   .Map .legend{display:flex;flex-wrap:wrap;gap:8px 14px;padding:8px 12px;font-size:12px}
   .Map .legend span{display:inline-flex;align-items:center;gap:6px}
   .Map .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+  .GanttChart{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  .GanttChart .ct{padding:10px 12px;font-size:12px;font-weight:600;color:var(--ink-muted);border-bottom:1px solid var(--rule);font-family:var(--font-mono)}
+  .GanttChart .grid{padding:10px 12px;overflow-x:auto}
+  .GanttChart .row{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12px;min-height:28px}
+  .GanttChart .lbl{flex:0 0 110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-body)}
+  .GanttChart .track{flex:1;position:relative;height:16px;background:var(--surface-alt);border-radius:4px;min-width:160px}
+  .GanttChart .bar{position:absolute;height:100%;border-radius:4px;background:var(--accent);opacity:.85}
+  .GanttChart .cap{padding:6px 12px;font-size:11px;color:var(--ink-muted);border-top:1px solid var(--rule)}
 </style>
 </head>
 <body>
@@ -158,6 +166,7 @@ const R={
   CodeDiff:(c,x)=>codeDiff(c,x),
   Map:(c,x)=>renderMap(c,x),
   KanbanBoard:(c,x)=>renderKanban(c,x),
+  GanttChart:(c,x)=>renderGantt(c,x),
 };
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
 function node(c,x){
@@ -231,6 +240,27 @@ function renderKanban(c,x){
     lanes.append(lane);
   });
   e.append(lanes);return e;
+}
+
+function renderGantt(c,x){
+  const e=$("div","GanttChart");const h=$("div","ct");h.append(T(c.title||"schedule"));e.append(h);
+  const tasks=resolve(c.tasks,x.dm)||[];
+  if(!tasks.length){const em=$("div","grid");em.append(T("no tasks"));e.append(em);return e;}
+  const starts=tasks.map(t=>t.start||"").filter(Boolean);const ends=tasks.map(t=>t.end||"").filter(Boolean);
+  const allDates=[...starts,...ends].map(d=>new Date(d)).filter(d=>!isNaN(d));
+  const useDates=allDates.length===tasks.length*2;
+  const tMin=useDates?Math.min(...allDates.map(d=>d.getTime())):0;
+  const tMax=useDates?Math.max(...allDates.map(d=>d.getTime())):1;
+  const span=tMax-tMin||1;
+  const grid=$("div","grid");
+  tasks.forEach(t=>{
+    const row=$("div","row");const lbl=$("div","lbl");lbl.append(T(t.label||t.id||""));row.append(lbl);
+    const track=$("div","track");
+    if(useDates){const s=new Date(t.start),en=new Date(t.end);
+      if(!isNaN(s)&&!isNaN(en)){const bar=$("div","bar");bar.style.left=((s-tMin)/span*100).toFixed(1)+"%";bar.style.width=(Math.max((en-s)/span*100,2)).toFixed(1)+"%";track.append(bar);}}
+    else{const bar=$("div","bar");bar.style.left="0%";bar.style.width="100%";track.append(bar);}
+    row.append(track);grid.append(row);});
+  e.append(grid);if(c.caption){const cap=$("div","cap");cap.append(T(c.caption));e.append(cap);}return e;
 }
 
 function pickRoot(surface){
