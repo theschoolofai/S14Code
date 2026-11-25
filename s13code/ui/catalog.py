@@ -10,8 +10,9 @@ The catalog is aligned to A2UI's Basic component set: the 15 layout / text /
 input / container types A2UI Basic already defines are adopted under their real
 A2UI names (``source="a2ui-basic"``). Only the components A2UI Basic genuinely
 lacks — charts, tiles, tables, timelines, notices, the approval card, a
-code diff, a map, and a Kanban board — are kept as clearly labelled custom extensions (``source="custom"``).
-Twenty-six types in all; a student can read every one and the validator can
+code diff, a map, a Kanban board, and a Gantt chart — are kept as clearly
+labelled custom extensions (``source="custom"``).
+Twenty-seven types in all; a student can read every one and the validator can
 prove coverage.
 
 Property kinds:
@@ -135,6 +136,11 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "columns": PropSpec("binding"),
         "onCardPress": PropSpec("action"),
         "wipLimit": PropSpec("number"),
+    }, source="custom"),
+    "GanttChart": ComponentSpec("GanttChart", {
+        "title": PropSpec("text"),
+        "tasks": PropSpec("binding"),   # list of {id, label, start, end, lane?}
+        "caption": PropSpec("text"),
     }, source="custom"),
 }
 

@@ -1,0 +1,105 @@
+{
+  "model": "gemini-2.5-flash-lite",
+  "prompt_mentions_gantt": false,
+  "gantt_present_in_output": true,
+  "raw": "```json\n{\n  \"root\": \"root\",\n  \"components\": [\n    {\n      \"id\": \"root\",\n      \"type\": \"Column\",\n      \"children\": [\n        \"title\",\n        \"summary\",\n        \"gantt\"\n      ]\n    },\n    {\n      \"id\": \"title\",\n      \"type\": \"Text\",\n      \"text\": {\n        \"$bind\": \"/title\"\n      },\n      \"variant\": \"heading\"\n    },\n    {\n      \"id\": \"summary\",\n      \"type\": \"Row\",\n      \"justify\": \"spaceAround\",\n      \"children\": [\n        \"open_tasks_tile\",\n        \"submitted_tasks_tile\"\n      ]\n    },\n    {\n      \"id\": \"open_tasks_tile\",\n      \"type\": \"StatTile\",\n      \"label\": \"Open Tasks\",\n      \"value\": {\n        \"$bind\": \"/open_count\"\n      },\n      \"tone\": \"neutral\"\n    },\n    {\n      \"id\": \"submitted_tasks_tile\",\n      \"type\": \"StatTile\",\n      \"label\": \"Submitted Tasks\",\n      \"value\": {\n        \"$bind\": \"/submitted_count\"\n      },\n      \"tone\": \"good\"\n    },\n    {\n      \"id\": \"gantt\",\n      \"type\": \"GanttChart\",\n      \"title\": \"Assignment Schedule\",\n      \"tasks\": {\n        \"$bind\": \"/tasks\"\n      },\n      \"caption\": {\n        \"$bind\": \"/caption\"\n      }\n    }\n  ]\n}\n```",
+  "surface_accepted": {
+    "root": "root",
+    "components": [
+      {
+        "id": "root",
+        "type": "Column",
+        "children": [
+          "title",
+          "summary",
+          "gantt"
+        ]
+      },
+      {
+        "id": "title",
+        "type": "Text",
+        "text": {
+          "$bind": "/title"
+        },
+        "variant": "heading"
+      },
+      {
+        "id": "summary",
+        "type": "Row",
+        "justify": "spaceAround",
+        "children": [
+          "open_tasks_tile",
+          "submitted_tasks_tile"
+        ]
+      },
+      {
+        "id": "open_tasks_tile",
+        "type": "StatTile",
+        "label": "Open Tasks",
+        "value": {
+          "$bind": "/open_count"
+        },
+        "tone": "neutral"
+      },
+      {
+        "id": "submitted_tasks_tile",
+        "type": "StatTile",
+        "label": "Submitted Tasks",
+        "value": {
+          "$bind": "/submitted_count"
+        },
+        "tone": "good"
+      },
+      {
+        "id": "gantt",
+        "type": "GanttChart",
+        "title": "Assignment Schedule",
+        "tasks": {
+          "$bind": "/tasks"
+        },
+        "caption": {
+          "$bind": "/caption"
+        }
+      }
+    ],
+    "dataModel": {
+      "title": "Study schedule \u2014 Nov/Dec 2026",
+      "open_count": 3,
+      "submitted_count": 2,
+      "tasks": [
+        {
+          "id": "t1",
+          "label": "EAG Session 14",
+          "start": "2026-11-25",
+          "end": "2026-12-01"
+        },
+        {
+          "id": "t2",
+          "label": "NLP Assignment 3",
+          "start": "2026-11-27",
+          "end": "2026-12-05"
+        },
+        {
+          "id": "t3",
+          "label": "CV Mini-Project",
+          "start": "2026-11-28",
+          "end": "2026-12-10"
+        },
+        {
+          "id": "t4",
+          "label": "RL Quiz (done)",
+          "start": "2026-11-15",
+          "end": "2026-11-20"
+        },
+        {
+          "id": "t5",
+          "label": "Math Worksheet",
+          "start": "2026-11-10",
+          "end": "2026-11-18"
+        }
+      ],
+      "caption": "Bars show start \u2192 due date. Colour: accent = active."
+    }
+  },
+  "rejections": []
+}
